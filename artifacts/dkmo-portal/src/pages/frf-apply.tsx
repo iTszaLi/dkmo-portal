@@ -16,7 +16,6 @@ import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useLocation } from "wouter";
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -35,6 +34,7 @@ interface FormData {
   iqamaNumber: string;
   occupation: string;
   companyName: string;
+  familyInSaudi: string;
   mobileSaudi: string;
   email: string;
   areaSaudi: string;
@@ -54,6 +54,7 @@ interface FormData {
   nomineeRelation: string;
   nomineeMobile: string;
   notes: string;
+  photoDataUrl: string;
 }
 
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Unknown"];
@@ -80,225 +81,352 @@ function inputClass(extra = "") {
 }
 
 // ─── PDF Generation ──────────────────────────────────────────────────────────
-function generateFrfPdf(
+async function generateFrfPdf(
   form: FormData,
   dependents: Dependent[],
   frfNumber: string,
   submissionDate: string,
-): void {
+): Promise<void> {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-  const W = 210;
-  const marginL = 12;
-  const marginR = 198;
-  const brand: [number, number, number] = [20, 100, 40];
+  const PW = 210;
+  const mL = 12;
+  const mR = 198;
+  const cW = mR - mL; // 186mm
+  const black: [number, number, number] = [0, 0, 0];
   const red: [number, number, number] = [180, 20, 20];
+  const grey: [number, number, number] = [80, 80, 80];
+  const lgrey: [number, number, number] = [160, 160, 160];
 
-  // ── Header ──────────────────────────────────────────────────────────────────
-  doc.setFillColor(...brand);
-  doc.roundedRect(marginL, 8, W - 24, 20, 3, 3, "F");
-  doc.setTextColor(255, 255, 255);
+  // ── Load logo ──────────────────────────────────────────────────────────────
+  let logoDataUrl: string | null = null;
+  try {
+    const resp = await fetch(`${basePath}/logo.png`);
+    const blob = await resp.blob();
+    logoDataUrl = await new Promise<string>((res, rej) => {
+      const fr = new FileReader();
+      fr.onloadend = () => res(fr.result as string);
+      fr.onerror = rej;
+      fr.readAsDataURL(blob);
+    });
+  } catch { /* logo fails gracefully */ }
+
+  // ── HEADER ─────────────────────────────────────────────────────────────────
+  // Logo top-left
+  if (logoDataUrl) {
+    doc.addImage(logoDataUrl, "PNG", mL, 8, 24, 24);
+  } else {
+    doc.setDrawColor(...black);
+    doc.setLineWidth(0.4);
+    doc.rect(mL, 8, 24, 24);
+    doc.setTextColor(...grey);
+    doc.setFontSize(6);
+    doc.text("DKMO", mL + 12, 22, { align: "center" });
+  }
+
+  // Title (centered on page)
+  doc.setTextColor(...black);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(13);
-  doc.text("DAKSHINA KARNATAKA MUSLIM OKKOOTA", W / 2, 16, { align: "center" });
-  doc.setFontSize(9);
+  doc.setFontSize(15);
+  doc.text("DAKSHINA KARNATAKA MUSLIM OKKOOTA", PW / 2, 17, { align: "center" });
   doc.setFont("helvetica", "normal");
-  doc.text("Family Relief Fund (FRF) Application Form", W / 2, 23, { align: "center" });
+  doc.setFontSize(10);
+  doc.text("Family Relief Fund (FRF) Application Form", PW / 2, 24, { align: "center" });
 
   // FRF ID box (top-right)
-  doc.setTextColor(0, 0, 0);
-  doc.setFont("helvetica", "bold");
+  doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
-  doc.text("FRF ID No.", marginR - 44, 33);
-  doc.setDrawColor(0, 0, 0);
-  doc.setLineWidth(0.3);
-  doc.rect(marginR - 30, 29, 32, 7);
+  doc.setTextColor(...black);
+  doc.text("FRF ID No.", 153, 11);
+  doc.setDrawColor(...black);
+  doc.setLineWidth(0.5);
+  doc.rect(153, 13, 45, 8);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
-  doc.setTextColor(...brand);
-  doc.text(frfNumber, marginR - 14, 34, { align: "center" });
+  doc.setFontSize(10);
+  doc.text(frfNumber, 175, 19.5, { align: "center" });
 
-  // Important note
+  // Separator
+  doc.setDrawColor(...black);
+  doc.setLineWidth(0.5);
+  doc.line(mL, 34, mR, 34);
+
+  // ── IMPORTANT NOTE ─────────────────────────────────────────────────────────
+  let y = 39;
   doc.setTextColor(...red);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
-  doc.text("Important Note:", marginL, 34);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.5);
-  doc.text(
-    "In case of any changes in your Contact Information, you are required to inform the General Secretary of DKMO immediately.",
-    marginL,
-    39,
-    { maxWidth: 120 },
-  );
-
-  // Submission date
-  doc.setTextColor(80, 80, 80);
-  doc.setFontSize(7.5);
-  doc.text(`Submitted: ${submissionDate}`, marginR, 39, { align: "right" });
-
-  let y = 48;
-
-  // ── Section helper ──────────────────────────────────────────────────────────
-  const sectionTitle = (title: string) => {
-    doc.setFillColor(240, 248, 240);
-    doc.rect(marginL, y, W - 24, 7, "F");
-    doc.setDrawColor(...brand);
-    doc.setLineWidth(0.4);
-    doc.rect(marginL, y, W - 24, 7);
-    doc.setTextColor(...brand);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8.5);
-    doc.text(title, marginL + 2, y + 5);
-    y += 9;
-  };
-
-  const field = (label: string, value: string, x: number, width: number) => {
-    doc.setTextColor(100, 100, 100);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
-    doc.text(label, x, y);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8.5);
-    doc.text(value || "—", x, y + 5, { maxWidth: width - 2 });
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.2);
-    doc.line(x, y + 7, x + width - 4, y + 7);
-  };
-
-  // ── Personal Info ──────────────────────────────────────────────────────────
-  sectionTitle("Personal Information");
-  field("Full Name of the Applicant", form.fullName, marginL, 186);
-  y += 10;
-  field("Date of Birth", form.dateOfBirth, marginL, 90);
-  field("Passport No.", form.passportNumber, 110, 88);
-  y += 10;
-  field("Occupation / Job Title", form.occupation, marginL, 90);
-  field("Iqama No.", form.iqamaNumber, 110, 88);
-  y += 10;
-  field("Company / Employer Name", form.companyName, marginL, 186);
-  y += 10;
-  field("Marital Status", form.maritalStatus, marginL, 90);
-  field("Number of Dependents", String(dependents.length), 110, 88);
-  y += 10;
-  field("Blood Group", form.bloodGroup, marginL, 90);
-  y += 12;
-
-  // ── Contact Details (two columns) ──────────────────────────────────────────
-  const colLeft = marginL;
-  const colRight = 108;
-  const colW = 90;
-
-  // Column headers
-  doc.setFillColor(220, 240, 220);
-  doc.rect(colLeft, y, colW, 7, "F");
-  doc.rect(colRight, y, colW, 7, "F");
-  doc.setDrawColor(...brand);
-  doc.setLineWidth(0.3);
-  doc.rect(colLeft, y, colW, 7);
-  doc.rect(colRight, y, colW, 7);
-  doc.setTextColor(...brand);
+  doc.setFontSize(8.5);
+  doc.text("Important Note:", mL, y);
+  y += 4.5;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
-  doc.text("Contact details in Saudi Arabia", colLeft + 2, y + 5);
-  doc.text("Contact details in India", colRight + 2, y + 5);
-  y += 9;
+  const noteLines = doc.splitTextToSize(
+    "In Case of any changes in your Contact Information, You have to inform to the General Secretary of DKMO Immediately.",
+    cW - 2,
+  );
+  doc.text(noteLines, mL, y);
+  y += noteLines.length * 4.2 + 3;
 
-  const fieldL = (label: string, value: string) => {
-    doc.setTextColor(100, 100, 100);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
-    doc.text(label, colLeft, y);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8.5);
-    doc.text(value || "—", colLeft, y + 5, { maxWidth: colW - 2 });
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.2);
-    doc.line(colLeft, y + 7, colLeft + colW - 4, y + 7);
-  };
-  const fieldR = (label: string, value: string) => {
-    doc.setTextColor(100, 100, 100);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
-    doc.text(label, colRight, y);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8.5);
-    doc.text(value || "—", colRight, y + 5, { maxWidth: colW - 2 });
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.2);
-    doc.line(colRight, y + 7, colRight + colW - 4, y + 7);
-  };
+  doc.setDrawColor(...black);
+  doc.setLineWidth(0.4);
+  doc.line(mL, y, mR, y);
+  y += 6;
 
-  const rows = [
-    { l: ["Area / Location", form.areaSaudi], r: ["Name of Home / House", form.houseName] },
-    { l: ["P.O. Box No. & Pin Code", form.poBox], r: ["Postal details", form.postalAddress] },
-    { l: ["Business Tel. No.", form.businessPhone], r: ["District & nearest Jamaath", `${form.district} / ${form.nearestJamaath}`] },
-    { l: ["Mobile No.", form.mobileSaudi], r: ["Home Tel. No.", form.homePhone] },
-    { l: ["Email ID", form.email], r: ["Mobile No. (India)", form.mobileIndia] },
-  ];
+  // ── PERSONAL INFO + PHOTO BOX ───────────────────────────────────────────────
+  // Photo box (passport size, right side)
+  const photoX = 168;
+  const photoY = y;
+  const photoW = 30;
+  const photoH = 38;
+  doc.setDrawColor(...black);
+  doc.setLineWidth(0.5);
+  doc.rect(photoX, photoY, photoW, photoH);
 
-  rows.forEach((row) => {
-    fieldL(row.l[0], row.l[1]);
-    fieldR(row.r[0], row.r[1]);
-    y += 10;
-  });
-
-  // Emergency contacts
-  fieldL("Emergency Contact (Saudi)", `${form.emergencyNameSaudi} — ${form.emergencyMobileSaudi}`);
-  fieldR("Emergency Contact (India)", `${form.emergencyNameIndia} — ${form.emergencyMobileIndia}`);
-  y += 12;
-
-  // ── Nominee ──────────────────────────────────────────────────────────────
-  sectionTitle("Nominee Information");
-  field("Nominee Name", form.nomineeName, marginL, 90);
-  field("Relation", form.nomineeRelation, 110, 45);
-  field("Mobile", form.nomineeMobile, 158, 40);
-  y += 12;
-
-  // ── Dependants ─────────────────────────────────────────────────────────────
-  sectionTitle("Dependants Details");
-  if (dependents.length === 0) {
-    doc.setTextColor(120, 120, 120);
-    doc.setFont("helvetica", "italic");
-    doc.setFontSize(8);
-    doc.text("No dependants listed.", marginL, y + 4);
-    y += 10;
+  if (form.photoDataUrl) {
+    try {
+      doc.addImage(form.photoDataUrl, "JPEG", photoX + 0.5, photoY + 0.5, photoW - 1, photoH - 1);
+    } catch { /* skip */ }
   } else {
-    autoTable(doc, {
-      startY: y,
-      head: [["#", "Name", "Age", "Relationship"]],
-      body: dependents.map((d, i) => [i + 1, d.fullName, d.age || "—", d.relation || "—"]),
-      styles: { fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: brand, textColor: [255, 255, 255], fontStyle: "bold" },
-      alternateRowStyles: { fillColor: [245, 250, 245] },
-      margin: { left: marginL, right: 12 },
-    });
-    y = (doc as any).lastAutoTable.finalY + 6;
+    doc.setFillColor(255, 235, 80);
+    doc.rect(photoX + 0.5, photoY + 0.5, photoW - 1, photoH - 1, "F");
+    doc.setTextColor(60, 60, 60);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6.5);
+    doc.text("Affix Passport", photoX + photoW / 2, photoY + photoH / 2 - 2, { align: "center" });
+    doc.text("size Photo", photoX + photoW / 2, photoY + photoH / 2 + 3, { align: "center" });
   }
 
-  // ── Notes ──────────────────────────────────────────────────────────────────
-  if (form.notes) {
-    sectionTitle("Additional Notes");
-    doc.setTextColor(0, 0, 0);
+  // Field helper (underline style)
+  const fw = photoX - mL - 3; // width left of photo
+  const fw2 = (fw - 3) / 2;  // half of that
+  const fullW = cW;
+  const fullW2 = (cW - 3) / 2;
+
+  const drawLine = (x: number, fy: number, w: number) => {
+    doc.setDrawColor(...lgrey);
+    doc.setLineWidth(0.3);
+    doc.line(x, fy, x + w, fy);
+  };
+  const pField = (label: string, value: string, x: number, w: number, fy: number) => {
+    doc.setTextColor(...grey);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.text(label, x, fy);
+    doc.setTextColor(...black);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    if (value) doc.text(value, x + 1, fy + 5.5, { maxWidth: w - 2 });
+    drawLine(x, fy + 8, w);
+  };
+
+  // Row 1 (left of photo): Full Name full width
+  pField("Full Name of the Applicant", form.fullName, mL, fw, y);
+  y += 11;
+
+  // Row 2: Date of Birth | Passport No.
+  pField("Date of Birth", form.dateOfBirth, mL, fw2, y);
+  pField("Passport No.", form.passportNumber, mL + fw2 + 3, fw2, y);
+  y += 11;
+
+  // Row 3: Occupation | Iqama No.
+  pField("Occupation / Job Title", form.occupation, mL, fw2, y);
+  pField("Iqama No.", form.iqamaNumber, mL + fw2 + 3, fw2, y);
+  y += 11;
+
+  // Row 4: Company (full content width, photo box ends below this)
+  pField("Company / Employer Name", form.companyName, mL, fw, y);
+  y += 11;
+
+  // Now past photo box — use full width
+  pField("Marital Status (single / married)", form.maritalStatus, mL, fullW2, y);
+  pField("Number of Dependents", String(dependents.length), mL + fullW2 + 3, fullW2, y);
+  y += 11;
+
+  pField("Is the family living in Saudi (Yes / No)", form.familyInSaudi || "", mL, fullW2, y);
+  pField("Blood Group", form.bloodGroup, mL + fullW2 + 3, fullW2, y);
+  y += 14;
+
+  // ── CONTACT DETAILS (two bordered boxes side by side) ──────────────────────
+  const boxW = cW / 2;     // 93mm each
+  const boxL = mL;
+  const boxR = mL + boxW;
+  const rowH = 9;
+  const contactData = [
+    { l: "Area / Location you located",                            lv: form.areaSaudi,
+      r: "Name of Home/House",                                     rv: form.houseName },
+    { l: "P.O. Box No. & Pin Code No.",                           lv: form.poBox,
+      r: "Postal details",                                         rv: form.postalAddress },
+    { l: "Business Tel. No.",                                      lv: form.businessPhone,
+      r: "District Name and nearest Jaina't",                      rv: [form.district, form.nearestJamaath].filter(Boolean).join(" / ") },
+    { l: "Mobile No.",                                             lv: form.mobileSaudi,
+      r: "Home Tel. No.",                                          rv: form.homePhone },
+    { l: "Email ID",                                               lv: form.email,
+      r: "Mobile No.",                                             rv: form.mobileIndia },
+    { l: "Contact person's name & mobile no. in case of emergency", lv: [form.emergencyNameSaudi, form.emergencyMobileSaudi].filter(Boolean).join(" — "),
+      r: "Contact person's name & mobile no. in case of emergency", rv: [form.emergencyNameIndia, form.emergencyMobileIndia].filter(Boolean).join(" — ") },
+  ];
+  const hdrH = 8;
+  const totalBoxH = hdrH + contactData.length * rowH;
+
+  // Draw outer borders
+  doc.setDrawColor(...black);
+  doc.setLineWidth(0.5);
+  doc.rect(boxL, y, boxW, totalBoxH);
+  doc.rect(boxR, y, boxW, totalBoxH);
+
+  // Headers (bold, centered)
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(...black);
+  doc.text("Contact details in Saudi Arabia", boxL + boxW / 2, y + 5.5, { align: "center" });
+  doc.text("Contact details in India", boxR + boxW / 2, y + 5.5, { align: "center" });
+
+  // Header bottom lines
+  doc.setLineWidth(0.4);
+  doc.line(boxL, y + hdrH, boxL + boxW, y + hdrH);
+  doc.line(boxR, y + hdrH, boxR + boxW, y + hdrH);
+
+  let cy = y + hdrH;
+  for (let i = 0; i < contactData.length; i++) {
+    const row = contactData[i];
+
+    // Left cell
+    doc.setTextColor(...grey);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6.8);
+    doc.text(row.l, boxL + 2, cy + 3.5, { maxWidth: boxW - 4 });
+    if (row.lv) {
+      doc.setTextColor(...black);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      doc.text(row.lv, boxL + 2, cy + 7.5, { maxWidth: boxW - 4 });
+    }
+
+    // Right cell
+    doc.setTextColor(...grey);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6.8);
+    doc.text(row.r, boxR + 2, cy + 3.5, { maxWidth: boxW - 4 });
+    if (row.rv) {
+      doc.setTextColor(...black);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      doc.text(row.rv, boxR + 2, cy + 7.5, { maxWidth: boxW - 4 });
+    }
+
+    cy += rowH;
+    if (i < contactData.length - 1) {
+      doc.setLineWidth(0.2);
+      doc.setDrawColor(...lgrey);
+      doc.line(boxL + 0.5, cy, boxL + boxW - 0.5, cy);
+      doc.line(boxR + 0.5, cy, boxR + boxW - 0.5, cy);
+    }
+  }
+  y += totalBoxH + 5;
+
+  // ── DEPENDANTS TABLE ────────────────────────────────────────────────────────
+  const depHdrH = 6;
+  const depColHdrH = 6;
+  const depRowH = 6;
+  const depRowCount = 7;
+  const depTotalH = depHdrH + depColHdrH + depRowCount * depRowH;
+
+  const nameW = cW * 0.58;
+  const ageW  = cW * 0.18;
+  const relW  = cW * 0.24;
+
+  // Outer border
+  doc.setDrawColor(...black);
+  doc.setLineWidth(0.5);
+  doc.rect(mL, y, cW, depTotalH);
+
+  // "Dependants details" section title
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8.5);
+  doc.setTextColor(...black);
+  doc.text("Dependants details", mL + 2, y + 4.5);
+
+  // Section header line
+  doc.setLineWidth(0.4);
+  doc.line(mL, y + depHdrH, mR, y + depHdrH);
+
+  let dy = y + depHdrH;
+
+  // Column headers
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  doc.text("Name", mL + 2, dy + 4.2);
+  doc.text("Age", mL + nameW + ageW / 2, dy + 4.2, { align: "center" });
+  doc.text("Relationship", mL + nameW + ageW + relW / 2, dy + 4.2, { align: "center" });
+
+  // Vertical separators
+  doc.setLineWidth(0.3);
+  doc.setDrawColor(...black);
+  doc.line(mL + nameW, y + depHdrH, mL + nameW, y + depTotalH);
+  doc.line(mL + nameW + ageW, y + depHdrH, mL + nameW + ageW, y + depTotalH);
+
+  dy += depColHdrH;
+  doc.setLineWidth(0.3);
+  doc.line(mL, dy, mR, dy);
+
+  for (let i = 0; i < depRowCount; i++) {
+    const dep = dependents[i] ?? null;
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
-    doc.text(form.notes, marginL, y, { maxWidth: 186 });
-    y += 12;
+    doc.setTextColor(...black);
+    doc.text(`${i + 1})`, mL + 1.5, dy + 4.2);
+    if (dep?.fullName) doc.text(dep.fullName, mL + 6, dy + 4.2, { maxWidth: nameW - 8 });
+    const ageText = dep?.age ? `( ${dep.age} )` : "(          )";
+    const relText = dep?.relation ? `{ ${dep.relation} }` : "{                    }";
+    doc.text(ageText, mL + nameW + ageW / 2, dy + 4.2, { align: "center" });
+    doc.text(relText, mL + nameW + ageW + relW / 2, dy + 4.2, { align: "center" });
+    dy += depRowH;
+    if (i < depRowCount - 1) {
+      doc.setLineWidth(0.15);
+      doc.setDrawColor(...lgrey);
+      doc.line(mL + 0.5, dy, mR - 0.5, dy);
+    }
   }
+  y += depTotalH + 5;
 
-  // ── Signature ──────────────────────────────────────────────────────────────
-  y = Math.max(y, 260);
-  doc.setDrawColor(100, 100, 100);
+  // ── ANY OTHER DETAILS ───────────────────────────────────────────────────────
+  doc.setTextColor(...black);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.text("Any other details, if any", mL, y);
+  y += 4;
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(7);
+  doc.setTextColor(...grey);
+  doc.text("(If you are not willing to avail contribution, please mention so herein)", mL, y);
+  y += 5;
+  if (form.notes) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(...black);
+    doc.text(form.notes, mL, y, { maxWidth: cW });
+    y += 5;
+  }
+  doc.setDrawColor(...lgrey);
   doc.setLineWidth(0.3);
-  doc.line(marginL, y, marginL + 70, y);
-  doc.line(W - 80, y, marginR, y);
-  doc.setTextColor(80, 80, 80);
+  doc.line(mL, y, mR, y);
+  y += 3;
+
+  // Submission date (small, right-aligned)
+  doc.setTextColor(...grey);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.text(`Submitted: ${submissionDate}`, mR, y, { align: "right" });
+
+  // ── SIGNATURES ──────────────────────────────────────────────────────────────
+  y = Math.max(y + 8, 273);
+  doc.setDrawColor(...black);
+  doc.setLineWidth(0.4);
+  doc.line(mL, y, mL + 68, y);
+  doc.line(mR - 78, y, mR, y);
+  doc.setTextColor(...black);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
-  doc.text("Applicant's Signature & date", marginL, y + 4);
-  doc.text("Signature of President / General Secretary - OKMO", W - 80, y + 4);
+  doc.text("Applicant's Signature & date", mL, y + 4.5);
+  doc.text("Signature of President/ General Secretary-OKMO", mR - 78, y + 4.5);
 
   doc.save(`FRF_Application_${frfNumber}.pdf`);
 }
@@ -321,11 +449,12 @@ export default function FrfApplyPage() {
   const [form, setForm] = useState<FormData>({
     fullName: "", dateOfBirth: "", bloodGroup: "", maritalStatus: "",
     passportNumber: "", iqamaNumber: "", occupation: "", companyName: "",
-    mobileSaudi: "", email: "", areaSaudi: "", poBox: "", businessPhone: "",
+    familyInSaudi: "", mobileSaudi: "", email: "", areaSaudi: "", poBox: "", businessPhone: "",
     emergencyNameSaudi: "", emergencyMobileSaudi: "",
     houseName: "", postalAddress: "", district: "", nearestJamaath: "",
     homePhone: "", mobileIndia: "", emergencyNameIndia: "", emergencyMobileIndia: "",
     nomineeName: "", nomineeRelation: "", nomineeMobile: "", notes: "",
+    photoDataUrl: "",
   });
 
   const [dependents, setDependents] = useState<Dependent[]>([]);
@@ -404,10 +533,10 @@ export default function FrfApplyPage() {
   // ── Success / Confirmation ──────────────────────────────────────────────────
   if (submitted) {
     const handleDownloadPdf = () => {
-      generateFrfPdf(submitted.formData, submitted.dependents, submitted.frfNumber, submitted.submittedAt);
+      void generateFrfPdf(submitted.formData, submitted.dependents, submitted.frfNumber, submitted.submittedAt);
     };
     const handlePrint = () => {
-      generateFrfPdf(submitted.formData, submitted.dependents, submitted.frfNumber, submitted.submittedAt);
+      void generateFrfPdf(submitted.formData, submitted.dependents, submitted.frfNumber, submitted.submittedAt);
     };
 
     return (
@@ -590,6 +719,42 @@ export default function FrfApplyPage() {
                 <FieldRow label="Company / Employer" id="company">
                   <Input id="company" value={form.companyName} onChange={(e) => set("companyName", e.target.value)} className={inputClass()} placeholder="Company name" />
                 </FieldRow>
+
+                {/* Passport Photo Upload */}
+                <div className="sm:col-span-2 pt-2">
+                  <p className="text-sm font-medium text-green-900 dark:text-green-300 mb-2">Passport-size Photo (optional)</p>
+                  <div className="flex items-start gap-4">
+                    <div className="border-2 border-dashed border-green-300 dark:border-green-800 rounded-lg overflow-hidden flex-shrink-0"
+                         style={{ width: 90, height: 112, background: "#fffbe6" }}>
+                      {form.photoDataUrl
+                        ? <img src={form.photoDataUrl} alt="Passport photo" className="w-full h-full object-cover" />
+                        : <div className="w-full h-full flex flex-col items-center justify-center text-xs text-slate-400 gap-1 p-2 text-center">
+                            <span>Affix Passport</span>
+                            <span>Size Photo</span>
+                          </div>
+                      }
+                    </div>
+                    <div className="space-y-2">
+                      <label htmlFor="photoUpload"
+                        className="cursor-pointer inline-flex items-center gap-2 text-sm text-green-800 dark:text-green-300 border border-green-300 dark:border-green-700 rounded-lg px-3 py-2 hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors">
+                        <span>Choose photo…</span>
+                      </label>
+                      <input id="photoUpload" type="file" accept="image/*" className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const reader = new FileReader();
+                          reader.onloadend = () => set("photoDataUrl", reader.result as string);
+                          reader.readAsDataURL(file);
+                        }} />
+                      {form.photoDataUrl && (
+                        <button type="button" onClick={() => set("photoDataUrl", "")}
+                          className="text-xs text-red-500 hover:text-red-700 block">Remove photo</button>
+                      )}
+                      <p className="text-xs text-slate-400">Will appear in the downloaded PDF form.</p>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           )}
@@ -612,6 +777,15 @@ export default function FrfApplyPage() {
                   {showValidation && stepErrors.mobileSaudi && (
                     <p className="text-xs text-red-500 dark:text-red-400 mt-1">{stepErrors.mobileSaudi}</p>
                   )}
+                </FieldRow>
+                <FieldRow label="Is the family living in Saudi?" id="famSaudi">
+                  <Select value={form.familyInSaudi} onValueChange={(v) => set("familyInSaudi", v)}>
+                    <SelectTrigger className={inputClass()}><SelectValue placeholder="Select" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Yes">Yes</SelectItem>
+                      <SelectItem value="No">No</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </FieldRow>
                 <FieldRow label="Email" id="email">
                   <Input id="email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} className={inputClass()} placeholder="email@example.com" />
