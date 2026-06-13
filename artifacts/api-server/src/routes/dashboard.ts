@@ -510,15 +510,15 @@ router.get("/dashboard/cash-flow", async (req, res): Promise<void> => {
   const quarterStart = new Date(Date.UTC(now.getUTCFullYear(), Math.floor(now.getUTCMonth() / 3) * 3, 1));
   const quarterEnd = new Date(Date.UTC(now.getUTCFullYear(), Math.floor(now.getUTCMonth() / 3) * 3 + 3, 0));
   const eventsThisQuarter = eventsAll.filter((e) => {
-    const d = new Date(e.startDate);
-    return d >= quarterStart && d <= quarterEnd;
+    const d = e.eventDate ? new Date(e.eventDate) : null;
+    return d && d >= quarterStart && d <= quarterEnd;
   }).length;
 
   const upcomingEvents = eventsAll
-    .filter((e) => new Date(e.startDate) > now)
-    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+    .filter((e) => e.eventDate && new Date(e.eventDate) > now)
+    .sort((a, b) => new Date(a.eventDate!).getTime() - new Date(b.eventDate!).getTime())
     .slice(0, 5)
-    .map((e) => ({ id: e.id, title: e.title, startDate: e.startDate.toISOString(), location: e.location }));
+    .map((e) => ({ id: e.id, title: e.name, startDate: e.eventDate ? new Date(e.eventDate).toISOString() : null, location: e.location }));
 
   res.json({
     totalCollected,
