@@ -23,11 +23,57 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Phone, MapPin, User, Briefcase, Users, Printer, Download, Trash2, Edit, Plus, X } from "lucide-react";
+import { ArrowLeft, Phone, MapPin, User, Briefcase, Users, Printer, Download, Trash2, Edit, Plus, X, MessageCircle } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { generateFrfPdf } from "@/lib/frf-pdf";
+
+function formatWhatsAppNumber(mobile: string) {
+  return mobile.replace(/[^0-9]/g, "");
+}
+
+function openWhatsApp(mobile: string, message: string) {
+  const num = formatWhatsAppNumber(mobile);
+  if (!num) return;
+  window.open(`https://wa.me/${num}?text=${encodeURIComponent(message)}`, "_blank");
+}
+
+function buildApprovalMessage(fullName: string, frfNumber: string) {
+  return `Assalamu Alaikum ${fullName},
+
+We are pleased to inform you that your FRF (Family Relief Fund) application *No. ${frfNumber}* with DKMO has been *APPROVED* ✅.
+
+Welcome to the DKMO Family Relief Fund!
+
+For any queries, please contact the DKMO General Secretary.
+
+Jazakallah Khair,
+*DKMO – Dakshina Karnataka Muslim Ookota*`;
+}
+
+function buildDeclineMessage(fullName: string, frfNumber: string, reason: string) {
+  return `Assalamu Alaikum ${fullName},
+
+We regret to inform you that your FRF (Family Relief Fund) application *No. ${frfNumber}* with DKMO has been *DECLINED* ❌.
+
+*Reason:* ${reason}
+
+If you have any queries or wish to reapply, please contact the DKMO General Secretary.
+
+Jazakallah Khair,
+*DKMO – Dakshina Karnataka Muslim Ookota*`;
+}
 
 const STATUS_OPTIONS = [
   { value: "submitted", label: "Submitted", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" },
@@ -78,14 +124,43 @@ export default function FrfMembershipDetailPage() {
   const [newDepRelation, setNewDepRelation] = useState("");
   const [newDepAge, setNewDepAge] = useState("");
   const [addingDep, setAddingDep] = useState(false);
+  const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
+  const [declineReason, setDeclineReason] = useState("");
+  const [sendingDecline, setSendingDecline] = useState(false);
 
   const statusInfo = STATUS_OPTIONS.find((s) => s.value === membership?.status) ?? STATUS_OPTIONS[0];
 
+  const primaryMobile = membership?.mobileSaudi || membership?.mobileIndia || "";
+
   async function handleStatusChange(newStatus: string) {
     if (!membership) return;
+    if (newStatus === "rejected") {
+      setDeclineReason("");
+      setDeclineDialogOpen(true);
+      return;
+    }
     await updateMembership({ id, data: { status: newStatus, fullName: membership.fullName } });
     toast({ title: "Status updated" });
     void refetch();
+    if (newStatus === "approved" && primaryMobile) {
+      openWhatsApp(primaryMobile, buildApprovalMessage(membership.fullName, membership.frfNumber));
+    }
+  }
+
+  async function handleConfirmDecline() {
+    if (!membership) return;
+    setSendingDecline(true);
+    try {
+      await updateMembership({ id, data: { status: "rejected", declineReason: declineReason.trim(), fullName: membership.fullName } });
+      toast({ title: "Application declined", description: "Status updated to Rejected." });
+      void refetch();
+      setDeclineDialogOpen(false);
+      if (primaryMobile) {
+        openWhatsApp(primaryMobile, buildDeclineMessage(membership.fullName, membership.frfNumber, declineReason.trim() || "No specific reason provided."));
+      }
+    } finally {
+      setSendingDecline(false);
+    }
   }
 
   async function handleDelete() {
@@ -339,6 +414,52 @@ export default function FrfMembershipDetailPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={declineDialogOpen} onOpenChange={setDeclineDialogOpen}>
+        <DialogContent className="sm:max-w-md dark:bg-slate-900 dark:border-slate-700">
+          <DialogHeader>
+            <DialogTitle className="text-red-700 dark:text-red-400">Decline Application</DialogTitle>
+            <DialogDescription>
+              Provide a reason for declining <strong>{membership.fullName}</strong>'s application. This reason will be sent to the applicant via WhatsApp.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Label htmlFor="decline-reason" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              Reason for declining <span className="text-red-500">*</span>
+            </Label>
+            <Textarea
+              id="decline-reason"
+              placeholder="e.g. Incomplete documentation, duplicate application, eligibility criteria not met…"
+              value={declineReason}
+              onChange={(e) => setDeclineReason(e.target.value)}
+              rows={4}
+              className="border-red-200 dark:border-slate-700 dark:bg-slate-800/60 resize-none"
+            />
+            {primaryMobile ? (
+              <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                <MessageCircle className="h-3.5 w-3.5 text-green-600" />
+                WhatsApp will open pre-filled to <span className="font-mono font-medium">{primaryMobile}</span>
+              </p>
+            ) : (
+              <p className="text-xs text-amber-600 dark:text-amber-400">
+                No mobile number on record — WhatsApp notification will be skipped.
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeclineDialogOpen(false)} className="dark:border-slate-700">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmDecline}
+              disabled={!declineReason.trim() || sendingDecline}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {sendingDecline ? "Declining…" : "Decline & Notify via WhatsApp"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "wouter";
 import {
-  CheckCircle, Users, Loader2, ShieldCheck, ChevronRight, ChevronLeft,
-  Plus, Trash2, Download, Printer, ExternalLink,
+  CheckCircle, XCircle, Clock, Users, Loader2, ShieldCheck, ChevronRight, ChevronLeft,
+  Plus, Trash2, Download, Printer, ExternalLink, RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -80,6 +80,80 @@ function inputClass(extra = "") {
   return `border-green-200 dark:border-slate-700 focus-visible:border-green-700 dark:bg-slate-800/60 dark:text-slate-100 dark:placeholder:text-slate-500 ${extra}`;
 }
 
+// ─── Status helpers (applicant-facing) ────────────────────────────────────────
+type AppStatus = "submitted" | "under_review" | "approved" | "rejected" | "completed";
+
+function StatusIcon({ status }: { status: AppStatus }) {
+  if (status === "approved" || status === "completed") {
+    return (
+      <div className="h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center">
+        <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
+      </div>
+    );
+  }
+  if (status === "rejected") {
+    return (
+      <div className="h-16 w-16 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center">
+        <XCircle className="h-8 w-8 text-red-500 dark:text-red-400" />
+      </div>
+    );
+  }
+  return (
+    <div className="h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center">
+      <Clock className="h-8 w-8 text-amber-500 dark:text-amber-400" />
+    </div>
+  );
+}
+
+function StatusBadge({ status, checkingStatus, onRefresh }: { status: AppStatus; checkingStatus: boolean; onRefresh: () => void }) {
+  const map: Record<AppStatus, { label: string; color: string; dot: string }> = {
+    submitted:    { label: "Pending Approval", color: "text-amber-700 dark:text-amber-400",    dot: "bg-amber-500" },
+    under_review: { label: "Under Review",     color: "text-yellow-700 dark:text-yellow-400",  dot: "bg-yellow-500" },
+    approved:     { label: "Approved ✓",        color: "text-green-700 dark:text-green-400",   dot: "bg-green-500" },
+    completed:    { label: "Completed ✓",       color: "text-green-700 dark:text-green-400",   dot: "bg-green-500" },
+    rejected:     { label: "Declined",          color: "text-red-600 dark:text-red-400",       dot: "bg-red-500" },
+  };
+  const info = map[status] ?? map.submitted;
+  return (
+    <span className="flex items-center gap-1.5">
+      <span className={`inline-flex items-center gap-1 font-medium ${info.color}`}>
+        <span className={`h-1.5 w-1.5 rounded-full ${info.dot} inline-block`} />
+        {info.label}
+      </span>
+      <button
+        onClick={onRefresh}
+        disabled={checkingStatus}
+        title="Refresh status"
+        className="ml-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 disabled:opacity-40"
+      >
+        <RefreshCw className={`h-3.5 w-3.5 ${checkingStatus ? "animate-spin" : ""}`} />
+      </button>
+    </span>
+  );
+}
+
+function StatusMessage({ status }: { status: AppStatus }) {
+  if (status === "approved" || status === "completed") {
+    return (
+      <p className="text-sm text-green-700 dark:text-green-400 font-medium text-center">
+        🎉 Congratulations! Your FRF application has been approved. You will be contacted by DKMO shortly.
+      </p>
+    );
+  }
+  if (status === "rejected") {
+    return (
+      <p className="text-sm text-red-600 dark:text-red-400 text-center">
+        Your application was not approved at this time. Please contact the DKMO General Secretary for more information.
+      </p>
+    );
+  }
+  return (
+    <p className="text-sm text-slate-600 dark:text-slate-400 text-center">
+      Your application is under review. You will be contacted at your provided mobile number once processed.
+    </p>
+  );
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 export default function FrfApplyPage() {
   const [, setLocation] = useLocation();
@@ -94,6 +168,25 @@ export default function FrfApplyPage() {
     dependents: Dependent[];
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [appStatus, setAppStatus] = useState<AppStatus>("submitted");
+  const [checkingStatus, setCheckingStatus] = useState(false);
+  const [declineReason, setDeclineReason] = useState<string | null>(null);
+
+  async function handleCheckStatus() {
+    if (!submitted) return;
+    setCheckingStatus(true);
+    try {
+      const res = await fetch(`${basePath}/api/frf/memberships/track?frfNumber=${encodeURIComponent(submitted.frfNumber)}`);
+      if (res.ok) {
+        const list = await res.json() as Array<{ status?: string; declineReason?: string | null }>;
+        const data = Array.isArray(list) ? list[0] : (list as any);
+        if (data?.status) setAppStatus(data.status as AppStatus);
+        setDeclineReason(data?.declineReason ?? null);
+      }
+    } catch { /* silently ignore */ } finally {
+      setCheckingStatus(false);
+    }
+  }
 
   const [form, setForm] = useState<FormData>({
     fullName: "", dateOfBirth: "", bloodGroup: "", maritalStatus: "",
@@ -193,9 +286,7 @@ export default function FrfApplyPage() {
         <div className="absolute top-4 right-4 z-20"><ThemeToggle /></div>
         <Card className="w-full max-w-lg rounded-2xl border-green-200 dark:border-green-900/50 shadow-xl dark:bg-slate-900">
           <CardContent className="pt-10 pb-8 flex flex-col items-center text-center gap-5">
-            <div className="h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center">
-              <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
-            </div>
+            <StatusIcon status={appStatus} />
 
             <div>
               <h2 className="text-2xl font-bold text-green-900 dark:text-green-100">Application Submitted!</h2>
@@ -210,7 +301,7 @@ export default function FrfApplyPage() {
             </div>
 
             {/* Details */}
-            <div className="w-full text-left space-y-1 text-sm">
+            <div className="w-full text-left space-y-2 text-sm">
               <div className="flex justify-between text-slate-600 dark:text-slate-400">
                 <span>Applicant</span>
                 <span className="font-medium text-slate-800 dark:text-slate-200">{submitted.fullName}</span>
@@ -219,18 +310,19 @@ export default function FrfApplyPage() {
                 <span>Submission Date</span>
                 <span className="font-medium text-slate-800 dark:text-slate-200">{submitted.submittedAt}</span>
               </div>
-              <div className="flex justify-between text-slate-600 dark:text-slate-400">
+              <div className="flex justify-between items-start text-slate-600 dark:text-slate-400">
                 <span>Status</span>
-                <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-400 font-medium">
-                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500 inline-block" />
-                  Pending Approval
-                </span>
+                <StatusBadge status={appStatus} checkingStatus={checkingStatus} onRefresh={handleCheckStatus} />
               </div>
+              {appStatus === "rejected" && declineReason && (
+                <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-lg p-3 text-left">
+                  <p className="text-xs font-semibold text-red-700 dark:text-red-400 mb-1">Reason for declining:</p>
+                  <p className="text-xs text-red-600 dark:text-red-300">{declineReason}</p>
+                </div>
+              )}
             </div>
 
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              Your application is under review. You will be contacted at your provided mobile number once processed.
-            </p>
+            <StatusMessage status={appStatus} />
 
             {/* PDF Buttons */}
             <div className="flex flex-col gap-2 w-full">

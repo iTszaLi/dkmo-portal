@@ -1912,6 +1912,7 @@ components:
         nomineeRelation: { type: string }
         nomineeMobile: { type: string }
         status: { type: string }
+        declineReason: { type: ["string", "null"] }
         photoUrl: { type: ["string", "null"] }
         notes: { type: string }
         membershipDate: { type: ["string", "null"] }
@@ -1963,6 +1964,7 @@ components:
         nomineeRelation: { type: string }
         nomineeMobile: { type: string }
         status: { type: string }
+        declineReason: { type: ["string", "null"] }
         photoUrl: { type: ["string", "null"] }
         notes: { type: string }
         dependents:
@@ -1987,6 +1989,7 @@ components:
         frfNumber: { type: string }
         fullName: { type: string }
         status: { type: string }
+        declineReason: { type: ["string", "null"] }
         membershipDate: { type: ["string", "null"] }
         createdAt: { type: string, format: date-time }
       required: [frfNumber, fullName, status, createdAt]

@@ -643,6 +643,8 @@ export interface FrfMembership {
   nomineeMobile?: string;
   status: string;
   /** @nullable */
+  declineReason?: string | null;
+  /** @nullable */
   photoUrl?: string | null;
   notes?: string;
   /** @nullable */
@@ -691,6 +693,8 @@ export interface FrfMembershipInput {
   nomineeMobile?: string;
   status?: string;
   /** @nullable */
+  declineReason?: string | null;
+  /** @nullable */
   photoUrl?: string | null;
   notes?: string;
   dependents?: FrfDependentInput[];
@@ -708,6 +712,8 @@ export interface FrfMembershipTrack {
   frfNumber: string;
   fullName: string;
   status: string;
+  /** @nullable */
+  declineReason?: string | null;
   /** @nullable */
   membershipDate?: string | null;
   createdAt: string;

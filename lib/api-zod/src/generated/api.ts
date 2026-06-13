@@ -1047,6 +1047,7 @@ export const ListFrfMembershipsResponseItem = zod.object({
   nomineeRelation: zod.string().optional(),
   nomineeMobile: zod.string().optional(),
   status: zod.string(),
+  declineReason: zod.string().nullish(),
   photoUrl: zod.string().nullish(),
   notes: zod.string().optional(),
   membershipDate: zod.string().nullish(),
@@ -1092,6 +1093,7 @@ export const CreateFrfMembershipBody = zod.object({
   nomineeRelation: zod.string().optional(),
   nomineeMobile: zod.string().optional(),
   status: zod.string().optional(),
+  declineReason: zod.string().nullish(),
   photoUrl: zod.string().nullish(),
   notes: zod.string().optional(),
   dependents: zod
@@ -1139,6 +1141,7 @@ export const ApplyFrfMembershipBody = zod.object({
   nomineeRelation: zod.string().optional(),
   nomineeMobile: zod.string().optional(),
   status: zod.string().optional(),
+  declineReason: zod.string().nullish(),
   photoUrl: zod.string().nullish(),
   notes: zod.string().optional(),
   dependents: zod
@@ -1164,6 +1167,7 @@ export const TrackFrfMembershipResponseItem = zod.object({
   frfNumber: zod.string(),
   fullName: zod.string(),
   status: zod.string(),
+  declineReason: zod.string().nullish(),
   membershipDate: zod.string().nullish(),
   createdAt: zod.coerce.date(),
 });
@@ -1222,6 +1226,7 @@ export const GetFrfMembershipResponse = zod
     nomineeRelation: zod.string().optional(),
     nomineeMobile: zod.string().optional(),
     status: zod.string(),
+    declineReason: zod.string().nullish(),
     photoUrl: zod.string().nullish(),
     notes: zod.string().optional(),
     membershipDate: zod.string().nullish(),
@@ -1280,6 +1285,7 @@ export const UpdateFrfMembershipBody = zod.object({
   nomineeRelation: zod.string().optional(),
   nomineeMobile: zod.string().optional(),
   status: zod.string().optional(),
+  declineReason: zod.string().nullish(),
   photoUrl: zod.string().nullish(),
   notes: zod.string().optional(),
   dependents: zod
@@ -1325,6 +1331,7 @@ export const UpdateFrfMembershipResponse = zod.object({
   nomineeRelation: zod.string().optional(),
   nomineeMobile: zod.string().optional(),
   status: zod.string(),
+  declineReason: zod.string().nullish(),
   photoUrl: zod.string().nullish(),
   notes: zod.string().optional(),
   membershipDate: zod.string().nullish(),

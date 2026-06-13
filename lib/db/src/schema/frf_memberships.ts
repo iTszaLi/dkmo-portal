@@ -33,6 +33,7 @@ export const frfMembershipsTable = pgTable("frf_memberships", {
   nomineeRelation: text("nominee_relation").notNull().default(""),
   nomineeMobile: text("nominee_mobile").notNull().default(""),
   status: text("status").notNull().default("submitted"),
+  declineReason: text("decline_reason"),
   photoUrl: text("photo_url"),
   notes: text("notes").notNull().default(""),
   membershipDate: date("membership_date").notNull().default("2024-01-01"),
