@@ -342,6 +342,172 @@ export interface EventList {
   total: number;
 }
 
+export type EventSponsorSponsorshipType =
+  (typeof EventSponsorSponsorshipType)[keyof typeof EventSponsorSponsorshipType];
+
+export const EventSponsorSponsorshipType = {
+  cash: "cash",
+  "in-kind": "in-kind",
+} as const;
+
+export interface EventSponsor {
+  id: string;
+  eventId: string;
+  sponsorName: string;
+  contactPerson?: string;
+  phone?: string;
+  email?: string;
+  amount: number;
+  sponsorshipType: EventSponsorSponsorshipType;
+  sponsorshipDate?: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export type EventSponsorInputSponsorshipType =
+  (typeof EventSponsorInputSponsorshipType)[keyof typeof EventSponsorInputSponsorshipType];
+
+export const EventSponsorInputSponsorshipType = {
+  cash: "cash",
+  "in-kind": "in-kind",
+} as const;
+
+export interface EventSponsorInput {
+  /** @minLength 1 */
+  sponsorName: string;
+  contactPerson?: string;
+  phone?: string;
+  email?: string;
+  /** @minimum 0 */
+  amount?: number;
+  sponsorshipType?: EventSponsorInputSponsorshipType;
+  sponsorshipDate?: string;
+  notes?: string;
+}
+
+export interface EventExpense {
+  id: string;
+  eventId: string;
+  category: string;
+  description?: string;
+  vendor?: string;
+  amount: number;
+  expenseDate?: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface EventExpenseInput {
+  /** @minLength 1 */
+  category: string;
+  description?: string;
+  vendor?: string;
+  /** @minimum 0 */
+  amount?: number;
+  expenseDate?: string;
+  notes?: string;
+}
+
+export type EventTicketBookletStatus =
+  (typeof EventTicketBookletStatus)[keyof typeof EventTicketBookletStatus];
+
+export const EventTicketBookletStatus = {
+  available: "available",
+  assigned: "assigned",
+  sold: "sold",
+  completed: "completed",
+} as const;
+
+export interface EventTicketBooklet {
+  id: string;
+  eventId: string;
+  bookletNumber: string;
+  ticketRangeStart: number;
+  ticketRangeEnd: number;
+  assignedTo?: string;
+  assignedDate?: string;
+  status: EventTicketBookletStatus;
+  createdAt: string;
+}
+
+export type EventBookletInputStatus =
+  (typeof EventBookletInputStatus)[keyof typeof EventBookletInputStatus];
+
+export const EventBookletInputStatus = {
+  available: "available",
+  assigned: "assigned",
+  sold: "sold",
+  completed: "completed",
+} as const;
+
+export interface EventBookletInput {
+  /** @minLength 1 */
+  bookletNumber: string;
+  /** @minimum 1 */
+  ticketRangeStart: number;
+  /** @minimum 1 */
+  ticketRangeEnd: number;
+  assignedTo?: string;
+  assignedDate?: string;
+  status?: EventBookletInputStatus;
+  /** @minimum 0 */
+  ticketAmount?: number;
+}
+
+export interface EventTicket {
+  id: string;
+  bookletId: string;
+  eventId: string;
+  ticketNumber: number;
+  isSold: boolean;
+  soldBy?: string;
+  buyerName?: string;
+  buyerPhone?: string;
+  saleDate?: string;
+  amount: number;
+  createdAt: string;
+}
+
+export interface EventTicketUpdate {
+  isSold?: boolean;
+  soldBy?: string;
+  buyerName?: string;
+  buyerPhone?: string;
+  saleDate?: string;
+  /** @minimum 0 */
+  amount?: number;
+}
+
+export type EventFinancialSummarySponsors = {
+  total: number;
+  count: number;
+};
+
+export type EventFinancialSummaryExpenses = {
+  total: number;
+  count: number;
+};
+
+export type EventFinancialSummaryTickets = {
+  total: number;
+  sold: number;
+  unsold: number;
+  revenue: number;
+};
+
+export type EventFinancialSummarySummary = {
+  totalIncome: number;
+  totalExpenses: number;
+  netBalance: number;
+};
+
+export interface EventFinancialSummary {
+  sponsors: EventFinancialSummarySponsors;
+  expenses: EventFinancialSummaryExpenses;
+  tickets: EventFinancialSummaryTickets;
+  summary: EventFinancialSummarySummary;
+}
+
 export type FinancialSummaryMembers = {
   collectedAllTime: number;
   collectedThisMonth: number;

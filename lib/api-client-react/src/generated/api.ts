@@ -22,8 +22,17 @@ import type {
   DashboardCashFlow,
   DashboardSummary,
   Event,
+  EventBookletInput,
+  EventExpense,
+  EventExpenseInput,
+  EventFinancialSummary,
   EventInput,
   EventList,
+  EventSponsor,
+  EventSponsorInput,
+  EventTicket,
+  EventTicketBooklet,
+  EventTicketUpdate,
   FinancialSummary,
   FrfClaim,
   FrfClaimInput,
@@ -1964,6 +1973,1204 @@ export const useDeleteEvent = <
 > => {
   return useMutation(getDeleteEventMutationOptions(options));
 };
+
+/**
+ * @summary List sponsors for an event
+ */
+export const getListEventSponsorsUrl = (eventId: string) => {
+  return `/api/events/${eventId}/sponsors`;
+};
+
+export const listEventSponsors = async (
+  eventId: string,
+  options?: RequestInit,
+): Promise<EventSponsor[]> => {
+  return customFetch<EventSponsor[]>(getListEventSponsorsUrl(eventId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListEventSponsorsQueryKey = (eventId: string) => {
+  return [`/api/events/${eventId}/sponsors`] as const;
+};
+
+export const getListEventSponsorsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listEventSponsors>>,
+  TError = ErrorType<unknown>,
+>(
+  eventId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listEventSponsors>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListEventSponsorsQueryKey(eventId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listEventSponsors>>
+  > = ({ signal }) => listEventSponsors(eventId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!eventId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listEventSponsors>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListEventSponsorsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listEventSponsors>>
+>;
+export type ListEventSponsorsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List sponsors for an event
+ */
+
+export function useListEventSponsors<
+  TData = Awaited<ReturnType<typeof listEventSponsors>>,
+  TError = ErrorType<unknown>,
+>(
+  eventId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listEventSponsors>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListEventSponsorsQueryOptions(eventId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Add a sponsor to an event
+ */
+export const getCreateEventSponsorUrl = (eventId: string) => {
+  return `/api/events/${eventId}/sponsors`;
+};
+
+export const createEventSponsor = async (
+  eventId: string,
+  eventSponsorInput: EventSponsorInput,
+  options?: RequestInit,
+): Promise<EventSponsor> => {
+  return customFetch<EventSponsor>(getCreateEventSponsorUrl(eventId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(eventSponsorInput),
+  });
+};
+
+export const getCreateEventSponsorMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createEventSponsor>>,
+    TError,
+    { eventId: string; data: BodyType<EventSponsorInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createEventSponsor>>,
+  TError,
+  { eventId: string; data: BodyType<EventSponsorInput> },
+  TContext
+> => {
+  const mutationKey = ["createEventSponsor"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createEventSponsor>>,
+    { eventId: string; data: BodyType<EventSponsorInput> }
+  > = (props) => {
+    const { eventId, data } = props ?? {};
+
+    return createEventSponsor(eventId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateEventSponsorMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createEventSponsor>>
+>;
+export type CreateEventSponsorMutationBody = BodyType<EventSponsorInput>;
+export type CreateEventSponsorMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Add a sponsor to an event
+ */
+export const useCreateEventSponsor = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createEventSponsor>>,
+    TError,
+    { eventId: string; data: BodyType<EventSponsorInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createEventSponsor>>,
+  TError,
+  { eventId: string; data: BodyType<EventSponsorInput> },
+  TContext
+> => {
+  return useMutation(getCreateEventSponsorMutationOptions(options));
+};
+
+/**
+ * @summary Remove a sponsor from an event
+ */
+export const getDeleteEventSponsorUrl = (eventId: string, id: string) => {
+  return `/api/events/${eventId}/sponsors/${id}`;
+};
+
+export const deleteEventSponsor = async (
+  eventId: string,
+  id: string,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteEventSponsorUrl(eventId, id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteEventSponsorMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteEventSponsor>>,
+    TError,
+    { eventId: string; id: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteEventSponsor>>,
+  TError,
+  { eventId: string; id: string },
+  TContext
+> => {
+  const mutationKey = ["deleteEventSponsor"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteEventSponsor>>,
+    { eventId: string; id: string }
+  > = (props) => {
+    const { eventId, id } = props ?? {};
+
+    return deleteEventSponsor(eventId, id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteEventSponsorMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteEventSponsor>>
+>;
+
+export type DeleteEventSponsorMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Remove a sponsor from an event
+ */
+export const useDeleteEventSponsor = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteEventSponsor>>,
+    TError,
+    { eventId: string; id: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteEventSponsor>>,
+  TError,
+  { eventId: string; id: string },
+  TContext
+> => {
+  return useMutation(getDeleteEventSponsorMutationOptions(options));
+};
+
+/**
+ * @summary List expenses for an event
+ */
+export const getListEventExpensesUrl = (eventId: string) => {
+  return `/api/events/${eventId}/expenses`;
+};
+
+export const listEventExpenses = async (
+  eventId: string,
+  options?: RequestInit,
+): Promise<EventExpense[]> => {
+  return customFetch<EventExpense[]>(getListEventExpensesUrl(eventId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListEventExpensesQueryKey = (eventId: string) => {
+  return [`/api/events/${eventId}/expenses`] as const;
+};
+
+export const getListEventExpensesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listEventExpenses>>,
+  TError = ErrorType<unknown>,
+>(
+  eventId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listEventExpenses>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListEventExpensesQueryKey(eventId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listEventExpenses>>
+  > = ({ signal }) => listEventExpenses(eventId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!eventId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listEventExpenses>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListEventExpensesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listEventExpenses>>
+>;
+export type ListEventExpensesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List expenses for an event
+ */
+
+export function useListEventExpenses<
+  TData = Awaited<ReturnType<typeof listEventExpenses>>,
+  TError = ErrorType<unknown>,
+>(
+  eventId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listEventExpenses>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListEventExpensesQueryOptions(eventId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Add an expense to an event
+ */
+export const getCreateEventExpenseUrl = (eventId: string) => {
+  return `/api/events/${eventId}/expenses`;
+};
+
+export const createEventExpense = async (
+  eventId: string,
+  eventExpenseInput: EventExpenseInput,
+  options?: RequestInit,
+): Promise<EventExpense> => {
+  return customFetch<EventExpense>(getCreateEventExpenseUrl(eventId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(eventExpenseInput),
+  });
+};
+
+export const getCreateEventExpenseMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createEventExpense>>,
+    TError,
+    { eventId: string; data: BodyType<EventExpenseInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createEventExpense>>,
+  TError,
+  { eventId: string; data: BodyType<EventExpenseInput> },
+  TContext
+> => {
+  const mutationKey = ["createEventExpense"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createEventExpense>>,
+    { eventId: string; data: BodyType<EventExpenseInput> }
+  > = (props) => {
+    const { eventId, data } = props ?? {};
+
+    return createEventExpense(eventId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateEventExpenseMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createEventExpense>>
+>;
+export type CreateEventExpenseMutationBody = BodyType<EventExpenseInput>;
+export type CreateEventExpenseMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Add an expense to an event
+ */
+export const useCreateEventExpense = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createEventExpense>>,
+    TError,
+    { eventId: string; data: BodyType<EventExpenseInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createEventExpense>>,
+  TError,
+  { eventId: string; data: BodyType<EventExpenseInput> },
+  TContext
+> => {
+  return useMutation(getCreateEventExpenseMutationOptions(options));
+};
+
+/**
+ * @summary Remove an expense from an event
+ */
+export const getDeleteEventExpenseUrl = (eventId: string, id: string) => {
+  return `/api/events/${eventId}/expenses/${id}`;
+};
+
+export const deleteEventExpense = async (
+  eventId: string,
+  id: string,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteEventExpenseUrl(eventId, id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteEventExpenseMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteEventExpense>>,
+    TError,
+    { eventId: string; id: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteEventExpense>>,
+  TError,
+  { eventId: string; id: string },
+  TContext
+> => {
+  const mutationKey = ["deleteEventExpense"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteEventExpense>>,
+    { eventId: string; id: string }
+  > = (props) => {
+    const { eventId, id } = props ?? {};
+
+    return deleteEventExpense(eventId, id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteEventExpenseMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteEventExpense>>
+>;
+
+export type DeleteEventExpenseMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Remove an expense from an event
+ */
+export const useDeleteEventExpense = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteEventExpense>>,
+    TError,
+    { eventId: string; id: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteEventExpense>>,
+  TError,
+  { eventId: string; id: string },
+  TContext
+> => {
+  return useMutation(getDeleteEventExpenseMutationOptions(options));
+};
+
+/**
+ * @summary List ticket booklets for an event
+ */
+export const getListEventBookletsUrl = (eventId: string) => {
+  return `/api/events/${eventId}/booklets`;
+};
+
+export const listEventBooklets = async (
+  eventId: string,
+  options?: RequestInit,
+): Promise<EventTicketBooklet[]> => {
+  return customFetch<EventTicketBooklet[]>(getListEventBookletsUrl(eventId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListEventBookletsQueryKey = (eventId: string) => {
+  return [`/api/events/${eventId}/booklets`] as const;
+};
+
+export const getListEventBookletsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listEventBooklets>>,
+  TError = ErrorType<unknown>,
+>(
+  eventId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listEventBooklets>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListEventBookletsQueryKey(eventId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listEventBooklets>>
+  > = ({ signal }) => listEventBooklets(eventId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!eventId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listEventBooklets>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListEventBookletsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listEventBooklets>>
+>;
+export type ListEventBookletsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List ticket booklets for an event
+ */
+
+export function useListEventBooklets<
+  TData = Awaited<ReturnType<typeof listEventBooklets>>,
+  TError = ErrorType<unknown>,
+>(
+  eventId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listEventBooklets>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListEventBookletsQueryOptions(eventId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a ticket booklet for an event
+ */
+export const getCreateEventBookletUrl = (eventId: string) => {
+  return `/api/events/${eventId}/booklets`;
+};
+
+export const createEventBooklet = async (
+  eventId: string,
+  eventBookletInput: EventBookletInput,
+  options?: RequestInit,
+): Promise<EventTicketBooklet> => {
+  return customFetch<EventTicketBooklet>(getCreateEventBookletUrl(eventId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(eventBookletInput),
+  });
+};
+
+export const getCreateEventBookletMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createEventBooklet>>,
+    TError,
+    { eventId: string; data: BodyType<EventBookletInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createEventBooklet>>,
+  TError,
+  { eventId: string; data: BodyType<EventBookletInput> },
+  TContext
+> => {
+  const mutationKey = ["createEventBooklet"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createEventBooklet>>,
+    { eventId: string; data: BodyType<EventBookletInput> }
+  > = (props) => {
+    const { eventId, data } = props ?? {};
+
+    return createEventBooklet(eventId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateEventBookletMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createEventBooklet>>
+>;
+export type CreateEventBookletMutationBody = BodyType<EventBookletInput>;
+export type CreateEventBookletMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create a ticket booklet for an event
+ */
+export const useCreateEventBooklet = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createEventBooklet>>,
+    TError,
+    { eventId: string; data: BodyType<EventBookletInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createEventBooklet>>,
+  TError,
+  { eventId: string; data: BodyType<EventBookletInput> },
+  TContext
+> => {
+  return useMutation(getCreateEventBookletMutationOptions(options));
+};
+
+/**
+ * @summary Update a ticket booklet
+ */
+export const getUpdateEventBookletUrl = (eventId: string, id: string) => {
+  return `/api/events/${eventId}/booklets/${id}`;
+};
+
+export const updateEventBooklet = async (
+  eventId: string,
+  id: string,
+  eventBookletInput: EventBookletInput,
+  options?: RequestInit,
+): Promise<EventTicketBooklet> => {
+  return customFetch<EventTicketBooklet>(
+    getUpdateEventBookletUrl(eventId, id),
+    {
+      ...options,
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(eventBookletInput),
+    },
+  );
+};
+
+export const getUpdateEventBookletMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateEventBooklet>>,
+    TError,
+    { eventId: string; id: string; data: BodyType<EventBookletInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateEventBooklet>>,
+  TError,
+  { eventId: string; id: string; data: BodyType<EventBookletInput> },
+  TContext
+> => {
+  const mutationKey = ["updateEventBooklet"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateEventBooklet>>,
+    { eventId: string; id: string; data: BodyType<EventBookletInput> }
+  > = (props) => {
+    const { eventId, id, data } = props ?? {};
+
+    return updateEventBooklet(eventId, id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateEventBookletMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateEventBooklet>>
+>;
+export type UpdateEventBookletMutationBody = BodyType<EventBookletInput>;
+export type UpdateEventBookletMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update a ticket booklet
+ */
+export const useUpdateEventBooklet = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateEventBooklet>>,
+    TError,
+    { eventId: string; id: string; data: BodyType<EventBookletInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateEventBooklet>>,
+  TError,
+  { eventId: string; id: string; data: BodyType<EventBookletInput> },
+  TContext
+> => {
+  return useMutation(getUpdateEventBookletMutationOptions(options));
+};
+
+/**
+ * @summary Delete a ticket booklet
+ */
+export const getDeleteEventBookletUrl = (eventId: string, id: string) => {
+  return `/api/events/${eventId}/booklets/${id}`;
+};
+
+export const deleteEventBooklet = async (
+  eventId: string,
+  id: string,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteEventBookletUrl(eventId, id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteEventBookletMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteEventBooklet>>,
+    TError,
+    { eventId: string; id: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteEventBooklet>>,
+  TError,
+  { eventId: string; id: string },
+  TContext
+> => {
+  const mutationKey = ["deleteEventBooklet"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteEventBooklet>>,
+    { eventId: string; id: string }
+  > = (props) => {
+    const { eventId, id } = props ?? {};
+
+    return deleteEventBooklet(eventId, id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteEventBookletMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteEventBooklet>>
+>;
+
+export type DeleteEventBookletMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a ticket booklet
+ */
+export const useDeleteEventBooklet = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteEventBooklet>>,
+    TError,
+    { eventId: string; id: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteEventBooklet>>,
+  TError,
+  { eventId: string; id: string },
+  TContext
+> => {
+  return useMutation(getDeleteEventBookletMutationOptions(options));
+};
+
+/**
+ * @summary List tickets in a booklet
+ */
+export const getListBookletTicketsUrl = (
+  eventId: string,
+  bookletId: string,
+) => {
+  return `/api/events/${eventId}/booklets/${bookletId}/tickets`;
+};
+
+export const listBookletTickets = async (
+  eventId: string,
+  bookletId: string,
+  options?: RequestInit,
+): Promise<EventTicket[]> => {
+  return customFetch<EventTicket[]>(
+    getListBookletTicketsUrl(eventId, bookletId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListBookletTicketsQueryKey = (
+  eventId: string,
+  bookletId: string,
+) => {
+  return [`/api/events/${eventId}/booklets/${bookletId}/tickets`] as const;
+};
+
+export const getListBookletTicketsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listBookletTickets>>,
+  TError = ErrorType<unknown>,
+>(
+  eventId: string,
+  bookletId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listBookletTickets>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListBookletTicketsQueryKey(eventId, bookletId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listBookletTickets>>
+  > = ({ signal }) =>
+    listBookletTickets(eventId, bookletId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!(eventId && bookletId),
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listBookletTickets>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListBookletTicketsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listBookletTickets>>
+>;
+export type ListBookletTicketsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List tickets in a booklet
+ */
+
+export function useListBookletTickets<
+  TData = Awaited<ReturnType<typeof listBookletTickets>>,
+  TError = ErrorType<unknown>,
+>(
+  eventId: string,
+  bookletId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listBookletTickets>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListBookletTicketsQueryOptions(
+    eventId,
+    bookletId,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update a ticket (mark sold/unsold, set buyer info)
+ */
+export const getUpdateEventTicketUrl = (
+  eventId: string,
+  bookletId: string,
+  ticketId: string,
+) => {
+  return `/api/events/${eventId}/booklets/${bookletId}/tickets/${ticketId}`;
+};
+
+export const updateEventTicket = async (
+  eventId: string,
+  bookletId: string,
+  ticketId: string,
+  eventTicketUpdate: EventTicketUpdate,
+  options?: RequestInit,
+): Promise<EventTicket> => {
+  return customFetch<EventTicket>(
+    getUpdateEventTicketUrl(eventId, bookletId, ticketId),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(eventTicketUpdate),
+    },
+  );
+};
+
+export const getUpdateEventTicketMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateEventTicket>>,
+    TError,
+    {
+      eventId: string;
+      bookletId: string;
+      ticketId: string;
+      data: BodyType<EventTicketUpdate>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateEventTicket>>,
+  TError,
+  {
+    eventId: string;
+    bookletId: string;
+    ticketId: string;
+    data: BodyType<EventTicketUpdate>;
+  },
+  TContext
+> => {
+  const mutationKey = ["updateEventTicket"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateEventTicket>>,
+    {
+      eventId: string;
+      bookletId: string;
+      ticketId: string;
+      data: BodyType<EventTicketUpdate>;
+    }
+  > = (props) => {
+    const { eventId, bookletId, ticketId, data } = props ?? {};
+
+    return updateEventTicket(
+      eventId,
+      bookletId,
+      ticketId,
+      data,
+      requestOptions,
+    );
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateEventTicketMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateEventTicket>>
+>;
+export type UpdateEventTicketMutationBody = BodyType<EventTicketUpdate>;
+export type UpdateEventTicketMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update a ticket (mark sold/unsold, set buyer info)
+ */
+export const useUpdateEventTicket = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateEventTicket>>,
+    TError,
+    {
+      eventId: string;
+      bookletId: string;
+      ticketId: string;
+      data: BodyType<EventTicketUpdate>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateEventTicket>>,
+  TError,
+  {
+    eventId: string;
+    bookletId: string;
+    ticketId: string;
+    data: BodyType<EventTicketUpdate>;
+  },
+  TContext
+> => {
+  return useMutation(getUpdateEventTicketMutationOptions(options));
+};
+
+/**
+ * @summary Get financial summary for an event
+ */
+export const getGetEventFinancialSummaryUrl = (eventId: string) => {
+  return `/api/events/${eventId}/financial-summary`;
+};
+
+export const getEventFinancialSummary = async (
+  eventId: string,
+  options?: RequestInit,
+): Promise<EventFinancialSummary> => {
+  return customFetch<EventFinancialSummary>(
+    getGetEventFinancialSummaryUrl(eventId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetEventFinancialSummaryQueryKey = (eventId: string) => {
+  return [`/api/events/${eventId}/financial-summary`] as const;
+};
+
+export const getGetEventFinancialSummaryQueryOptions = <
+  TData = Awaited<ReturnType<typeof getEventFinancialSummary>>,
+  TError = ErrorType<unknown>,
+>(
+  eventId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getEventFinancialSummary>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetEventFinancialSummaryQueryKey(eventId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getEventFinancialSummary>>
+  > = ({ signal }) =>
+    getEventFinancialSummary(eventId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!eventId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getEventFinancialSummary>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetEventFinancialSummaryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getEventFinancialSummary>>
+>;
+export type GetEventFinancialSummaryQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get financial summary for an event
+ */
+
+export function useGetEventFinancialSummary<
+  TData = Awaited<ReturnType<typeof getEventFinancialSummary>>,
+  TError = ErrorType<unknown>,
+>(
+  eventId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getEventFinancialSummary>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetEventFinancialSummaryQueryOptions(
+    eventId,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary List tasks

@@ -467,6 +467,281 @@ export const DeleteEventParams = zod.object({
 });
 
 /**
+ * @summary List sponsors for an event
+ */
+export const ListEventSponsorsParams = zod.object({
+  eventId: zod.coerce.string().uuid(),
+});
+
+export const ListEventSponsorsResponseItem = zod.object({
+  id: zod.string(),
+  eventId: zod.string(),
+  sponsorName: zod.string(),
+  contactPerson: zod.string().optional(),
+  phone: zod.string().optional(),
+  email: zod.string().optional(),
+  amount: zod.number(),
+  sponsorshipType: zod.enum(["cash", "in-kind"]),
+  sponsorshipDate: zod.string().optional(),
+  notes: zod.string().optional(),
+  createdAt: zod.coerce.date(),
+});
+export const ListEventSponsorsResponse = zod.array(
+  ListEventSponsorsResponseItem,
+);
+
+/**
+ * @summary Add a sponsor to an event
+ */
+export const CreateEventSponsorParams = zod.object({
+  eventId: zod.coerce.string().uuid(),
+});
+
+export const createEventSponsorBodyAmountMin = 0;
+
+export const CreateEventSponsorBody = zod.object({
+  sponsorName: zod.string().min(1),
+  contactPerson: zod.string().optional(),
+  phone: zod.string().optional(),
+  email: zod.string().optional(),
+  amount: zod.number().min(createEventSponsorBodyAmountMin).optional(),
+  sponsorshipType: zod.enum(["cash", "in-kind"]).optional(),
+  sponsorshipDate: zod.string().optional(),
+  notes: zod.string().optional(),
+});
+
+/**
+ * @summary Remove a sponsor from an event
+ */
+export const DeleteEventSponsorParams = zod.object({
+  eventId: zod.coerce.string().uuid(),
+  id: zod.coerce.string().uuid(),
+});
+
+/**
+ * @summary List expenses for an event
+ */
+export const ListEventExpensesParams = zod.object({
+  eventId: zod.coerce.string().uuid(),
+});
+
+export const ListEventExpensesResponseItem = zod.object({
+  id: zod.string(),
+  eventId: zod.string(),
+  category: zod.string(),
+  description: zod.string().optional(),
+  vendor: zod.string().optional(),
+  amount: zod.number(),
+  expenseDate: zod.string().optional(),
+  notes: zod.string().optional(),
+  createdAt: zod.coerce.date(),
+});
+export const ListEventExpensesResponse = zod.array(
+  ListEventExpensesResponseItem,
+);
+
+/**
+ * @summary Add an expense to an event
+ */
+export const CreateEventExpenseParams = zod.object({
+  eventId: zod.coerce.string().uuid(),
+});
+
+export const createEventExpenseBodyAmountMin = 0;
+
+export const CreateEventExpenseBody = zod.object({
+  category: zod.string().min(1),
+  description: zod.string().optional(),
+  vendor: zod.string().optional(),
+  amount: zod.number().min(createEventExpenseBodyAmountMin).optional(),
+  expenseDate: zod.string().optional(),
+  notes: zod.string().optional(),
+});
+
+/**
+ * @summary Remove an expense from an event
+ */
+export const DeleteEventExpenseParams = zod.object({
+  eventId: zod.coerce.string().uuid(),
+  id: zod.coerce.string().uuid(),
+});
+
+/**
+ * @summary List ticket booklets for an event
+ */
+export const ListEventBookletsParams = zod.object({
+  eventId: zod.coerce.string().uuid(),
+});
+
+export const ListEventBookletsResponseItem = zod.object({
+  id: zod.string(),
+  eventId: zod.string(),
+  bookletNumber: zod.string(),
+  ticketRangeStart: zod.number(),
+  ticketRangeEnd: zod.number(),
+  assignedTo: zod.string().optional(),
+  assignedDate: zod.string().optional(),
+  status: zod.enum(["available", "assigned", "sold", "completed"]),
+  createdAt: zod.coerce.date(),
+});
+export const ListEventBookletsResponse = zod.array(
+  ListEventBookletsResponseItem,
+);
+
+/**
+ * @summary Create a ticket booklet for an event
+ */
+export const CreateEventBookletParams = zod.object({
+  eventId: zod.coerce.string().uuid(),
+});
+
+export const createEventBookletBodyTicketAmountMin = 0;
+
+export const CreateEventBookletBody = zod.object({
+  bookletNumber: zod.string().min(1),
+  ticketRangeStart: zod.number().min(1),
+  ticketRangeEnd: zod.number().min(1),
+  assignedTo: zod.string().optional(),
+  assignedDate: zod.string().optional(),
+  status: zod.enum(["available", "assigned", "sold", "completed"]).optional(),
+  ticketAmount: zod
+    .number()
+    .min(createEventBookletBodyTicketAmountMin)
+    .optional(),
+});
+
+/**
+ * @summary Update a ticket booklet
+ */
+export const UpdateEventBookletParams = zod.object({
+  eventId: zod.coerce.string().uuid(),
+  id: zod.coerce.string().uuid(),
+});
+
+export const updateEventBookletBodyTicketAmountMin = 0;
+
+export const UpdateEventBookletBody = zod.object({
+  bookletNumber: zod.string().min(1),
+  ticketRangeStart: zod.number().min(1),
+  ticketRangeEnd: zod.number().min(1),
+  assignedTo: zod.string().optional(),
+  assignedDate: zod.string().optional(),
+  status: zod.enum(["available", "assigned", "sold", "completed"]).optional(),
+  ticketAmount: zod
+    .number()
+    .min(updateEventBookletBodyTicketAmountMin)
+    .optional(),
+});
+
+export const UpdateEventBookletResponse = zod.object({
+  id: zod.string(),
+  eventId: zod.string(),
+  bookletNumber: zod.string(),
+  ticketRangeStart: zod.number(),
+  ticketRangeEnd: zod.number(),
+  assignedTo: zod.string().optional(),
+  assignedDate: zod.string().optional(),
+  status: zod.enum(["available", "assigned", "sold", "completed"]),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Delete a ticket booklet
+ */
+export const DeleteEventBookletParams = zod.object({
+  eventId: zod.coerce.string().uuid(),
+  id: zod.coerce.string().uuid(),
+});
+
+/**
+ * @summary List tickets in a booklet
+ */
+export const ListBookletTicketsParams = zod.object({
+  eventId: zod.coerce.string().uuid(),
+  bookletId: zod.coerce.string().uuid(),
+});
+
+export const ListBookletTicketsResponseItem = zod.object({
+  id: zod.string(),
+  bookletId: zod.string(),
+  eventId: zod.string(),
+  ticketNumber: zod.number(),
+  isSold: zod.boolean(),
+  soldBy: zod.string().optional(),
+  buyerName: zod.string().optional(),
+  buyerPhone: zod.string().optional(),
+  saleDate: zod.string().optional(),
+  amount: zod.number(),
+  createdAt: zod.coerce.date(),
+});
+export const ListBookletTicketsResponse = zod.array(
+  ListBookletTicketsResponseItem,
+);
+
+/**
+ * @summary Update a ticket (mark sold/unsold, set buyer info)
+ */
+export const UpdateEventTicketParams = zod.object({
+  eventId: zod.coerce.string().uuid(),
+  bookletId: zod.coerce.string().uuid(),
+  ticketId: zod.coerce.string().uuid(),
+});
+
+export const updateEventTicketBodyAmountMin = 0;
+
+export const UpdateEventTicketBody = zod.object({
+  isSold: zod.boolean().optional(),
+  soldBy: zod.string().optional(),
+  buyerName: zod.string().optional(),
+  buyerPhone: zod.string().optional(),
+  saleDate: zod.string().optional(),
+  amount: zod.number().min(updateEventTicketBodyAmountMin).optional(),
+});
+
+export const UpdateEventTicketResponse = zod.object({
+  id: zod.string(),
+  bookletId: zod.string(),
+  eventId: zod.string(),
+  ticketNumber: zod.number(),
+  isSold: zod.boolean(),
+  soldBy: zod.string().optional(),
+  buyerName: zod.string().optional(),
+  buyerPhone: zod.string().optional(),
+  saleDate: zod.string().optional(),
+  amount: zod.number(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Get financial summary for an event
+ */
+export const GetEventFinancialSummaryParams = zod.object({
+  eventId: zod.coerce.string().uuid(),
+});
+
+export const GetEventFinancialSummaryResponse = zod.object({
+  sponsors: zod.object({
+    total: zod.number(),
+    count: zod.number(),
+  }),
+  expenses: zod.object({
+    total: zod.number(),
+    count: zod.number(),
+  }),
+  tickets: zod.object({
+    total: zod.number(),
+    sold: zod.number(),
+    unsold: zod.number(),
+    revenue: zod.number(),
+  }),
+  summary: zod.object({
+    totalIncome: zod.number(),
+    totalExpenses: zod.number(),
+    netBalance: zod.number(),
+  }),
+});
+
+/**
  * @summary List tasks
  */
 

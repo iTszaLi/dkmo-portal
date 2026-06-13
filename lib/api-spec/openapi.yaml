@@ -446,6 +446,271 @@ paths:
         "204":
           description: Deleted
 
+  /events/{eventId}/sponsors:
+    get:
+      operationId: listEventSponsors
+      tags: [events]
+      summary: List sponsors for an event
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Sponsor list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/EventSponsor" }
+    post:
+      operationId: createEventSponsor
+      tags: [events]
+      summary: Add a sponsor to an event
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EventSponsorInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EventSponsor" }
+
+  /events/{eventId}/sponsors/{id}:
+    delete:
+      operationId: deleteEventSponsor
+      tags: [events]
+      summary: Remove a sponsor from an event
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string, format: uuid }
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Deleted
+
+  /events/{eventId}/expenses:
+    get:
+      operationId: listEventExpenses
+      tags: [events]
+      summary: List expenses for an event
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Expense list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/EventExpense" }
+    post:
+      operationId: createEventExpense
+      tags: [events]
+      summary: Add an expense to an event
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EventExpenseInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EventExpense" }
+
+  /events/{eventId}/expenses/{id}:
+    delete:
+      operationId: deleteEventExpense
+      tags: [events]
+      summary: Remove an expense from an event
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string, format: uuid }
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Deleted
+
+  /events/{eventId}/booklets:
+    get:
+      operationId: listEventBooklets
+      tags: [events]
+      summary: List ticket booklets for an event
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Booklet list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/EventTicketBooklet" }
+    post:
+      operationId: createEventBooklet
+      tags: [events]
+      summary: Create a ticket booklet for an event
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EventBookletInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EventTicketBooklet" }
+
+  /events/{eventId}/booklets/{id}:
+    put:
+      operationId: updateEventBooklet
+      tags: [events]
+      summary: Update a ticket booklet
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string, format: uuid }
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EventBookletInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EventTicketBooklet" }
+    delete:
+      operationId: deleteEventBooklet
+      tags: [events]
+      summary: Delete a ticket booklet
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string, format: uuid }
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Deleted
+
+  /events/{eventId}/booklets/{bookletId}/tickets:
+    get:
+      operationId: listBookletTickets
+      tags: [events]
+      summary: List tickets in a booklet
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string, format: uuid }
+        - in: path
+          name: bookletId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Ticket list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/EventTicket" }
+
+  /events/{eventId}/booklets/{bookletId}/tickets/{ticketId}:
+    patch:
+      operationId: updateEventTicket
+      tags: [events]
+      summary: Update a ticket (mark sold/unsold, set buyer info)
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string, format: uuid }
+        - in: path
+          name: bookletId
+          required: true
+          schema: { type: string, format: uuid }
+        - in: path
+          name: ticketId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EventTicketUpdate" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EventTicket" }
+
+  /events/{eventId}/financial-summary:
+    get:
+      operationId: getEventFinancialSummary
+      tags: [events]
+      summary: Get financial summary for an event
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Financial summary
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EventFinancialSummary" }
+
   /tasks:
     get:
       operationId: listTasks
@@ -1632,6 +1897,144 @@ components:
         pageSize: { type: integer }
         total: { type: integer }
       required: [items, page, pageSize, total]
+
+    EventSponsor:
+      type: object
+      properties:
+        id: { type: string }
+        eventId: { type: string }
+        sponsorName: { type: string }
+        contactPerson: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        amount: { type: number }
+        sponsorshipType: { type: string, enum: [cash, in-kind] }
+        sponsorshipDate: { type: string }
+        notes: { type: string }
+        createdAt: { type: string, format: date-time }
+      required: [id, eventId, sponsorName, amount, sponsorshipType, createdAt]
+
+    EventSponsorInput:
+      type: object
+      properties:
+        sponsorName: { type: string, minLength: 1 }
+        contactPerson: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        amount: { type: number, minimum: 0 }
+        sponsorshipType: { type: string, enum: [cash, in-kind] }
+        sponsorshipDate: { type: string }
+        notes: { type: string }
+      required: [sponsorName]
+
+    EventExpense:
+      type: object
+      properties:
+        id: { type: string }
+        eventId: { type: string }
+        category: { type: string }
+        description: { type: string }
+        vendor: { type: string }
+        amount: { type: number }
+        expenseDate: { type: string }
+        notes: { type: string }
+        createdAt: { type: string, format: date-time }
+      required: [id, eventId, category, amount, createdAt]
+
+    EventExpenseInput:
+      type: object
+      properties:
+        category: { type: string, minLength: 1 }
+        description: { type: string }
+        vendor: { type: string }
+        amount: { type: number, minimum: 0 }
+        expenseDate: { type: string }
+        notes: { type: string }
+      required: [category]
+
+    EventTicketBooklet:
+      type: object
+      properties:
+        id: { type: string }
+        eventId: { type: string }
+        bookletNumber: { type: string }
+        ticketRangeStart: { type: integer }
+        ticketRangeEnd: { type: integer }
+        assignedTo: { type: string }
+        assignedDate: { type: string }
+        status: { type: string, enum: [available, assigned, sold, completed] }
+        createdAt: { type: string, format: date-time }
+      required: [id, eventId, bookletNumber, ticketRangeStart, ticketRangeEnd, status, createdAt]
+
+    EventBookletInput:
+      type: object
+      properties:
+        bookletNumber: { type: string, minLength: 1 }
+        ticketRangeStart: { type: integer, minimum: 1 }
+        ticketRangeEnd: { type: integer, minimum: 1 }
+        assignedTo: { type: string }
+        assignedDate: { type: string }
+        status: { type: string, enum: [available, assigned, sold, completed] }
+        ticketAmount: { type: number, minimum: 0 }
+      required: [bookletNumber, ticketRangeStart, ticketRangeEnd]
+
+    EventTicket:
+      type: object
+      properties:
+        id: { type: string }
+        bookletId: { type: string }
+        eventId: { type: string }
+        ticketNumber: { type: integer }
+        isSold: { type: boolean }
+        soldBy: { type: string }
+        buyerName: { type: string }
+        buyerPhone: { type: string }
+        saleDate: { type: string }
+        amount: { type: number }
+        createdAt: { type: string, format: date-time }
+      required: [id, bookletId, eventId, ticketNumber, isSold, amount, createdAt]
+
+    EventTicketUpdate:
+      type: object
+      properties:
+        isSold: { type: boolean }
+        soldBy: { type: string }
+        buyerName: { type: string }
+        buyerPhone: { type: string }
+        saleDate: { type: string }
+        amount: { type: number, minimum: 0 }
+
+    EventFinancialSummary:
+      type: object
+      properties:
+        sponsors:
+          type: object
+          properties:
+            total: { type: number }
+            count: { type: integer }
+          required: [total, count]
+        expenses:
+          type: object
+          properties:
+            total: { type: number }
+            count: { type: integer }
+          required: [total, count]
+        tickets:
+          type: object
+          properties:
+            total: { type: integer }
+            sold: { type: integer }
+            unsold: { type: integer }
+            revenue: { type: number }
+          required: [total, sold, unsold, revenue]
+        summary:
+          type: object
+          properties:
+            totalIncome: { type: number }
+            totalExpenses: { type: number }
+            netBalance: { type: number }
+          required: [totalIncome, totalExpenses, netBalance]
+      required: [sponsors, expenses, tickets, summary]
 
     FinancialSummary:
       type: object
