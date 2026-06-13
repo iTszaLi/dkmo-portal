@@ -47,10 +47,10 @@ const TIERS = ["platinum", "gold", "silver", "bronze"] as const;
 const STATUSES = ["pending", "partial", "paid", "overdue"] as const;
 
 const TIER_STYLE: Record<string, string> = {
-  platinum: "bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-200 ring-1 ring-slate-300 dark:ring-slate-600",
+  platinum: "bg-violet-100 dark:bg-violet-900/40 text-violet-900 dark:text-violet-200 ring-1 ring-violet-300 dark:ring-violet-700/50",
   gold: "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-900 dark:text-yellow-300 ring-1 ring-yellow-300 dark:ring-yellow-700/50",
-  silver: "bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-300 ring-1 ring-zinc-300 dark:ring-zinc-600",
-  bronze: "bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-300 ring-1 ring-amber-300 dark:ring-amber-700/50",
+  silver: "bg-sky-100 dark:bg-sky-900/40 text-sky-800 dark:text-sky-300 ring-1 ring-sky-300 dark:ring-sky-700/50",
+  bronze: "bg-orange-100 dark:bg-orange-900/40 text-orange-900 dark:text-orange-300 ring-1 ring-orange-300 dark:ring-orange-700/50",
 };
 const STATUS_STYLE: Record<string, string> = {
   paid: "bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 ring-1 ring-green-300 dark:ring-green-700/50",

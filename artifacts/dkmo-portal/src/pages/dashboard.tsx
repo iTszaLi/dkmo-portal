@@ -832,10 +832,10 @@ export default function Dashboard() {
                   .filter(Boolean)
                   .map((b) => {
                     const TIER_STYLE: Record<string, string> = {
-                      platinum: "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-300",
+                      platinum: "bg-violet-50 dark:bg-violet-950/30 border-violet-200 dark:border-violet-900/50 text-violet-800 dark:text-violet-300",
                       gold: "bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-900/50 text-yellow-800 dark:text-yellow-300",
-                      silver: "bg-zinc-50 dark:bg-zinc-900/30 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300",
-                      bronze: "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/50 text-amber-800 dark:text-amber-300",
+                      silver: "bg-sky-50 dark:bg-sky-950/30 border-sky-200 dark:border-sky-900/50 text-sky-700 dark:text-sky-300",
+                      bronze: "bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-900/50 text-orange-800 dark:text-orange-300",
                     };
                     return (
                       <div key={b!.tier} className={`rounded-xl border p-3 text-center ${TIER_STYLE[b!.tier] ?? ""}`}>

@@ -72,7 +72,7 @@ export async function generateFrfPdf(
 
   // ── HEADER ──────────────────────────────────────────────────────────────────
   if (logoDataUrl) {
-    doc.addImage(logoDataUrl, "PNG", mL, 8, 24, 24);
+    doc.addImage(logoDataUrl, "PNG", mL, 6, 30, 30);
   } else {
     doc.setDrawColor(...black);
     doc.setLineWidth(0.4);
