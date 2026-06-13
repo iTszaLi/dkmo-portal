@@ -1,0 +1,50 @@
+1. Database / Tables
+Fill all existing tables and columns with realistic sample data.
+Ensure every record is unique and distinct (no duplicates in IDs, names, emails, or values).
+Maintain proper relationships between tables (foreign keys must be respected if present).
+
+Include at least:
+
+Members table (unique members)
+Sponsorship table (unique sponsors)
+Collections / Payments table
+2. Dashboard Features
+Add a separate column for Monthly Collected Amount
+Add a clear financial summary section showing:
+Total Collected Amount (Overall)
+Member Collections (only members)
+Sponsorship Collections (only sponsors)
+Ensure calculations are dynamic and update automatically based on data.
+3. Separation Logic (Important)
+Member collections and sponsorship collections must be handled completely separately.
+Total collected = Member Collections + Sponsorship Collections
+Do NOT mix categories in calculations or reporting.
+4. Notification / Alert System (NEW)
+
+Add a real-time notification system that shows alerts for:
+
+Missing Data Alerts
+If any required field in a table is empty or null, trigger a warning
+Pending Payments Alerts
+If a member or sponsor has unpaid or pending amount, show alert
+Data Inconsistency Alerts
+If totals don’t match or calculations are incorrect, show error alert
+Notification UI Requirements:
+Show notifications in a bell icon dropdown OR side alert panel
+Use color coding:
+Red = critical issues (missing data, overdue payments)
+Yellow = warnings (pending items)
+Green = successful updates/payments
+Notifications should update dynamically when data changes
+5. UI Requirements
+Clean and modern dashboard layout
+Separate tables for members, sponsorships, and collections
+Filters:
+By month
+By type (member / sponsorship)
+By status (paid / pending / missing)
+6. Important Rules
+Ensure data integrity at all times
+No mixing of member and sponsorship financial logic
+Dashboard must always reflect real-time calculated values
+Notifications must trigger automatically based on database state

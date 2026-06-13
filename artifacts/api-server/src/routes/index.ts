@@ -1,0 +1,34 @@
+import { Router, type IRouter } from "express";
+import healthRouter from "./health";
+import authRouter from "./auth";
+import meRouter from "./me";
+import membersRouter from "./members";
+import paymentsRouter from "./payments";
+import dashboardRouter from "./dashboard";
+import sponsorsRouter from "./sponsors";
+import eventsRouter from "./events";
+import tasksRouter from "./tasks";
+import frfRouter from "./frf";
+import frfMembershipRouter from "./frf-membership";
+import storageRouter from "./storage";
+import loansRouter from "./loans";
+import receiptsRouter from "./receipts";
+
+const router: IRouter = Router();
+
+router.use(healthRouter);
+router.use(authRouter);
+router.use(meRouter);
+router.use(frfMembershipRouter);
+router.use(membersRouter);
+router.use(paymentsRouter);
+router.use(dashboardRouter);
+router.use(sponsorsRouter);
+router.use(eventsRouter);
+router.use(tasksRouter);
+router.use(frfRouter);
+router.use(storageRouter);
+router.use(loansRouter);
+router.use(receiptsRouter);
+
+export default router;

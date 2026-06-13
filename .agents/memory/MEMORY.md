@@ -1,0 +1,1 @@
+- [Express router auth ordering](express-router-auth-ordering.md) — public routes must mount before any catch-all requireAuth router; `next_frf_number()` SQL function must be created manually in DB.

@@ -1,0 +1,1407 @@
+IMPORTANT — READ BEFORE MAKING CHANGES
+
+We already have a working DKMO Riyadh portal with authentication, login system, dashboard, navigation, database, member registration, and existing modules.
+
+DO NOT:
+
+* Rebuild the existing portal
+* Replace existing UI layouts
+* Recreate authentication
+* Modify working modules unnecessarily
+* Break existing database relationships
+* Change existing navigation structure
+* Delete existing functionality
+
+Only add the following enhancements and integrations while preserving everything already working.
+
+Do not redesign the login page.
+
+Add a prominent button in the TOP RIGHT CORNER.
+
+Button Style:
+
+* Background Color: Green
+* Text Color: White
+* Match existing design system
+* Responsive on mobile and desktop
+
+Button Text:
+
+"Apply for FRF Membership"
+
+Optional second button:
+
+"Track FRF Application"
+
+When "Apply for FRF Membership" is clicked:
+
+Open a public FRF Membership Application page.
+
+No login required.
+
+Users should only see:
+
+* FRF Application Form
+
+They must NOT see:
+
+* Dashboard
+* Members
+* Payments
+* Sponsors
+* Reports
+* Settings
+* Internal Portal Data
+* Other Applicants
+
+When "Track FRF Application" is clicked:
+
+Allow search using:
+
+* FRF Number
+* Mobile Number
+
+Display:
+
+* Application Status
+* Submitted Date
+* Download PDF
+* Print PDF
+
+Keep existing dashboard cards.
+
+Add KPI cards:
+
+* Collection Rate %
+* Active Members %
+* Sponsor Renewal Rate
+* Welfare Fund Balance
+* Claims Pending Approval
+* Events This Quarter
+
+Examples:
+
+Collection Rate: 92%
+Members Paid: 31/35
+Claims Pending: 3
+Fund Balance: SAR 1.2M
+
+Add Cash Flow Widget:
+
+* Total Collected
+* Total Spent
+* Available Balance
+
+Example:
+
+Collected: SAR 203,000
+Spent: SAR 45,000
+Available: SAR 158,000
+
+Add Upcoming Actions Widget:
+
+* Upcoming Events
+* Sponsor Renewals Due
+* Pending Welfare Claims
+* Expiring Memberships
+
+Add FRF Statistics:
+
+* Total FRF Members
+* New Applications This Month
+* Pending Review
+* Approved
+* Rejected
+
+Do NOT replace existing member module.
+
+Add Member Profile Page.
+
+Display:
+
+Personal Details
+
+* Full Name
+* DKMO ID
+* Mobile
+* Email
+* City
+* Nationality
+* Occupation
+
+Family Information
+
+* Spouse
+* Children
+* Emergency Contact
+* Relationship
+
+Contribution History
+
+Examples:
+
+Jan 2026 - Paid
+Feb 2026 - Paid
+Mar 2026 - Pending
+
+Documents
+
+* Iqama
+* Passport
+* Membership Form
+
+Status
+
+* Active
+* Inactive
+* Suspended
+* Deceased
+
+Add Committee Term History:
+
+* 2024-2025
+* 2026-2027
+* 2028-2029
+
+Attendance Tracking:
+
+* Meetings Attended
+* Meetings Missed
+* Participation %
+
+Meeting Documents:
+
+* Agenda
+* Minutes
+* Decisions
+
+Create a new module:
+
+FRF Membership
+
+Add menu item:
+
+FRF Membership
+
+Applicant Details
+
+* Full Name
+* Date of Birth
+* Passport Number
+* Iqama Number
+* Occupation / Job Title
+* Company / Employer Name
+* Marital Status
+* Number of Dependents
+* Blood Group
+* Passport Size Photo
+
+Saudi Contact Details
+
+* Area / Location
+* PO Box & Pin Code
+* Business Telephone
+* Mobile Number
+* Email ID
+* Emergency Contact Name
+* Emergency Contact Number
+
+India Contact Details
+
+* House Name
+* Postal Address
+* District
+* Nearest Jamaath
+* Home Telephone
+* Mobile Number
+* Emergency Contact Name
+* Emergency Contact Number
+
+Dependents
+
+Allow unlimited rows.
+
+Fields:
+
+* Name
+* Age
+* Relationship
+
+Generate automatically:
+
+FRF-00001
+FRF-00002
+FRF-00003
+
+Store permanently.
+
+Create tables only if they do not already exist.
+
+Store:
+
+* FRF Number
+* All form fields
+* Passport Photo
+* Created Date
+* Linked Member ID (if exists)
+
+After submission:
+
+Generate PDF.
+
+Include:
+
+* Applicant Details
+* Dependents
+* Passport Photo
+* FRF Number
+* Submission Date
+
+Buttons:
+
+* View PDF
+* Download PDF
+* Print PDF
+
+All submitted FRF applications must be visible inside the portal.
+
+Create FRF Applications Management Page.
+
+Visible only to:
+
+* Super Admin
+* President
+* Authorized Committee Members
+* Authorized Staff
+
+Public users must NOT access this page.
+
+Table Columns:
+
+* FRF Number
+* Applicant Name
+* Mobile Number
+* Passport Number
+* Iqama Number
+* Submission Date
+* Status
+
+Statuses:
+
+* Submitted
+* Under Review
+* Approved
+* Rejected
+* Completed
+
+Functions:
+
+* View
+* Edit
+* Approve
+* Reject
+* Generate PDF
+* Download PDF
+* Print PDF
+
+Application Profile View:
+
+Display:
+
+* Full Applicant Information
+* Saudi Contact Information
+* India Contact Information
+* Dependents
+* Uploaded Photo
+* Documents
+* FRF Number
+* Submission Date
+
+Search By:
+
+* FRF Number
+* Name
+* Mobile Number
+* Passport Number
+* Iqama Number
+
+Filters:
+
+* Status
+* Date Range
+
+Display:
+
+* Applicant Details
+* Dependents
+* Uploaded Photo
+* FRF Number
+* Generated PDF
+* Contribution History
+
+Add Workflow:
+
+* Submitted
+* Verification
+* Committee Review
+* Approved
+* Disbursed
+* Closed
+
+Evidence Uploads:
+
+* Death Certificate
+* Hospital Report
+* Air Ticket
+* Medical Documents
+
+Beneficiary Bank Details:
+
+* Bank Name
+* Account Number
+* IBAN
+
+Claim Timeline:
+
+10 May - Submitted
+11 May - Verified
+13 May - Approved
+14 May - Paid
+
+Audit Trail:
+
+Track:
+
+* Who approved
+* Who changed amount
+* Who disbursed
+
+Add Sponsor CRM.
+
+Fields:
+
+* Contact Person
+* Mobile
+* Email
+* Renewal Date
+
+Interaction History:
+
+* Calls
+* Meetings
+* Proposals
+
+Documents:
+
+* MoU
+* Agreements
+* Receipts
+
+Performance:
+
+* Total Sponsored
+* Events Supported
+* Years Active
+
+Add Auto Receipt Generation.
+
+Receipt Format:
+
+RCPT-00001
+RCPT-00002
+
+Fields:
+
+* Date
+* Receipt Number
+* Jamaath Name
+* Name
+* DKMO ID
+* Mobile Number
+* WhatsApp Number
+* Amount
+
+Payment Types:
+
+* Life Membership
+* FRF Case
+* Voluntary Yearly Contribution
+* Donation
+* Loan Recovery
+* Others
+
+Payment Methods:
+
+* Cash
+* Bank Transfer
+* STC Pay
+* Mada
+* Online Payment
+
+Recurring Dues:
+
+Generate monthly dues automatically.
+
+Reminders:
+
+* WhatsApp
+* SMS
+* Email
+
+Generate receipt PDF matching existing DKMO receipt design.
+
+Functions:
+
+* Download
+* Print
+* Retrieve Later
+
+Search using Receipt Number.
+
+Add Event Detail Page.
+
+Budget:
+
+* Planned
+* Actual
+* Variance
+
+Sponsors Linked:
+
+Show supporting sponsors.
+
+Expenses:
+
+* Venue
+* Food
+* Printing
+* Transport
+
+Attendance:
+
+* Expected
+* Registered
+* Attended
+
+Add:
+
+Task Comments
+
+Examples:
+
+* Venue Booked
+* Sponsor Contacted
+
+Attachments:
+
+* PDFs
+* Photos
+* Quotations
+
+Recurring Tasks:
+
+* Monthly Dues Collection
+* AGM Preparation
+
+Collection Analytics:
+
+* 0–30 Days
+* 30–60 Days
+* 60+ Days
+
+Bulk WhatsApp Reminder
+
+Partial Payments:
+
+Example:
+
+Total Due: SAR 200
+Paid: SAR 100
+Balance: SAR 100
+
+Financial Reports:
+
+* Monthly Collections
+* Annual Collections
+* Expenses
+* Sponsors
+* FRF
+
+Committee Reports:
+
+* Attendance
+* Activities
+
+Event Reports:
+
+* Income
+* Expenses
+* Sponsor Contributions
+
+Export:
+
+* PDF
+* Excel
+
+User Management
+
+Create users from UI.
+
+Roles:
+
+* Super Admin
+* President
+* Treasurer
+* Finance Officer
+* Committee Member
+* Event Manager
+* Viewer
+
+Role-Based Access Control.
+
+Audit Logs:
+
+Track:
+
+* Member Creation
+* Payment Changes
+* Claim Approvals
+* Sponsor Deletion
+
+Enable:
+
+* OTP Login
+* Two Factor Authentication
+
+Backups:
+
+* Daily Backup
+* Weekly Backup
+
+Create Communication Center.
+
+Send:
+
+* WhatsApp
+* SMS
+* Email
+
+To:
+
+* Members
+* Sponsors
+* FRF Members
+* Committees
+
+Store communication history.
+
+Allow public donations.
+
+Options:
+
+* SAR 50
+* SAR 100
+* SAR 500
+* Custom Amount
+
+Generate donation receipt.
+
+Create Expense Module.
+
+Track:
+
+* Income
+* Expenses
+* Balance
+
+Categories:
+
+* Welfare
+* Events
+* Administration
+* Miscellaneous
+
+Workflow:
+
+* Submitted
+* Reviewed
+* Approved
+* Paid
+
+Track:
+
+* Tents
+* Sound Systems
+* Furniture
+* Equipment
+
+Store:
+
+* Purchase Date
+* Condition
+* Location
+* Responsible Person
+
+Create:
+
+* Meetings
+* Agendas
+* Minutes
+* Attendance
+* Decisions
+
+Track:
+
+* Volunteers
+* Skills
+* Availability
+* Event Assignments
+* Participation History
+
+Create only if missing:
+
+* audit_logs
+* expenses
+* communications
+* meeting_minutes
+* member_documents
+* claim_documents
+* event_expenses
+* event_attendance
+* notifications
+* roles
+* permissions
+* frf_memberships
+* frf_dependents
+* frf_documents
+* receipts
+* donations
+* volunteers
+* assets
+
+We already have a working DKMO Riyadh portal with authentication, member registration, login system, dashboard, navigation, database, and existing modules.
+
+IMPORTANT:
+
+* Do NOT rebuild existing modules.
+* Do NOT redesign existing layouts unless specifically mentioned.
+* Do NOT recreate authentication.
+* Do NOT modify working database structures unless required for new functionality.
+* Preserve all existing data.
+* Only add the following enhancements and missing functionality.
+
+---
+
+## PHASE 1 — DASHBOARD ENHANCEMENTS
+
+Keep existing dashboard cards.
+
+Add the following new KPI cards:
+
+* Collection Rate %
+* Active Members %
+* Sponsor Renewal Rate
+* Total Welfare Fund Balance
+* Claims Pending Approval
+* Events This Quarter
+
+Example:
+
+Collection Rate: 92%
+Members Paid: 31/35
+Claims Pending: 3
+Fund Balance: SAR 1.2M
+
+Add Cash Flow Widget:
+
+Display:
+
+* Total Collected
+* Total Spent
+* Current Balance
+
+Example:
+
+Collected: SAR 203,000
+Spent: SAR 45,000
+Available: SAR 158,000
+
+Add Upcoming Actions Widget:
+
+Display:
+
+* Upcoming events
+* Pending sponsor payments
+* Welfare claims awaiting approval
+* Expiring memberships
+
+---
+
+## PHASE 2 — MEMBER MODULE ENHANCEMENTS
+
+Do not replace existing member system.
+
+Add Member Profile Page.
+
+When a member is opened show:
+
+Personal Information:
+
+* Full Name
+* DKMO ID
+* Mobile
+* Email
+* City
+* Nationality
+* Occupation
+
+Family Information:
+
+* Spouse
+* Children
+* Emergency Contact
+* Relationship
+
+Contribution History:
+
+Example:
+
+Jan 2026 - Paid
+Feb 2026 - Paid
+Mar 2026 - Pending
+
+Documents:
+
+* Iqama
+* Passport
+* Membership Form
+
+Member Status:
+
+* Active
+* Inactive
+* Suspended
+* Deceased
+
+---
+
+## PHASE 3 — COMMITTEE MODULE ENHANCEMENTS
+
+Add Committee Term History:
+
+* 2024-2025
+* 2026-2027
+* 2028-2029
+
+Attendance Tracking:
+
+* Meetings attended
+* Meetings missed
+* Participation %
+
+Meeting Minutes:
+
+Upload:
+
+* Agenda
+* Minutes
+* Decisions
+
+Committee members should be able to access meeting records.
+
+---
+
+## PHASE 4 — FRF MEMBERSHIP MODULE (NEW)
+
+Create a completely new module called:
+
+FRF Membership
+
+Add menu item:
+
+FRF Membership
+
+Create digital FRF application form.
+
+Fields:
+
+Applicant Details:
+
+* Full Name
+* Date of Birth
+* Passport Number
+* Iqama Number
+* Occupation / Job Title
+* Company / Employer Name
+* Marital Status
+* Number of Dependents
+* Blood Group
+* Passport Size Photo
+
+Saudi Contact Details:
+
+* Area / Location
+* PO Box & Pin Code
+* Business Telephone
+* Mobile Number
+* Email ID
+* Emergency Contact Name
+* Emergency Contact Number
+
+India Contact Details:
+
+* House Name
+* Postal Address
+* District
+* Nearest Jamaath
+* Home Telephone
+* Mobile Number
+* Emergency Contact Name
+* Emergency Contact Number
+
+Dependents Section:
+
+* Name
+* Age
+* Relationship
+
+Allow unlimited dependents.
+
+---
+
+## AUTO FRF NUMBER GENERATION
+
+Upon submission automatically generate:
+
+FRF-00001
+FRF-00002
+FRF-00003
+
+Store permanently.
+
+---
+
+## FRF DATABASE STORAGE
+
+Create database tables only if missing.
+
+Store:
+
+* FRF Number
+* All form fields
+* Passport photo
+* Created Date
+* Linked Member ID (if applicable)
+
+---
+
+## FRF PDF GENERATION
+
+After save:
+
+Generate PDF matching existing FRF paper form.
+
+Include:
+
+* Applicant details
+* Dependents
+* Passport photo
+* FRF Number
+* Submission date
+
+Buttons:
+
+* View PDF
+* Download PDF
+* Print PDF
+
+---
+
+## FRF SEARCH
+
+Search by:
+
+* FRF Number
+* Name
+* Mobile Number
+* Passport Number
+* Iqama Number
+
+Open full FRF profile.
+
+---
+
+## FRF PROFILE PAGE
+
+Display:
+
+* Applicant Details
+* Dependents
+* Uploaded Photo
+* FRF Number
+* Generated PDF
+* Contribution History
+
+---
+
+## PHASE 5 — FRF CLAIM MANAGEMENT ENHANCEMENT
+
+Improve existing FRF Claims module.
+
+Add Approval Workflow:
+
+* Submitted
+* Verification
+* Committee Review
+* Approved
+* Disbursed
+* Closed
+
+Add Evidence Uploads:
+
+* Death Certificate
+* Hospital Report
+* Air Ticket
+* Medical Documents
+
+Beneficiary Bank Details:
+
+* Bank Name
+* Account Number
+* IBAN
+
+Claim Timeline:
+
+Example:
+
+10 May - Submitted
+11 May - Verified
+13 May - Approved
+14 May - Paid
+
+Add Audit Trail:
+
+Track:
+
+* Who approved
+* Who modified amount
+* Who disbursed
+
+---
+
+## PHASE 6 — SPONSOR MODULE ENHANCEMENTS
+
+Add Sponsor CRM.
+
+Store:
+
+* Contact Person
+* Mobile
+* Email
+* Renewal Date
+
+Interaction History:
+
+* Calls
+* Meetings
+* Proposals Sent
+
+Sponsor Documents:
+
+* MoU
+* Agreements
+* Receipts
+
+Sponsor Performance:
+
+* Total Sponsored
+* Events Supported
+* Years Active
+
+---
+
+## PHASE 7 — PAYMENT MODULE ENHANCEMENTS
+
+Add Auto Receipt Generation.
+
+Receipt Numbers:
+
+RCPT-00001
+RCPT-00002
+RCPT-00003
+
+Fields:
+
+* Date
+* Receipt Number
+* Jamaath Name
+* Name
+* DKMO ID
+* Mobile Number
+* WhatsApp Number
+* Amount
+
+Payment Types:
+
+* Life Membership
+* FRF Case
+* Voluntary Yearly Contribution
+* Donation
+* Loan Recovery
+* Others
+
+Payment Methods:
+
+* Bank Transfer
+* Cash
+* STC Pay
+* Mada
+* Online Payment
+
+Recurring Dues:
+
+Automatically generate monthly dues.
+
+Example:
+
+June dues automatically generated.
+
+Reminder Channels:
+
+* WhatsApp
+* SMS
+* Email
+
+---
+
+## PHASE 8 — RECEIPT PDF SYSTEM
+
+Generate receipt PDF matching DKMO receipt design.
+
+Features:
+
+* Download
+* Print
+* Retrieve Later
+
+Search using receipt number.
+
+---
+
+## PHASE 9 — EVENTS MODULE ENHANCEMENTS
+
+Add Event Detail Page.
+
+Budget Tracking:
+
+Planned Budget
+Actual Cost
+Variance
+
+Example:
+
+Planned: SAR 10,000
+Actual: SAR 8,500
+Variance: SAR 1,500
+
+Sponsors Linked:
+
+Show sponsors supporting the event.
+
+Expense Categories:
+
+* Venue
+* Food
+* Printing
+* Transport
+
+Attendance:
+
+* Expected
+* Registered
+* Attended
+
+---
+
+## PHASE 10 — TASK MODULE ENHANCEMENTS
+
+Add:
+
+Task Comments
+
+Example:
+
+* Venue booked
+* Sponsor contacted
+
+Attachments:
+
+* PDFs
+* Quotations
+* Photos
+
+Recurring Tasks:
+
+Examples:
+
+* Monthly dues collection
+* AGM preparation
+
+---
+
+## PHASE 11 — PENDING DUES ENHANCEMENTS
+
+Collection Analytics:
+
+* 0–30 Days
+* 30–60 Days
+* 60+ Days
+
+Bulk WhatsApp:
+
+Example:
+
+Send reminder to all overdue members with one click.
+
+Partial Payments:
+
+Example:
+
+Total Due: SAR 200
+Paid: SAR 100
+Balance: SAR 100
+
+---
+
+## PHASE 12 — REPORTS MODULE
+
+Financial Reports:
+
+* Monthly Collections
+* Annual Collections
+* Expense Reports
+* Sponsor Reports
+* FRF Reports
+
+Committee Reports:
+
+* Attendance
+* Activities
+
+Event Reports:
+
+* Income
+* Expenses
+* Sponsor Contributions
+
+Export:
+
+* PDF
+* Excel
+
+---
+
+## PHASE 13 — SETTINGS & SECURITY
+
+Add User Management:
+
+Create users from UI.
+
+Role Management:
+
+* Super Admin
+* President
+* Treasurer
+* Finance Officer
+* Committee Member
+* Event Manager
+* Viewer
+
+Permissions based access control.
+
+Audit Logs:
+
+Track:
+
+* Who added member
+* Who edited payment
+* Who approved claim
+* Who deleted sponsor
+
+Add Two-Factor Authentication (2FA / OTP).
+
+Add Backup System:
+
+* Daily Backup
+* Weekly Backup
+
+---
+
+## PHASE 14 — COMMUNICATION CENTER (NEW)
+
+Create Communication Center module.
+
+Send:
+
+* WhatsApp
+* SMS
+* Email
+
+Recipients:
+
+* Members
+* Sponsors
+* Committees
+* FRF Members
+
+Store communication history.
+
+---
+
+## PHASE 15 — DONATION MODULE (NEW)
+
+Create Donation Module.
+
+Allow non-members to donate.
+
+Preset options:
+
+* SAR 50
+* SAR 100
+* SAR 500
+* Custom Amount
+
+Integrate online payment gateway.
+
+Generate donation receipts.
+
+---
+
+## PHASE 16 — EXPENSE MANAGEMENT (CRITICAL)
+
+Create Expense Management Module.
+
+Track:
+
+* Income
+* Expenses
+* Balance
+
+Expense Categories:
+
+* Welfare
+* Events
+* Administration
+* Miscellaneous
+
+Approval Workflow:
+
+Submitted
+Reviewed
+Approved
+Paid
+
+Generate financial summaries.
+
+---
+
+## PHASE 17 — ASSET REGISTER (NEW)
+
+Track organization assets:
+
+* Tents
+* Sound Systems
+* Furniture
+* Equipment
+
+Store:
+
+* Purchase Date
+* Condition
+* Assigned Location
+* Responsible Person
+
+---
+
+## PHASE 18 — MEETING MANAGEMENT (NEW)
+
+Create Meeting Management module.
+
+Features:
+
+* Meeting Creation
+* Agenda
+* Attendance
+* Minutes
+* Decisions
+
+Link committee attendance automatically.
+
+---
+
+## PHASE 19 — VOLUNTEER MANAGEMENT (NEW)
+
+Track:
+
+* Volunteers
+* Event Assignments
+* Participation History
+* Skills
+* Availability
+
+---
+
+## DATABASE IMPROVEMENTS
+
+Create tables only if they do not already exist:
+
+* audit_logs
+* expenses
+* communications
+* meeting_minutes
+* member_documents
+* claim_documents
+* event_expenses
+* event_attendance
+* notifications
+* roles
+* permissions
+* frf_memberships
+* frf_dependents
+* frf_documents
+* receipts
+* donations
+* volunteers
+* assets
+
+---
+
+## IMPLEMENTATION RULES
+
+1. Preserve existing working portal.
+2. Do not rebuild completed functionality.
+3. Reuse existing UI components and design system.
+4. Maintain current navigation structure.
+5. Ensure mobile responsiveness.
+6. Add proper validation on all forms.
+7. Add search, filters and pagination where applicable.
+8. Use audit logging for all financial transactions.
+9. Use role-based permissions throughout the system.
+10. Maintain clean production-ready code.
+11. Ensure generated PDFs are printable and professional.
+12. Integrate all new modules seamlessly into the existing DKMO Riyadh portal.
+
+1) Preserve all existing portal functionality.
+2) Do not rebuild completed modules.
+3) Reuse existing design system.
+4) Maintain current navigation.
+5) Mobile responsive.
+6) Add validations.
+7) Add search/filter/pagination.
+8) Use audit logs for financial transactions.
+9) Apply role-based permissions.
+10) Production-ready code only.
+11) Professional printable PDFs.
+12) Integrate all new functionality seamlessly into the existing DKMO Riyadh portal.
+13) Public FRF applicants must never have access to internal portal modules.
+14) All FRF applications submitted publicly must be visible and manageable by authorized users inside the portal.

@@ -1,0 +1,384 @@
+import { useState } from "react";
+import { useLocation } from "wouter";
+import {
+  useListFrfMemberships,
+  useGetFrfMembershipStats,
+  useDeleteFrfMembership,
+} from "@workspace/api-client-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
+import { Search, Plus, UserCheck, Clock, CheckCircle, XCircle, Users, Trash2, Eye, Download, FileSpreadsheet, FileText } from "lucide-react";
+import { formatDate } from "@/lib/utils";
+import ExcelJS from "exceljs";
+
+const STATUS_MAP: Record<string, { label: string; color: string }> = {
+  submitted: { label: "Submitted", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" },
+  under_review: { label: "Under Review", color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300" },
+  approved: { label: "Approved", color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" },
+  rejected: { label: "Rejected", color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300" },
+  completed: { label: "Completed", color: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300" },
+};
+
+type FrfMembership = {
+  id: string;
+  frfNumber: string;
+  fullName: string;
+  dateOfBirth?: string | null;
+  passportNumber?: string | null;
+  iqamaNumber?: string | null;
+  occupation?: string | null;
+  companyName?: string | null;
+  maritalStatus?: string | null;
+  numDependents?: number | null;
+  bloodGroup?: string | null;
+  mobileSaudi?: string | null;
+  email?: string | null;
+  areaSaudi?: string | null;
+  poBox?: string | null;
+  businessPhone?: string | null;
+  emergencyNameSaudi?: string | null;
+  emergencyMobileSaudi?: string | null;
+  houseName?: string | null;
+  postalAddress?: string | null;
+  district?: string | null;
+  nearestJamaath?: string | null;
+  homePhone?: string | null;
+  mobileIndia?: string | null;
+  emergencyNameIndia?: string | null;
+  emergencyMobileIndia?: string | null;
+  status: string;
+  createdAt?: string | null;
+};
+
+function v(val: unknown): string {
+  if (val === null || val === undefined) return "";
+  return String(val);
+}
+
+async function exportToExcel(rows: FrfMembership[], filename: string) {
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "DKMO Portal";
+  const ws = wb.addWorksheet("FRF Applications");
+
+  const headers = [
+    "FRF ID", "Full Name", "Date of Birth", "Passport No", "Iqama No",
+    "Occupation", "Employer", "Marital Status", "Dependents", "Blood Group",
+    "Mobile (Saudi)", "Email", "Area (Saudi)", "PO Box", "Business Phone",
+    "Emergency Name (Saudi)", "Emergency Mobile (Saudi)",
+    "House Name", "Postal Address", "District", "Nearest Jamaath",
+    "Home Phone", "Mobile (India)", "Emergency Name (India)", "Emergency Mobile (India)",
+    "Status", "Application Date",
+  ];
+
+  ws.addRow(headers);
+  ws.getRow(1).font = { bold: true };
+  ws.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF14532D" } };
+  ws.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
+  headers.forEach((_, i) => { ws.getColumn(i + 1).width = 18; });
+
+  rows.forEach((m) => {
+    ws.addRow([
+      v(m.frfNumber), v(m.fullName), v(m.dateOfBirth), v(m.passportNumber), v(m.iqamaNumber),
+      v(m.occupation), v(m.companyName), v(m.maritalStatus), v(m.numDependents), v(m.bloodGroup),
+      v(m.mobileSaudi), v(m.email), v(m.areaSaudi), v(m.poBox), v(m.businessPhone),
+      v(m.emergencyNameSaudi), v(m.emergencyMobileSaudi),
+      v(m.houseName), v(m.postalAddress), v(m.district), v(m.nearestJamaath),
+      v(m.homePhone), v(m.mobileIndia), v(m.emergencyNameIndia), v(m.emergencyMobileIndia),
+      v(m.status), v(m.createdAt),
+    ]);
+  });
+
+  const buf = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+function exportToCsv(rows: FrfMembership[], filename: string) {
+  const headers = [
+    "FRF ID", "Full Name", "DOB", "Passport", "Iqama", "Occupation", "Employer",
+    "Marital Status", "Dependents", "Blood Group", "Mobile (SA)", "Email",
+    "Area (SA)", "PO Box", "Biz Phone", "Emg Name (SA)", "Emg Mobile (SA)",
+    "House Name", "Postal", "District", "Jamaath", "Home Phone", "Mobile (IN)",
+    "Emg Name (IN)", "Emg Mobile (IN)", "Status", "Applied",
+  ];
+  const escape = (s: string) => `"${s.replace(/"/g, '""')}"`;
+  const csvRows = [
+    headers.map(escape).join(","),
+    ...rows.map((m) => [
+      v(m.frfNumber), v(m.fullName), v(m.dateOfBirth), v(m.passportNumber), v(m.iqamaNumber),
+      v(m.occupation), v(m.companyName), v(m.maritalStatus), v(m.numDependents), v(m.bloodGroup),
+      v(m.mobileSaudi), v(m.email), v(m.areaSaudi), v(m.poBox), v(m.businessPhone),
+      v(m.emergencyNameSaudi), v(m.emergencyMobileSaudi),
+      v(m.houseName), v(m.postalAddress), v(m.district), v(m.nearestJamaath),
+      v(m.homePhone), v(m.mobileIndia), v(m.emergencyNameIndia), v(m.emergencyMobileIndia),
+      v(m.status), v(m.createdAt),
+    ].map(escape).join(",")),
+  ];
+  const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+export default function FrfMembershipPage() {
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+
+  const { data: memberships, isLoading, refetch } = useListFrfMemberships(
+    { search: search || undefined, status: statusFilter !== "all" ? statusFilter : undefined },
+    { query: { staleTime: 30000 } }
+  );
+
+  const { data: stats, isLoading: isLoadingStats } = useGetFrfMembershipStats(
+    { query: { staleTime: 60000 } }
+  );
+
+  const { mutateAsync: deleteMembership, isPending: isDeleting } = useDeleteFrfMembership({
+    mutation: {
+      onSuccess: () => {
+        toast({ title: "Deleted", description: "FRF membership removed." });
+        void refetch();
+      },
+    },
+  });
+
+  const dateStr = new Date().toISOString().split("T")[0];
+  const statusStr = statusFilter !== "all" ? `_${statusFilter}` : "";
+
+  const handleExcelExport = async () => {
+    if (!memberships?.length) { toast({ title: "No data to export" }); return; }
+    setExporting(true);
+    try {
+      await exportToExcel(memberships as unknown as FrfMembership[], `DKMO_FRF${statusStr}_${dateStr}.xlsx`);
+      toast({ title: "Excel exported" });
+    } catch {
+      toast({ title: "Export failed", variant: "destructive" });
+    } finally { setExporting(false); }
+  };
+
+  const handleCsvExport = () => {
+    if (!memberships?.length) { toast({ title: "No data to export" }); return; }
+    exportToCsv(memberships as unknown as FrfMembership[], `DKMO_FRF${statusStr}_${dateStr}.csv`);
+    toast({ title: "CSV exported" });
+  };
+
+  const statCards = [
+    { label: "Total", value: stats?.total, icon: Users, color: "text-green-700 dark:text-green-400" },
+    { label: "Pending Review", value: stats?.pending, icon: Clock, color: "text-yellow-600 dark:text-yellow-400" },
+    { label: "Approved", value: stats?.approved, icon: CheckCircle, color: "text-green-700 dark:text-green-400" },
+    { label: "New This Month", value: stats?.newThisMonth, icon: UserCheck, color: "text-blue-600 dark:text-blue-400" },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-green-950 dark:text-green-100">FRF Membership</h1>
+          <p className="text-sm text-green-800/70 dark:text-slate-400 mt-1">Family Relief Fund membership applications</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {/* Export dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="border-green-200 dark:border-slate-700 text-green-800 dark:text-green-300 gap-2" disabled={exporting}>
+                <Download className="h-4 w-4" />
+                {exporting ? "Exporting…" : "Export"}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Export FRF Applications</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleExcelExport} className="gap-2 cursor-pointer">
+                <FileSpreadsheet className="h-4 w-4 text-green-700" />
+                Export to Excel (.xlsx)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleCsvExport} className="gap-2 cursor-pointer">
+                <FileText className="h-4 w-4 text-slate-600" />
+                Export to CSV
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <Button
+            onClick={() => setLocation("/frf-membership/new")}
+            className="bg-green-800 hover:bg-green-900 dark:bg-green-700 dark:hover:bg-green-600 text-white"
+          >
+            <Plus className="h-4 w-4 mr-2" /> New Application
+          </Button>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {statCards.map(({ label, value, icon: Icon, color }) => (
+          <Card key={label} className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+            <CardContent className="pt-4 pb-4">
+              {isLoadingStats ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <div className="flex items-center gap-3">
+                  <Icon className={`h-5 w-5 ${color}`} />
+                  <div>
+                    <p className="text-2xl font-bold text-green-950 dark:text-white">{value ?? 0}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{label}</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-700/60 dark:text-green-500/60" />
+          <Input
+            placeholder="Search by name, FRF#, mobile, passport, iqama..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 border-green-200 dark:border-slate-700 dark:bg-slate-800/60"
+          />
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full sm:w-44 border-green-200 dark:border-slate-700 dark:bg-slate-800/60">
+            <SelectValue placeholder="All statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All statuses</SelectItem>
+            <SelectItem value="submitted">Submitted</SelectItem>
+            <SelectItem value="under_review">Under Review</SelectItem>
+            <SelectItem value="approved">Approved</SelectItem>
+            <SelectItem value="rejected">Rejected</SelectItem>
+            <SelectItem value="completed">Completed</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Table */}
+      <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-green-100 dark:border-slate-800 bg-green-50/50 dark:bg-slate-800/50">
+                <th className="text-left px-4 py-3 font-semibold text-green-900 dark:text-green-300">FRF #</th>
+                <th className="text-left px-4 py-3 font-semibold text-green-900 dark:text-green-300">Name</th>
+                <th className="text-left px-4 py-3 font-semibold text-green-900 dark:text-green-300 hidden md:table-cell">Mobile</th>
+                <th className="text-left px-4 py-3 font-semibold text-green-900 dark:text-green-300 hidden lg:table-cell">Area</th>
+                <th className="text-left px-4 py-3 font-semibold text-green-900 dark:text-green-300">Status</th>
+                <th className="text-left px-4 py-3 font-semibold text-green-900 dark:text-green-300 hidden sm:table-cell">Applied</th>
+                <th className="text-right px-4 py-3 font-semibold text-green-900 dark:text-green-300">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="border-b border-green-50 dark:border-slate-800">
+                    {Array.from({ length: 7 }).map((_, j) => (
+                      <td key={j} className="px-4 py-3"><Skeleton className="h-4 w-full" /></td>
+                    ))}
+                  </tr>
+                ))
+              ) : memberships?.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-12 text-center text-slate-500 dark:text-slate-400">
+                    No FRF memberships found
+                  </td>
+                </tr>
+              ) : (
+                memberships?.map((m) => {
+                  const statusInfo = STATUS_MAP[m.status] ?? { label: m.status, color: "bg-slate-100 text-slate-800" };
+                  return (
+                    <tr key={m.id} className="border-b border-green-50 dark:border-slate-800 hover:bg-green-50/40 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="px-4 py-3 font-mono text-xs font-medium text-green-800 dark:text-green-300">{m.frfNumber}</td>
+                      <td className="px-4 py-3">
+                        <div className="font-medium text-green-950 dark:text-slate-100">{m.fullName}</div>
+                        {m.occupation && <div className="text-xs text-slate-500 dark:text-slate-400">{m.occupation}</div>}
+                      </td>
+                      <td className="px-4 py-3 hidden md:table-cell text-slate-600 dark:text-slate-400 text-xs">
+                        {m.mobileSaudi || m.mobileIndia || "—"}
+                      </td>
+                      <td className="px-4 py-3 hidden lg:table-cell text-slate-600 dark:text-slate-400 text-xs">{m.areaSaudi || "—"}</td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusInfo.color}`}>
+                          {statusInfo.label}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 hidden sm:table-cell text-xs text-slate-500 dark:text-slate-400">
+                        {formatDate(m.createdAt)}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-green-700 hover:text-green-900 hover:bg-green-100 dark:hover:bg-slate-700"
+                            onClick={() => setLocation(`/frf-membership/${m.id}`)}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
+                            onClick={() => setDeleteId(m.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete FRF membership?</AlertDialogTitle>
+            <AlertDialogDescription>This will permanently remove the membership and all its dependents.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={async () => {
+                if (deleteId) {
+                  await deleteMembership({ id: deleteId });
+                  setDeleteId(null);
+                }
+              }}>
+              {isDeleting ? "Deleting…" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
