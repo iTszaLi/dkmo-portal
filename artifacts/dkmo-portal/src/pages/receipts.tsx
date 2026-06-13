@@ -530,10 +530,9 @@ export default function ReceiptsPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_auto] gap-6">
-          {/* ── FORM ──────────────────────────────────────────────── */}
-          <Form {...form}>
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-5 space-y-5">
+        {/* ── FORM ──────────────────────────────────────────────── */}
+        <Form {...form}>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-5 space-y-5">
 
               {/* Row 1: Date / Receipt # / Jamath */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -690,8 +689,7 @@ export default function ReceiptsPage() {
                 )}
               </div>
             </div>
-          </Form>
-        </div>
+        </Form>
 
         {/* ── LIVE RECEIPT PREVIEW ─────────────────────────────────── */}
         <div>
