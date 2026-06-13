@@ -329,6 +329,7 @@ export default function FrfApplyPage() {
   });
 
   const [dependents, setDependents] = useState<Dependent[]>([]);
+  const [showValidation, setShowValidation] = useState(false);
 
   const set = (field: keyof FormData, value: string) => setForm((f) => ({ ...f, [field]: value }));
   const addDependent = () => setDependents((d) => [...d, { fullName: "", relation: "", age: "" }]);
@@ -336,9 +337,30 @@ export default function FrfApplyPage() {
   const setDependent = (i: number, field: keyof Dependent, value: string) =>
     setDependents((d) => d.map((dep, idx) => (idx === i ? { ...dep, [field]: value } : dep)));
 
-  const canAdvance = () => {
-    if (step === 0) return form.fullName.trim().length > 0 && form.mobileSaudi.trim().length > 0;
-    return true;
+  // Per-step validation — returns a map of fieldKey → error message
+  const getStepErrors = (): Record<string, string> => {
+    if (step === 0) {
+      const errs: Record<string, string> = {};
+      if (!form.fullName.trim()) errs.fullName = "Full name is required.";
+      return errs;
+    }
+    if (step === 1) {
+      const errs: Record<string, string> = {};
+      if (!form.mobileSaudi.trim()) errs.mobileSaudi = "Saudi mobile number is required.";
+      return errs;
+    }
+    return {};
+  };
+
+  const stepErrors = getStepErrors();
+  const canAdvance = () => Object.keys(stepErrors).length === 0;
+
+  const handleNext = () => {
+    setShowValidation(true);
+    if (canAdvance()) {
+      setShowValidation(false);
+      setStep(step + 1);
+    }
   };
 
   async function handleSubmit(e: FormEvent) {
@@ -497,7 +519,7 @@ export default function FrfApplyPage() {
             <div key={i} className="flex items-center gap-2 min-w-0">
               <button
                 type="button"
-                onClick={() => i < step && setStep(i)}
+                onClick={() => { if (i < step) { setShowValidation(false); setStep(i); } }}
                 className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                   i === step
                     ? "bg-green-800 text-white shadow-sm"
@@ -529,7 +551,16 @@ export default function FrfApplyPage() {
               <CardContent className="grid sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
                   <FieldRow label="Full Name *" id="fullName">
-                    <Input id="fullName" value={form.fullName} onChange={(e) => set("fullName", e.target.value)} className={inputClass()} placeholder="As in passport" required />
+                    <Input
+                      id="fullName"
+                      value={form.fullName}
+                      onChange={(e) => set("fullName", e.target.value)}
+                      className={inputClass(showValidation && stepErrors.fullName ? "border-red-400 dark:border-red-500" : "")}
+                      placeholder="As in passport"
+                    />
+                    {showValidation && stepErrors.fullName && (
+                      <p className="text-xs text-red-500 dark:text-red-400 mt-1">{stepErrors.fullName}</p>
+                    )}
                   </FieldRow>
                 </div>
                 <FieldRow label="Date of Birth" id="dob">
@@ -571,7 +602,16 @@ export default function FrfApplyPage() {
               </CardHeader>
               <CardContent className="grid sm:grid-cols-2 gap-4">
                 <FieldRow label="Mobile (Saudi) *" id="mobSA">
-                  <Input id="mobSA" value={form.mobileSaudi} onChange={(e) => set("mobileSaudi", e.target.value)} className={inputClass()} placeholder="+966 5x xxx xxxx" required />
+                  <Input
+                    id="mobSA"
+                    value={form.mobileSaudi}
+                    onChange={(e) => set("mobileSaudi", e.target.value)}
+                    className={inputClass(showValidation && stepErrors.mobileSaudi ? "border-red-400 dark:border-red-500" : "")}
+                    placeholder="+966 5x xxx xxxx"
+                  />
+                  {showValidation && stepErrors.mobileSaudi && (
+                    <p className="text-xs text-red-500 dark:text-red-400 mt-1">{stepErrors.mobileSaudi}</p>
+                  )}
                 </FieldRow>
                 <FieldRow label="Email" id="email">
                   <Input id="email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} className={inputClass()} placeholder="email@example.com" />
@@ -751,7 +791,10 @@ export default function FrfApplyPage() {
           <div className="flex justify-between items-center pb-4">
             <Button type="button" variant="outline"
               className="border-green-300 dark:border-green-800 text-green-800 dark:text-green-300"
-              onClick={() => step > 0 ? setStep(step - 1) : setLocation("/login")}
+              onClick={() => {
+                setShowValidation(false);
+                step > 0 ? setStep(step - 1) : setLocation("/login");
+              }}
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
               {step === 0 ? "Back to Login" : "Previous"}
@@ -760,8 +803,7 @@ export default function FrfApplyPage() {
             {step < STEPS.length - 1 ? (
               <Button type="button"
                 className="bg-green-800 hover:bg-green-900 dark:bg-green-700 dark:hover:bg-green-600 text-white"
-                onClick={() => canAdvance() && setStep(step + 1)}
-                disabled={!canAdvance()}
+                onClick={handleNext}
               >
                 Next <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
