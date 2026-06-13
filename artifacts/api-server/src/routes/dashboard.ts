@@ -489,6 +489,18 @@ router.get("/dashboard/alerts", async (req, res): Promise<void> => {
 });
 
 router.get("/dashboard/cash-flow", async (req, res): Promise<void> => {
+  const now = new Date();
+  const currentYear = now.getUTCFullYear();
+  const currentQuarter = Math.floor(now.getUTCMonth() / 3) + 1;
+
+  const rawYear = parseInt(req.query.year as string, 10);
+  const rawQuarter = parseInt(req.query.quarter as string, 10);
+  const selectedYear = (!isNaN(rawYear) && rawYear >= 2000 && rawYear <= 2100) ? rawYear : currentYear;
+  const selectedQuarter = (!isNaN(rawQuarter) && rawQuarter >= 1 && rawQuarter <= 4) ? rawQuarter : currentQuarter;
+
+  const quarterStart = new Date(Date.UTC(selectedYear, (selectedQuarter - 1) * 3, 1));
+  const quarterEnd = new Date(Date.UTC(selectedYear, selectedQuarter * 3, 0, 23, 59, 59));
+
   const [memberTotal, sponsorRows, frfClaims, eventsAll] = await Promise.all([
     db.select({ total: sum(paymentsTable.amountPaid) }).from(paymentsTable),
     db.select().from(sponsorsTable),
@@ -504,11 +516,10 @@ router.get("/dashboard/cash-flow", async (req, res): Promise<void> => {
     .filter((c) => c.status === "disbursed" || c.status === "approved")
     .reduce((s, c) => s + Number(c.amountApproved), 0);
 
+  const netBalance = totalCollected - totalDisbursed;
+
   const pendingClaimsCount = frfClaims.filter((c) => c.status === "pending" || c.status === "under_review").length;
 
-  const now = new Date();
-  const quarterStart = new Date(Date.UTC(now.getUTCFullYear(), Math.floor(now.getUTCMonth() / 3) * 3, 1));
-  const quarterEnd = new Date(Date.UTC(now.getUTCFullYear(), Math.floor(now.getUTCMonth() / 3) * 3 + 3, 0));
   const eventsThisQuarter = eventsAll.filter((e) => {
     const d = e.eventDate ? new Date(e.eventDate) : null;
     return d && d >= quarterStart && d <= quarterEnd;
@@ -523,9 +534,12 @@ router.get("/dashboard/cash-flow", async (req, res): Promise<void> => {
   res.json({
     totalCollected,
     totalDisbursed,
-    balance: Math.max(0, totalCollected - totalDisbursed),
+    balance: netBalance,
+    netBalance,
     pendingClaimsCount,
     eventsThisQuarter,
+    selectedYear,
+    selectedQuarter,
     upcomingEvents,
   });
 });

@@ -925,8 +925,11 @@ export interface DashboardCashFlow {
   totalCollected: number;
   totalDisbursed: number;
   balance: number;
+  netBalance: number;
   pendingClaimsCount: number;
   eventsThisQuarter: number;
+  selectedYear: number;
+  selectedQuarter: number;
   upcomingEvents: DashboardCashFlowUpcomingEventsItem[];
 }
 
@@ -1126,6 +1129,15 @@ export type ListFrfMembershipsParams = {
 export type TrackFrfMembershipParams = {
   frfNumber?: string;
   mobile?: string;
+};
+
+export type GetDashboardCashFlowParams = {
+  year?: number;
+  /**
+   * @minimum 1
+   * @maximum 4
+   */
+  quarter?: number;
 };
 
 export type ListReceiptRecordsParams = {

@@ -44,6 +44,7 @@ import type {
   FrfMembershipStats,
   FrfMembershipTrack,
   FrfStats,
+  GetDashboardCashFlowParams,
   GetDashboardFinancialSummaryParams,
   GetDashboardSummaryParams,
   GetMonthlyCollectionParams,
@@ -5683,41 +5684,63 @@ export const useDeleteFrfDependent = <
 /**
  * @summary Get cash flow summary and upcoming events
  */
-export const getGetDashboardCashFlowUrl = () => {
-  return `/api/dashboard/cash-flow`;
+export const getGetDashboardCashFlowUrl = (
+  params?: GetDashboardCashFlowParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/dashboard/cash-flow?${stringifiedParams}`
+    : `/api/dashboard/cash-flow`;
 };
 
 export const getDashboardCashFlow = async (
+  params?: GetDashboardCashFlowParams,
   options?: RequestInit,
 ): Promise<DashboardCashFlow> => {
-  return customFetch<DashboardCashFlow>(getGetDashboardCashFlowUrl(), {
+  return customFetch<DashboardCashFlow>(getGetDashboardCashFlowUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetDashboardCashFlowQueryKey = () => {
-  return [`/api/dashboard/cash-flow`] as const;
+export const getGetDashboardCashFlowQueryKey = (
+  params?: GetDashboardCashFlowParams,
+) => {
+  return [`/api/dashboard/cash-flow`, ...(params ? [params] : [])] as const;
 };
 
 export const getGetDashboardCashFlowQueryOptions = <
   TData = Awaited<ReturnType<typeof getDashboardCashFlow>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getDashboardCashFlow>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
+>(
+  params?: GetDashboardCashFlowParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getDashboardCashFlow>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetDashboardCashFlowQueryKey();
+  const queryKey =
+    queryOptions?.queryKey ?? getGetDashboardCashFlowQueryKey(params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof getDashboardCashFlow>>
-  > = ({ signal }) => getDashboardCashFlow({ signal, ...requestOptions });
+  > = ({ signal }) =>
+    getDashboardCashFlow(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof getDashboardCashFlow>>,
@@ -5738,15 +5761,18 @@ export type GetDashboardCashFlowQueryError = ErrorType<unknown>;
 export function useGetDashboardCashFlow<
   TData = Awaited<ReturnType<typeof getDashboardCashFlow>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getDashboardCashFlow>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getGetDashboardCashFlowQueryOptions(options);
+>(
+  params?: GetDashboardCashFlowParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getDashboardCashFlow>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetDashboardCashFlowQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

@@ -1645,12 +1645,26 @@ export const DeleteFrfDependentParams = zod.object({
 /**
  * @summary Get cash flow summary and upcoming events
  */
+export const getDashboardCashFlowQueryQuarterMax = 4;
+
+export const GetDashboardCashFlowQueryParams = zod.object({
+  year: zod.coerce.number().optional(),
+  quarter: zod.coerce
+    .number()
+    .min(1)
+    .max(getDashboardCashFlowQueryQuarterMax)
+    .optional(),
+});
+
 export const GetDashboardCashFlowResponse = zod.object({
   totalCollected: zod.number(),
   totalDisbursed: zod.number(),
   balance: zod.number(),
+  netBalance: zod.number(),
   pendingClaimsCount: zod.number(),
   eventsThisQuarter: zod.number(),
+  selectedYear: zod.number(),
+  selectedQuarter: zod.number(),
   upcomingEvents: zod.array(
     zod.object({
       id: zod.string(),

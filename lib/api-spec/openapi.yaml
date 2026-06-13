@@ -1289,6 +1289,15 @@ paths:
       operationId: getDashboardCashFlow
       tags: [dashboard]
       summary: Get cash flow summary and upcoming events
+      parameters:
+        - in: query
+          name: year
+          required: false
+          schema: { type: integer }
+        - in: query
+          name: quarter
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 4 }
       responses:
         "200":
           description: Cash flow data
@@ -2434,8 +2443,11 @@ components:
         totalCollected: { type: number }
         totalDisbursed: { type: number }
         balance: { type: number }
+        netBalance: { type: number }
         pendingClaimsCount: { type: integer }
         eventsThisQuarter: { type: integer }
+        selectedYear: { type: integer }
+        selectedQuarter: { type: integer }
         upcomingEvents:
           type: array
           items:
@@ -2446,4 +2458,4 @@ components:
               startDate: { type: string }
               location: { type: string }
             required: [id, title, startDate]
-      required: [totalCollected, totalDisbursed, balance, pendingClaimsCount, eventsThisQuarter, upcomingEvents]
+      required: [totalCollected, totalDisbursed, balance, netBalance, pendingClaimsCount, eventsThisQuarter, selectedYear, selectedQuarter, upcomingEvents]
