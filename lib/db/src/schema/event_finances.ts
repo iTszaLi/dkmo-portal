@@ -35,6 +35,7 @@ export const eventTicketBookletsTable = pgTable("event_ticket_booklets", {
   ticketRangeEnd: integer("ticket_range_end").notNull(),
   assignedTo: text("assigned_to").notNull().default(""),
   assignedDate: text("assigned_date").notNull().default(""),
+  ticketAmount: numeric("ticket_amount", { precision: 14, scale: 2 }).notNull().default("0"),
   status: text("status").notNull().default("available"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

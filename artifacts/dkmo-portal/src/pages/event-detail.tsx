@@ -46,11 +46,12 @@ import {
 } from "@/components/ui/dialog";
 import {
   ArrowLeft, Save, Trash2, ListChecks, Plus, Users, DollarSign,
-  Ticket, BarChart3, X, ChevronDown, ChevronUp,
+  Ticket, BarChart3, X, ChevronDown, ChevronUp, Printer,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { generateEventReportPdf } from "@/lib/event-report-pdf";
 
 // ── Constants ─────────────────────────────────────────────────────
 const EVENT_STATUSES = ["upcoming", "ongoing", "completed", "cancelled"] as const;
@@ -744,6 +745,50 @@ export default function EventDetail() {
     { query: { enabled: !!id && !isNew } },
   );
 
+  const { data: reportSponsors = [] } = useListEventSponsors(id ?? "");
+  const { data: reportExpenses = [] } = useListEventExpenses(id ?? "");
+  const { data: financialSummary } = useGetEventFinancialSummary(id ?? "");
+
+  const [printing, setPrinting] = useState(false);
+
+  const handlePrintReport = async () => {
+    if (!event) return;
+    setPrinting(true);
+    try {
+      await generateEventReportPdf({
+        eventName: event.name,
+        eventDate: event.eventDate,
+        location: event.location,
+        status: event.status,
+        budget: event.budget,
+        sponsors: reportSponsors.map((s) => ({
+          sponsorName: s.sponsorName,
+          contactPerson: s.contactPerson || undefined,
+          amount: s.amount,
+          sponsorshipType: s.sponsorshipType,
+          notes: s.notes || undefined,
+        })),
+        expenses: reportExpenses.map((e) => ({
+          category: e.category,
+          description: e.description || undefined,
+          vendor: e.vendor || undefined,
+          amount: e.amount,
+          expenseDate: e.expenseDate || undefined,
+        })),
+        ticketsSold: financialSummary?.tickets.sold ?? 0,
+        ticketsTotal: financialSummary?.tickets.total ?? 0,
+        ticketRevenue: financialSummary?.tickets.revenue ?? 0,
+        totalIncome: financialSummary?.summary.totalIncome ?? 0,
+        totalExpenses: financialSummary?.summary.totalExpenses ?? 0,
+        netBalance: financialSummary?.summary.netBalance ?? 0,
+      });
+    } catch (err) {
+      toast({ title: "Could not generate report", description: String(err), variant: "destructive" });
+    } finally {
+      setPrinting(false);
+    }
+  };
+
   const [form, setForm] = useState<FormState>(EMPTY);
   const [editing, setEditing] = useState(isNew);
 
@@ -843,18 +888,32 @@ export default function EventDetail() {
             )}
           </div>
         </div>
-        {!isNew && canEdit && !editing && (
+        {!isNew && (
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setEditing(true)}
-              className="border-green-300 dark:border-green-800 text-green-800 dark:text-green-300 hover:bg-green-50 dark:hover:bg-green-950/30">
-              Edit
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePrintReport}
+              disabled={printing}
+              className="border-green-300 dark:border-green-800 text-green-800 dark:text-green-300 hover:bg-green-50 dark:hover:bg-green-950/30"
+            >
+              <Printer className="h-4 w-4 mr-1.5" />
+              {printing ? "Generating…" : "Print Report"}
             </Button>
-            {canDelete && (
-              <Button variant="outline" onClick={onDelete}
-                className="border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
-                disabled={deleteMutation.isPending}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
+            {canEdit && !editing && (
+              <>
+                <Button variant="outline" size="sm" onClick={() => setEditing(true)}
+                  className="border-green-300 dark:border-green-800 text-green-800 dark:text-green-300 hover:bg-green-50 dark:hover:bg-green-950/30">
+                  Edit
+                </Button>
+                {canDelete && (
+                  <Button variant="outline" size="sm" onClick={onDelete}
+                    className="border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
+                    disabled={deleteMutation.isPending}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </>
             )}
           </div>
         )}
