@@ -24,9 +24,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Phone, Mail, MapPin, User, Briefcase, Users, Printer, Trash2, Edit, Plus, X } from "lucide-react";
+import { ArrowLeft, Phone, MapPin, User, Briefcase, Users, Printer, Download, Trash2, Edit, Plus, X } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import { generateFrfPdf } from "@/lib/frf-pdf";
 
 const STATUS_OPTIONS = [
   { value: "submitted", label: "Submitted", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" },
@@ -116,6 +117,46 @@ export default function FrfMembershipDetailPage() {
     window.print();
   }
 
+  function handleDownloadPdf() {
+    if (!membership) return;
+    const deps = ((membership as any).dependents ?? []) as Array<{ fullName?: string; relation?: string; age?: number | null }>;
+    const submittedDate = membership.createdAt
+      ? new Date(membership.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
+      : new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+    void generateFrfPdf(
+      {
+        fullName: membership.fullName,
+        dateOfBirth: membership.dateOfBirth,
+        passportNumber: membership.passportNumber,
+        iqamaNumber: membership.iqamaNumber,
+        occupation: membership.occupation,
+        companyName: membership.companyName,
+        maritalStatus: membership.maritalStatus,
+        bloodGroup: membership.bloodGroup,
+        photoDataUrl: (membership as any).photoUrl ?? null,
+        areaSaudi: membership.areaSaudi,
+        poBox: membership.poBox,
+        businessPhone: membership.businessPhone,
+        mobileSaudi: membership.mobileSaudi,
+        email: membership.email,
+        emergencyNameSaudi: membership.emergencyNameSaudi,
+        emergencyMobileSaudi: membership.emergencyMobileSaudi,
+        houseName: membership.houseName,
+        postalAddress: membership.postalAddress,
+        district: membership.district,
+        nearestJamaath: membership.nearestJamaath,
+        homePhone: membership.homePhone,
+        mobileIndia: membership.mobileIndia,
+        emergencyNameIndia: membership.emergencyNameIndia,
+        emergencyMobileIndia: membership.emergencyMobileIndia,
+        notes: membership.notes,
+      },
+      deps.map((d) => ({ fullName: d.fullName, relation: d.relation, age: d.age })),
+      membership.frfNumber,
+      submittedDate,
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -163,6 +204,10 @@ export default function FrfMembershipDetailPage() {
           <Button variant="outline" size="sm" onClick={handlePrint}
             className="border-green-200 dark:border-slate-700 text-green-800 dark:text-green-300 hover:bg-green-50">
             <Printer className="h-4 w-4 mr-1" /> Print
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleDownloadPdf}
+            className="border-green-200 dark:border-slate-700 text-green-800 dark:text-green-300 hover:bg-green-50">
+            <Download className="h-4 w-4 mr-1" /> Download PDF
           </Button>
           <Button variant="outline" size="sm" onClick={() => setLocation(`/frf-membership/${id}/edit`)}
             className="border-green-200 dark:border-slate-700 text-green-800 dark:text-green-300 hover:bg-green-50">
