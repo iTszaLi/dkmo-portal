@@ -13,7 +13,6 @@ import {
   useGetFrfMembershipStats,
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { formatSAR, getCurrentMonth, formatDate, formatYearMonth, getCurrentYear } from "@/lib/utils";
 import {
   Users,
@@ -35,8 +34,6 @@ import {
   ArrowUpCircle,
   ArrowDownCircle,
   Scale,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 import { PaymentMethodIcon } from "@/lib/payment-icons";
 import {
@@ -72,8 +69,6 @@ export default function Dashboard() {
 
   const todayYear = today.getFullYear();
   const todayQuarter = Math.floor(today.getMonth() / 3) + 1;
-  const [selectedYear, setSelectedYear] = useState(todayYear);
-  const [selectedQuarter, setSelectedQuarter] = useState(todayQuarter);
 
   const { data: summary, isLoading: isLoadingSummary } = useGetDashboardSummary({ month: currentMonth });
   const { data: recentPayments, isLoading: isLoadingRecent } = useGetRecentPayments({ limit: 5 });
@@ -83,7 +78,7 @@ export default function Dashboard() {
   const { data: members } = useListMembers();
   const { data: pipeline } = useGetDashboardSponsorPipeline();
   const { data: financialSummary } = useGetDashboardFinancialSummary({ month: currentMonth });
-  const { data: cashFlow } = useGetDashboardCashFlow({ year: selectedYear, quarter: selectedQuarter });
+  const { data: cashFlow } = useGetDashboardCashFlow({ year: todayYear, quarter: todayQuarter });
   const { data: frfStats } = useGetFrfMembershipStats();
 
   const yearToDate = useMemo(() => {
@@ -271,70 +266,7 @@ export default function Dashboard() {
             >
               Events This Quarter
             </CardTitle>
-            <Popover>
-              <PopoverTrigger asChild>
-                <button
-                  className="p-1 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
-                  title="Change quarter"
-                >
-                  <CalendarDays className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-56 p-3" align="end">
-                <div className="space-y-3">
-                  {/* Year selector */}
-                  <div className="flex items-center justify-between">
-                    <button
-                      onClick={() => setSelectedYear((y) => y - 1)}
-                      className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </button>
-                    <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">{selectedYear}</span>
-                    <button
-                      onClick={() => setSelectedYear((y) => y + 1)}
-                      className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                      disabled={selectedYear >= todayYear}
-                    >
-                      <ChevronRight className={`h-4 w-4 ${selectedYear >= todayYear ? "opacity-30" : ""}`} />
-                    </button>
-                  </div>
-                  {/* Quarter buttons */}
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {[1, 2, 3, 4].map((q) => {
-                      const isCurrent = q === todayQuarter && selectedYear === todayYear;
-                      const isSelected = q === selectedQuarter && selectedYear === selectedYear;
-                      const isFuture = selectedYear === todayYear && q > todayQuarter;
-                      return (
-                        <button
-                          key={q}
-                          disabled={isFuture}
-                          onClick={() => setSelectedQuarter(q)}
-                          className={`text-xs font-medium py-1.5 px-2 rounded-md border transition-all ${
-                            isSelected && q === selectedQuarter
-                              ? "bg-blue-600 text-white border-blue-600 dark:bg-blue-500 dark:border-blue-500"
-                              : isFuture
-                              ? "opacity-30 cursor-not-allowed border-slate-200 dark:border-slate-700 text-slate-400"
-                              : "border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 text-slate-700 dark:text-slate-300"
-                          }`}
-                        >
-                          Q{q}{isCurrent ? " ●" : ""}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {/* Reset to today */}
-                  {(selectedYear !== todayYear || selectedQuarter !== todayQuarter) && (
-                    <button
-                      onClick={() => { setSelectedYear(todayYear); setSelectedQuarter(todayQuarter); }}
-                      className="w-full text-xs text-blue-600 dark:text-blue-400 hover:underline text-center"
-                    >
-                      Back to current quarter
-                    </button>
-                  )}
-                </div>
-              </PopoverContent>
-            </Popover>
+            <CalendarDays className="h-4 w-4 text-blue-600 dark:text-blue-400" />
           </CardHeader>
           <CardContent>
             {cashFlow == null ? (
@@ -348,10 +280,7 @@ export default function Dashboard() {
               </div>
             )}
             <p className="text-xs text-blue-700/80 dark:text-blue-500/80 mt-1">
-              Q{selectedQuarter} · {selectedYear}
-              {(selectedYear !== todayYear || selectedQuarter !== todayQuarter) && (
-                <span className="ml-1 text-blue-400">(custom)</span>
-              )}
+              Q{todayQuarter} · {todayYear}
             </p>
           </CardContent>
         </Card>
@@ -921,12 +850,22 @@ export default function Dashboard() {
                       silver: "bg-sky-50 dark:bg-sky-950/30 border-sky-200 dark:border-sky-900/50 text-sky-700 dark:text-sky-300",
                       bronze: "bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-900/50 text-orange-800 dark:text-orange-300",
                     };
+                    const TIER_HOVER: Record<string, string> = {
+                      platinum: "hover:border-violet-400 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97]",
+                      gold: "hover:border-yellow-400 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97]",
+                      silver: "hover:border-sky-400 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97]",
+                      bronze: "hover:border-orange-400 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97]",
+                    };
                     return (
-                      <div key={b!.tier} className={`rounded-xl border p-3 text-center ${TIER_STYLE[b!.tier] ?? ""}`}>
+                      <Link
+                        key={b!.tier}
+                        href={`/sponsors?tier=${b!.tier}`}
+                        className={`rounded-xl border p-3 text-center cursor-pointer transition-all duration-150 block ${TIER_STYLE[b!.tier] ?? ""} ${TIER_HOVER[b!.tier] ?? ""}`}
+                      >
                         <p className="text-xs font-semibold capitalize mb-1">{b!.tier}</p>
                         <p className="text-lg font-bold">{b!.count}</p>
                         <p className="text-xs opacity-70">{formatSAR(b!.collected)}</p>
-                      </div>
+                      </Link>
                     );
                   })}
               </div>

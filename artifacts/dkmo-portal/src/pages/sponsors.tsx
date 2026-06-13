@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link, useLocation } from "wouter";
+import { Link, useLocation, useSearch } from "wouter";
 import {
   useListSponsors,
   useDeleteSponsor,
@@ -69,11 +69,18 @@ function formatSAR(n: number) {
 
 export default function Sponsors() {
   const [, setLocation] = useLocation();
+  const searchString = useSearch();
   const { canEdit, canDelete } = useAuth();
   const { toast } = useToast();
 
+  const initialTier = useMemo(() => {
+    const params = new URLSearchParams(searchString);
+    const t = params.get("tier");
+    return t && ["platinum", "gold", "silver", "bronze"].includes(t) ? t : "all";
+  }, []);
+
   const [search, setSearch] = useState("");
-  const [tier, setTier] = useState<string>("all");
+  const [tier, setTier] = useState<string>(initialTier);
   const [status, setStatus] = useState<string>("all");
   const [sort, setSort] = useState<string>("recent");
   const [page, setPage] = useState(1);
