@@ -126,7 +126,7 @@ function loanTypeBadge(type: LoanType) {
 }
 
 function fmt(n: number) {
-  return `₹${n.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  return new Intl.NumberFormat("en-SA", { style: "currency", currency: "SAR", maximumFractionDigits: 0 }).format(n);
 }
 
 const PAGE_SIZE = 20;
@@ -544,7 +544,7 @@ export default function Loans() {
                   name="principalAmount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Principal (₹)</FormLabel>
+                      <FormLabel>Principal (SAR)</FormLabel>
                       <FormControl>
                         <Input type="number" min={0} {...field} />
                       </FormControl>
@@ -575,7 +575,7 @@ export default function Loans() {
                   name="emiAmount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>EMI (₹)</FormLabel>
+                      <FormLabel>EMI (SAR)</FormLabel>
                       <FormControl>
                         <Input type="number" min={0} {...field} />
                       </FormControl>
