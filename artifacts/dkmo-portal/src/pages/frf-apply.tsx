@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link } from "wouter";
 import {
   CheckCircle, XCircle, Clock, Users, Loader2, ShieldCheck, ChevronRight, ChevronLeft,
-  Plus, Trash2, Download, Printer, ExternalLink, RefreshCw,
+  Plus, Trash2, Download, Printer, ExternalLink, RefreshCw, Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -340,6 +340,15 @@ export default function FrfApplyPage() {
               >
                 <Printer className="h-4 w-4" />
                 Print Application
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-green-700 dark:text-green-400 gap-1 font-medium"
+                onClick={() => setLocation(`${basePath}/frf-track`)}
+              >
+                <Search className="h-3.5 w-3.5" />
+                Check Application Status Later
               </Button>
               <Button
                 variant="ghost"

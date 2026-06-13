@@ -28,6 +28,7 @@ import FrfMembershipDetail from "@/pages/frf-membership-detail";
 import FrfMembershipForm from "@/pages/frf-membership-form";
 import FrfApply from "@/pages/frf-apply";
 import FrfTerms from "@/pages/frf-terms";
+import FrfTrack from "@/pages/frf-track";
 import Loans from "@/pages/loans";
 import Receipts from "@/pages/receipts";
 import Documents from "@/pages/documents";
@@ -107,6 +108,7 @@ function AppRoutes() {
       {/* Public routes — no auth required */}
       <Route path="/frf-apply" component={FrfApply} />
       <Route path="/frf-terms" component={FrfTerms} />
+      <Route path="/frf-track" component={FrfTrack} />
       {/* Backwards-compat: redirect old Clerk paths to /login */}
       <Route path="/sign-in/:rest*" component={() => <Redirect to="/login" />} />
       <Route path="/sign-up/:rest*" component={() => <Redirect to="/login" />} />
