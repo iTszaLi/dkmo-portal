@@ -106,6 +106,7 @@ async function main() {
       nominee_relation TEXT NOT NULL DEFAULT '',
       nominee_mobile TEXT NOT NULL DEFAULT '',
       status TEXT NOT NULL DEFAULT 'submitted',
+      decline_reason TEXT,
       photo_url TEXT,
       notes TEXT NOT NULL DEFAULT '',
       membership_date DATE NOT NULL DEFAULT '2024-01-01',
