@@ -19,6 +19,7 @@ import {
   Landmark,
   Receipt,
   FolderOpen,
+  Printer,
 } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -63,6 +64,7 @@ const navigation: NavItem[] = [
   { name: "Pending",        href: "/pending",         icon: AlertCircle },
   { name: "Loans",          href: "/loans",           icon: Landmark },
   { name: "Receipts",       href: "/receipts",        icon: Receipt },
+  { name: "Print Receipts", href: "/print-receipts",  icon: Printer },
   { name: "Documents",      href: "/documents",       icon: FolderOpen },
   { name: "Reports",        href: "/reports",         icon: FileText },
   { name: "Settings",       href: "/settings",        icon: Cog, roles: ["admin"] },

@@ -31,6 +31,7 @@ import FrfTerms from "@/pages/frf-terms";
 import FrfTrack from "@/pages/frf-track";
 import Loans from "@/pages/loans";
 import Receipts from "@/pages/receipts";
+import PrintReceipts from "@/pages/print-receipts";
 import Documents from "@/pages/documents";
 import Forbidden from "@/pages/forbidden";
 import NotFound from "@/pages/not-found";
@@ -134,6 +135,7 @@ function AppRoutes() {
       <Route path="/frf-membership" component={() => <AuthenticatedRoute component={FrfMembership} />} />
       <Route path="/loans" component={() => <AuthenticatedRoute component={Loans} />} />
       <Route path="/receipts" component={() => <AuthenticatedRoute component={Receipts} />} />
+      <Route path="/print-receipts" component={() => <AuthenticatedRoute component={PrintReceipts} />} />
       <Route path="/documents" component={() => <AuthenticatedRoute component={Documents} />} />
       <Route
         path="/settings"
