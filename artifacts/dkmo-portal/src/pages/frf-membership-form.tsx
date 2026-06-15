@@ -1,7 +1,11 @@
-import { useState, type FormEvent } from "react";
-import { useLocation } from "wouter";
-import { useCreateFrfMembership } from "@workspace/api-client-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useState, useEffect, type FormEvent } from "react";
+import { useLocation, useRoute } from "wouter";
+import {
+  useCreateFrfMembership,
+  useUpdateFrfMembership,
+  useGetFrfMembership,
+} from "@workspace/api-client-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,6 +33,17 @@ const STEPS = [
   { label: "Nominee & Dependents" },
 ];
 
+const EMPTY_FORM = {
+  fullName: "", dateOfBirth: "", bloodGroup: "", maritalStatus: "",
+  passportNumber: "", iqamaNumber: "", occupation: "", companyName: "",
+  mobileSaudi: "", email: "", areaSaudi: "", poBox: "", businessPhone: "",
+  emergencyNameSaudi: "", emergencyMobileSaudi: "",
+  houseName: "", postalAddress: "", district: "", nearestJamaath: "",
+  homePhone: "", mobileIndia: "", emergencyNameIndia: "", emergencyMobileIndia: "",
+  nomineeName: "", nomineeRelation: "", nomineeMobile: "", notes: "",
+  status: "submitted",
+};
+
 function FieldRow({ label, id, children }: { label: string; id?: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
@@ -46,19 +61,62 @@ export default function FrfMembershipFormPage() {
   const [step, setStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [dependents, setDependents] = useState<Dependent[]>([]);
+  const [form, setForm] = useState({ ...EMPTY_FORM });
 
-  const [form, setForm] = useState({
-    fullName: "", dateOfBirth: "", bloodGroup: "", maritalStatus: "",
-    passportNumber: "", iqamaNumber: "", occupation: "", companyName: "",
-    mobileSaudi: "", email: "", areaSaudi: "", poBox: "", businessPhone: "",
-    emergencyNameSaudi: "", emergencyMobileSaudi: "",
-    houseName: "", postalAddress: "", district: "", nearestJamaath: "",
-    homePhone: "", mobileIndia: "", emergencyNameIndia: "", emergencyMobileIndia: "",
-    nomineeName: "", nomineeRelation: "", nomineeMobile: "", notes: "",
-    status: "submitted",
-  });
+  // Detect edit mode via route
+  const [isEditRoute, editParams] = useRoute("/frf-membership/:id/edit");
+  const editId = isEditRoute ? (editParams?.id ?? "") : "";
+  const isEditMode = !!editId;
 
-  const { mutateAsync: createMembership, isPending } = useCreateFrfMembership();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: existingMembership, isLoading: isLoadingExisting } = useGetFrfMembership(editId, { query: { enabled: isEditMode } as any });
+
+  // Pre-populate form when editing
+  useEffect(() => {
+    if (!existingMembership) return;
+    const m = existingMembership;
+    setForm({
+      fullName: m.fullName ?? "",
+      dateOfBirth: m.dateOfBirth ?? "",
+      bloodGroup: m.bloodGroup ?? "",
+      maritalStatus: m.maritalStatus ?? "",
+      passportNumber: m.passportNumber ?? "",
+      iqamaNumber: m.iqamaNumber ?? "",
+      occupation: m.occupation ?? "",
+      companyName: m.companyName ?? "",
+      mobileSaudi: m.mobileSaudi ?? "",
+      email: m.email ?? "",
+      areaSaudi: m.areaSaudi ?? "",
+      poBox: m.poBox ?? "",
+      businessPhone: m.businessPhone ?? "",
+      emergencyNameSaudi: m.emergencyNameSaudi ?? "",
+      emergencyMobileSaudi: m.emergencyMobileSaudi ?? "",
+      houseName: m.houseName ?? "",
+      postalAddress: m.postalAddress ?? "",
+      district: m.district ?? "",
+      nearestJamaath: m.nearestJamaath ?? "",
+      homePhone: m.homePhone ?? "",
+      mobileIndia: m.mobileIndia ?? "",
+      emergencyNameIndia: m.emergencyNameIndia ?? "",
+      emergencyMobileIndia: m.emergencyMobileIndia ?? "",
+      nomineeName: m.nomineeName ?? "",
+      nomineeRelation: m.nomineeRelation ?? "",
+      nomineeMobile: m.nomineeMobile ?? "",
+      notes: m.notes ?? "",
+      status: m.status ?? "submitted",
+    });
+    if (m.dependents && m.dependents.length > 0) {
+      setDependents(m.dependents.map((d: { fullName: string; relation: string; age?: number | null }) => ({
+        fullName: d.fullName ?? "",
+        relation: d.relation ?? "",
+        age: d.age != null ? String(d.age) : "",
+      })));
+    }
+  }, [existingMembership]);
+
+  const { mutateAsync: createMembership, isPending: isCreating } = useCreateFrfMembership();
+  const { mutateAsync: updateMembership, isPending: isUpdating } = useUpdateFrfMembership();
+  const isPending = isCreating || isUpdating;
 
   const set = (field: keyof typeof form, value: string) => setForm((f) => ({ ...f, [field]: value }));
   const addDependent = () => setDependents((d) => [...d, { fullName: "", relation: "", age: "" }]);
@@ -70,33 +128,55 @@ export default function FrfMembershipFormPage() {
     e.preventDefault();
     if (!form.fullName.trim()) { setError("Full name is required."); return; }
     setError(null);
+    const payload = {
+      ...form,
+      numDependents: dependents.length,
+      dependents: dependents
+        .filter((d) => d.fullName.trim())
+        .map((d) => ({ fullName: d.fullName, relation: d.relation, age: d.age ? parseInt(d.age, 10) : null })),
+    };
     try {
-      const created = await createMembership({
-        data: {
-          ...form,
-          numDependents: dependents.length,
-          dependents: dependents
-            .filter((d) => d.fullName.trim())
-            .map((d) => ({ fullName: d.fullName, relation: d.relation, age: d.age ? parseInt(d.age, 10) : null })),
-        },
-      });
-      toast({ title: "FRF membership created", description: `FRF Number: ${created.frfNumber}` });
-      setLocation(`/frf-membership/${created.id}`);
+      if (isEditMode) {
+        await updateMembership({ id: editId, data: payload });
+        toast({ title: "FRF membership updated" });
+        setLocation(`/frf-membership/${editId}`);
+      } else {
+        const created = await createMembership({ data: payload });
+        toast({ title: "FRF membership created", description: `FRF Number: ${created.frfNumber}` });
+        setLocation(`/frf-membership/${created.id}`);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create membership.");
+      setError(err instanceof Error ? err.message : `Failed to ${isEditMode ? "update" : "create"} membership.`);
     }
+  }
+
+  const backPath = isEditMode ? `/frf-membership/${editId}` : "/frf-membership";
+
+  if (isEditMode && isLoadingExisting) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="h-6 w-6 animate-spin text-green-700" />
+        <span className="ml-3 text-green-800 dark:text-slate-300">Loading membership…</span>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => setLocation("/frf-membership")}
+        <Button variant="ghost" size="icon" onClick={() => setLocation(backPath)}
           className="text-green-800 hover:bg-green-50 dark:hover:bg-slate-800">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-green-950 dark:text-green-100">New FRF Membership</h1>
-          <p className="text-sm text-green-800/70 dark:text-slate-400">Admin entry — FRF number auto-assigned</p>
+          <h1 className="text-2xl font-bold text-green-950 dark:text-green-100">
+            {isEditMode ? "Edit FRF Membership" : "New FRF Membership"}
+          </h1>
+          <p className="text-sm text-green-800/70 dark:text-slate-400">
+            {isEditMode
+              ? `Editing: ${existingMembership?.frfNumber ?? editId}`
+              : "Admin entry — FRF number auto-assigned"}
+          </p>
         </div>
       </div>
 
@@ -245,7 +325,7 @@ export default function FrfMembershipFormPage() {
         <div className="flex justify-between items-center">
           <Button type="button" variant="outline"
             className="border-green-300 dark:border-green-800 text-green-800 dark:text-green-300"
-            onClick={() => step > 0 ? setStep(step - 1) : setLocation("/frf-membership")}>
+            onClick={() => step > 0 ? setStep(step - 1) : setLocation(backPath)}>
             <ChevronLeft className="h-4 w-4 mr-1" />
             {step === 0 ? "Cancel" : "Previous"}
           </Button>
@@ -259,7 +339,9 @@ export default function FrfMembershipFormPage() {
           ) : (
             <Button type="submit" disabled={isPending}
               className="bg-green-800 hover:bg-green-900 dark:bg-green-700 dark:hover:bg-green-600 text-white">
-              {isPending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Creating…</> : "Create Membership"}
+              {isPending
+                ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {isEditMode ? "Saving…" : "Creating…"}</>
+                : isEditMode ? "Save Changes" : "Create Membership"}
             </Button>
           )}
         </div>

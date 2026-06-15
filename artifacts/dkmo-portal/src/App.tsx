@@ -131,6 +131,7 @@ function AppRoutes() {
       <Route path="/committee" component={() => <AuthenticatedRoute component={Committee} />} />
       <Route path="/frf" component={() => <AuthenticatedRoute component={Frf} />} />
       <Route path="/frf-membership/new" component={() => <AuthenticatedRoute component={FrfMembershipForm} />} />
+      <Route path="/frf-membership/:id/edit" component={() => <AuthenticatedRoute component={FrfMembershipForm} />} />
       <Route path="/frf-membership/:id" component={() => <AuthenticatedRoute component={FrfMembershipDetail} />} />
       <Route path="/frf-membership" component={() => <AuthenticatedRoute component={FrfMembership} />} />
       <Route path="/loans" component={() => <AuthenticatedRoute component={Loans} />} />
