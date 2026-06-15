@@ -99,7 +99,7 @@ export default function FrfTermsPage() {
           <Button
             variant="outline"
             className="border-green-300 dark:border-green-800 text-green-800 dark:text-green-300"
-            onClick={() => window.history.back()}
+            onClick={() => setLocation("/frf-apply")}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Go Back

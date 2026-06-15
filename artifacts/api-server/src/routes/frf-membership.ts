@@ -49,8 +49,33 @@ const FrfMembershipInput = z.object({
 });
 
 async function nextFrfNumber(): Promise<string> {
-  const result = await db.execute(sql`SELECT next_frf_number() AS num`);
-  return (result.rows[0] as any).num as string;
+  try {
+    const result = await db.execute(sql`SELECT next_frf_number() AS num`);
+    const num = (result.rows[0] as any)?.num;
+    if (num) return num as string;
+  } catch {
+    // SQL function not available — fall through to TS implementation
+  }
+  // TypeScript fallback: derive next FRF number from the latest record
+  const lastRows = await db
+    .select({ frfNumber: frfMembershipsTable.frfNumber })
+    .from(frfMembershipsTable)
+    .orderBy(desc(frfMembershipsTable.createdAt))
+    .limit(1);
+
+  const year2d = new Date().getFullYear().toString().slice(2);
+  if (lastRows.length === 0) return `FRF-${year2d}01`;
+
+  const last = lastRows[0].frfNumber;
+  const match = last.match(/FRF-(\d{2})(\d+)$/);
+  if (match) {
+    const [, yr, numStr] = match;
+    if (yr === year2d) {
+      const next = parseInt(numStr, 10) + 1;
+      return `FRF-${yr}${String(next).padStart(Math.max(2, numStr.length), "0")}`;
+    }
+  }
+  return `FRF-${year2d}01`;
 }
 
 function membershipToApi(m: typeof frfMembershipsTable.$inferSelect) {

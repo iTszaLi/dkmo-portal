@@ -103,7 +103,7 @@ export default function FrfMembershipFormPage() {
       nomineeRelation: m.nomineeRelation ?? "",
       nomineeMobile: m.nomineeMobile ?? "",
       notes: m.notes ?? "",
-      status: m.status ?? "submitted",
+      status: (m.status || "submitted") as string,
     });
     if (m.dependents && m.dependents.length > 0) {
       setDependents(m.dependents.map((d: { fullName: string; relation: string; age?: number | null }) => ({
@@ -130,6 +130,7 @@ export default function FrfMembershipFormPage() {
     setError(null);
     const payload = {
       ...form,
+      status: form.status || "submitted",
       numDependents: dependents.length,
       dependents: dependents
         .filter((d) => d.fullName.trim())

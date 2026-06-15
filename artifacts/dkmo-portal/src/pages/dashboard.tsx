@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import {
   useGetDashboardSummary,
@@ -70,6 +70,27 @@ export default function Dashboard() {
   const todayYear = today.getFullYear();
   const todayQuarter = Math.floor(today.getMonth() / 3) + 1;
 
+  // Adjustable YTD year
+  const [ytdYear, setYtdYear] = useState(todayYear);
+  const [showYtdPicker, setShowYtdPicker] = useState(false);
+  const ytdPickerRef = useRef<HTMLDivElement>(null);
+
+  // Adjustable Events quarter/year
+  const [eventsYear, setEventsYear] = useState(todayYear);
+  const [eventsQuarter, setEventsQuarter] = useState(todayQuarter);
+  const [showQuarterPicker, setShowQuarterPicker] = useState(false);
+  const quarterPickerRef = useRef<HTMLDivElement>(null);
+
+  // Close pickers on outside click
+  useEffect(() => {
+    function onMouseDown(e: MouseEvent) {
+      if (ytdPickerRef.current && !ytdPickerRef.current.contains(e.target as Node)) setShowYtdPicker(false);
+      if (quarterPickerRef.current && !quarterPickerRef.current.contains(e.target as Node)) setShowQuarterPicker(false);
+    }
+    document.addEventListener("mousedown", onMouseDown);
+    return () => document.removeEventListener("mousedown", onMouseDown);
+  }, []);
+
   const { data: summary, isLoading: isLoadingSummary } = useGetDashboardSummary({ month: currentMonth });
   const { data: recentPayments, isLoading: isLoadingRecent } = useGetRecentPayments({ limit: 5 });
   const { data: monthlyCollection, isLoading: isLoadingCollection } = useGetMonthlyCollection({ months: 6 });
@@ -78,15 +99,15 @@ export default function Dashboard() {
   const { data: members } = useListMembers();
   const { data: pipeline } = useGetDashboardSponsorPipeline();
   const { data: financialSummary } = useGetDashboardFinancialSummary({ month: currentMonth });
-  const { data: cashFlow } = useGetDashboardCashFlow({ year: todayYear, quarter: todayQuarter });
+  const { data: cashFlow } = useGetDashboardCashFlow({ year: eventsYear, quarter: eventsQuarter });
   const { data: frfStats } = useGetFrfMembershipStats();
 
   const yearToDate = useMemo(() => {
     if (!allPayments) return null;
     return allPayments
-      .filter((p) => p.month.startsWith(currentYear))
+      .filter((p) => p.month.startsWith(String(ytdYear)))
       .reduce((acc, p) => acc + Number(p.amountPaid), 0);
-  }, [allPayments, currentYear]);
+  }, [allPayments, ytdYear]);
 
   const topContributors = useMemo(() => {
     if (!allPayments) return [];
@@ -202,22 +223,49 @@ export default function Dashboard() {
           </Card>
         </Link>
 
-        <Link href="/reports" className="block group" data-testid="link-summary-ytd">
-          <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-green-300 dark:group-hover:border-green-700 group-active:scale-[0.98] cursor-pointer h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-green-900 dark:text-slate-300">Year-to-Date {currentYear}</CardTitle>
-              <CalendarRange className="h-4 w-4 text-green-700 dark:text-green-400" />
-            </CardHeader>
-            <CardContent>
-              {yearToDate == null ? (
-                <Skeleton className="h-8 w-32" />
-              ) : (
-                <div className="text-2xl font-bold text-green-950 dark:text-green-300">{formatSAR(yearToDate)}</div>
+        <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm h-full" data-testid="link-summary-ytd">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-green-900 dark:text-slate-300">
+              Year-to-Date {ytdYear}
+            </CardTitle>
+            <div className="relative" ref={ytdPickerRef}>
+              <button
+                type="button"
+                onClick={() => setShowYtdPicker((v) => !v)}
+                title="Change year"
+                className="rounded-lg p-1 hover:bg-green-100 dark:hover:bg-slate-700 transition-colors"
+              >
+                <CalendarRange className="h-4 w-4 text-green-700 dark:text-green-400" />
+              </button>
+              {showYtdPicker && (
+                <div className="absolute right-0 top-7 z-50 bg-white dark:bg-slate-800 border border-green-200 dark:border-slate-700 rounded-xl shadow-lg p-1.5 flex flex-col gap-1 min-w-[80px]">
+                  {[todayYear - 2, todayYear - 1, todayYear].map((yr) => (
+                    <button
+                      key={yr}
+                      type="button"
+                      onClick={() => { setYtdYear(yr); setShowYtdPicker(false); }}
+                      className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors text-center ${
+                        ytdYear === yr
+                          ? "bg-green-800 text-white"
+                          : "text-green-900 dark:text-slate-300 hover:bg-green-50 dark:hover:bg-slate-700"
+                      }`}
+                    >
+                      {yr}
+                    </button>
+                  ))}
+                </div>
               )}
-              <p className="text-xs text-green-700/80 dark:text-slate-500 mt-1">All payments this year</p>
-            </CardContent>
-          </Card>
-        </Link>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {yearToDate == null ? (
+              <Skeleton className="h-8 w-32" />
+            ) : (
+              <div className="text-2xl font-bold text-green-950 dark:text-green-300">{formatSAR(yearToDate)}</div>
+            )}
+            <p className="text-xs text-green-700/80 dark:text-slate-500 mt-1">All payments this year</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Secondary KPI Row — FRF + Claims + Events */}
@@ -266,7 +314,49 @@ export default function Dashboard() {
             >
               Events This Quarter
             </CardTitle>
-            <CalendarDays className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <div className="relative" ref={quarterPickerRef}>
+              <button
+                type="button"
+                onClick={() => setShowQuarterPicker((v) => !v)}
+                title="Change quarter"
+                className="rounded-lg p-1 hover:bg-blue-100 dark:hover:bg-slate-700 transition-colors"
+              >
+                <CalendarDays className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              </button>
+              {showQuarterPicker && (
+                <div className="absolute right-0 top-7 z-50 bg-white dark:bg-slate-800 border border-blue-200 dark:border-slate-700 rounded-xl shadow-lg p-2.5 min-w-[130px]">
+                  <div className="flex items-center justify-between mb-2">
+                    <button
+                      type="button"
+                      onClick={() => setEventsYear((y) => y - 1)}
+                      className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 w-6 h-6 flex items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-700"
+                    >‹</button>
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{eventsYear}</span>
+                    <button
+                      type="button"
+                      onClick={() => setEventsYear((y) => y + 1)}
+                      className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 w-6 h-6 flex items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-700"
+                    >›</button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1">
+                    {[1, 2, 3, 4].map((q) => (
+                      <button
+                        key={q}
+                        type="button"
+                        onClick={() => { setEventsQuarter(q); setShowQuarterPicker(false); }}
+                        className={`text-xs px-2 py-1.5 rounded-lg font-medium transition-colors ${
+                          eventsQuarter === q
+                            ? "bg-blue-600 text-white"
+                            : "text-blue-900 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700"
+                        }`}
+                      >
+                        Q{q}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             {cashFlow == null ? (
@@ -280,7 +370,7 @@ export default function Dashboard() {
               </div>
             )}
             <p className="text-xs text-blue-700/80 dark:text-blue-500/80 mt-1">
-              Q{todayQuarter} · {todayYear}
+              Q{eventsQuarter} · {eventsYear}
             </p>
           </CardContent>
         </Card>

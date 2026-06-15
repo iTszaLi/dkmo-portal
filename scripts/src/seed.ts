@@ -133,6 +133,22 @@ const eventRows = [
     description: "Inter-city cricket and football tournament for DKMO member families.",
     status: "upcoming",
   },
+  {
+    name: "DKMO Quarterly Community Meeting — Q2 2026",
+    eventDate: new Date("2026-05-10T10:00:00Z"),
+    location: "DKMO Office, Riyadh",
+    budget: "8000",
+    description: "Quarterly review meeting covering FRF disbursements, membership updates and upcoming events planning.",
+    status: "completed",
+  },
+  {
+    name: "DKMO Welfare Committee Meeting — June 2026",
+    eventDate: new Date("2026-06-12T09:30:00Z"),
+    location: "Al-Noor Community Centre, Riyadh",
+    budget: "5000",
+    description: "Meeting to review FRF applications, approve welfare claims and plan community support initiatives.",
+    status: "upcoming",
+  },
 ];
 
 // ── 3. SPONSORS ───────────────────────────────────────────────────────────────

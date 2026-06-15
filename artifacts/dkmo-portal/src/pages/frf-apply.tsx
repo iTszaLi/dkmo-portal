@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { Link } from "wouter";
 import {
   CheckCircle, XCircle, Clock, Users, Loader2, ShieldCheck, ChevronRight, ChevronLeft,
@@ -202,6 +202,26 @@ export default function FrfApplyPage() {
   const [dependents, setDependents] = useState<Dependent[]>([]);
   const [showValidation, setShowValidation] = useState(false);
 
+  // Restore form draft from sessionStorage on mount
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem("frfApplyDraft");
+      if (saved) {
+        const parsed = JSON.parse(saved) as { form?: FormData; dependents?: Dependent[]; step?: number };
+        if (parsed.form) setForm(parsed.form);
+        if (parsed.dependents) setDependents(parsed.dependents);
+        if (typeof parsed.step === "number") setStep(parsed.step);
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  // Auto-save form draft to sessionStorage
+  useEffect(() => {
+    try {
+      sessionStorage.setItem("frfApplyDraft", JSON.stringify({ form, dependents, step }));
+    } catch { /* ignore */ }
+  }, [form, dependents, step]);
+
   const set = (field: keyof FormData, value: string) => setForm((f) => ({ ...f, [field]: value }));
   const addDependent = () => setDependents((d) => [...d, { fullName: "", relation: "", age: "" }]);
   const removeDependent = (i: number) => setDependents((d) => d.filter((_, idx) => idx !== i));
@@ -258,6 +278,7 @@ export default function FrfApplyPage() {
         throw new Error((body as any).error || `Request failed (${res.status})`);
       }
       const data = await res.json() as { frfNumber: string; fullName: string };
+      sessionStorage.removeItem("frfApplyDraft");
       setSubmitted({
         frfNumber: data.frfNumber,
         fullName: data.fullName,
