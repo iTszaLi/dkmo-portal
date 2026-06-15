@@ -13,6 +13,21 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
+async function loadImageAsBase64(url: string): Promise<string> {
+  try {
+    const resp = await fetch(url);
+    const blob = await resp.blob();
+    return await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return "";
+  }
+}
+
 export default function PrintReceipts() {
   const [search, setSearch] = useState("");
   const searchString = useSearch();
@@ -47,119 +62,364 @@ export default function PrintReceipts() {
 
   const clearMonthFilter = () => setLocation("/print-receipts");
 
-  const printReceipt = (payment: (typeof filteredPayments)[number]) => {
-    const printContent = document.getElementById(`receipt-${payment.id}`);
-    if (!printContent) return;
-    const originalBody = document.body.innerHTML;
-    document.body.innerHTML = printContent.innerHTML;
-    window.print();
-    document.body.innerHTML = originalBody;
-    window.location.reload();
-  };
+  // ── PDF download: matches physical DKMO receipt card ─────────────────────
+  const downloadReceiptPDF = async (payment: (typeof filteredPayments)[number]) => {
+    const logoDataUrl = await loadImageAsBase64(`${basePath}/logo.png`);
 
-  const downloadReceiptPDF = (payment: (typeof filteredPayments)[number]) => {
-    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a5" });
-    const pageW = doc.internal.pageSize.getWidth();
-    const green: [number, number, number] = [5, 150, 105];
+    // A5 landscape: 210 × 148 mm
+    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a5" });
+    const W = doc.internal.pageSize.getWidth();   // 210
+    const H = doc.internal.pageSize.getHeight();  // 148
 
-    // Header band
-    doc.setFillColor(...green);
-    doc.rect(0, 0, pageW, 30, "F");
+    const maroon: [number, number, number]    = [102, 0, 0];
+    const darkGray: [number, number, number]  = [50, 50, 50];
+    const lightGray: [number, number, number] = [235, 235, 235];
 
-    // Logo placeholder
+    // ── White background ──────────────────────────────────────────────────
     doc.setFillColor(255, 255, 255);
-    doc.roundedRect(5, 5, 20, 20, 2, 2, "F");
-    doc.setFontSize(6);
-    doc.setTextColor(5, 150, 105);
-    doc.text("DKMO", 15, 16, { align: "center" });
+    doc.rect(0, 0, W, H, "F");
 
-    // Title
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.text("Dakshina Karnataka Muslim Ookota", pageW / 2, 12, { align: "center" });
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "normal");
-    doc.text("ದಕ್ಷಿಣ ಕರ್ನಾಟಕ ಮುಸ್ಲಿಂ ಒಕ್ಕೂಟ", pageW / 2, 19, { align: "center" });
-    doc.setFontSize(7);
-    doc.text("Reg. No: DKMO/2023/1234 · Mangaluru", pageW / 2, 26, { align: "center" });
+    // ── Outer border ─────────────────────────────────────────────────────
+    doc.setDrawColor(...maroon);
+    doc.setLineWidth(1.2);
+    doc.rect(3, 3, W - 6, H - 6, "D");
 
-    // Receipt title
-    doc.setTextColor(5, 150, 105);
-    doc.setFontSize(13);
-    doc.setFont("helvetica", "bold");
-    doc.text("OFFICIAL RECEIPT", pageW / 2, 42, { align: "center" });
-    doc.setDrawColor(5, 150, 105);
-    doc.setLineWidth(0.5);
-    doc.line(20, 44, pageW - 20, 44);
-
-    // Receipt details
-    doc.setTextColor(30, 30, 30);
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Receipt No:`, 10, 54);
-    doc.setFont("helvetica", "bold");
-    doc.text(`${payment.receiptNumber}`, 40, 54);
-
-    doc.setFont("helvetica", "normal");
-    doc.text(`Date:`, 10, 62);
-    doc.setFont("helvetica", "bold");
-    doc.text(`${formatDate(payment.paidAt)}`, 40, 62);
-
-    doc.setFont("helvetica", "normal");
-    doc.text(`Membership ID:`, 10, 70);
-    doc.setFont("helvetica", "bold");
-    doc.text(`${payment.membershipId}`, 40, 70);
-
-    // Body text box
-    doc.setFillColor(240, 253, 244);
-    doc.roundedRect(8, 78, pageW - 16, 36, 2, 2, "F");
-    doc.setDrawColor(167, 243, 208);
-    doc.setLineWidth(0.3);
-    doc.roundedRect(8, 78, pageW - 16, 36, 2, 2, "S");
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8.5);
-    doc.setTextColor(30, 30, 30);
-    const bodyText = doc.splitTextToSize(
-      `Received with thanks from ${payment.memberName}, a sum of ${formatSAR(Number(payment.amountPaid))} towards monthly contribution for the month of ${payment.month}.`,
-      pageW - 26,
-    );
-    doc.text(bodyText, 13, 87);
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.text(`Payment Mode:`, 13, 104);
-    doc.setFont("helvetica", "bold");
-    doc.text(payment.paymentMethod.replace("_", " ").toUpperCase(), 42, 104);
-
-    if (payment.notes) {
-      doc.setFont("helvetica", "italic");
-      doc.setFontSize(7.5);
-      doc.setTextColor(100, 100, 100);
-      doc.text(`"${payment.notes}"`, 13, 110);
+    // ── Logo ─────────────────────────────────────────────────────────────
+    if (logoDataUrl) {
+      doc.addImage(logoDataUrl, "PNG", 6, 6, 22, 22);
+    } else {
+      doc.setFillColor(...maroon);
+      doc.circle(17, 17, 10, "F");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(6);
+      doc.setTextColor(255, 255, 255);
+      doc.text("DKMO", 17, 18, { align: "center" });
     }
 
-    // Signature area
-    doc.setDrawColor(180, 180, 180);
-    doc.setLineWidth(0.3);
-    doc.line(pageW - 60, 145, pageW - 10, 145);
+    // ── Organisation name ─────────────────────────────────────────────────
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
-    doc.setTextColor(30, 30, 30);
-    doc.text("Authorized Signatory", pageW - 35, 150, { align: "center" });
+    doc.setFontSize(17);
+    doc.setTextColor(...maroon);
+    doc.text("Dakshina Karnataka Muslim Okkoota - DKMO RIYADH", 32, 14);
+
+    // Reg line
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...darkGray);
+    doc.text("Reg. No: DKMO/2023/1234  ·  Committed to the Community", 32, 22);
+
+    // ── Header divider ────────────────────────────────────────────────────
+    doc.setDrawColor(...maroon);
+    doc.setLineWidth(0.6);
+    doc.line(5, 30, W - 5, 30);
+
+    // ── Helper: dotted underline field ────────────────────────────────────
+    const dottedLine = (x1: number, y: number, x2: number) => {
+      doc.setLineDashPattern([0.4, 0.7], 0);
+      doc.setLineWidth(0.25);
+      doc.setDrawColor(100, 100, 100);
+      doc.line(x1, y, x2, y);
+      doc.setLineDashPattern([], 0);
+    };
+
+    const label = (text: string, x: number, y: number) => {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9.5);
+      doc.setTextColor(0, 0, 0);
+      doc.text(text, x, y);
+    };
+
+    const value = (text: string, x: number, y: number) => {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(...darkGray);
+      doc.text(text, x, y);
+    };
+
+    // ── Row 1: Date | Receipt# | Jamath Name ─────────────────────────────
+    let y = 40;
+    label("Date:",          6,  y);
+    value(formatDate(payment.paidAt), 19, y);
+    dottedLine(19, y + 1, 62);
+
+    label("Receipt # :",    68, y);
+    value(payment.receiptNumber, 92, y);
+    dottedLine(92, y + 1, 136);
+
+    label("Jamath Name:",   142, y);
+    dottedLine(168, y + 1, W - 6);
+
+    // ── Row 2: Name | DKMO ID ─────────────────────────────────────────────
+    y = 52;
+    label("Name :",         6,  y);
+    value(payment.memberName, 22, y);
+    dottedLine(22, y + 1, 118);
+
+    label("DKMO ID # :",    124, y);
+    value(payment.membershipId, 150, y);
+    dottedLine(150, y + 1, W - 6);
+
+    // ── Row 3: Mobile | WhatsApp ──────────────────────────────────────────
+    y = 64;
+    label("Mobile #:",      6,  y);
+    dottedLine(24, y + 1, 98);
+
+    label("Whatsapp # :",   104, y);
+    dottedLine(130, y + 1, W - 6);
+
+    // ── Row 4: Received Towards ───────────────────────────────────────────
+    y = 76;
+    label("Received",  6, y - 1);
+    label("Towards:",  6, y + 5);
+
+    // Determine which oval to fill
+    const pm = payment.paymentMethod ?? "";
+    const isLoan = pm === "bank_transfer" && (payment.notes ?? "").toLowerCase().includes("loan");
+    const towardsChecked = [
+      false,                 // Life Membership
+      false,                 // FRF Case#
+      !isLoan,               // Voluntary Yearly Contribution (default)
+      false,                 // Donation
+      isLoan,                // Loan Recovery
+      false,                 // Others
+    ];
+    const towardsLabels = [
+      ["Life", "Membership"],
+      ["FRF Case#", ""],
+      ["Voluntary Yearly", "Contribution"],
+      ["Donation", ""],
+      ["Loan", "Recovery"],
+      ["Others", ""],
+    ];
+
+    const ovalW = 14;
+    const ovalH = 7;
+    const ovalStartX = 26;
+    const ovalSpacing = 24;
+
+    for (let i = 0; i < 6; i++) {
+      const ox = ovalStartX + i * ovalSpacing;
+      const oy = y - 3;
+      doc.setLineWidth(0.5);
+      if (towardsChecked[i]) {
+        doc.setFillColor(...maroon);
+        doc.setDrawColor(...maroon);
+        doc.ellipse(ox + ovalW / 2, oy, ovalW / 2, ovalH / 2, "FD");
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(255, 255, 255);
+      } else {
+        doc.setFillColor(255, 255, 255);
+        doc.setDrawColor(80, 80, 80);
+        doc.ellipse(ox + ovalW / 2, oy, ovalW / 2, ovalH / 2, "D");
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(...darkGray);
+      }
+      // Label below oval
+      doc.setFontSize(6.5);
+      towardsLabels[i].forEach((line, li) => {
+        if (line) doc.text(line, ox + ovalW / 2, oy + 6 + li * 4.5, { align: "center" });
+      });
+    }
+
+    // SR/= box (amount)
+    const boxX = W - 44;
+    const boxY = y - 9;
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.6);
+    doc.rect(boxX, boxY, 38, 18, "D");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(0, 0, 0);
+    doc.text("SR/=", boxX + 3, boxY + 7);
+    doc.setFontSize(11);
+    doc.setTextColor(...maroon);
+    const amtStr = Number(payment.amountPaid).toLocaleString("en-IN");
+    doc.text(amtStr, boxX + 19, boxY + 14, { align: "center" });
+
+    // ── Footer divider ────────────────────────────────────────────────────
+    const footerTop = y + 22;
+    doc.setDrawColor(...maroon);
+    doc.setLineWidth(0.6);
+    doc.line(5, footerTop, W - 5, footerTop);
+
+    // ── Footer section background ─────────────────────────────────────────
+    doc.setFillColor(...lightGray);
+    doc.rect(5, footerTop + 0.3, W - 10, H - footerTop - 5.3, "F");
+
+    // "COMMITTED TO THE COMMUNITY"
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(...maroon);
+    doc.text("COMMITTED TO THE COMMUNITY", W / 2, footerTop + 8, { align: "center" });
+
+    // Two columns of community services
+    const col1 = [
+      "Frf Scheme (Family Relief Fund)",
+      "Medical Aid",
+      "Free Air Ticket To Stranded Nri's",
+      "General Relief Fund",
+    ];
+    const col2 = [
+      "Representative In India For Health & Govt Scheme Utilization",
+      "Emergency Response Scheme.",
+      "Dkmo Job Bureau",
+      "Loan Scheme For Members",
+    ];
+
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7);
-    doc.setTextColor(130, 130, 130);
-    doc.text("DKMO Trust", pageW - 35, 155, { align: "center" });
+    doc.setTextColor(30, 30, 30);
 
-    // Footer
-    doc.setFontSize(6.5);
-    doc.setTextColor(160, 160, 160);
-    doc.text("This is a computer generated receipt.", 10, 162);
-    doc.text("Dakshina Karnataka Muslim Ookota — Committed to the Community", pageW / 2, 168, { align: "center" });
+    const colStartY = footerTop + 14;
+    col1.forEach((item, i) => {
+      doc.text(`* ${item}`, 8, colStartY + i * 5.5);
+    });
+    const midX = W / 2 + 3;
+    col2.forEach((item, i) => {
+      const lines = doc.splitTextToSize(`* ${item}`, W / 2 - 14);
+      doc.text(lines, midX, colStartY + i * 5.5);
+    });
 
-    doc.save(`Receipt_${payment.receiptNumber}.pdf`);
+    // Signature line
+    doc.setDrawColor(80, 80, 80);
+    doc.setLineWidth(0.3);
+    doc.line(W - 55, H - 9, W - 7, H - 9);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(30, 30, 30);
+    doc.text("Treasurer/ Gen. Secretary", W - 31, H - 5, { align: "center" });
+
+    doc.save(`DKMO_Receipt_${payment.receiptNumber}.pdf`);
+  };
+
+  // ── Print: opens jsPDF in new tab with autoPrint ──────────────────────────
+  const printReceipt = async (payment: (typeof filteredPayments)[number]) => {
+    const logoDataUrl = await loadImageAsBase64(`${basePath}/logo.png`);
+    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a5" });
+    const W = doc.internal.pageSize.getWidth();
+    const H = doc.internal.pageSize.getHeight();
+    const maroon: [number, number, number]    = [102, 0, 0];
+    const darkGray: [number, number, number]  = [50, 50, 50];
+    const lightGray: [number, number, number] = [235, 235, 235];
+
+    doc.setFillColor(255, 255, 255);
+    doc.rect(0, 0, W, H, "F");
+    doc.setDrawColor(...maroon);
+    doc.setLineWidth(1.2);
+    doc.rect(3, 3, W - 6, H - 6, "D");
+
+    if (logoDataUrl) {
+      doc.addImage(logoDataUrl, "PNG", 6, 6, 22, 22);
+    }
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(17);
+    doc.setTextColor(...maroon);
+    doc.text("Dakshina Karnataka Muslim Okkoota - DKMO RIYADH", 32, 14);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...darkGray);
+    doc.text("Reg. No: DKMO/2023/1234  ·  Committed to the Community", 32, 22);
+
+    doc.setDrawColor(...maroon);
+    doc.setLineWidth(0.6);
+    doc.line(5, 30, W - 5, 30);
+
+    const dottedLine = (x1: number, y: number, x2: number) => {
+      doc.setLineDashPattern([0.4, 0.7], 0);
+      doc.setLineWidth(0.25);
+      doc.setDrawColor(100, 100, 100);
+      doc.line(x1, y, x2, y);
+      doc.setLineDashPattern([], 0);
+    };
+
+    let y = 40;
+    doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); doc.setTextColor(0,0,0);
+    doc.text("Date:", 6, y);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(...darkGray);
+    doc.text(formatDate(payment.paidAt), 19, y);
+    dottedLine(19, y + 1, 62);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); doc.setTextColor(0,0,0);
+    doc.text("Receipt # :", 68, y);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(...darkGray);
+    doc.text(payment.receiptNumber, 92, y);
+    dottedLine(92, y + 1, 136);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); doc.setTextColor(0,0,0);
+    doc.text("Jamath Name:", 142, y);
+    dottedLine(168, y + 1, W - 6);
+
+    y = 52;
+    doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); doc.setTextColor(0,0,0);
+    doc.text("Name :", 6, y);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(...darkGray);
+    doc.text(payment.memberName, 22, y);
+    dottedLine(22, y + 1, 118);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); doc.setTextColor(0,0,0);
+    doc.text("DKMO ID # :", 124, y);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(...darkGray);
+    doc.text(payment.membershipId, 150, y);
+    dottedLine(150, y + 1, W - 6);
+
+    y = 64;
+    doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); doc.setTextColor(0,0,0);
+    doc.text("Mobile #:", 6, y); dottedLine(24, y + 1, 98);
+    doc.text("Whatsapp # :", 104, y); dottedLine(130, y + 1, W - 6);
+
+    y = 76;
+    doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); doc.setTextColor(0,0,0);
+    doc.text("Received", 6, y - 1);
+    doc.text("Towards:", 6, y + 5);
+
+    const towardsLabels = [["Life","Membership"],["FRF Case#",""],["Voluntary Yearly","Contribution"],["Donation",""],["Loan","Recovery"],["Others",""]];
+    const isLoan = (payment.notes ?? "").toLowerCase().includes("loan");
+    const towardsChecked = [false, false, !isLoan, false, isLoan, false];
+    const ovalW = 14, ovalH = 7, ovalStartX = 26, ovalSpacing = 24;
+    for (let i = 0; i < 6; i++) {
+      const ox = ovalStartX + i * ovalSpacing;
+      const oy = y - 3;
+      doc.setLineWidth(0.5);
+      if (towardsChecked[i]) {
+        doc.setFillColor(...maroon); doc.setDrawColor(...maroon);
+        doc.ellipse(ox + ovalW / 2, oy, ovalW / 2, ovalH / 2, "FD");
+        doc.setFont("helvetica","bold"); doc.setTextColor(255,255,255);
+      } else {
+        doc.setFillColor(255,255,255); doc.setDrawColor(80,80,80);
+        doc.ellipse(ox + ovalW / 2, oy, ovalW / 2, ovalH / 2, "D");
+        doc.setFont("helvetica","normal"); doc.setTextColor(...darkGray);
+      }
+      doc.setFontSize(6.5);
+      towardsLabels[i].forEach((line, li) => {
+        if (line) doc.text(line, ox + ovalW / 2, oy + 6 + li * 4.5, { align: "center" });
+      });
+    }
+    const boxX = W - 44, boxY = y - 9;
+    doc.setDrawColor(0,0,0); doc.setLineWidth(0.6); doc.rect(boxX, boxY, 38, 18, "D");
+    doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(0,0,0);
+    doc.text("SR/=", boxX + 3, boxY + 7);
+    doc.setFontSize(11); doc.setTextColor(...maroon);
+    doc.text(Number(payment.amountPaid).toLocaleString("en-IN"), boxX + 19, boxY + 14, { align: "center" });
+
+    const footerTop = y + 22;
+    doc.setDrawColor(...maroon); doc.setLineWidth(0.6); doc.line(5, footerTop, W - 5, footerTop);
+    doc.setFillColor(...lightGray); doc.rect(5, footerTop + 0.3, W - 10, H - footerTop - 5.3, "F");
+    doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(...maroon);
+    doc.text("COMMITTED TO THE COMMUNITY", W / 2, footerTop + 8, { align: "center" });
+
+    const col1 = ["Frf Scheme (Family Relief Fund)","Medical Aid","Free Air Ticket To Stranded Nri's","General Relief Fund"];
+    const col2 = ["Representative In India For Health & Govt Scheme Utilization","Emergency Response Scheme.","Dkmo Job Bureau","Loan Scheme For Members"];
+    doc.setFont("helvetica","normal"); doc.setFontSize(7); doc.setTextColor(30,30,30);
+    const colStartY = footerTop + 14;
+    col1.forEach((item, i) => { doc.text(`* ${item}`, 8, colStartY + i * 5.5); });
+    col2.forEach((item, i) => {
+      const lines = doc.splitTextToSize(`* ${item}`, W / 2 - 14);
+      doc.text(lines, W / 2 + 3, colStartY + i * 5.5);
+    });
+    doc.setDrawColor(80,80,80); doc.setLineWidth(0.3); doc.line(W - 55, H - 9, W - 7, H - 9);
+    doc.setFont("helvetica","normal"); doc.setFontSize(7); doc.setTextColor(30,30,30);
+    doc.text("Treasurer/ Gen. Secretary", W - 31, H - 5, { align: "center" });
+
+    doc.autoPrint();
+    window.open(doc.output("bloburl"), "_blank");
   };
 
   return (
@@ -297,55 +557,6 @@ export default function PrintReceipts() {
                             <Download className="mr-1.5 h-3 w-3" /> PDF
                           </Button>
                         </div>
-                        {/* Hidden receipt for browser print */}
-                        <div id={`receipt-${payment.id}`} className="hidden print:block p-8 bg-white text-black font-sans max-w-2xl mx-auto border-2 border-gray-800 h-full">
-                          <div className="flex justify-between items-center border-b-2 border-gray-800 pb-6 mb-6">
-                            <div className="flex items-center gap-4">
-                              <img src={`${basePath}/logo.png`} alt="DKMO Logo" className="h-20 w-auto" />
-                              <div>
-                                <h1 className="text-2xl font-bold uppercase tracking-wide">Dakshina Karnataka Muslim Ookota</h1>
-                                <p className="text-sm font-medium mt-1">ದಕ್ಷಿಣ ಕರ್ನಾಟಕ ಮುಸ್ಲಿಂ ಒಕ್ಕೂಟ</p>
-                                <p className="text-xs mt-1 text-gray-600">Reg. No: DKMO/2023/1234 • Mangaluru</p>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="text-center mb-8">
-                            <h2 className="text-xl font-bold uppercase underline">Official Receipt</h2>
-                          </div>
-                          <div className="flex justify-between mb-8 text-sm">
-                            <div>
-                              <p><span className="font-semibold">Receipt No:</span> {payment.receiptNumber}</p>
-                              <p className="mt-1"><span className="font-semibold">Date:</span> {formatDate(payment.paidAt)}</p>
-                            </div>
-                            <div className="text-right">
-                              <p><span className="font-semibold">Membership ID:</span> {payment.membershipId}</p>
-                            </div>
-                          </div>
-                          <div className="bg-gray-50 border border-gray-200 p-6 rounded-lg mb-8">
-                            <p className="text-lg leading-relaxed">
-                              Received with thanks from <span className="font-bold border-b border-gray-400 pb-1 px-2">{payment.memberName}</span>,
-                              a sum of <span className="font-bold border-b border-gray-400 pb-1 px-2">{formatSAR(payment.amountPaid)}</span>
-                              towards monthly contribution for the month of <span className="font-bold border-b border-gray-400 pb-1 px-2">{payment.month}</span>.
-                            </p>
-                            <p className="mt-4 text-sm">
-                              <span className="font-semibold">Payment Mode:</span>{" "}
-                              <span className="capitalize">{payment.paymentMethod.replace("_", " ")}</span>
-                            </p>
-                            {payment.notes && (
-                              <p className="mt-2 text-sm text-gray-600 italic">"{payment.notes}"</p>
-                            )}
-                          </div>
-                          <div className="flex justify-between items-end mt-16 pt-8 border-t border-gray-200">
-                            <div>
-                              <p className="text-xs text-gray-500">This is a computer generated receipt.</p>
-                            </div>
-                            <div className="text-center">
-                              <div className="w-40 border-b border-gray-800 mb-2"></div>
-                              <p className="font-semibold text-sm">Authorized Signatory</p>
-                              <p className="text-xs text-gray-500">DKMO Trust</p>
-                            </div>
-                          </div>
-                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -361,7 +572,6 @@ export default function PrintReceipts() {
         </CardContent>
       </Card>
 
-      {/* Receipt preview info card */}
       <Card className="rounded-2xl border-emerald-100 dark:border-slate-800 dark:bg-slate-900/60 shadow-sm">
         <CardContent className="py-5">
           <div className="flex items-start gap-4">
@@ -371,8 +581,8 @@ export default function PrintReceipts() {
             <div>
               <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-200 mb-1">About Print Receipts</p>
               <p className="text-xs text-emerald-700/70 dark:text-slate-400 leading-relaxed">
-                Use <strong>Print</strong> to open the browser print dialog with a formatted DKMO receipt.
-                Use <strong>PDF</strong> to download a branded A5 receipt as a PDF file.
+                Use <strong>Print</strong> to open a print dialog with the DKMO receipt card format (A5 landscape).
+                Use <strong>PDF</strong> to download a branded DKMO receipt card as a PDF file matching the official receipt design.
                 To generate new receipts from scratch, use the <strong>Receipts</strong> page in the sidebar.
               </p>
             </div>

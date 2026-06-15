@@ -349,21 +349,26 @@ async function main() {
   // ── Loans ─────────────────────────────────────────────────────────────────
   console.log("  ↳ inserting loans…");
   const loanData = [
-    { memberId: insertedMembers[3].id,  loanType: "personal",    principalAmount: "15000", disbursedDate: dateStrAgo(365), emiAmount: "1500", emiCount: 12, paidEmis: 10, status: "active",    convenorName: "Ghani Ahmed Mulki",   description: "Personal loan for home renovation", notes: "2 EMIs remaining" },
-    { memberId: insertedMembers[7].id,  loanType: "medical",     principalAmount: "25000", disbursedDate: dateStrAgo(420), emiAmount: "2500", emiCount: 10, paidEmis: 10, status: "closed",    convenorName: "Ghani Ahmed Mulki",   description: "Medical emergency loan for cardiac surgery", notes: "Fully repaid" },
-    { memberId: insertedMembers[11].id, loanType: "education",   principalAmount: "12000", disbursedDate: dateStrAgo(180), emiAmount: "1000", emiCount: 12, paidEmis: 6,  status: "active",    convenorName: "Shamsuddin Addoor",   description: "Education loan for son's engineering fees", notes: "On track" },
-    { memberId: insertedMembers[15].id, loanType: "personal",    principalAmount: "8000",  disbursedDate: dateStrAgo(240), emiAmount: "800",  emiCount: 10, paidEmis: 8,  status: "active",    convenorName: "Shamsuddin Addoor",   description: "Loan for vehicle purchase", notes: "Final 2 EMIs pending" },
-    { memberId: insertedMembers[19].id, loanType: "business",    principalAmount: "50000", disbursedDate: dateStrAgo(90),  emiAmount: "2500", emiCount: 20, paidEmis: 3,  status: "active",    convenorName: "Ghani Ahmed Mulki",   description: "Business startup loan for grocery store", notes: "Regular repayment" },
-    { memberId: insertedMembers[23].id, loanType: "emergency",   principalAmount: "5000",  disbursedDate: dateStrAgo(60),  emiAmount: "1000", emiCount: 5,  paidEmis: 2,  status: "active",    convenorName: "Shamsuddin Addoor",   description: "Emergency travel loan – family bereavement", notes: "Approved under emergency protocol" },
-    { memberId: insertedMembers[27].id, loanType: "personal",    principalAmount: "20000", disbursedDate: dateStrAgo(600), emiAmount: "1667", emiCount: 12, paidEmis: 12, status: "closed",    convenorName: "Ghani Ahmed Mulki",   description: "Home renovation loan", notes: "Closed. No dues." },
-    { memberId: insertedMembers[5].id,  loanType: "medical",     principalAmount: "18000", disbursedDate: dateStrAgo(30),  emiAmount: "1500", emiCount: 12, paidEmis: 1,  status: "active",    convenorName: "Ghani Ahmed Mulki",   description: "Medical loan for dialysis treatment", notes: "Freshly disbursed" },
-    { memberId: insertedMembers[9].id,  loanType: "education",   principalAmount: "10000", disbursedDate: dateStrAgo(120), emiAmount: "1000", emiCount: 10, paidEmis: 4,  status: "active",    convenorName: "Shamsuddin Addoor",   description: "Daughter's nursing course fees", notes: "" },
-    { memberId: insertedMembers[13].id, loanType: "business",    principalAmount: "35000", disbursedDate: dateStrAgo(730), emiAmount: "1750", emiCount: 20, paidEmis: 20, status: "closed",    convenorName: "Ghani Ahmed Mulki",   description: "Business loan for tailoring shop", notes: "Fully repaid on time" },
-    { memberId: insertedMembers[17].id, loanType: "personal",    principalAmount: "6000",  disbursedDate: dateStrAgo(45),  emiAmount: "600",  emiCount: 10, paidEmis: 1,  status: "active",    convenorName: "Shamsuddin Addoor",   description: "Personal loan for household expenses", notes: "" },
-    { memberId: insertedMembers[21].id, loanType: "emergency",   principalAmount: "3000",  disbursedDate: dateStrAgo(150), emiAmount: "1000", emiCount: 3,  paidEmis: 3,  status: "closed",    convenorName: "Ghani Ahmed Mulki",   description: "Emergency medical loan – dengue treatment", notes: "Cleared quickly" },
-    { memberId: insertedMembers[25].id, loanType: "personal",    principalAmount: "22000", disbursedDate: dateStrAgo(200), emiAmount: "1100", emiCount: 20, paidEmis: 7,  status: "active",    convenorName: "Shamsuddin Addoor",   description: "Loan for house construction", notes: "Repaying steadily" },
-    { memberId: insertedMembers[29].id, loanType: "medical",     principalAmount: "14000", disbursedDate: dateStrAgo(300), emiAmount: "1400", emiCount: 10, paidEmis: 10, status: "closed",    convenorName: "Ghani Ahmed Mulki",   description: "Medical loan for hernia operation", notes: "Loan closed" },
-    { memberId: insertedMembers[33].id, loanType: "education",   principalAmount: "9000",  disbursedDate: dateStrAgo(75),  emiAmount: "750",  emiCount: 12, paidEmis: 2,  status: "active",    convenorName: "Shamsuddin Addoor",   description: "Polytechnic fee support for son", notes: "" },
+    { memberId: insertedMembers[3].id,  loanType: "personal",    principalAmount: "15000", disbursedDate: dateStrAgo(365), emiAmount: "1500", emiCount: 12, paidEmis: 10, status: "active",   convenorName: "Ghani Ahmed Mulki",   description: "Personal loan for home renovation",                     notes: "2 EMIs remaining" },
+    { memberId: insertedMembers[7].id,  loanType: "medical",     principalAmount: "25000", disbursedDate: dateStrAgo(420), emiAmount: "2500", emiCount: 10, paidEmis: 10, status: "closed",   convenorName: "Ghani Ahmed Mulki",   description: "Medical emergency loan for cardiac surgery",             notes: "Fully repaid" },
+    { memberId: insertedMembers[11].id, loanType: "education",   principalAmount: "12000", disbursedDate: dateStrAgo(180), emiAmount: "1000", emiCount: 12, paidEmis: 6,  status: "active",   convenorName: "Shamsuddin Addoor",   description: "Education loan for son's engineering fees",              notes: "On track" },
+    { memberId: insertedMembers[15].id, loanType: "personal",    principalAmount: "8000",  disbursedDate: dateStrAgo(240), emiAmount: "800",  emiCount: 10, paidEmis: 8,  status: "active",   convenorName: "Shamsuddin Addoor",   description: "Loan for vehicle purchase",                              notes: "Final 2 EMIs pending" },
+    { memberId: insertedMembers[19].id, loanType: "business",    principalAmount: "50000", disbursedDate: dateStrAgo(90),  emiAmount: "2500", emiCount: 20, paidEmis: 3,  status: "active",   convenorName: "Ghani Ahmed Mulki",   description: "Business startup loan for grocery store",               notes: "Regular repayment" },
+    { memberId: insertedMembers[23].id, loanType: "emergency",   principalAmount: "5000",  disbursedDate: dateStrAgo(60),  emiAmount: "1000", emiCount: 5,  paidEmis: 2,  status: "active",   convenorName: "Shamsuddin Addoor",   description: "Emergency travel loan – family bereavement",             notes: "Approved under emergency protocol" },
+    { memberId: insertedMembers[27].id, loanType: "personal",    principalAmount: "20000", disbursedDate: dateStrAgo(600), emiAmount: "1667", emiCount: 12, paidEmis: 12, status: "closed",   convenorName: "Ghani Ahmed Mulki",   description: "Home renovation loan",                                   notes: "Closed. No dues." },
+    { memberId: insertedMembers[5].id,  loanType: "medical",     principalAmount: "18000", disbursedDate: dateStrAgo(30),  emiAmount: "1500", emiCount: 12, paidEmis: 1,  status: "active",   convenorName: "Ghani Ahmed Mulki",   description: "Medical loan for dialysis treatment",                    notes: "Freshly disbursed" },
+    { memberId: insertedMembers[9].id,  loanType: "education",   principalAmount: "10000", disbursedDate: dateStrAgo(120), emiAmount: "1000", emiCount: 10, paidEmis: 4,  status: "active",   convenorName: "Shamsuddin Addoor",   description: "Daughter's nursing course fees",                         notes: "" },
+    { memberId: insertedMembers[13].id, loanType: "business",    principalAmount: "35000", disbursedDate: dateStrAgo(730), emiAmount: "1750", emiCount: 20, paidEmis: 20, status: "closed",   convenorName: "Ghani Ahmed Mulki",   description: "Business loan for tailoring shop",                       notes: "Fully repaid on time" },
+    { memberId: insertedMembers[17].id, loanType: "personal",    principalAmount: "6000",  disbursedDate: dateStrAgo(45),  emiAmount: "600",  emiCount: 10, paidEmis: 1,  status: "active",   convenorName: "Shamsuddin Addoor",   description: "Personal loan for household expenses",                   notes: "" },
+    { memberId: insertedMembers[21].id, loanType: "emergency",   principalAmount: "3000",  disbursedDate: dateStrAgo(150), emiAmount: "1000", emiCount: 3,  paidEmis: 3,  status: "closed",   convenorName: "Ghani Ahmed Mulki",   description: "Emergency medical loan – dengue treatment",              notes: "Cleared quickly" },
+    { memberId: insertedMembers[25].id, loanType: "personal",    principalAmount: "22000", disbursedDate: dateStrAgo(200), emiAmount: "1100", emiCount: 20, paidEmis: 7,  status: "active",   convenorName: "Shamsuddin Addoor",   description: "Loan for house construction",                            notes: "Repaying steadily" },
+    { memberId: insertedMembers[29].id, loanType: "medical",     principalAmount: "14000", disbursedDate: dateStrAgo(300), emiAmount: "1400", emiCount: 10, paidEmis: 10, status: "closed",   convenorName: "Ghani Ahmed Mulki",   description: "Medical loan for hernia operation",                      notes: "Loan closed" },
+    { memberId: insertedMembers[33].id, loanType: "education",   principalAmount: "9000",  disbursedDate: dateStrAgo(75),  emiAmount: "750",  emiCount: 12, paidEmis: 2,  status: "active",   convenorName: "Shamsuddin Addoor",   description: "Polytechnic fee support for son",                        notes: "" },
+    // ── Overdue loans (missed EMIs, past due) ─────────────────────────────────
+    { memberId: insertedMembers[1].id,  loanType: "personal",    principalAmount: "18000", disbursedDate: dateStrAgo(400), emiAmount: "1500", emiCount: 12, paidEmis: 5,  status: "overdue",  convenorName: "Ghani Ahmed Mulki",   description: "Personal loan for land purchase",                        notes: "Stopped paying after EMI 5. 3 months overdue. Follow-up initiated." },
+    { memberId: insertedMembers[8].id,  loanType: "business",    principalAmount: "30000", disbursedDate: dateStrAgo(350), emiAmount: "2000", emiCount: 15, paidEmis: 8,  status: "overdue",  convenorName: "Shamsuddin Addoor",   description: "Business loan – shop inventory",                         notes: "Business closed. Legal notice sent. EMI 9-11 unpaid." },
+    { memberId: insertedMembers[16].id, loanType: "medical",     principalAmount: "11000", disbursedDate: dateStrAgo(280), emiAmount: "1100", emiCount: 10, paidEmis: 4,  status: "overdue",  convenorName: "Ghani Ahmed Mulki",   description: "Medical loan for knee replacement surgery",              notes: "2 EMIs missed. Convenor contacted member in India." },
+    { memberId: insertedMembers[36].id, loanType: "education",   principalAmount: "7500",  disbursedDate: dateStrAgo(320), emiAmount: "750",  emiCount: 10, paidEmis: 3,  status: "overdue",  convenorName: "Shamsuddin Addoor",   description: "Education loan for daughter's college admission",        notes: "Last payment 4 months ago. Contact attempts unsuccessful." },
   ];
   await db.insert(loansTable).values(loanData);
 
@@ -514,75 +519,81 @@ async function main() {
     { eventId: insertedEvents[5].id, category: "prizes",      description: "Trophies and medals",                    vendor: "Mangalore Steel Industries",amount: "3800",  expenseDate: dateStrAgo(12),  notes: "20 trophies, 60 medals" },
   ]);
 
-  // ── Event Ticket Booklets & Tickets (for AGM and Sports Day) ─────────────
+  // ── Event Ticket Booklets & Tickets (ALL events) ──────────────────────────
   console.log("  ↳ inserting ticket booklets and tickets…");
+
+  const buyerNames  = ["Khalid Farooq", "Ravi Kumar", "Mohammed Al-Rashid", "Suresh Shetty", "Dr. Yusuf Noor", "Ibrahim Nasser", "Prakash Rao", "Abdullah Al-Baraka", "Suhail Ahmed", "Bilal Hussain", "Tariq Mehmood", "Saleem Ansari", "Faisal Khan", "Noor Mohammed", "Hasan Siddiqui", "Arshad Ali", "Waqar Ahmed", "Imtiaz Baig", "Zubair Shaikh", "Rafeeq Hassan"];
+  const buyerPhones = ["+966512233445", "+919876543210", "+966501234567", "+919833445566", "+919844777888", "+966557654321", "+919844556677", "+966509876543", "+919844112233", "+919844100030", "+966512344567", "+919844556781", "+966523456789", "+919844100031", "+919844100032", "+966598765432", "+919844100033", "+919844100034", "+966511223344", "+919844100035"];
+
   const bookletInserts = [
+    // AGM 2025 (events[0]) – completed, sold out
     { eventId: insertedEvents[0].id, bookletNumber: "AGM-BK-01", ticketRangeStart: 1,   ticketRangeEnd: 50,  assignedTo: "Ashraf Kozhikan",   assignedDate: dateStrAgo(230), ticketAmount: "500", status: "sold_out" },
     { eventId: insertedEvents[0].id, bookletNumber: "AGM-BK-02", ticketRangeStart: 51,  ticketRangeEnd: 100, assignedTo: "Shareef Thokur",    assignedDate: dateStrAgo(228), ticketAmount: "500", status: "sold_out" },
     { eventId: insertedEvents[0].id, bookletNumber: "AGM-BK-03", ticketRangeStart: 101, ticketRangeEnd: 150, assignedTo: "Hameed Nazeer",     assignedDate: dateStrAgo(225), ticketAmount: "500", status: "partial"  },
-    { eventId: insertedEvents[5].id, bookletNumber: "SPT-BK-01", ticketRangeStart: 1,   ticketRangeEnd: 50,  assignedTo: "Nazeer Hassan",     assignedDate: dateStrAgo(20),  ticketAmount: "200", status: "active"   },
+    // Eid Milad (events[1]) – upcoming, partial sales
+    { eventId: insertedEvents[1].id, bookletNumber: "EID-BK-01", ticketRangeStart: 1,   ticketRangeEnd: 50,  assignedTo: "Haneef N.S.",       assignedDate: dateStrAgo(25),  ticketAmount: "300", status: "partial"  },
+    { eventId: insertedEvents[1].id, bookletNumber: "EID-BK-02", ticketRangeStart: 51,  ticketRangeEnd: 100, assignedTo: "Zia Ganjimutt",     assignedDate: dateStrAgo(22),  ticketAmount: "300", status: "active"   },
+    { eventId: insertedEvents[1].id, bookletNumber: "EID-BK-03", ticketRangeStart: 101, ticketRangeEnd: 150, assignedTo: "Razik Bajpe",       assignedDate: dateStrAgo(18),  ticketAmount: "300", status: "active"   },
+    // Medical Camp (events[2]) – completed, sold out
+    { eventId: insertedEvents[2].id, bookletNumber: "MED-BK-01", ticketRangeStart: 1,   ticketRangeEnd: 40,  assignedTo: "Sadiq Ahmed Udupi", assignedDate: dateStrAgo(145), ticketAmount: "0",   status: "sold_out" },
+    { eventId: insertedEvents[2].id, bookletNumber: "MED-BK-02", ticketRangeStart: 41,  ticketRangeEnd: 80,  assignedTo: "Akhil Ganjimutt",  assignedDate: dateStrAgo(143), ticketAmount: "0",   status: "sold_out" },
+    // Employment Workshop (events[3]) – upcoming, partial
+    { eventId: insertedEvents[3].id, bookletNumber: "WRK-BK-01", ticketRangeStart: 1,   ticketRangeEnd: 60,  assignedTo: "Sadiq Ahmed Udupi", assignedDate: dateStrAgo(30),  ticketAmount: "100", status: "partial"  },
+    // Ramadan Distribution (events[4]) – completed (pass tickets), all taken
+    { eventId: insertedEvents[4].id, bookletNumber: "RAM-BK-01", ticketRangeStart: 1,   ticketRangeEnd: 100, assignedTo: "Shamsuddin Addoor", assignedDate: dateStrAgo(200), ticketAmount: "0",   status: "sold_out" },
+    { eventId: insertedEvents[4].id, bookletNumber: "RAM-BK-02", ticketRangeStart: 101, ticketRangeEnd: 200, assignedTo: "Yousuf Addoor",     assignedDate: dateStrAgo(198), ticketAmount: "0",   status: "sold_out" },
+    // Sports Day (events[5]) – upcoming, partial sales
+    { eventId: insertedEvents[5].id, bookletNumber: "SPT-BK-01", ticketRangeStart: 1,   ticketRangeEnd: 50,  assignedTo: "Nazeer Hassan",     assignedDate: dateStrAgo(20),  ticketAmount: "200", status: "partial"  },
     { eventId: insertedEvents[5].id, bookletNumber: "SPT-BK-02", ticketRangeStart: 51,  ticketRangeEnd: 100, assignedTo: "Zia Ganjimutt",     assignedDate: dateStrAgo(18),  ticketAmount: "200", status: "active"   },
-    { eventId: insertedEvents[1].id, bookletNumber: "EID-BK-01", ticketRangeStart: 1,   ticketRangeEnd: 100, assignedTo: "Haneef N.S.",       assignedDate: dateStrAgo(10),  ticketAmount: "300", status: "active"   },
+    { eventId: insertedEvents[5].id, bookletNumber: "SPT-BK-03", ticketRangeStart: 101, ticketRangeEnd: 150, assignedTo: "Hameed Nazeer",     assignedDate: dateStrAgo(15),  ticketAmount: "200", status: "active"   },
   ];
   const insertedBooklets = await db.insert(eventTicketBookletsTable).values(bookletInserts).returning();
 
-  // Generate tickets for the first 3 booklets (AGM) – realistic mix of sold/unsold
-  const ticketInserts = [];
-  const agmBuyerNames = ["Khalid Farooq", "Ravi Kumar", "Mohammed Al-Rashid", "Suresh Shetty", "Dr. Yusuf Noor", "Ibrahim Nasser", "Prakash Rao", "Abdullah Al-Baraka", "Suhail Ahmed", "Bilal Hussain"];
-  const agmBuyerPhones = ["+966512233445", "+919876543210", "+966501234567", "+919833445566", "+919844777888", "+966557654321", "+919844556677", "+966509876543", "+919844112233", "+919844100030"];
-
-  for (let b = 0; b < 3; b++) {
-    const booklet = insertedBooklets[b];
+  // Helper to generate tickets for a booklet
+  function genTickets(booklet: typeof insertedBooklets[0], soldCount: number, daysAgoBase: number) {
+    const tickets = [];
     const total = booklet.ticketRangeEnd - booklet.ticketRangeStart + 1;
     for (let t = 0; t < total; t++) {
       const ticketNum = booklet.ticketRangeStart + t;
-      const isSold = b < 2 ? true : t < 30; // booklets 0,1 all sold; booklet 2 partial
-      const buyerIdx = t % agmBuyerNames.length;
-      ticketInserts.push({
+      const isSold = t < soldCount;
+      const bi = t % buyerNames.length;
+      tickets.push({
         bookletId: booklet.id,
         eventId: booklet.eventId,
         ticketNumber: ticketNum,
         isSold,
         soldBy: isSold ? booklet.assignedTo : "",
-        buyerName: isSold ? agmBuyerNames[buyerIdx] : "",
-        buyerPhone: isSold ? agmBuyerPhones[buyerIdx] : "",
-        saleDate: isSold ? dateStrAgo(220 - t % 10) : "",
+        buyerName: isSold ? buyerNames[bi] : "",
+        buyerPhone: isSold ? buyerPhones[bi] : "",
+        saleDate: isSold ? dateStrAgo(daysAgoBase - (t % 8)) : "",
         amount: isSold ? booklet.ticketAmount : "0",
       });
     }
+    return tickets;
   }
-  // Add a few sold tickets for Sports Day booklets
-  for (let b = 3; b < 5; b++) {
-    const booklet = insertedBooklets[b];
-    for (let t = 0; t < 15; t++) {
-      const ticketNum = booklet.ticketRangeStart + t;
-      ticketInserts.push({
-        bookletId: booklet.id,
-        eventId: booklet.eventId,
-        ticketNumber: ticketNum,
-        isSold: true,
-        soldBy: booklet.assignedTo,
-        buyerName: agmBuyerNames[t % agmBuyerNames.length],
-        buyerPhone: agmBuyerPhones[t % agmBuyerPhones.length],
-        saleDate: dateStrAgo(15 - t % 5),
-        amount: booklet.ticketAmount,
-      });
-    }
-    // remaining unsold
-    for (let t = 15; t < 50; t++) {
-      ticketInserts.push({
-        bookletId: booklet.id,
-        eventId: booklet.eventId,
-        ticketNumber: booklet.ticketRangeStart + t,
-        isSold: false,
-        soldBy: "",
-        buyerName: "",
-        buyerPhone: "",
-        saleDate: "",
-        amount: "0",
-      });
-    }
-  }
+
+  const ticketInserts = [
+    // AGM: BK-01 all sold (50), BK-02 all sold (50), BK-03 partial (30/50)
+    ...genTickets(insertedBooklets[0],  50, 215),
+    ...genTickets(insertedBooklets[1],  50, 212),
+    ...genTickets(insertedBooklets[2],  30, 208),
+    // Eid Milad: BK-01 partial (32/50), BK-02 early sales (12/50), BK-03 few (5/50)
+    ...genTickets(insertedBooklets[3],  32, 20),
+    ...genTickets(insertedBooklets[4],  12, 18),
+    ...genTickets(insertedBooklets[5],   5, 15),
+    // Medical Camp: BK-01 all (40), BK-02 all (40) – free entry passes
+    ...genTickets(insertedBooklets[6],  40, 140),
+    ...genTickets(insertedBooklets[7],  40, 138),
+    // Workshop: BK-01 partial (22/60)
+    ...genTickets(insertedBooklets[8],  22, 28),
+    // Ramadan Distribution: BK-01 all (100), BK-02 all (100) – beneficiary passes
+    ...genTickets(insertedBooklets[9],  100, 195),
+    ...genTickets(insertedBooklets[10], 100, 193),
+    // Sports Day: BK-01 partial (18/50), BK-02 few (8/50), BK-03 few (4/50)
+    ...genTickets(insertedBooklets[11], 18, 16),
+    ...genTickets(insertedBooklets[12],  8, 13),
+    ...genTickets(insertedBooklets[13],  4, 10),
+  ];
   await db.insert(eventTicketsTable).values(ticketInserts);
 
   console.log("✅  Seed complete!");
@@ -591,14 +602,14 @@ async function main() {
   console.log(`   Events:           ${insertedEvents.length}`);
   console.log(`   Sponsors:         ${insertedSponsors.length}`);
   console.log(`   Tasks:            ${taskRows.length}`);
-  console.log(`   Loans:            ${loanData.length}`);
+  console.log(`   Loans:            ${loanData.length} (incl. 4 overdue)`);
   console.log(`   Receipts:         ${receiptData.length}`);
   console.log(`   FRF Memberships:  ${insertedFrfMemberships.length}`);
   console.log(`   FRF Dependents:   ${dependentInserts.length}`);
   console.log(`   FRF Claims:       ${frfClaimInserts.length}`);
   console.log(`   Event Sponsors:   12`);
   console.log(`   Event Expenses:   15`);
-  console.log(`   Ticket Booklets:  ${insertedBooklets.length}`);
+  console.log(`   Ticket Booklets:  ${insertedBooklets.length} (all 6 events)`);
   console.log(`   Tickets:          ${ticketInserts.length}`);
 
   await pool.end();
