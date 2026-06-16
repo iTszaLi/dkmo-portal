@@ -230,6 +230,36 @@ async function main() {
     );
   `);
 
+  await pool.query(`
+    ALTER TABLE frf_memberships
+      ADD COLUMN IF NOT EXISTS reviewed_by TEXT NOT NULL DEFAULT '',
+      ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS approved_by TEXT NOT NULL DEFAULT '',
+      ADD COLUMN IF NOT EXISTS approved_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS rejected_by TEXT NOT NULL DEFAULT '',
+      ADD COLUMN IF NOT EXISTS rejected_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS remarks TEXT NOT NULL DEFAULT '';
+
+    ALTER TABLE frf_claims
+      ADD COLUMN IF NOT EXISTS under_review_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS under_review_by TEXT NOT NULL DEFAULT '',
+      ADD COLUMN IF NOT EXISTS disbursed_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS disbursed_by TEXT NOT NULL DEFAULT '',
+      ADD COLUMN IF NOT EXISTS rejected_by TEXT NOT NULL DEFAULT '',
+      ADD COLUMN IF NOT EXISTS rejected_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS review_notes TEXT NOT NULL DEFAULT '';
+
+    CREATE TABLE IF NOT EXISTS audit_logs (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      action TEXT NOT NULL,
+      entity_type TEXT NOT NULL DEFAULT '',
+      entity_id TEXT NOT NULL DEFAULT '',
+      performed_by TEXT NOT NULL DEFAULT '',
+      details TEXT NOT NULL DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+
   console.log("✅  All tables created.");
   await pool.end();
 }
