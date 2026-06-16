@@ -1,8 +1,9 @@
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, useEffect, useRef, type FormEvent } from "react";
 import { Link } from "wouter";
 import {
   CheckCircle, XCircle, Clock, Users, Loader2, ShieldCheck, ChevronRight, ChevronLeft,
   Plus, Trash2, Download, Printer, ExternalLink, RefreshCw, Search,
+  ChevronsUpDown, Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,12 @@ interface Dependent {
   fullName: string;
   relation: string;
   age: string;
+}
+
+interface MemberEntry {
+  id: string;
+  fullName: string;
+  membershipId: string;
 }
 
 interface FormData {
@@ -55,6 +62,95 @@ interface FormData {
   nomineeMobile: string;
   notes: string;
   photoDataUrl: string;
+  refMemberName: string;
+  refMemberId: string;
+}
+
+function isValidEmail(v: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim()); }
+function isValidIqama(v: string) { return v === "" || /^\d{10}$/.test(v.trim()); }
+function isValidSaudiMobile(v: string) { return v.replace(/\D/g, "").length >= 10; }
+function isValidIndiaMobile(v: string) { return v === "" || /^\d{10}$/.test(v.replace(/\D/g, "")); }
+
+function MemberPicker({ value, onChange }: { value: MemberEntry | null; onChange: (m: MemberEntry | null) => void }) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [members, setMembers] = useState<MemberEntry[]>([]);
+  const [loading, setLoading] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`${basePath}/api/dkmo/members-list`)
+      .then((r) => r.json())
+      .then((data: MemberEntry[]) => setMembers(data))
+      .catch(() => setMembers([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const filtered = members.filter((m) =>
+    m.fullName.toLowerCase().includes(query.toLowerCase()) ||
+    m.membershipId.toLowerCase().includes(query.toLowerCase()),
+  ).slice(0, 30);
+
+  return (
+    <div ref={ref} className="relative">
+      <button type="button" onClick={() => setOpen((o) => !o)}
+        className={`w-full flex items-center justify-between rounded-md border px-3 py-2 text-sm text-left transition-colors ${
+          value
+            ? "border-green-400 dark:border-green-600 bg-green-50/60 dark:bg-green-900/20"
+            : "border-green-200 dark:border-slate-700 bg-white dark:bg-slate-800/60"
+        } text-green-900 dark:text-slate-100`}
+      >
+        <span className={value ? "" : "text-slate-400 dark:text-slate-500"}>
+          {value ? `${value.fullName} (${value.membershipId})` : "Search and select a member…"}
+        </span>
+        <ChevronsUpDown className="h-3.5 w-3.5 opacity-50" />
+      </button>
+      {open && (
+        <div className="absolute z-50 top-full mt-1 w-full rounded-lg border border-green-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl overflow-hidden">
+          <div className="p-2 border-b border-green-100 dark:border-slate-800">
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+              <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)}
+                className="w-full pl-7 pr-3 py-1.5 text-sm rounded border border-green-200 dark:border-slate-700 bg-transparent dark:text-slate-100 outline-none focus:border-green-500"
+                placeholder="Type name or member ID…" />
+            </div>
+          </div>
+          <div className="max-h-52 overflow-y-auto">
+            {loading && <p className="text-center text-xs text-slate-400 py-4">Loading members…</p>}
+            {!loading && filtered.length === 0 && <p className="text-center text-xs text-slate-400 py-4">No members found</p>}
+            {!loading && (
+              <>
+                <button type="button"
+                  className="w-full text-left px-3 py-2 text-xs text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                  onClick={() => { onChange(null); setQuery(""); setOpen(false); }}>
+                  — None / Clear selection
+                </button>
+                {filtered.map((m) => (
+                  <button key={m.id} type="button"
+                    onClick={() => { onChange(m); setOpen(false); setQuery(""); }}
+                    className={`w-full text-left flex items-center gap-2 px-3 py-2.5 text-sm hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors ${value?.id === m.id ? "bg-green-50 dark:bg-green-900/30 font-semibold" : ""}`}
+                  >
+                    {value?.id === m.id && <Check className="h-3.5 w-3.5 text-green-600 shrink-0" />}
+                    <span className="text-green-900 dark:text-slate-100">{m.fullName}</span>
+                    <span className="ml-auto text-xs text-slate-400">{m.membershipId}</span>
+                  </button>
+                ))}
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Unknown"];
@@ -196,8 +292,9 @@ export default function FrfApplyPage() {
     houseName: "", postalAddress: "", district: "", nearestJamaath: "",
     homePhone: "", mobileIndia: "", emergencyNameIndia: "", emergencyMobileIndia: "",
     nomineeName: "", nomineeRelation: "", nomineeMobile: "", notes: "",
-    photoDataUrl: "",
+    photoDataUrl: "", refMemberName: "", refMemberId: "",
   });
+  const [refMember, setRefMember] = useState<MemberEntry | null>(null);
 
   const [dependents, setDependents] = useState<Dependent[]>([]);
   const [showValidation, setShowValidation] = useState(false);
@@ -230,17 +327,37 @@ export default function FrfApplyPage() {
 
   // Per-step validation — returns a map of fieldKey → error message
   const getStepErrors = (): Record<string, string> => {
+    const errs: Record<string, string> = {};
     if (step === 0) {
-      const errs: Record<string, string> = {};
       if (!form.fullName.trim()) errs.fullName = "Full name is required.";
-      return errs;
+      if (!form.dateOfBirth) errs.dateOfBirth = "Date of birth is required.";
+      if (!form.passportNumber.trim()) errs.passportNumber = "Passport number is required.";
+      if (!form.occupation.trim()) errs.occupation = "Occupation is required.";
+      if (!form.iqamaNumber.trim()) {
+        errs.iqamaNumber = "Iqama number is required.";
+      } else if (!isValidIqama(form.iqamaNumber)) {
+        errs.iqamaNumber = "Iqama must be exactly 10 digits.";
+      }
     }
     if (step === 1) {
-      const errs: Record<string, string> = {};
-      if (!form.mobileSaudi.trim()) errs.mobileSaudi = "Saudi mobile number is required.";
-      return errs;
+      if (!form.mobileSaudi.trim()) {
+        errs.mobileSaudi = "Saudi mobile number is required.";
+      } else if (!isValidSaudiMobile(form.mobileSaudi)) {
+        errs.mobileSaudi = "Enter a valid Saudi mobile number (minimum 10 digits).";
+      }
+      if (!form.email.trim()) {
+        errs.email = "Email address is required.";
+      } else if (!isValidEmail(form.email)) {
+        errs.email = "Enter a valid email address (e.g. name@gmail.com).";
+      }
     }
-    return {};
+    if (step === 2) {
+      if (!form.houseName.trim()) errs.houseName = "House name / address is required.";
+      if (form.mobileIndia.trim() && !isValidIndiaMobile(form.mobileIndia)) {
+        errs.mobileIndia = "India mobile must be exactly 10 digits.";
+      }
+    }
+    return errs;
   };
 
   const stepErrors = getStepErrors();
@@ -263,6 +380,8 @@ export default function FrfApplyPage() {
     try {
       const payload = {
         ...form,
+        refMemberName: refMember ? refMember.fullName : form.refMemberName,
+        refMemberId: refMember ? refMember.membershipId : form.refMemberId,
         numDependents: dependents.length,
         dependents: dependents
           .filter((d) => d.fullName.trim())
@@ -463,8 +582,10 @@ export default function FrfApplyPage() {
                     )}
                   </FieldRow>
                 </div>
-                <FieldRow label="Date of Birth" id="dob">
-                  <Input id="dob" type="date" value={form.dateOfBirth} onChange={(e) => set("dateOfBirth", e.target.value)} className={inputClass()} />
+                <FieldRow label="Date of Birth *" id="dob">
+                  <Input id="dob" type="date" value={form.dateOfBirth} onChange={(e) => set("dateOfBirth", e.target.value)}
+                    className={inputClass(showValidation && stepErrors.dateOfBirth ? "border-red-400 dark:border-red-500" : "")} />
+                  {showValidation && stepErrors.dateOfBirth && <p className="text-xs text-red-500 mt-1">{stepErrors.dateOfBirth}</p>}
                 </FieldRow>
                 <FieldRow label="Blood Group">
                   <Select value={form.bloodGroup} onValueChange={(v) => set("bloodGroup", v)}>
@@ -478,18 +599,36 @@ export default function FrfApplyPage() {
                     <SelectContent>{MARITAL_STATUS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                   </Select>
                 </FieldRow>
-                <FieldRow label="Passport Number" id="passport">
-                  <Input id="passport" value={form.passportNumber} onChange={(e) => set("passportNumber", e.target.value)} className={inputClass()} placeholder="e.g. J1234567" />
+                <FieldRow label="Passport Number *" id="passport">
+                  <Input id="passport" value={form.passportNumber} onChange={(e) => set("passportNumber", e.target.value)}
+                    className={inputClass(showValidation && stepErrors.passportNumber ? "border-red-400 dark:border-red-500" : "")} placeholder="e.g. J1234567" />
+                  {showValidation && stepErrors.passportNumber && <p className="text-xs text-red-500 mt-1">{stepErrors.passportNumber}</p>}
                 </FieldRow>
-                <FieldRow label="Iqama / Residence ID" id="iqama">
-                  <Input id="iqama" value={form.iqamaNumber} onChange={(e) => set("iqamaNumber", e.target.value)} className={inputClass()} placeholder="Iqama number" />
+                <FieldRow label="Iqama / Residence ID * (10 digits)" id="iqama">
+                  <Input id="iqama" value={form.iqamaNumber} onChange={(e) => set("iqamaNumber", e.target.value.replace(/\D/g, "").slice(0, 10))}
+                    className={inputClass(showValidation && stepErrors.iqamaNumber ? "border-red-400 dark:border-red-500" : "")} placeholder="10-digit number" maxLength={10} />
+                  {showValidation && stepErrors.iqamaNumber && <p className="text-xs text-red-500 mt-1">{stepErrors.iqamaNumber}</p>}
                 </FieldRow>
-                <FieldRow label="Occupation" id="occ">
-                  <Input id="occ" value={form.occupation} onChange={(e) => set("occupation", e.target.value)} className={inputClass()} placeholder="e.g. Engineer" />
+                <FieldRow label="Occupation *" id="occ">
+                  <Input id="occ" value={form.occupation} onChange={(e) => set("occupation", e.target.value)}
+                    className={inputClass(showValidation && stepErrors.occupation ? "border-red-400 dark:border-red-500" : "")} placeholder="e.g. Engineer" />
+                  {showValidation && stepErrors.occupation && <p className="text-xs text-red-500 mt-1">{stepErrors.occupation}</p>}
                 </FieldRow>
                 <FieldRow label="Company / Employer" id="company">
                   <Input id="company" value={form.companyName} onChange={(e) => set("companyName", e.target.value)} className={inputClass()} placeholder="Company name" />
                 </FieldRow>
+
+                {/* Reference Member */}
+                <div className="sm:col-span-2">
+                  <FieldRow label="Reference Member — Who referred you to join FRF?">
+                    <MemberPicker value={refMember} onChange={(m) => {
+                      setRefMember(m);
+                      if (m) { set("refMemberName", m.fullName); set("refMemberId", m.membershipId); }
+                      else { set("refMemberName", ""); set("refMemberId", ""); }
+                    }} />
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Optional — select the DKMO member who referred you</p>
+                  </FieldRow>
+                </div>
 
                 {/* Passport Photo Upload */}
                 <div className="sm:col-span-2 pt-2">
@@ -558,8 +697,10 @@ export default function FrfApplyPage() {
                     </SelectContent>
                   </Select>
                 </FieldRow>
-                <FieldRow label="Email" id="email">
-                  <Input id="email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} className={inputClass()} placeholder="email@example.com" />
+                <FieldRow label="Email *" id="email">
+                  <Input id="email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)}
+                    className={inputClass(showValidation && stepErrors.email ? "border-red-400 dark:border-red-500" : "")} placeholder="email@example.com" />
+                  {showValidation && stepErrors.email && <p className="text-xs text-red-500 mt-1">{stepErrors.email}</p>}
                 </FieldRow>
                 <FieldRow label="Area / City (Saudi)" id="areaSA">
                   <Input id="areaSA" value={form.areaSaudi} onChange={(e) => set("areaSaudi", e.target.value)} className={inputClass()} placeholder="e.g. Riyadh" />
@@ -591,8 +732,10 @@ export default function FrfApplyPage() {
                 <CardTitle className="text-base text-green-900 dark:text-green-100">Home Address (India / Karnataka)</CardTitle>
               </CardHeader>
               <CardContent className="grid sm:grid-cols-2 gap-4">
-                <FieldRow label="House Name" id="houseName">
-                  <Input id="houseName" value={form.houseName} onChange={(e) => set("houseName", e.target.value)} className={inputClass()} />
+                <FieldRow label="House Name *" id="houseName">
+                  <Input id="houseName" value={form.houseName} onChange={(e) => set("houseName", e.target.value)}
+                    className={inputClass(showValidation && stepErrors.houseName ? "border-red-400 dark:border-red-500" : "")} />
+                  {showValidation && stepErrors.houseName && <p className="text-xs text-red-500 mt-1">{stepErrors.houseName}</p>}
                 </FieldRow>
                 <FieldRow label="Postal Address" id="postalAddr">
                   <Input id="postalAddr" value={form.postalAddress} onChange={(e) => set("postalAddress", e.target.value)} className={inputClass()} placeholder="Street / Post" />
@@ -607,7 +750,9 @@ export default function FrfApplyPage() {
                   <Input id="homePhone" value={form.homePhone} onChange={(e) => set("homePhone", e.target.value)} className={inputClass()} placeholder="+91 xxx xxx xxxx" />
                 </FieldRow>
                 <FieldRow label="Mobile (India)" id="mobIndia">
-                  <Input id="mobIndia" value={form.mobileIndia} onChange={(e) => set("mobileIndia", e.target.value)} className={inputClass()} placeholder="+91 9xx xxx xxxx" />
+                  <Input id="mobIndia" value={form.mobileIndia} onChange={(e) => set("mobileIndia", e.target.value.replace(/\D/g, "").slice(0, 10))}
+                    className={inputClass(showValidation && stepErrors.mobileIndia ? "border-red-400 dark:border-red-500" : "")} placeholder="10-digit mobile" maxLength={10} />
+                  {showValidation && stepErrors.mobileIndia && <p className="text-xs text-red-500 mt-1">{stepErrors.mobileIndia}</p>}
                 </FieldRow>
                 <div className="sm:col-span-2"><Separator /></div>
                 <div className="sm:col-span-2">

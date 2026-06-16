@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, desc, ilike, or, sql } from "drizzle-orm";
 import { z } from "zod";
-import { db, frfMembershipsTable, frfDependentsTable } from "@workspace/db";
+import { db, frfMembershipsTable, frfDependentsTable, membersTable } from "@workspace/db";
 import { requireAuth, type AuthedRequest } from "../middlewares/requireAuth";
 import { getUserById } from "../lib/users";
 import { logAudit } from "../lib/audit";
@@ -245,6 +245,15 @@ router.get("/frf/memberships/track", async (req, res): Promise<void> => {
       createdAt: r.createdAt.toISOString(),
     })),
   );
+});
+
+// Public: member lookup list for reference member dropdown (used by FRF & DKMO apply forms)
+router.get("/dkmo/members-list", async (_req, res): Promise<void> => {
+  const rows = await db
+    .select({ id: membersTable.id, fullName: membersTable.fullName, membershipId: membersTable.membershipId })
+    .from(membersTable)
+    .orderBy(membersTable.fullName);
+  res.json(rows);
 });
 
 // All routes below require auth

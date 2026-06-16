@@ -10,3 +10,4 @@ export * from "./loans";
 export * from "./receipts";
 export * from "./audit-logs";
 export * from "./documents";
+export * from "./dkmo_memberships";

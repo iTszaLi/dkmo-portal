@@ -1,0 +1,158 @@
+DKMO Membership Application System Enhancement
+
+I would like to add a Normal DKMO Membership Application system alongside the existing FRF Membership Application.
+
+The existing FRF Membership application flow is already very good. Please use the same multi-step application experience, UI style, validation logic, and PDF generation structure for the new Normal Membership application.
+
+1. Add "Apply for Membership" on Main Login Page
+
+On the DKMO Portal login/home page, add:
+
+Apply for FRF Membership
+Apply for DKMO Membership (NEW)
+
+Both should be accessible without admin login.
+
+The new DKMO Membership application should follow the same step-by-step process used in FRF Membership.
+
+2. Mandatory Fields (Apply to BOTH FRF and DKMO Membership)
+
+The following fields must be mandatory before submission:
+
+Personal Information
+Full Name
+Date of Birth
+Passport Number
+Occupation / Job Title
+Iqama Number
+Saudi Mobile Number
+Email Address
+India Contact Information
+House Name / House Address
+Mobile Number (India)
+
+Application cannot be submitted unless all mandatory fields are completed.
+
+3. Field Validation Rules (Apply to BOTH FRF and DKMO Membership)
+Email Validation
+
+Allow only valid email formats such as:
+
+example@gmail.com
+example@hotmail.com
+example@yahoo.com
+example@domain.com
+example@domain.net
+example@domain.org
+
+Show validation error for invalid email formats.
+
+Iqama Validation
+Must contain exactly 10 digits.
+Numbers only.
+No letters or special characters.
+
+Example:
+1234567890 ✓
+
+Saudi Mobile Validation
+Numbers only.
+Must be valid Saudi mobile format.
+Minimum 10 digits.
+India Mobile Validation
+Numbers only.
+Must be exactly 10 digits.
+
+Display clear validation messages whenever invalid data is entered.
+
+4. Referral Member Selection (NEW SECTION)
+
+Add a new field in the Personal Information section for BOTH memberships.
+
+Label
+
+"Reference Member / Who referred you to join DKMO?"
+
+Functionality
+Dropdown searchable list.
+Load all active DKMO members.
+User must select one member from the list.
+Store:
+Reference Member Name
+Member ID
+
+This should become part of the application record.
+
+Example:
+
+Reference Member:
+[Fazlurrahman Kolkar]
+[Asif Kannur]
+[Irshad Bajupe]
+etc.
+
+5. PDF Form Enhancement (Apply to BOTH FRF and DKMO Membership PDFs)
+
+Currently the PDF contains this text:
+
+"In Case of any changes in your Contact Information, You have to inform to the General Secretary of DKMO Immediately."
+
+Immediately below this line add a green rectangular box.
+
+Design
+Green bordered rectangle.
+Light green background.
+Black text.
+Content
+
+Reference Member
+
+Member Name: ______________________
+
+Member ID: ______________________
+
+This member referred me to join DKMO Membership.
+
+The selected reference member should automatically populate into the PDF.
+
+Apply this PDF enhancement to:
+
+FRF Membership PDF
+DKMO Membership PDF
+6. New DKMO Membership Module
+
+Create a dedicated DKMO Membership module similar to FRF Membership.
+
+Features:
+
+Membership Application Form
+Application Review
+Approval Workflow
+Reject Workflow
+Membership Status Tracking
+Member Record Creation after Approval
+PDF Application Generation
+Search & Filters
+Dashboard Statistics
+Reports
+
+Reuse existing FRF Membership architecture wherever possible to avoid duplicate code.
+
+7. Data Storage
+
+Store the following additional fields:
+
+Reference Member Name
+Reference Member ID
+Referral Date
+Membership Type (FRF / DKMO)
+
+These fields should be visible in:
+
+Application Details
+Member Profile
+Reports
+Exports
+PDF Forms
+
+Please implement these changes carefully while keeping the existing FRF Membership workflow intact and only enhancing it where specified above. The new DKMO Membership application should match the professionalism and structure of the existing FRF Membership application.

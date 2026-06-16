@@ -35,6 +35,8 @@ export interface FrfPdfData {
   emergencyNameIndia?: string | null;
   emergencyMobileIndia?: string | null;
   notes?: string | null;
+  refMemberName?: string | null;
+  refMemberId?: string | null;
 }
 
 async function loadImageAsBase64(url: string): Promise<string | null> {
@@ -122,6 +124,31 @@ export async function generateFrfPdf(
   );
   doc.text(noteLines, mL, y);
   y += (noteLines as string[]).length * 4.2 + 3;
+
+  // ── REFERENCE MEMBER GREEN BOX ───────────────────────────────────────────────
+  if (form.refMemberName || form.refMemberId) {
+    const green: [number, number, number] = [30, 120, 60];
+    const lightGreen: [number, number, number] = [220, 245, 225];
+    const boxH = 22;
+    doc.setFillColor(...lightGreen);
+    doc.setDrawColor(...green);
+    doc.setLineWidth(0.6);
+    doc.roundedRect(mL, y, cW, boxH, 2, 2, "FD");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(...green);
+    doc.text("Reference Member", mL + 3, y + 5);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(...black);
+    doc.text(`Member Name:  ${form.refMemberName || "______________________"}`, mL + 3, y + 10);
+    doc.text(`Member ID:      ${form.refMemberId || "______________________"}`, mL + 3, y + 15);
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(7);
+    doc.setTextColor(...grey);
+    doc.text("This member referred me to join FRF Membership.", mL + 3, y + 20);
+    y += boxH + 3;
+  }
 
   doc.setDrawColor(...black);
   doc.setLineWidth(0.4);

@@ -62,10 +62,17 @@ export default function LoginPage() {
         </a>
         <a
           href={`${basePath}/frf-apply`}
-          className="inline-flex items-center gap-1.5 rounded-full bg-green-700 hover:bg-green-800 text-white text-xs font-semibold px-3.5 py-1.5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98]"
+          className="inline-flex items-center gap-1.5 rounded-full border border-green-400 dark:border-green-700 bg-white/80 dark:bg-slate-900/80 hover:bg-green-50 dark:hover:bg-slate-800 text-green-800 dark:text-green-300 text-xs font-semibold px-3.5 py-1.5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98]"
         >
           <Users className="h-3.5 w-3.5" />
           Apply for FRF Membership
+        </a>
+        <a
+          href={`${basePath}/dkmo-apply`}
+          className="inline-flex items-center gap-1.5 rounded-full bg-green-700 hover:bg-green-800 text-white text-xs font-semibold px-3.5 py-1.5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98]"
+        >
+          <Users className="h-3.5 w-3.5" />
+          Apply for DKMO Membership
         </a>
         <ThemeToggle />
       </div>

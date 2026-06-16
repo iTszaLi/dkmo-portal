@@ -18,6 +18,11 @@ In `artifacts/api-server/src/routes/index.ts`, the mount order must be:
 
 Routers with mixed public/protected routes should declare their public routes BEFORE `router.use(requireAuth)` inside the file, AND be mounted early in the chain.
 
+## Critical lesson: all public endpoints must live in frf-membership.ts
+Every router with `router.use(requireAuth)` (no path) acts as a catch-all that blocks unauthenticated requests. Since `routes/index.ts` chains all sub-routers with no path restriction, the first `router.use(requireAuth)` hit by an unauthenticated request ends it with 401 — even for routes in later sub-routers.
+
+**Rule:** Any new public API endpoint must be added to `frf-membership.ts` BEFORE its `router.use(requireAuth)` line — this is the only safe location for public routes outside the health/auth/me routers.
+
 ## The `next_frf_number()` SQL function
 This function must exist in the DB. It was not created by Drizzle schema push — created manually via psql:
 ```sql

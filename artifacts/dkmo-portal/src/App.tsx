@@ -30,6 +30,8 @@ import FrfApply from "@/pages/frf-apply";
 import FrfTerms from "@/pages/frf-terms";
 import FrfTrack from "@/pages/frf-track";
 import FrfAmbassadors from "@/pages/frf-ambassadors";
+import DkmoApply from "@/pages/dkmo-apply";
+import DkmoMemberships from "@/pages/dkmo-memberships";
 import Loans from "@/pages/loans";
 import Receipts from "@/pages/receipts";
 import PrintReceipts from "@/pages/print-receipts";
@@ -112,6 +114,7 @@ function AppRoutes() {
       <Route path="/frf-apply" component={FrfApply} />
       <Route path="/frf-terms" component={FrfTerms} />
       <Route path="/frf-track" component={FrfTrack} />
+      <Route path="/dkmo-apply" component={DkmoApply} />
       {/* Backwards-compat: redirect old Clerk paths to /login */}
       <Route path="/sign-in/:rest*" component={() => <Redirect to="/login" />} />
       <Route path="/sign-up/:rest*" component={() => <Redirect to="/login" />} />
@@ -137,6 +140,7 @@ function AppRoutes() {
       <Route path="/frf-membership/:id" component={() => <AuthenticatedRoute component={FrfMembershipDetail} />} />
       <Route path="/frf-membership" component={() => <AuthenticatedRoute component={FrfMembership} />} />
       <Route path="/frf-ambassadors" component={() => <AuthenticatedRoute component={FrfAmbassadors} />} />
+      <Route path="/dkmo-memberships" component={() => <AuthenticatedRoute component={DkmoMemberships} />} />
       <Route path="/loans" component={() => <AuthenticatedRoute component={Loans} />} />
       <Route path="/receipts" component={() => <AuthenticatedRoute component={Receipts} />} />
       <Route path="/print-receipts" component={() => <AuthenticatedRoute component={PrintReceipts} />} />
