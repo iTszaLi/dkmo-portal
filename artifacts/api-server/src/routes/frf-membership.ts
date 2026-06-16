@@ -3,6 +3,8 @@ import { eq, desc, ilike, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, frfMembershipsTable, frfDependentsTable } from "@workspace/db";
 import { requireAuth } from "../middlewares/requireAuth";
+import { getUserById } from "../lib/users";
+import { logAudit } from "../lib/audit";
 
 const router: IRouter = Router();
 
@@ -45,6 +47,7 @@ const FrfMembershipInput = z.object({
   declineReason: z.string().optional().nullable(),
   photoUrl: z.string().optional().nullable(),
   notes: z.string().default(""),
+  remarks: z.string().default(""),
   dependents: z.array(DependentInput).default([]),
 });
 
@@ -114,6 +117,13 @@ function membershipToApi(m: typeof frfMembershipsTable.$inferSelect) {
     declineReason: m.declineReason ?? null,
     photoUrl: m.photoUrl,
     notes: m.notes,
+    remarks: m.remarks,
+    reviewedBy: m.reviewedBy,
+    reviewedAt: m.reviewedAt?.toISOString() ?? null,
+    approvedBy: m.approvedBy,
+    approvedAt: m.approvedAt?.toISOString() ?? null,
+    rejectedBy: m.rejectedBy,
+    rejectedAt: m.rejectedAt?.toISOString() ?? null,
     membershipDate: m.membershipDate,
     renewalDate: m.renewalDate,
     createdAt: m.createdAt.toISOString(),
@@ -390,6 +400,16 @@ router.patch("/frf/memberships/:id", async (req, res): Promise<void> => {
       ...(fields.declineReason !== undefined && { declineReason: fields.declineReason ?? null }),
       ...(fields.photoUrl !== undefined && { photoUrl: fields.photoUrl ?? null }),
       ...(fields.notes !== undefined && { notes: fields.notes }),
+      ...(fields.remarks !== undefined && { remarks: fields.remarks }),
+      ...(() => {
+        if (fields.status === undefined) return {};
+        const actor = getUserById((req as any).userId ?? "")?.displayName ?? (req as any).userId ?? "";
+        const now = new Date();
+        if (fields.status === "under_review") return { reviewedBy: actor, reviewedAt: now };
+        if (fields.status === "approved") return { approvedBy: actor, approvedAt: now };
+        if (fields.status === "rejected") return { rejectedBy: actor, rejectedAt: now };
+        return {};
+      })(),
       updatedAt: new Date(),
     })
     .where(eq(frfMembershipsTable.id, id))

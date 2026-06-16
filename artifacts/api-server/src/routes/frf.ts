@@ -3,6 +3,7 @@ import { eq, desc, and } from "drizzle-orm";
 import { db, frfClaimsTable } from "@workspace/db";
 import { requireAuth, requireRole } from "../middlewares/requireAuth";
 import { logAudit } from "../lib/audit";
+import { getUserById } from "../lib/users";
 import { z } from "zod";
 
 const router: IRouter = Router();
@@ -23,6 +24,7 @@ const FrfClaimInput = z.object({
   beneficiaryRelation: z.string().optional().default(""),
   description: z.string().optional().default(""),
   notes: z.string().optional().default(""),
+  reviewNotes: z.string().optional().default(""),
 });
 
 function frfToApi(row: any) {
@@ -38,6 +40,13 @@ function frfToApi(row: any) {
     claimDate: row.claimDate?.toISOString() ?? null,
     approvedDate: row.approvedDate?.toISOString() ?? null,
     approvedBy: row.approvedBy ?? "",
+    underReviewAt: row.underReviewAt?.toISOString() ?? null,
+    underReviewBy: row.underReviewBy ?? "",
+    disbursedAt: row.disbursedAt?.toISOString() ?? null,
+    disbursedBy: row.disbursedBy ?? "",
+    rejectedBy: row.rejectedBy ?? "",
+    rejectedAt: row.rejectedAt?.toISOString() ?? null,
+    reviewNotes: row.reviewNotes ?? "",
     beneficiaryName: row.beneficiaryName ?? "",
     beneficiaryRelation: row.beneficiaryRelation ?? "",
     description: row.description ?? "",
@@ -161,6 +170,16 @@ router.put("/frf/claims/:id", requireRole("admin", "finance"), async (req, res):
     if (data.beneficiaryRelation !== undefined) updateData.beneficiaryRelation = data.beneficiaryRelation;
     if (data.description !== undefined) updateData.description = data.description;
     if (data.notes !== undefined) updateData.notes = data.notes;
+    if (data.reviewNotes !== undefined) updateData.reviewNotes = data.reviewNotes;
+
+    if (data.status !== undefined) {
+      const actor = getUserById((req as any).userId ?? "")?.displayName ?? (req as any).userId ?? "";
+      const now = new Date();
+      if (data.status === "under_review") { updateData.underReviewBy = actor; updateData.underReviewAt = now; }
+      if (data.status === "approved") { updateData.approvedBy = actor; updateData.approvedDate = now; }
+      if (data.status === "rejected") { updateData.rejectedBy = actor; updateData.rejectedAt = now; }
+      if (data.status === "disbursed") { updateData.disbursedBy = actor; updateData.disbursedAt = now; }
+    }
 
     const [updated] = await db.update(frfClaimsTable).set(updateData).where(eq(frfClaimsTable.id, id)).returning();
     if (!updated) { res.status(404).json({ error: "Not found" }); return; }

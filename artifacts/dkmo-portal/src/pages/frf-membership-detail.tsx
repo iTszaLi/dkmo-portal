@@ -34,7 +34,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Phone, MapPin, User, Briefcase, Users, Printer, Download, Trash2, Edit, Plus, X, MessageCircle } from "lucide-react";
+import { ArrowLeft, Phone, MapPin, User, Briefcase, Users, Printer, Download, Trash2, Edit, Plus, X, MessageCircle, CheckCheck, XCircle as XCircleIcon, CircleDot, Activity } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { generateFrfPdf } from "@/lib/frf-pdf";
@@ -113,7 +113,7 @@ export default function FrfMembershipDetailPage() {
   const { toast } = useToast();
   const id = params?.id ?? "";
 
-  const { data: membership, isLoading, refetch } = useGetFrfMembership(id, { query: { enabled: !!id } });
+  const { data: membership, isLoading, refetch } = useGetFrfMembership(id, { query: { enabled: !!id } as any });
   const { mutateAsync: updateMembership } = useUpdateFrfMembership();
   const { mutateAsync: deleteMembership, isPending: isDeleting } = useDeleteFrfMembership();
   const { mutateAsync: addDependent } = useAddFrfDependent();
@@ -352,6 +352,86 @@ export default function FrfMembershipDetailPage() {
           {membership.membershipDate && <InfoRow label="Membership Date" value={membership.membershipDate} />}
         </Section>
       </div>
+
+      {/* Status Timeline */}
+      {(() => {
+        const m = membership as any;
+        type TimelineStep = { label: string; date?: string | null; by?: string; done: boolean; active?: boolean; rejected?: boolean };
+        const steps: TimelineStep[] = [
+          { label: "Application Submitted", date: m.createdAt, by: m.fullName, done: true },
+          { label: "Under Review", date: m.reviewedAt, by: m.reviewedBy || undefined, done: !!m.reviewedAt, active: m.status === "under_review" },
+        ];
+        if (m.status === "rejected") {
+          steps.push({ label: "Rejected", date: m.rejectedAt, by: m.rejectedBy || undefined, done: true, rejected: true });
+        } else {
+          steps.push({ label: "Approved", date: m.approvedAt, by: m.approvedBy || undefined, done: !!m.approvedAt, active: m.status === "approved" || m.status === "completed" });
+          if (m.status === "completed") steps.push({ label: "Completed", date: m.updatedAt, done: true });
+        }
+        const fmtTs = (iso?: string | null) => {
+          if (!iso) return "—";
+          return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+        };
+        const hasAnyProgress = !!m.reviewedAt || !!m.approvedAt || !!m.rejectedAt;
+        return (
+          <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm print:shadow-none">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold text-green-900 dark:text-green-300 flex items-center gap-2">
+                <Activity className="h-4 w-4" /> Application Status Timeline
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-0">
+                {steps.map((step, i) => (
+                  <div key={step.label} className="flex items-start gap-3">
+                    <div className="flex flex-col items-center">
+                      <div className={`h-7 w-7 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
+                        step.done && !step.rejected ? "bg-green-600 border-green-600 text-white" :
+                        step.rejected ? "bg-red-500 border-red-500 text-white" :
+                        step.active ? "border-blue-400 bg-blue-50 dark:bg-blue-950/40 text-blue-600" :
+                        "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-400"
+                      }`}>
+                        {step.done && !step.rejected ? <CheckCheck className="h-3.5 w-3.5" /> :
+                         step.rejected ? <XCircleIcon className="h-3.5 w-3.5" /> :
+                         step.active ? <CircleDot className="h-3.5 w-3.5" /> :
+                         <span className="text-xs">{i + 1}</span>}
+                      </div>
+                      {i < steps.length - 1 && (
+                        <div className={`w-0.5 h-8 ${step.done ? "bg-green-300 dark:bg-green-700" : "bg-slate-200 dark:bg-slate-700"}`} />
+                      )}
+                    </div>
+                    <div className="pb-3 flex-1">
+                      <p className={`text-sm font-semibold ${
+                        step.rejected ? "text-red-600 dark:text-red-400" :
+                        step.done ? "text-green-800 dark:text-green-300" :
+                        step.active ? "text-blue-700 dark:text-blue-400" :
+                        "text-slate-400 dark:text-slate-500"
+                      }`}>{step.label}</p>
+                      {step.done ? (
+                        <p className="text-xs text-slate-500 dark:text-slate-400">{fmtTs(step.date)}{step.by ? ` · by ${step.by}` : ""}</p>
+                      ) : (
+                        <p className="text-xs text-slate-400 dark:text-slate-600 italic">Pending</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {(m.remarks || m.declineReason) && (
+                <div className="mt-3 pt-3 border-t border-green-100 dark:border-slate-700">
+                  <p className="text-xs font-semibold text-green-700 dark:text-green-400 mb-1">
+                    {m.status === "rejected" ? "Rejection Reason" : "Remarks"}
+                  </p>
+                  <p className={`text-sm ${m.status === "rejected" ? "text-red-700 dark:text-red-400" : "text-slate-700 dark:text-slate-300"}`}>
+                    {m.remarks || m.declineReason}
+                  </p>
+                </div>
+              )}
+              {!hasAnyProgress && m.status === "submitted" && (
+                <p className="text-xs text-slate-400 dark:text-slate-600 mt-2 italic">Application is awaiting review.</p>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* Dependents */}
       <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
