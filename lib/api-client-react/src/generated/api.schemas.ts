@@ -979,6 +979,217 @@ export interface WelfareStats {
   byType: WelfareStatsByTypeItem[];
 }
 
+export interface JobDocument {
+  name: string;
+  url: string;
+  uploadedAt?: string;
+}
+
+export type JobListingJobType =
+  (typeof JobListingJobType)[keyof typeof JobListingJobType];
+
+export const JobListingJobType = {
+  full_time: "full_time",
+  part_time: "part_time",
+  contract: "contract",
+  internship: "internship",
+  temporary: "temporary",
+} as const;
+
+export type JobListingStatus =
+  (typeof JobListingStatus)[keyof typeof JobListingStatus];
+
+export const JobListingStatus = {
+  open: "open",
+  closed: "closed",
+  filled: "filled",
+} as const;
+
+export interface JobListing {
+  id: string;
+  title: string;
+  company: string;
+  location: string;
+  jobType: JobListingJobType;
+  salaryRange: string;
+  description: string;
+  contactPerson: string;
+  contactNumber: string;
+  contactEmail: string;
+  status: JobListingStatus;
+  postedBy: string;
+  applicationCount: number;
+  placedCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type JobListingInputJobType =
+  (typeof JobListingInputJobType)[keyof typeof JobListingInputJobType];
+
+export const JobListingInputJobType = {
+  full_time: "full_time",
+  part_time: "part_time",
+  contract: "contract",
+  internship: "internship",
+  temporary: "temporary",
+} as const;
+
+export type JobListingInputStatus =
+  (typeof JobListingInputStatus)[keyof typeof JobListingInputStatus];
+
+export const JobListingInputStatus = {
+  open: "open",
+  closed: "closed",
+  filled: "filled",
+} as const;
+
+export interface JobListingInput {
+  /** @minLength 1 */
+  title: string;
+  company?: string;
+  location?: string;
+  jobType?: JobListingInputJobType;
+  salaryRange?: string;
+  description?: string;
+  contactPerson?: string;
+  contactNumber?: string;
+  contactEmail?: string;
+  status?: JobListingInputStatus;
+}
+
+export type JobListingUpdateJobType =
+  (typeof JobListingUpdateJobType)[keyof typeof JobListingUpdateJobType];
+
+export const JobListingUpdateJobType = {
+  full_time: "full_time",
+  part_time: "part_time",
+  contract: "contract",
+  internship: "internship",
+  temporary: "temporary",
+} as const;
+
+export type JobListingUpdateStatus =
+  (typeof JobListingUpdateStatus)[keyof typeof JobListingUpdateStatus];
+
+export const JobListingUpdateStatus = {
+  open: "open",
+  closed: "closed",
+  filled: "filled",
+} as const;
+
+/**
+ * Partial update for a job listing. All fields optional.
+ */
+export interface JobListingUpdate {
+  /** @minLength 1 */
+  title?: string;
+  company?: string;
+  location?: string;
+  jobType?: JobListingUpdateJobType;
+  salaryRange?: string;
+  description?: string;
+  contactPerson?: string;
+  contactNumber?: string;
+  contactEmail?: string;
+  status?: JobListingUpdateStatus;
+}
+
+export type JobApplicationStatus =
+  (typeof JobApplicationStatus)[keyof typeof JobApplicationStatus];
+
+export const JobApplicationStatus = {
+  applied: "applied",
+  shortlisted: "shortlisted",
+  interviewed: "interviewed",
+  placed: "placed",
+  rejected: "rejected",
+} as const;
+
+export interface JobApplication {
+  id: string;
+  listingId: string;
+  /** @nullable */
+  memberId?: string | null;
+  applicantName: string;
+  membershipId: string;
+  contactNumber: string;
+  contactEmail: string;
+  cvDocuments: JobDocument[];
+  status: JobApplicationStatus;
+  notes: string;
+  /** @nullable */
+  appliedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type JobApplicationInputStatus =
+  (typeof JobApplicationInputStatus)[keyof typeof JobApplicationInputStatus];
+
+export const JobApplicationInputStatus = {
+  applied: "applied",
+  shortlisted: "shortlisted",
+  interviewed: "interviewed",
+  placed: "placed",
+  rejected: "rejected",
+} as const;
+
+export interface JobApplicationInput {
+  /** @nullable */
+  memberId?: string | null;
+  /** @minLength 1 */
+  applicantName: string;
+  membershipId?: string;
+  contactNumber?: string;
+  contactEmail?: string;
+  cvDocuments?: JobDocument[];
+  status?: JobApplicationInputStatus;
+  notes?: string;
+}
+
+export type JobApplicationUpdateStatus =
+  (typeof JobApplicationUpdateStatus)[keyof typeof JobApplicationUpdateStatus];
+
+export const JobApplicationUpdateStatus = {
+  applied: "applied",
+  shortlisted: "shortlisted",
+  interviewed: "interviewed",
+  placed: "placed",
+  rejected: "rejected",
+} as const;
+
+/**
+ * Partial update for a job application. All fields optional.
+ */
+export interface JobApplicationUpdate {
+  /** @nullable */
+  memberId?: string | null;
+  /** @minLength 1 */
+  applicantName?: string;
+  membershipId?: string;
+  contactNumber?: string;
+  contactEmail?: string;
+  cvDocuments?: JobDocument[];
+  status?: JobApplicationUpdateStatus;
+  notes?: string;
+}
+
+export type JobBureauStatsByStatusItem = {
+  status: string;
+  count: number;
+};
+
+export interface JobBureauStats {
+  totalListings: number;
+  openListings: number;
+  closedListings: number;
+  filledListings: number;
+  totalApplications: number;
+  placements: number;
+  byStatus: JobBureauStatsByStatusItem[];
+}
+
 export interface RequestUploadUrlBody {
   name: string;
   size: number;
@@ -1241,6 +1452,11 @@ export type ListWelfareRequestsParams = {
 
 export type GetWelfareStatsParams = {
   serviceType?: string;
+};
+
+export type ListJobListingsParams = {
+  status?: string;
+  search?: string;
 };
 
 export type GetDashboardCashFlowParams = {

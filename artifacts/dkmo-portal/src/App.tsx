@@ -25,6 +25,7 @@ import Committee from "@/pages/committee";
 import Frf from "@/pages/frf";
 import CommunityServices from "@/pages/community-services";
 import WelfareService from "@/pages/welfare-service";
+import JobBureau from "@/pages/job-bureau";
 import DkmoApply from "@/pages/dkmo-apply";
 import DkmoTrack from "@/pages/dkmo-track";
 import DkmoTerms from "@/pages/dkmo-terms";
@@ -132,6 +133,7 @@ function AppRoutes() {
       <Route path="/committee" component={() => <AuthenticatedRoute component={Committee} />} />
       <Route path="/services" component={() => <AuthenticatedRoute component={CommunityServices} />} />
       <Route path="/services/:type" component={() => <AuthenticatedRoute component={WelfareService} />} />
+      <Route path="/job-bureau" component={() => <AuthenticatedRoute component={JobBureau} />} />
       <Route path="/frf" component={() => <AuthenticatedRoute component={Frf} />} />
       <Route path="/dkmo-memberships" component={() => <AuthenticatedRoute component={DkmoMemberships} />} />
       <Route path="/loans" component={() => <AuthenticatedRoute component={Loans} />} />

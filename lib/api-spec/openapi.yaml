@@ -17,6 +17,7 @@ tags:
   - name: tasks
   - name: frf
   - name: welfare
+  - name: jobBureau
   - name: receipts
   - name: storage
   - name: audit
@@ -1229,6 +1230,190 @@ paths:
       operationId: deleteWelfareRequest
       tags: [welfare]
       summary: Delete a welfare request
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Deleted
+
+  /job-listings:
+    get:
+      operationId: listJobListings
+      tags: [jobBureau]
+      summary: List job listings
+      parameters:
+        - in: query
+          name: status
+          required: false
+          schema: { type: string }
+        - in: query
+          name: search
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: Job listings list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/JobListing"
+    post:
+      operationId: createJobListing
+      tags: [jobBureau]
+      summary: Create a job listing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobListingInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobListing"
+
+  /job-bureau/stats:
+    get:
+      operationId: getJobBureauStats
+      tags: [jobBureau]
+      summary: Get job bureau placement statistics
+      responses:
+        "200":
+          description: Job bureau stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobBureauStats"
+
+  /job-listings/{id}:
+    get:
+      operationId: getJobListing
+      tags: [jobBureau]
+      summary: Get a job listing
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Job listing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobListing"
+    put:
+      operationId: updateJobListing
+      tags: [jobBureau]
+      summary: Update a job listing
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobListingUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobListing"
+    delete:
+      operationId: deleteJobListing
+      tags: [jobBureau]
+      summary: Delete a job listing
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Deleted
+
+  /job-listings/{id}/applications:
+    get:
+      operationId: listJobApplications
+      tags: [jobBureau]
+      summary: List applications for a job listing
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Job applications list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/JobApplication"
+    post:
+      operationId: createJobApplication
+      tags: [jobBureau]
+      summary: Create an application for a job listing
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobApplicationInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobApplication"
+
+  /job-applications/{id}:
+    put:
+      operationId: updateJobApplication
+      tags: [jobBureau]
+      summary: Update a job application (status, notes, documents)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobApplicationUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobApplication"
+    delete:
+      operationId: deleteJobApplication
+      tags: [jobBureau]
+      summary: Delete a job application
       parameters:
         - in: path
           name: id
@@ -2459,6 +2644,194 @@ components:
         - totalRequested
         - totalApproved
         - byType
+
+    JobDocument:
+      type: object
+      properties:
+        name: { type: string }
+        url: { type: string }
+        uploadedAt: { type: string }
+      required: [name, url]
+
+    JobListing:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        company: { type: string }
+        location: { type: string }
+        jobType:
+          type: string
+          enum: [full_time, part_time, contract, internship, temporary]
+        salaryRange: { type: string }
+        description: { type: string }
+        contactPerson: { type: string }
+        contactNumber: { type: string }
+        contactEmail: { type: string }
+        status:
+          type: string
+          enum: [open, closed, filled]
+        postedBy: { type: string }
+        applicationCount: { type: integer }
+        placedCount: { type: integer }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required:
+        - id
+        - title
+        - company
+        - location
+        - jobType
+        - salaryRange
+        - description
+        - contactPerson
+        - contactNumber
+        - contactEmail
+        - status
+        - postedBy
+        - applicationCount
+        - placedCount
+        - createdAt
+        - updatedAt
+
+    JobListingInput:
+      type: object
+      properties:
+        title: { type: string, minLength: 1 }
+        company: { type: string }
+        location: { type: string }
+        jobType:
+          type: string
+          enum: [full_time, part_time, contract, internship, temporary]
+        salaryRange: { type: string }
+        description: { type: string }
+        contactPerson: { type: string }
+        contactNumber: { type: string }
+        contactEmail: { type: string }
+        status:
+          type: string
+          enum: [open, closed, filled]
+      required: [title]
+
+    JobListingUpdate:
+      type: object
+      description: Partial update for a job listing. All fields optional.
+      properties:
+        title: { type: string, minLength: 1 }
+        company: { type: string }
+        location: { type: string }
+        jobType:
+          type: string
+          enum: [full_time, part_time, contract, internship, temporary]
+        salaryRange: { type: string }
+        description: { type: string }
+        contactPerson: { type: string }
+        contactNumber: { type: string }
+        contactEmail: { type: string }
+        status:
+          type: string
+          enum: [open, closed, filled]
+
+    JobApplication:
+      type: object
+      properties:
+        id: { type: string }
+        listingId: { type: string }
+        memberId:
+          type: ["string", "null"]
+        applicantName: { type: string }
+        membershipId: { type: string }
+        contactNumber: { type: string }
+        contactEmail: { type: string }
+        cvDocuments:
+          type: array
+          items:
+            $ref: "#/components/schemas/JobDocument"
+        status:
+          type: string
+          enum: [applied, shortlisted, interviewed, placed, rejected]
+        notes: { type: string }
+        appliedAt:
+          type: ["string", "null"]
+          format: date-time
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required:
+        - id
+        - listingId
+        - applicantName
+        - membershipId
+        - contactNumber
+        - contactEmail
+        - cvDocuments
+        - status
+        - notes
+        - createdAt
+        - updatedAt
+
+    JobApplicationInput:
+      type: object
+      properties:
+        memberId:
+          type: ["string", "null"]
+        applicantName: { type: string, minLength: 1 }
+        membershipId: { type: string }
+        contactNumber: { type: string }
+        contactEmail: { type: string }
+        cvDocuments:
+          type: array
+          items:
+            $ref: "#/components/schemas/JobDocument"
+        status:
+          type: string
+          enum: [applied, shortlisted, interviewed, placed, rejected]
+        notes: { type: string }
+      required: [applicantName]
+
+    JobApplicationUpdate:
+      type: object
+      description: Partial update for a job application. All fields optional.
+      properties:
+        memberId:
+          type: ["string", "null"]
+        applicantName: { type: string, minLength: 1 }
+        membershipId: { type: string }
+        contactNumber: { type: string }
+        contactEmail: { type: string }
+        cvDocuments:
+          type: array
+          items:
+            $ref: "#/components/schemas/JobDocument"
+        status:
+          type: string
+          enum: [applied, shortlisted, interviewed, placed, rejected]
+        notes: { type: string }
+
+    JobBureauStats:
+      type: object
+      properties:
+        totalListings: { type: integer }
+        openListings: { type: integer }
+        closedListings: { type: integer }
+        filledListings: { type: integer }
+        totalApplications: { type: integer }
+        placements: { type: integer }
+        byStatus:
+          type: array
+          items:
+            type: object
+            properties:
+              status: { type: string }
+              count: { type: integer }
+            required: [status, count]
+      required:
+        - totalListings
+        - openListings
+        - closedListings
+        - filledListings
+        - totalApplications
+        - placements
+        - byStatus
 
     RequestUploadUrlBody:
       type: object

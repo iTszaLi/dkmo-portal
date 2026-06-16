@@ -345,6 +345,39 @@ async function main() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS job_listings (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      title TEXT NOT NULL,
+      company TEXT NOT NULL DEFAULT '',
+      location TEXT NOT NULL DEFAULT '',
+      job_type TEXT NOT NULL DEFAULT 'full_time',
+      salary_range TEXT NOT NULL DEFAULT '',
+      description TEXT NOT NULL DEFAULT '',
+      contact_person TEXT NOT NULL DEFAULT '',
+      contact_number TEXT NOT NULL DEFAULT '',
+      contact_email TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'open',
+      posted_by TEXT NOT NULL DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS job_applications (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      listing_id UUID NOT NULL REFERENCES job_listings(id) ON DELETE CASCADE,
+      member_id UUID REFERENCES members(id) ON DELETE SET NULL,
+      applicant_name TEXT NOT NULL,
+      membership_id TEXT NOT NULL DEFAULT '',
+      contact_number TEXT NOT NULL DEFAULT '',
+      contact_email TEXT NOT NULL DEFAULT '',
+      cv_documents JSONB NOT NULL DEFAULT '[]'::jsonb,
+      status TEXT NOT NULL DEFAULT 'applied',
+      notes TEXT NOT NULL DEFAULT '',
+      applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
   `);
 
   await pool.query(`
