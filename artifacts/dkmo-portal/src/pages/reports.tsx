@@ -222,19 +222,41 @@ export default function Reports() {
     doc.save(`DKMO_Members_${new Date().toISOString().split("T")[0]}.pdf`);
   };
 
-  const exportPaymentsPDF = () => {
+  const exportPaymentsPDF = async () => {
     if (!payments) return;
     const doc = new jsPDF();
-    doc.setFontSize(20);
-    doc.text("DKMO Payments Report", 14, 22);
-    doc.setFontSize(11);
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
+    const logoDataUrl = await loadImageAsBase64(`${basePath}/logo.png`);
+    const green: [number, number, number] = [5, 150, 105];
+
+    // Header band
+    doc.setFillColor(...green);
+    doc.rect(0, 0, 210, 32, "F");
+
+    // Logo
+    if (logoDataUrl) {
+      doc.addImage(logoDataUrl, "PNG", 5, 4, 22, 22);
+    }
+
+    // Title
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.setTextColor(255, 255, 255);
+    doc.text("DKMO Payments Report", 32, 15);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.text("Dakshina Karnataka Muslim Ookota — Committed to the Community", 32, 23);
+
+    // Generated line below header
+    doc.setTextColor(80, 80, 80);
+    doc.setFontSize(9);
+    doc.text(`Generated on: ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })}`, 14, 39);
+
     autoTable(doc, {
-      startY: 40,
+      startY: 44,
       head: [["Receipt", "Date", "Member", "Month", "Amount"]],
       body: payments.map((p) => [p.receiptNumber, formatDate(p.paidAt), p.memberName, p.month, `SAR ${p.amountPaid}`]),
       theme: "grid",
-      headStyles: { fillColor: [5, 150, 105] },
+      headStyles: { fillColor: green },
     });
     doc.save(`DKMO_Payments_${new Date().toISOString().split("T")[0]}.pdf`);
   };
