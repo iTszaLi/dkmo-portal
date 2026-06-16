@@ -158,14 +158,23 @@ async function generateReceiptPdf(data: FormValues, basePath: string): Promise<j
   boxes.forEach((b, i) => {
     const bx = startX + i * (bW + gap);
     const by = y - 2;
-    doc.setDrawColor(80, 80, 80);
-    doc.setLineWidth(0.4);
-    doc.roundedRect(bx, by, bW, bH, 3, 3);
+    doc.setFillColor(255, 255, 255);
     if (b.checked) {
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(9);
-      doc.setTextColor(0, 0, 0);
-      doc.text("✓", bx + bW / 2, by + bH / 2 + 1, { align: "center" });
+      doc.setDrawColor(0, 120, 0);
+      doc.setLineWidth(0.6);
+    } else {
+      doc.setDrawColor(80, 80, 80);
+      doc.setLineWidth(0.4);
+    }
+    doc.roundedRect(bx, by, bW, bH, 3, 3, "FD");
+    if (b.checked) {
+      // Draw tick mark as two lines (Unicode ✓ doesn't render in standard fonts)
+      const tcx = bx + bW / 2;
+      const tcy = by + bH / 2;
+      doc.setDrawColor(0, 130, 0);
+      doc.setLineWidth(1.0);
+      doc.line(tcx - 3.5, tcy + 0.8, tcx - 0.5, tcy + 3);
+      doc.line(tcx - 0.5, tcy + 3, tcx + 5, tcy - 2.5);
     }
     doc.setFont("helvetica", "normal");
     doc.setFontSize(6.5);

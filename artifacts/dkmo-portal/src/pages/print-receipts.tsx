@@ -200,24 +200,29 @@ export default function PrintReceipts() {
     for (let i = 0; i < 6; i++) {
       const ox = ovalStartX + i * ovalSpacing;
       const oy = y - 3;
-      doc.setLineWidth(0.5);
+      const cx = ox + ovalW / 2;
+      doc.setFillColor(255, 255, 255);
       if (towardsChecked[i]) {
-        doc.setFillColor(...maroon);
-        doc.setDrawColor(...maroon);
-        doc.ellipse(ox + ovalW / 2, oy, ovalW / 2, ovalH / 2, "FD");
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(255, 255, 255);
+        // Green outline oval
+        doc.setDrawColor(0, 120, 0);
+        doc.setLineWidth(0.8);
+        doc.ellipse(cx, oy, ovalW / 2, ovalH / 2, "FD");
+        // Draw tick mark as two lines inside the oval
+        doc.setDrawColor(0, 130, 0);
+        doc.setLineWidth(0.9);
+        doc.line(cx - 2.5, oy + 0.6, cx - 0.3, oy + 2.2);
+        doc.line(cx - 0.3, oy + 2.2, cx + 3.2, oy - 1.6);
       } else {
-        doc.setFillColor(255, 255, 255);
         doc.setDrawColor(80, 80, 80);
-        doc.ellipse(ox + ovalW / 2, oy, ovalW / 2, ovalH / 2, "D");
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(...darkGray);
+        doc.setLineWidth(0.5);
+        doc.ellipse(cx, oy, ovalW / 2, ovalH / 2, "D");
       }
       // Label below oval
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(...darkGray);
       doc.setFontSize(6.5);
       towardsLabels[i].forEach((line, li) => {
-        if (line) doc.text(line, ox + ovalW / 2, oy + 6 + li * 4.5, { align: "center" });
+        if (line) doc.text(line, cx, oy + 6 + li * 4.5, { align: "center" });
       });
     }
 
@@ -377,19 +382,27 @@ export default function PrintReceipts() {
     for (let i = 0; i < 6; i++) {
       const ox = ovalStartX + i * ovalSpacing;
       const oy = y - 3;
-      doc.setLineWidth(0.5);
+      const cx = ox + ovalW / 2;
+      doc.setFillColor(255, 255, 255);
       if (towardsChecked[i]) {
-        doc.setFillColor(...maroon); doc.setDrawColor(...maroon);
-        doc.ellipse(ox + ovalW / 2, oy, ovalW / 2, ovalH / 2, "FD");
-        doc.setFont("helvetica","bold"); doc.setTextColor(255,255,255);
+        doc.setDrawColor(0, 120, 0);
+        doc.setLineWidth(0.8);
+        doc.ellipse(cx, oy, ovalW / 2, ovalH / 2, "FD");
+        // Draw tick mark as two lines inside the oval
+        doc.setDrawColor(0, 130, 0);
+        doc.setLineWidth(0.9);
+        doc.line(cx - 2.5, oy + 0.6, cx - 0.3, oy + 2.2);
+        doc.line(cx - 0.3, oy + 2.2, cx + 3.2, oy - 1.6);
       } else {
-        doc.setFillColor(255,255,255); doc.setDrawColor(80,80,80);
-        doc.ellipse(ox + ovalW / 2, oy, ovalW / 2, ovalH / 2, "D");
-        doc.setFont("helvetica","normal"); doc.setTextColor(...darkGray);
+        doc.setDrawColor(80, 80, 80);
+        doc.setLineWidth(0.5);
+        doc.ellipse(cx, oy, ovalW / 2, ovalH / 2, "D");
       }
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(...darkGray);
       doc.setFontSize(6.5);
       towardsLabels[i].forEach((line, li) => {
-        if (line) doc.text(line, ox + ovalW / 2, oy + 6 + li * 4.5, { align: "center" });
+        if (line) doc.text(line, cx, oy + 6 + li * 4.5, { align: "center" });
       });
     }
     const boxX = W - 44, boxY = y - 9;

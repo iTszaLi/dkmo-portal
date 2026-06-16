@@ -13,6 +13,23 @@ import autoTable from "jspdf-autotable";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+async function loadImageAsBase64(url: string): Promise<string> {
+  try {
+    const resp = await fetch(url);
+    const blob = await resp.blob();
+    return await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return "";
+  }
+}
+
 // ── types ────────────────────────────────────────────────────────────────────
 type MonthlySummaryRow = {
   membershipId: string;
@@ -153,19 +170,41 @@ export default function Reports() {
     );
   };
 
-  const exportMembersPDF = () => {
+  const exportMembersPDF = async () => {
     if (!members) return;
     const doc = new jsPDF();
-    doc.setFontSize(20);
-    doc.text("DKMO Members Report", 14, 22);
-    doc.setFontSize(11);
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
+    const logoDataUrl = await loadImageAsBase64(`${basePath}/logo.png`);
+    const green: [number, number, number] = [5, 150, 105];
+
+    // Header band
+    doc.setFillColor(...green);
+    doc.rect(0, 0, 210, 32, "F");
+
+    // Logo
+    if (logoDataUrl) {
+      doc.addImage(logoDataUrl, "PNG", 5, 4, 22, 22);
+    }
+
+    // Title
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.setTextColor(255, 255, 255);
+    doc.text("DKMO Members Report", 32, 15);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.text("Dakshina Karnataka Muslim Ookota — Committed to the Community", 32, 23);
+
+    // Generated line below header
+    doc.setTextColor(80, 80, 80);
+    doc.setFontSize(9);
+    doc.text(`Generated on: ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })}`, 14, 39);
+
     autoTable(doc, {
-      startY: 40,
+      startY: 44,
       head: [["ID", "Name", "Designation", "Mobile", "City", "Amount"]],
       body: members.map((m) => [m.membershipId, m.fullName, m.designation ?? "", m.mobileNumber, m.city, `SAR ${m.monthlyAmount}`]),
       theme: "grid",
-      headStyles: { fillColor: [5, 150, 105] },
+      headStyles: { fillColor: green },
     });
     doc.save(`DKMO_Members_${new Date().toISOString().split("T")[0]}.pdf`);
   };
@@ -285,22 +324,21 @@ export default function Reports() {
     URL.revokeObjectURL(url);
   };
 
-  const exportMonthlySummaryPDF = () => {
+  const exportMonthlySummaryPDF = async () => {
     if (monthlySummaryRows.length === 0) return;
     const doc = new jsPDF({ orientation: "landscape" });
     const pageW = doc.internal.pageSize.getWidth();
     const green: [number, number, number] = [5, 150, 105];
+    const logoDataUrl = await loadImageAsBase64(`${basePath}/logo.png`);
 
     // Header band
     doc.setFillColor(...green);
     doc.rect(0, 0, pageW, 28, "F");
 
-    // Logo placeholder area (left)
-    doc.setFillColor(255, 255, 255);
-    doc.roundedRect(6, 4, 20, 20, 2, 2, "F");
-    doc.setFontSize(7);
-    doc.setTextColor(5, 150, 105);
-    doc.text("DKMO", 16, 16, { align: "center" });
+    // Logo (real image)
+    if (logoDataUrl) {
+      doc.addImage(logoDataUrl, "PNG", 6, 4, 20, 20);
+    }
 
     // Title text (centre)
     doc.setTextColor(255, 255, 255);
