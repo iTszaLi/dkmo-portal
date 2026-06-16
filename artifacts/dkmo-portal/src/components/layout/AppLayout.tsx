@@ -21,6 +21,7 @@ import {
   FolderOpen,
   Printer,
   ScrollText,
+  Trophy,
 } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -49,27 +50,28 @@ interface NavItem {
   name: string;
   href: string;
   icon: typeof LayoutDashboard;
-  roles?: Role[]; // if omitted, visible to all authenticated roles
+  roles?: Role[];
 }
 
 const navigation: NavItem[] = [
-  { name: "Dashboard",      href: "/dashboard",      icon: LayoutDashboard },
-  { name: "Members",        href: "/members",         icon: Users },
-  { name: "Committee",      href: "/committee",       icon: Crown },
-  { name: "Payments",       href: "/payments",        icon: CreditCard },
-  { name: "FRF Claims",     href: "/frf",             icon: HeartHandshake },
-  { name: "FRF Membership", href: "/frf-membership",  icon: BookUser },
-  { name: "Sponsors",       href: "/sponsors",        icon: Handshake },
-  { name: "Events",         href: "/events",          icon: CalendarDays },
-  { name: "Tasks",          href: "/tasks",           icon: ListChecks },
-  { name: "Pending",        href: "/pending",         icon: AlertCircle },
-  { name: "Loans",          href: "/loans",           icon: Landmark },
-  { name: "Receipts",       href: "/receipts",        icon: Receipt },
-  { name: "Print Receipts", href: "/print-receipts",  icon: Printer },
-  { name: "Documents",      href: "/documents",       icon: FolderOpen },
-  { name: "Reports",        href: "/reports",         icon: FileText },
-  { name: "Audit Trail",    href: "/audit",           icon: ScrollText, roles: ["admin", "finance"] },
-  { name: "Settings",       href: "/settings",        icon: Cog, roles: ["admin"] },
+  { name: "Dashboard",         href: "/dashboard",         icon: LayoutDashboard },
+  { name: "Members",           href: "/members",           icon: Users },
+  { name: "Committee",         href: "/committee",         icon: Crown },
+  { name: "Payments",          href: "/payments",          icon: CreditCard },
+  { name: "FRF Claims",        href: "/frf",               icon: HeartHandshake },
+  { name: "FRF Membership",    href: "/frf-membership",    icon: BookUser },
+  { name: "FRF Ambassadors",   href: "/frf-ambassadors",   icon: Trophy },
+  { name: "Sponsors",          href: "/sponsors",          icon: Handshake },
+  { name: "Events",            href: "/events",            icon: CalendarDays },
+  { name: "Tasks",             href: "/tasks",             icon: ListChecks },
+  { name: "Pending",           href: "/pending",           icon: AlertCircle },
+  { name: "Loans",             href: "/loans",             icon: Landmark },
+  { name: "Receipts",          href: "/receipts",          icon: Receipt },
+  { name: "Print Receipts",    href: "/print-receipts",    icon: Printer },
+  { name: "Documents",         href: "/documents",         icon: FolderOpen },
+  { name: "Reports",           href: "/reports",           icon: FileText },
+  { name: "Audit Trail",       href: "/audit",             icon: ScrollText, roles: ["admin", "finance"] },
+  { name: "Settings",          href: "/settings",          icon: Cog, roles: ["admin"] },
 ];
 
 function initialsOf(name: string): string {
@@ -205,13 +207,9 @@ export function AppLayout({ children }: AppLayoutProps) {
 
           <div className="flex-1" />
 
-          {/* Theme toggle */}
           <ThemeToggle />
-
-          {/* Notification bell */}
           {user && <NotificationBell />}
 
-          {/* Role badge in topbar */}
           {user && (
             <Badge
               data-testid="badge-role"

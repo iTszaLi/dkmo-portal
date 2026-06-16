@@ -45,6 +45,12 @@ export const frfMembershipsTable = pgTable("frf_memberships", {
   remarks: text("remarks").notNull().default(""),
   membershipDate: date("membership_date").notNull().default("2024-01-01"),
   renewalDate: date("renewal_date"),
+  // Referral tracking
+  referrerMemberName: text("referrer_member_name").notNull().default(""),
+  referrerDkmoId: text("referrer_dkmo_id").notNull().default(""),
+  referrerFrfNumber: text("referrer_frf_number").notNull().default(""),
+  referralCode: text("referral_code").notNull().default(""),
+  referralDate: date("referral_date"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
@@ -58,7 +64,25 @@ export const frfDependentsTable = pgTable("frf_dependents", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const frfAmbassadorHistoryTable = pgTable("frf_ambassador_history", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  year: integer("year").notNull(),
+  periodType: text("period_type").notNull().default("annual"),
+  rank: integer("rank").notNull(),
+  referrerMemberName: text("referrer_member_name").notNull(),
+  referrerDkmoId: text("referrer_dkmo_id").notNull().default(""),
+  referrerFrfNumber: text("referrer_frf_number").notNull().default(""),
+  approvedReferrals: integer("approved_referrals").notNull().default(0),
+  points: integer("points").notNull().default(0),
+  awardStatus: text("award_status").notNull().default("pending_review"),
+  notes: text("notes").notNull().default(""),
+  createdBy: text("created_by").notNull().default(""),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export type FrfMembership = typeof frfMembershipsTable.$inferSelect;
 export type InsertFrfMembership = typeof frfMembershipsTable.$inferInsert;
 export type FrfDependent = typeof frfDependentsTable.$inferSelect;
 export type InsertFrfDependent = typeof frfDependentsTable.$inferInsert;
+export type FrfAmbassadorHistory = typeof frfAmbassadorHistoryTable.$inferSelect;
+export type InsertFrfAmbassadorHistory = typeof frfAmbassadorHistoryTable.$inferInsert;

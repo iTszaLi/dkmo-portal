@@ -29,6 +29,7 @@ import FrfMembershipForm from "@/pages/frf-membership-form";
 import FrfApply from "@/pages/frf-apply";
 import FrfTerms from "@/pages/frf-terms";
 import FrfTrack from "@/pages/frf-track";
+import FrfAmbassadors from "@/pages/frf-ambassadors";
 import Loans from "@/pages/loans";
 import Receipts from "@/pages/receipts";
 import PrintReceipts from "@/pages/print-receipts";
@@ -135,6 +136,7 @@ function AppRoutes() {
       <Route path="/frf-membership/:id/edit" component={() => <AuthenticatedRoute component={FrfMembershipForm} />} />
       <Route path="/frf-membership/:id" component={() => <AuthenticatedRoute component={FrfMembershipDetail} />} />
       <Route path="/frf-membership" component={() => <AuthenticatedRoute component={FrfMembership} />} />
+      <Route path="/frf-ambassadors" component={() => <AuthenticatedRoute component={FrfAmbassadors} />} />
       <Route path="/loans" component={() => <AuthenticatedRoute component={Loans} />} />
       <Route path="/receipts" component={() => <AuthenticatedRoute component={Receipts} />} />
       <Route path="/print-receipts" component={() => <AuthenticatedRoute component={PrintReceipts} />} />

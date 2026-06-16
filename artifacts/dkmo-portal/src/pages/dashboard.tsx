@@ -31,8 +31,6 @@ import {
   HeartHandshake,
   CalendarDays,
   BookUser,
-  ArrowUpCircle,
-  ArrowDownCircle,
   Scale,
 } from "lucide-react";
 import { PaymentMethodIcon } from "@/lib/payment-icons";
@@ -50,6 +48,7 @@ import {
 } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
+import { useQuery } from "@tanstack/react-query";
 import { useTheme } from "@/lib/theme";
 
 export default function Dashboard() {
@@ -101,6 +100,25 @@ export default function Dashboard() {
   const { data: financialSummary } = useGetDashboardFinancialSummary({ month: currentMonth });
   const { data: cashFlow } = useGetDashboardCashFlow({ year: eventsYear, quarter: eventsQuarter });
   const { data: frfStats } = useGetFrfMembershipStats();
+
+  type AmbassadorEntry = {
+    rank: number;
+    referrerMemberName: string;
+    referrerDkmoId: string;
+    referrerFrfNumber: string;
+    approvedReferrals: number;
+    points: number;
+    awardStatus: string;
+  };
+  const { data: topAmbassadors } = useQuery<AmbassadorEntry[]>({
+    queryKey: ["frf-ambassadors-dashboard"],
+    queryFn: async () => {
+      const bp = import.meta.env.BASE_URL.replace(/\/$/, "");
+      const res = await fetch(`${bp}/api/frf/ambassadors?period=all-time`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json() as Promise<AmbassadorEntry[]>;
+    },
+  });
 
   const yearToDate = useMemo(() => {
     if (!allPayments) return null;
@@ -393,101 +411,63 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Cash Flow Widget */}
-      {cashFlow && (
-        <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base text-green-950 dark:text-green-100 flex items-center gap-2">
-              <Wallet className="h-4 w-4 text-green-700 dark:text-green-400" />
-              Cash Flow Overview
-            </CardTitle>
-            <CardDescription className="dark:text-slate-400">All-time collection vs welfare disbursements</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-green-50/60 dark:bg-green-950/20 border border-green-100 dark:border-green-900/40">
-                <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/40 flex items-center justify-center shrink-0">
-                  <ArrowUpCircle className="h-5 w-5 text-green-700 dark:text-green-400" />
-                </div>
-                <div>
-                  <p className="text-xs text-green-700/70 dark:text-green-600 font-medium">Total Collected</p>
-                  <p className="text-xl font-bold text-green-950 dark:text-green-200">{formatSAR(cashFlow.totalCollected)}</p>
-                  <p className="text-xs text-green-700/60 dark:text-slate-500">Members + Sponsors</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-red-50/50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/40">
-                <div className="h-10 w-10 rounded-lg bg-red-100 dark:bg-red-900/40 flex items-center justify-center shrink-0">
-                  <ArrowDownCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
-                </div>
-                <div>
-                  <p className="text-xs text-red-700/70 dark:text-red-500 font-medium">Total Disbursed</p>
-                  <p className="text-xl font-bold text-red-800 dark:text-red-300">{formatSAR(cashFlow.totalDisbursed)}</p>
-                  <p className="text-xs text-red-700/60 dark:text-red-600/60">FRF welfare claims</p>
-                </div>
-              </div>
-
-              <div className={`flex items-center gap-3 p-4 rounded-xl border ${
-                (cashFlow.netBalance ?? 0) >= 0
-                  ? "bg-blue-50/50 dark:bg-blue-950/20 border-blue-100 dark:border-blue-900/40"
-                  : "bg-orange-50/60 dark:bg-orange-950/20 border-orange-100 dark:border-orange-900/40"
-              }`}>
-                <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${
-                  (cashFlow.netBalance ?? 0) >= 0 ? "bg-blue-100 dark:bg-blue-900/40" : "bg-orange-100 dark:bg-orange-900/40"
-                }`}>
-                  <Scale className={`h-5 w-5 ${(cashFlow.netBalance ?? 0) >= 0 ? "text-blue-700 dark:text-blue-400" : "text-orange-700 dark:text-orange-400"}`} />
-                </div>
-                <div>
-                  <p className={`text-xs font-medium ${(cashFlow.netBalance ?? 0) >= 0 ? "text-blue-700/70 dark:text-blue-500" : "text-orange-700/70 dark:text-orange-500"}`}>
-                    Net Balance
-                  </p>
-                  <p className={`text-xl font-bold ${(cashFlow.netBalance ?? 0) >= 0 ? "text-blue-900 dark:text-blue-200" : "text-orange-800 dark:text-orange-300"}`}>
-                    {formatSAR(cashFlow.netBalance)}
-                  </p>
-                  <p className={`text-xs ${(cashFlow.netBalance ?? 0) >= 0 ? "text-blue-700/60 dark:text-blue-600/60" : "text-orange-700/60 dark:text-orange-600/60"}`}>
-                    {(cashFlow.netBalance ?? 0) >= 0 ? "Surplus" : "Deficit"}
-                  </p>
-                </div>
-              </div>
+      {/* FRF Ambassadors Widget */}
+      <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base text-green-950 dark:text-green-100 flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-yellow-500" />
+                FRF Ambassadors Leaderboard
+              </CardTitle>
+              <CardDescription className="dark:text-slate-400">Top recruiters by approved FRF membership referrals</CardDescription>
             </div>
-
-            {/* Progress bar */}
-            {cashFlow.totalCollected > 0 && (
-              <div className="mt-4 space-y-1.5">
-                <div className="flex justify-between text-xs text-green-700/70 dark:text-slate-500">
-                  <span>Disbursement rate</span>
-                  <span>{Math.round((cashFlow.totalDisbursed / cashFlow.totalCollected) * 100)}% of collected</span>
+            <Link href="/frf-ambassadors">
+              <button type="button" className="flex items-center gap-1 text-xs font-medium text-green-700 dark:text-green-400 hover:underline">
+                View All <ArrowRight className="h-3 w-3" />
+              </button>
+            </Link>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {topAmbassadors === undefined ? (
+            <div className="space-y-2.5">
+              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 rounded-xl" />)}
+            </div>
+          ) : topAmbassadors.length === 0 ? (
+            <div className="text-center py-8">
+              <Trophy className="h-8 w-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+              <p className="text-sm text-slate-400 dark:text-slate-500">No referral data yet</p>
+              <p className="text-xs text-slate-400 dark:text-slate-600 mt-1">
+                Referrals are tracked in FRF Membership applications
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {topAmbassadors.slice(0, 3).map((entry, i) => (
+                <div key={entry.referrerDkmoId}
+                  className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
+                    i === 0 ? "bg-yellow-50/60 border-yellow-200 dark:bg-yellow-950/20 dark:border-yellow-800/40" :
+                    i === 1 ? "bg-slate-50/80 border-slate-200 dark:bg-slate-800/60 dark:border-slate-700" :
+                    "bg-orange-50/40 border-orange-100 dark:bg-orange-950/10 dark:border-orange-900/30"
+                  }`}>
+                  <div className="text-xl shrink-0">
+                    {i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉"}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm text-green-950 dark:text-white truncate">{entry.referrerMemberName || "—"}</p>
+                    <p className="text-xs text-green-700/70 dark:text-slate-400">{entry.referrerDkmoId}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-lg font-bold text-green-800 dark:text-green-300">{entry.approvedReferrals}</p>
+                    <p className="text-[10px] text-green-700/60 dark:text-slate-500">referrals</p>
+                  </div>
                 </div>
-                <div className="h-2 bg-green-50 dark:bg-slate-700 rounded-full overflow-hidden border border-green-100 dark:border-transparent">
-                  <div
-                    className="h-full bg-gradient-to-r from-red-500 to-red-400 rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min(100, Math.round((cashFlow.totalDisbursed / cashFlow.totalCollected) * 100))}%` }}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Upcoming events preview */}
-            {cashFlow.upcomingEvents && cashFlow.upcomingEvents.length > 0 && (
-              <div className="mt-4 border-t border-green-100 dark:border-slate-800 pt-4">
-                <p className="text-xs font-semibold text-green-900 dark:text-green-400 mb-2 flex items-center gap-1.5">
-                  <CalendarDays className="h-3.5 w-3.5" /> Upcoming Events
-                </p>
-                <div className="space-y-1.5">
-                  {cashFlow.upcomingEvents.slice(0, 3).map((ev: any) => (
-                    <Link key={ev.id} href={`/events/${ev.id}`} className="flex items-center justify-between text-xs hover:bg-green-50 dark:hover:bg-slate-800 rounded-lg px-2 py-1.5 transition-colors">
-                      <span className="font-medium text-green-900 dark:text-slate-300 truncate">{ev.title}</span>
-                      <span className="text-green-700/60 dark:text-slate-500 shrink-0 ml-2">
-                        {new Date(ev.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Financial Summary */}
       {financialSummary && (

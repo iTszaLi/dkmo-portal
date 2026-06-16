@@ -31,6 +31,7 @@ const STEPS = [
   { label: "Saudi Contact" },
   { label: "India Contact" },
   { label: "Nominee & Dependents" },
+  { label: "Referral Info" },
 ];
 
 const EMPTY_FORM = {
@@ -42,6 +43,8 @@ const EMPTY_FORM = {
   homePhone: "", mobileIndia: "", emergencyNameIndia: "", emergencyMobileIndia: "",
   nomineeName: "", nomineeRelation: "", nomineeMobile: "", notes: "",
   status: "submitted",
+  referrerMemberName: "", referrerDkmoId: "", referrerFrfNumber: "",
+  referralCode: "", referralDate: "",
 };
 
 function FieldRow({ label, id, children }: { label: string; id?: string; children: React.ReactNode }) {
@@ -104,6 +107,11 @@ export default function FrfMembershipFormPage() {
       nomineeMobile: m.nomineeMobile ?? "",
       notes: m.notes ?? "",
       status: (m.status || "submitted") as string,
+      referrerMemberName: (m as any).referrerMemberName ?? "",
+      referrerDkmoId: (m as any).referrerDkmoId ?? "",
+      referrerFrfNumber: (m as any).referrerFrfNumber ?? "",
+      referralCode: (m as any).referralCode ?? "",
+      referralDate: (m as any).referralDate ?? "",
     });
     if (m.dependents && m.dependents.length > 0) {
       setDependents(m.dependents.map((d: { fullName: string; relation: string; age?: number | null }) => ({
@@ -315,6 +323,36 @@ export default function FrfMembershipFormPage() {
               </CardContent>
             </Card>
           </>
+        )}
+
+        {step === 4 && (
+          <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-base text-green-900 dark:text-green-100">Referral Information</CardTitle>
+              <p className="text-sm text-green-700/70 dark:text-slate-400 mt-0.5">
+                Optional — fill in if this applicant was referred by an existing FRF member.
+              </p>
+            </CardHeader>
+            <CardContent className="grid sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2">
+                <FieldRow label="Referrer Full Name">
+                  <Input className={inputCls} value={form.referrerMemberName} onChange={(e) => set("referrerMemberName", e.target.value)} placeholder="Full name of the referring member" />
+                </FieldRow>
+              </div>
+              <FieldRow label="Referrer DKMO ID">
+                <Input className={inputCls} value={form.referrerDkmoId} onChange={(e) => set("referrerDkmoId", e.target.value)} placeholder="e.g. DKMO-0001" />
+              </FieldRow>
+              <FieldRow label="Referrer FRF Number">
+                <Input className={inputCls} value={form.referrerFrfNumber} onChange={(e) => set("referrerFrfNumber", e.target.value)} placeholder="e.g. FRF-2601" />
+              </FieldRow>
+              <FieldRow label="Referral Code">
+                <Input className={inputCls} value={form.referralCode} onChange={(e) => set("referralCode", e.target.value)} placeholder="Optional referral code" />
+              </FieldRow>
+              <FieldRow label="Referral Date">
+                <Input type="date" className={inputCls} value={form.referralDate} onChange={(e) => set("referralDate", e.target.value)} />
+              </FieldRow>
+            </CardContent>
+          </Card>
         )}
 
         {error && (

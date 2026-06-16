@@ -48,6 +48,11 @@ const FrfMembershipInput = z.object({
   photoUrl: z.string().optional().nullable(),
   notes: z.string().default(""),
   remarks: z.string().default(""),
+  referrerMemberName: z.string().default(""),
+  referrerDkmoId: z.string().default(""),
+  referrerFrfNumber: z.string().default(""),
+  referralCode: z.string().default(""),
+  referralDate: z.string().optional().nullable(),
   dependents: z.array(DependentInput).default([]),
 });
 
@@ -126,6 +131,11 @@ function membershipToApi(m: typeof frfMembershipsTable.$inferSelect) {
     rejectedAt: m.rejectedAt?.toISOString() ?? null,
     membershipDate: m.membershipDate,
     renewalDate: m.renewalDate,
+    referrerMemberName: m.referrerMemberName,
+    referrerDkmoId: m.referrerDkmoId,
+    referrerFrfNumber: m.referrerFrfNumber,
+    referralCode: m.referralCode,
+    referralDate: m.referralDate ?? null,
     createdAt: m.createdAt.toISOString(),
     updatedAt: m.updatedAt.toISOString(),
   };
@@ -177,6 +187,11 @@ router.post("/frf/memberships/apply", async (req, res): Promise<void> => {
       status: "submitted",
       photoUrl: fields.photoUrl ?? null,
       notes: fields.notes,
+      referrerMemberName: fields.referrerMemberName,
+      referrerDkmoId: fields.referrerDkmoId,
+      referrerFrfNumber: fields.referrerFrfNumber,
+      referralCode: fields.referralCode,
+      referralDate: fields.referralDate ?? null,
     })
     .returning();
 
@@ -307,6 +322,11 @@ router.post("/frf/memberships", async (req, res): Promise<void> => {
       status: fields.status,
       photoUrl: fields.photoUrl ?? null,
       notes: fields.notes,
+      referrerMemberName: fields.referrerMemberName,
+      referrerDkmoId: fields.referrerDkmoId,
+      referrerFrfNumber: fields.referrerFrfNumber,
+      referralCode: fields.referralCode,
+      referralDate: fields.referralDate ?? null,
     })
     .returning();
 
@@ -445,6 +465,11 @@ router.patch("/frf/memberships/:id", async (req, res): Promise<void> => {
       ...(fields.photoUrl !== undefined && { photoUrl: fields.photoUrl ?? null }),
       ...(fields.notes !== undefined && { notes: fields.notes }),
       ...(fields.remarks !== undefined && { remarks: fields.remarks }),
+      ...(fields.referrerMemberName !== undefined && { referrerMemberName: fields.referrerMemberName }),
+      ...(fields.referrerDkmoId !== undefined && { referrerDkmoId: fields.referrerDkmoId }),
+      ...(fields.referrerFrfNumber !== undefined && { referrerFrfNumber: fields.referrerFrfNumber }),
+      ...(fields.referralCode !== undefined && { referralCode: fields.referralCode }),
+      ...(fields.referralDate !== undefined && { referralDate: fields.referralDate ?? null }),
       ...(() => {
         if (fields.status === undefined) return {};
         const actor = getUserById((req as any).userId ?? "")?.displayName ?? (req as any).userId ?? "";

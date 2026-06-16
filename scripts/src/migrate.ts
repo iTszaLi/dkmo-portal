@@ -293,6 +293,60 @@ async function main() {
     );
   `);
 
+  // Referral tracking columns for FRF Memberships
+  await pool.query(`
+    ALTER TABLE frf_memberships
+      ADD COLUMN IF NOT EXISTS referrer_member_name TEXT NOT NULL DEFAULT '',
+      ADD COLUMN IF NOT EXISTS referrer_dkmo_id TEXT NOT NULL DEFAULT '',
+      ADD COLUMN IF NOT EXISTS referrer_frf_number TEXT NOT NULL DEFAULT '',
+      ADD COLUMN IF NOT EXISTS referral_code TEXT NOT NULL DEFAULT '',
+      ADD COLUMN IF NOT EXISTS referral_date DATE;
+  `);
+
+  // FRF Ambassador History table
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS frf_ambassador_history (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      year INTEGER NOT NULL,
+      period_type TEXT NOT NULL DEFAULT 'annual',
+      rank INTEGER NOT NULL,
+      referrer_member_name TEXT NOT NULL,
+      referrer_dkmo_id TEXT NOT NULL DEFAULT '',
+      referrer_frf_number TEXT NOT NULL DEFAULT '',
+      approved_referrals INTEGER NOT NULL DEFAULT 0,
+      points INTEGER NOT NULL DEFAULT 0,
+      award_status TEXT NOT NULL DEFAULT 'pending_review',
+      notes TEXT NOT NULL DEFAULT '',
+      created_by TEXT NOT NULL DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+
+  // Ensure audit_logs has the new schema (user_id / user_name columns)
+  await pool.query(`
+    ALTER TABLE audit_logs
+      ADD COLUMN IF NOT EXISTS user_id TEXT NOT NULL DEFAULT '',
+      ADD COLUMN IF NOT EXISTS user_name TEXT NOT NULL DEFAULT '',
+      ADD COLUMN IF NOT EXISTS module TEXT NOT NULL DEFAULT '',
+      ADD COLUMN IF NOT EXISTS entity_id TEXT,
+      ADD COLUMN IF NOT EXISTS entity_name TEXT,
+      ADD COLUMN IF NOT EXISTS details TEXT,
+      ADD COLUMN IF NOT EXISTS ip_address TEXT;
+  `);
+
+  await pool.query(`
+    CREATE OR REPLACE FUNCTION next_frf_number()
+    RETURNS TEXT AS $$
+    DECLARE
+      seq INT;
+    BEGIN
+      SELECT COALESCE(MAX(CAST(SUBSTRING(frf_number FROM 5) AS INT)), 0) + 1
+        INTO seq FROM frf_memberships;
+      RETURN 'FRF-' || LPAD(seq::TEXT, 4, '0');
+    END;
+    $$ LANGUAGE plpgsql;
+  `);
+
   console.log("✅  All tables created.");
   await pool.end();
 }
