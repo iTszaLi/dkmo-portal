@@ -3,11 +3,10 @@ import {
   useGetWelfareStats,
   useGetFrfStats,
   useGetLoanStats,
-  useGetJobBureauStats,
 } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, HeartHandshake, Landmark, Briefcase, Users2 } from "lucide-react";
+import { ArrowRight, HeartHandshake, Landmark, Users2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SERVICE_TYPES, SERVICE_CONFIG } from "@/lib/welfare-config";
 
@@ -15,7 +14,6 @@ export default function CommunityServicesPage() {
   const { data: welfareStats } = useGetWelfareStats();
   const { data: frfStats } = useGetFrfStats();
   const { data: loanStats } = useGetLoanStats();
-  const { data: jobStats } = useGetJobBureauStats();
 
   const welfareCountByType = new Map<string, number>(
     (welfareStats?.byType ?? []).map((t) => [t.type, t.count]),
@@ -118,32 +116,6 @@ export default function CommunityServicesPage() {
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wide text-green-700/70 dark:text-slate-500 mb-3">Upcoming Programs</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Link href="/job-bureau">
-            <Card className="group rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900/60 shadow-sm h-full hover:shadow-md hover:border-green-300 dark:hover:border-green-700 transition-all cursor-pointer">
-              <CardContent className="p-5 flex flex-col h-full">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-100 dark:bg-violet-900/40">
-                    <Briefcase className="h-5 w-5 text-violet-700 dark:text-violet-400" />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {(jobStats?.openListings ?? 0) > 0 && (
-                      <Badge className="text-[10px] bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 ring-1 ring-green-300 dark:ring-green-700/50">
-                        {jobStats?.openListings} open
-                      </Badge>
-                    )}
-                    <ArrowRight className="h-4 w-4 text-green-700/50 dark:text-slate-500 group-hover:translate-x-0.5 transition-transform" />
-                  </div>
-                </div>
-                <h3 className="font-semibold text-green-950 dark:text-slate-100">Job Bureau</h3>
-                <p className="text-sm text-green-700/70 dark:text-slate-400 mt-1 flex-1">Job listings, applications and placement tracking connecting members with opportunities.</p>
-                <div className="mt-3 flex items-center gap-3 text-xs text-green-700/70 dark:text-slate-400">
-                  <span>{jobStats?.totalListings ?? 0} jobs</span>
-                  <span>{jobStats?.totalApplications ?? 0} applicants</span>
-                  <span>{jobStats?.placements ?? 0} placed</span>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
           <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900/60 shadow-sm h-full opacity-80">
             <CardContent className="p-5 flex flex-col h-full">
               <div className="flex items-center justify-between mb-3">

@@ -10,8 +10,6 @@ import {
   Plane,
   LifeBuoy,
   HandHelping,
-  Briefcase,
-  CheckCircle2,
   Coins,
   Sparkles,
 } from "lucide-react";
@@ -58,8 +56,6 @@ export default function Impact() {
     { def: { key: "airTicketBeneficiaries", label: "Air Ticket Beneficiaries", icon: Plane, accent: "text-teal-600 dark:text-teal-400", sub: "Welfare + FRF" }, value: data?.airTicketBeneficiaries ?? 0 },
     { def: { key: "emergencyReliefCases", label: "Emergency Relief", icon: LifeBuoy, accent: "text-red-600 dark:text-red-400", sub: "Cases resolved" }, value: data?.emergencyReliefCases ?? 0 },
     { def: { key: "totalWelfareRequests", label: "Welfare Requests", icon: HandHelping, accent: "text-orange-600 dark:text-orange-400", sub: "All-time submitted" }, value: data?.totalWelfareRequests ?? 0 },
-    { def: { key: "jobsPosted", label: "Jobs Posted", icon: Briefcase, accent: "text-indigo-600 dark:text-indigo-400", sub: "Job bureau listings" }, value: data?.jobsPosted ?? 0 },
-    { def: { key: "jobPlacements", label: "Job Placements", icon: CheckCircle2, accent: "text-emerald-600 dark:text-emerald-400", sub: "Members placed" }, value: data?.jobPlacements ?? 0 },
   ];
 
   const categoryData = (data?.assistanceByCategory ?? []).filter((c) => c.count > 0 || c.amount > 0);

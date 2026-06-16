@@ -9,8 +9,6 @@ import {
   eventsTable,
   welfareRequestsTable,
   loansTable,
-  jobListingsTable,
-  jobApplicationsTable,
 } from "@workspace/db";
 import {
   GetDashboardSummaryQueryParams,
@@ -515,13 +513,11 @@ const FRF_GRANTED = ["approved", "disbursed"];
 const WELFARE_GRANTED = ["approved", "completed"];
 
 router.get("/dashboard/impact", async (_req, res): Promise<void> => {
-  const [members, frfClaims, welfare, loans, listings, applications] = await Promise.all([
+  const [members, frfClaims, welfare, loans] = await Promise.all([
     db.select().from(membersTable),
     db.select().from(frfClaimsTable),
     db.select().from(welfareRequestsTable),
     db.select().from(loansTable),
-    db.select().from(jobListingsTable),
-    db.select().from(jobApplicationsTable),
   ]);
 
   const frfGranted = frfClaims.filter((c) => FRF_GRANTED.includes(c.status));
@@ -573,8 +569,6 @@ router.get("/dashboard/impact", async (_req, res): Promise<void> => {
     emergencyReliefCases,
     generalReliefCases,
     totalWelfareRequests: welfare.length,
-    jobsPosted: listings.length,
-    jobPlacements: applications.filter((a) => a.status === "placed").length,
     totalAssistanceDistributed,
     assistanceByCategory,
     welfareByType,
