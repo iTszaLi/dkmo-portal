@@ -42,7 +42,12 @@ export const ListMembersResponseItem = zod.object({
   city: zod.string(),
   country: zod.string(),
   designation: zod.string(),
-  monthlyAmount: zod.number(),
+  membershipFee: zod.number(),
+  feeStatus: zod.enum(["paid", "pending", "unpaid"]),
+  feePaidAt: zod.coerce.date().nullable(),
+  feeUpdatedBy: zod.string(),
+  refMemberName: zod.string(),
+  refMemberId: zod.string(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
 });
@@ -59,7 +64,10 @@ export const CreateMemberBody = zod.object({
   city: zod.string().optional(),
   country: zod.string().optional(),
   designation: zod.string().optional(),
-  monthlyAmount: zod.number(),
+  membershipFee: zod.number().optional(),
+  feeStatus: zod.enum(["paid", "pending", "unpaid"]).optional(),
+  refMemberName: zod.string().optional(),
+  refMemberId: zod.string().optional(),
 });
 
 /**
@@ -77,34 +85,14 @@ export const GetMemberResponse = zod.object({
   city: zod.string(),
   country: zod.string(),
   designation: zod.string(),
-  monthlyAmount: zod.number(),
+  membershipFee: zod.number(),
+  feeStatus: zod.enum(["paid", "pending", "unpaid"]),
+  feePaidAt: zod.coerce.date().nullable(),
+  feeUpdatedBy: zod.string(),
+  refMemberName: zod.string(),
+  refMemberId: zod.string(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
-  totalPaid: zod.number(),
-  totalDue: zod.number(),
-  paymentsCount: zod.number(),
-  recentPayments: zod.array(
-    zod.object({
-      id: zod.string(),
-      memberId: zod.string(),
-      memberName: zod.string(),
-      membershipId: zod.string(),
-      month: zod.string().describe("YYYY-MM"),
-      amountPaid: zod.number(),
-      paymentMethod: zod.enum([
-        "cash",
-        "upi",
-        "bank_transfer",
-        "card",
-        "cheque",
-        "other",
-      ]),
-      receiptNumber: zod.string(),
-      notes: zod.string().nullish(),
-      paidAt: zod.coerce.date(),
-      createdAt: zod.coerce.date(),
-    }),
-  ),
 });
 
 /**
@@ -121,7 +109,10 @@ export const UpdateMemberBody = zod.object({
   city: zod.string().optional(),
   country: zod.string().optional(),
   designation: zod.string().optional(),
-  monthlyAmount: zod.number(),
+  membershipFee: zod.number().optional(),
+  feeStatus: zod.enum(["paid", "pending", "unpaid"]).optional(),
+  refMemberName: zod.string().optional(),
+  refMemberId: zod.string().optional(),
 });
 
 export const UpdateMemberResponse = zod.object({
@@ -132,7 +123,12 @@ export const UpdateMemberResponse = zod.object({
   city: zod.string(),
   country: zod.string(),
   designation: zod.string(),
-  monthlyAmount: zod.number(),
+  membershipFee: zod.number(),
+  feeStatus: zod.enum(["paid", "pending", "unpaid"]),
+  feePaidAt: zod.coerce.date().nullable(),
+  feeUpdatedBy: zod.string(),
+  refMemberName: zod.string(),
+  refMemberId: zod.string(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
 });
@@ -142,6 +138,35 @@ export const UpdateMemberResponse = zod.object({
  */
 export const DeleteMemberParams = zod.object({
   id: zod.coerce.string(),
+});
+
+/**
+ * @summary Update a member's membership fee status (with audit)
+ */
+export const UpdateMemberFeeStatusParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const UpdateMemberFeeStatusBody = zod.object({
+  feeStatus: zod.enum(["paid", "pending", "unpaid"]),
+});
+
+export const UpdateMemberFeeStatusResponse = zod.object({
+  id: zod.string(),
+  fullName: zod.string(),
+  mobileNumber: zod.string(),
+  membershipId: zod.string(),
+  city: zod.string(),
+  country: zod.string(),
+  designation: zod.string(),
+  membershipFee: zod.number(),
+  feeStatus: zod.enum(["paid", "pending", "unpaid"]),
+  feePaidAt: zod.coerce.date().nullable(),
+  feeUpdatedBy: zod.string(),
+  refMemberName: zod.string(),
+  refMemberId: zod.string(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
 });
 
 /**
@@ -258,15 +283,13 @@ export const GetDashboardSummaryQueryParams = zod.object({
 });
 
 export const GetDashboardSummaryResponse = zod.object({
-  month: zod.string(),
   totalMembers: zod.number(),
-  totalCollectedThisMonth: zod.number(),
-  expectedThisMonth: zod.number(),
-  pendingAmount: zod.number(),
   paidMembersCount: zod.number(),
-  partialMembersCount: zod.number(),
+  pendingMembersCount: zod.number(),
   unpaidMembersCount: zod.number(),
-  totalCollectedAllTime: zod.number(),
+  totalFeesCollected: zod.number(),
+  outstandingFees: zod.number(),
+  membershipFeeTotal: zod.number(),
 });
 
 /**
@@ -286,10 +309,10 @@ export const GetPendingMembersResponseItem = zod.object({
   membershipId: zod.string(),
   city: zod.string(),
   country: zod.string(),
-  monthlyAmount: zod.number(),
-  amountPaid: zod.number(),
-  amountDue: zod.number(),
-  status: zod.enum(["unpaid", "partial"]),
+  membershipFee: zod.number(),
+  feeStatus: zod.enum(["pending", "unpaid"]),
+  refMemberName: zod.string(),
+  refMemberId: zod.string(),
 });
 export const GetPendingMembersResponse = zod.array(
   GetPendingMembersResponseItem,

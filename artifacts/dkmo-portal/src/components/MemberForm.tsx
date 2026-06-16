@@ -12,7 +12,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { MemberInput } from "@workspace/api-client-react/src/generated/api.schemas";
-import { useEffect } from "react";
+import { MemberRefPicker, type MemberRefEntry } from "@/components/MemberRefPicker";
+import { useEffect, useState } from "react";
 
 const DESIGNATION_OPTIONS = [
   "",
@@ -34,6 +35,8 @@ const DESIGNATION_OPTIONS = [
   "Member",
 ];
 
+const FEE_STATUS_OPTIONS = ["unpaid", "pending", "paid"] as const;
+
 const formSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
   mobileNumber: z.string().min(1, "Mobile number is required"),
@@ -41,7 +44,8 @@ const formSchema = z.object({
   city: z.string().optional(),
   country: z.string().optional(),
   designation: z.string().optional(),
-  monthlyAmount: z.coerce.number().min(0, "Amount must be positive"),
+  membershipFee: z.coerce.number().min(0, "Amount must be positive"),
+  feeStatus: z.enum(FEE_STATUS_OPTIONS),
 });
 
 interface MemberFormProps {
@@ -51,6 +55,16 @@ interface MemberFormProps {
 }
 
 export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberFormProps) {
+  const [refMember, setRefMember] = useState<MemberRefEntry | null>(
+    defaultValues?.refMemberId
+      ? {
+          id: defaultValues.refMemberId,
+          fullName: defaultValues.refMemberName || "",
+          membershipId: "",
+        }
+      : null,
+  );
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -60,7 +74,8 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
       city: defaultValues?.city || "",
       country: defaultValues?.country || "",
       designation: (defaultValues as any)?.designation || "",
-      monthlyAmount: defaultValues?.monthlyAmount || 0,
+      membershipFee: defaultValues?.membershipFee ?? 100,
+      feeStatus: (defaultValues?.feeStatus as (typeof FEE_STATUS_OPTIONS)[number]) || "unpaid",
     },
   });
 
@@ -73,14 +88,32 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
         city: defaultValues.city || "",
         country: defaultValues.country || "",
         designation: (defaultValues as any).designation || "",
-        monthlyAmount: defaultValues.monthlyAmount || 0,
+        membershipFee: defaultValues.membershipFee ?? 100,
+        feeStatus: (defaultValues.feeStatus as (typeof FEE_STATUS_OPTIONS)[number]) || "unpaid",
       });
+      setRefMember(
+        defaultValues.refMemberId
+          ? {
+              id: defaultValues.refMemberId,
+              fullName: defaultValues.refMemberName || "",
+              membershipId: "",
+            }
+          : null,
+      );
     }
   }, [defaultValues, form]);
 
+  const handleSubmit = (data: z.infer<typeof formSchema>) => {
+    onSubmit({
+      ...data,
+      refMemberId: refMember?.id || "",
+      refMemberName: refMember?.fullName || "",
+    } as MemberInput);
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="fullName"
@@ -172,19 +205,47 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="monthlyAmount"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Monthly Contribution Amount (SAR )</FormLabel>
-              <FormControl>
-                <Input type="number" placeholder="500" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <FormItem>
+          <FormLabel>Reference Member — Who referred this member?</FormLabel>
+          <MemberRefPicker value={refMember} onChange={setRefMember} />
+        </FormItem>
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="membershipFee"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Membership Fee (SAR)</FormLabel>
+                <FormControl>
+                  <Input type="number" placeholder="100" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="feeStatus"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Fee Status</FormLabel>
+                <FormControl>
+                  <select
+                    {...field}
+                    className="w-full border border-input rounded-md px-3 h-10 text-sm bg-background capitalize focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    {FEE_STATUS_OPTIONS.map((opt) => (
+                      <option key={opt} value={opt} className="capitalize">
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         <div className="flex justify-end pt-4">
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? "Saving..." : "Save Member"}

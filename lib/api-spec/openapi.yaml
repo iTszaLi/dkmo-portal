@@ -141,6 +141,31 @@ paths:
         "204":
           description: Deleted
 
+  /members/{id}/fee-status:
+    patch:
+      operationId: updateMemberFeeStatus
+      tags: [members]
+      summary: Update a member's membership fee status (with audit)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeeStatusInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+
   /payments:
     get:
       operationId: listPayments
@@ -1595,8 +1620,20 @@ components:
           type: string
         designation:
           type: string
-        monthlyAmount:
+        membershipFee:
           type: number
+        feeStatus:
+          type: string
+          enum: [paid, pending, unpaid]
+        feePaidAt:
+          type: ["string", "null"]
+          format: date-time
+        feeUpdatedBy:
+          type: string
+        refMemberName:
+          type: string
+        refMemberId:
+          type: string
         createdAt:
           type: string
           format: date-time
@@ -1611,7 +1648,12 @@ components:
         - city
         - country
         - designation
-        - monthlyAmount
+        - membershipFee
+        - feeStatus
+        - feePaidAt
+        - feeUpdatedBy
+        - refMemberName
+        - refMemberId
         - createdAt
         - updatedAt
 
@@ -1632,24 +1674,26 @@ components:
           type: string
         designation:
           type: string
-        monthlyAmount:
+        membershipFee:
           type: number
+        feeStatus:
+          type: string
+          enum: [paid, pending, unpaid]
+        feePaidAt:
+          type: ["string", "null"]
+          format: date-time
+        feeUpdatedBy:
+          type: string
+        refMemberName:
+          type: string
+        refMemberId:
+          type: string
         createdAt:
           type: string
           format: date-time
         updatedAt:
           type: string
           format: date-time
-        totalPaid:
-          type: number
-        totalDue:
-          type: number
-        paymentsCount:
-          type: integer
-        recentPayments:
-          type: array
-          items:
-            $ref: "#/components/schemas/Payment"
       required:
         - id
         - fullName
@@ -1658,13 +1702,14 @@ components:
         - city
         - country
         - designation
-        - monthlyAmount
+        - membershipFee
+        - feeStatus
+        - feePaidAt
+        - feeUpdatedBy
+        - refMemberName
+        - refMemberId
         - createdAt
         - updatedAt
-        - totalPaid
-        - totalDue
-        - paymentsCount
-        - recentPayments
 
     MemberInput:
       type: object
@@ -1684,13 +1729,28 @@ components:
           type: string
         designation:
           type: string
-        monthlyAmount:
+        membershipFee:
           type: number
+        feeStatus:
+          type: string
+          enum: [paid, pending, unpaid]
+        refMemberName:
+          type: string
+        refMemberId:
+          type: string
       required:
         - fullName
         - mobileNumber
         - membershipId
-        - monthlyAmount
+
+    FeeStatusInput:
+      type: object
+      properties:
+        feeStatus:
+          type: string
+          enum: [paid, pending, unpaid]
+      required:
+        - feeStatus
 
     Payment:
       type: object
@@ -1764,34 +1824,28 @@ components:
     DashboardSummary:
       type: object
       properties:
-        month:
-          type: string
         totalMembers:
           type: integer
-        totalCollectedThisMonth:
-          type: number
-        expectedThisMonth:
-          type: number
-        pendingAmount:
-          type: number
         paidMembersCount:
           type: integer
-        partialMembersCount:
+        pendingMembersCount:
           type: integer
         unpaidMembersCount:
           type: integer
-        totalCollectedAllTime:
+        totalFeesCollected:
+          type: number
+        outstandingFees:
+          type: number
+        membershipFeeTotal:
           type: number
       required:
-        - month
         - totalMembers
-        - totalCollectedThisMonth
-        - expectedThisMonth
-        - pendingAmount
         - paidMembersCount
-        - partialMembersCount
+        - pendingMembersCount
         - unpaidMembersCount
-        - totalCollectedAllTime
+        - totalFeesCollected
+        - outstandingFees
+        - membershipFeeTotal
 
     PendingMember:
       type: object
@@ -1808,15 +1862,15 @@ components:
           type: string
         country:
           type: string
-        monthlyAmount:
+        membershipFee:
           type: number
-        amountPaid:
-          type: number
-        amountDue:
-          type: number
-        status:
+        feeStatus:
           type: string
-          enum: [unpaid, partial]
+          enum: [pending, unpaid]
+        refMemberName:
+          type: string
+        refMemberId:
+          type: string
       required:
         - memberId
         - fullName
@@ -1824,10 +1878,10 @@ components:
         - membershipId
         - city
         - country
-        - monthlyAmount
-        - amountPaid
-        - amountDue
-        - status
+        - membershipFee
+        - feeStatus
+        - refMemberName
+        - refMemberId
 
     RecentPayment:
       type: object

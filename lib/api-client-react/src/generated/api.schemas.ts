@@ -135,6 +135,15 @@ export interface SponsorList {
   total: number;
 }
 
+export type MemberFeeStatus =
+  (typeof MemberFeeStatus)[keyof typeof MemberFeeStatus];
+
+export const MemberFeeStatus = {
+  paid: "paid",
+  pending: "pending",
+  unpaid: "unpaid",
+} as const;
+
 export interface Member {
   id: string;
   fullName: string;
@@ -143,9 +152,81 @@ export interface Member {
   city: string;
   country: string;
   designation: string;
-  monthlyAmount: number;
+  membershipFee: number;
+  feeStatus: MemberFeeStatus;
+  /** @nullable */
+  feePaidAt: string | null;
+  feeUpdatedBy: string;
+  refMemberName: string;
+  refMemberId: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export type MemberDetailFeeStatus =
+  (typeof MemberDetailFeeStatus)[keyof typeof MemberDetailFeeStatus];
+
+export const MemberDetailFeeStatus = {
+  paid: "paid",
+  pending: "pending",
+  unpaid: "unpaid",
+} as const;
+
+export interface MemberDetail {
+  id: string;
+  fullName: string;
+  mobileNumber: string;
+  membershipId: string;
+  city: string;
+  country: string;
+  designation: string;
+  membershipFee: number;
+  feeStatus: MemberDetailFeeStatus;
+  /** @nullable */
+  feePaidAt: string | null;
+  feeUpdatedBy: string;
+  refMemberName: string;
+  refMemberId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type MemberInputFeeStatus =
+  (typeof MemberInputFeeStatus)[keyof typeof MemberInputFeeStatus];
+
+export const MemberInputFeeStatus = {
+  paid: "paid",
+  pending: "pending",
+  unpaid: "unpaid",
+} as const;
+
+export interface MemberInput {
+  /** @minLength 1 */
+  fullName: string;
+  /** @minLength 1 */
+  mobileNumber: string;
+  /** @minLength 1 */
+  membershipId: string;
+  city?: string;
+  country?: string;
+  designation?: string;
+  membershipFee?: number;
+  feeStatus?: MemberInputFeeStatus;
+  refMemberName?: string;
+  refMemberId?: string;
+}
+
+export type FeeStatusInputFeeStatus =
+  (typeof FeeStatusInputFeeStatus)[keyof typeof FeeStatusInputFeeStatus];
+
+export const FeeStatusInputFeeStatus = {
+  paid: "paid",
+  pending: "pending",
+  unpaid: "unpaid",
+} as const;
+
+export interface FeeStatusInput {
+  feeStatus: FeeStatusInputFeeStatus;
 }
 
 export type PaymentPaymentMethod =
@@ -176,36 +257,6 @@ export interface Payment {
   createdAt: string;
 }
 
-export interface MemberDetail {
-  id: string;
-  fullName: string;
-  mobileNumber: string;
-  membershipId: string;
-  city: string;
-  country: string;
-  designation: string;
-  monthlyAmount: number;
-  createdAt: string;
-  updatedAt: string;
-  totalPaid: number;
-  totalDue: number;
-  paymentsCount: number;
-  recentPayments: Payment[];
-}
-
-export interface MemberInput {
-  /** @minLength 1 */
-  fullName: string;
-  /** @minLength 1 */
-  mobileNumber: string;
-  /** @minLength 1 */
-  membershipId: string;
-  city?: string;
-  country?: string;
-  designation?: string;
-  monthlyAmount: number;
-}
-
 export type PaymentInputPaymentMethod =
   (typeof PaymentInputPaymentMethod)[keyof typeof PaymentInputPaymentMethod];
 
@@ -233,23 +284,21 @@ export interface PaymentInput {
 }
 
 export interface DashboardSummary {
-  month: string;
   totalMembers: number;
-  totalCollectedThisMonth: number;
-  expectedThisMonth: number;
-  pendingAmount: number;
   paidMembersCount: number;
-  partialMembersCount: number;
+  pendingMembersCount: number;
   unpaidMembersCount: number;
-  totalCollectedAllTime: number;
+  totalFeesCollected: number;
+  outstandingFees: number;
+  membershipFeeTotal: number;
 }
 
-export type PendingMemberStatus =
-  (typeof PendingMemberStatus)[keyof typeof PendingMemberStatus];
+export type PendingMemberFeeStatus =
+  (typeof PendingMemberFeeStatus)[keyof typeof PendingMemberFeeStatus];
 
-export const PendingMemberStatus = {
+export const PendingMemberFeeStatus = {
+  pending: "pending",
   unpaid: "unpaid",
-  partial: "partial",
 } as const;
 
 export interface PendingMember {
@@ -259,10 +308,10 @@ export interface PendingMember {
   membershipId: string;
   city: string;
   country: string;
-  monthlyAmount: number;
-  amountPaid: number;
-  amountDue: number;
-  status: PendingMemberStatus;
+  membershipFee: number;
+  feeStatus: PendingMemberFeeStatus;
+  refMemberName: string;
+  refMemberId: string;
 }
 
 export interface RecentPayment {

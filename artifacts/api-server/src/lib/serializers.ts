@@ -9,7 +9,12 @@ export function memberToApi(m: Member) {
     city: m.city,
     country: m.country,
     designation: m.designation ?? "",
-    monthlyAmount: Number(m.monthlyAmount),
+    membershipFee: Number(m.membershipFee),
+    feeStatus: m.feeStatus,
+    feePaidAt: m.feePaidAt ? m.feePaidAt.toISOString() : null,
+    feeUpdatedBy: m.feeUpdatedBy ?? "",
+    refMemberName: m.refMemberName ?? "",
+    refMemberId: m.refMemberId ?? "",
     createdAt: m.createdAt.toISOString(),
     updatedAt: m.updatedAt.toISOString(),
   };

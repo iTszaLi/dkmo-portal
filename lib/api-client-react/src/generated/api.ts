@@ -33,6 +33,7 @@ import type {
   EventTicket,
   EventTicketBooklet,
   EventTicketUpdate,
+  FeeStatusInput,
   FinancialSummary,
   FrfClaim,
   FrfClaimInput,
@@ -679,6 +680,93 @@ export const useDeleteMember = <
   TContext
 > => {
   return useMutation(getDeleteMemberMutationOptions(options));
+};
+
+/**
+ * @summary Update a member's membership fee status (with audit)
+ */
+export const getUpdateMemberFeeStatusUrl = (id: string) => {
+  return `/api/members/${id}/fee-status`;
+};
+
+export const updateMemberFeeStatus = async (
+  id: string,
+  feeStatusInput: FeeStatusInput,
+  options?: RequestInit,
+): Promise<Member> => {
+  return customFetch<Member>(getUpdateMemberFeeStatusUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(feeStatusInput),
+  });
+};
+
+export const getUpdateMemberFeeStatusMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMemberFeeStatus>>,
+    TError,
+    { id: string; data: BodyType<FeeStatusInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateMemberFeeStatus>>,
+  TError,
+  { id: string; data: BodyType<FeeStatusInput> },
+  TContext
+> => {
+  const mutationKey = ["updateMemberFeeStatus"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateMemberFeeStatus>>,
+    { id: string; data: BodyType<FeeStatusInput> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateMemberFeeStatus(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateMemberFeeStatusMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateMemberFeeStatus>>
+>;
+export type UpdateMemberFeeStatusMutationBody = BodyType<FeeStatusInput>;
+export type UpdateMemberFeeStatusMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update a member's membership fee status (with audit)
+ */
+export const useUpdateMemberFeeStatus = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMemberFeeStatus>>,
+    TError,
+    { id: string; data: BodyType<FeeStatusInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateMemberFeeStatus>>,
+  TError,
+  { id: string; data: BodyType<FeeStatusInput> },
+  TContext
+> => {
+  return useMutation(getUpdateMemberFeeStatusMutationOptions(options));
 };
 
 /**

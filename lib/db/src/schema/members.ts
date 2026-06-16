@@ -10,9 +10,14 @@ export const membersTable = pgTable("members", {
   city: text("city").notNull().default(""),
   country: text("country").notNull().default(""),
   designation: text("designation").notNull().default(""),
-  monthlyAmount: numeric("monthly_amount", { precision: 12, scale: 2 })
+  membershipFee: numeric("membership_fee", { precision: 12, scale: 2 })
     .notNull()
-    .default("0"),
+    .default("100"),
+  feeStatus: text("fee_status").notNull().default("unpaid"),
+  feePaidAt: timestamp("fee_paid_at", { withTimezone: true }),
+  feeUpdatedBy: text("fee_updated_by").notNull().default(""),
+  refMemberName: text("ref_member_name").notNull().default(""),
+  refMemberId: text("ref_member_id").notNull().default(""),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

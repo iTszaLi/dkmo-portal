@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { eq, ilike, or, desc, sum, count } from "drizzle-orm";
-import { db, membersTable, paymentsTable } from "@workspace/db";
+import { eq, ilike, or, desc } from "drizzle-orm";
+import { db, membersTable } from "@workspace/db";
 import {
   CreateMemberBody,
   UpdateMemberBody,
@@ -8,9 +8,11 @@ import {
   UpdateMemberParams,
   DeleteMemberParams,
   ListMembersQueryParams,
+  UpdateMemberFeeStatusParams,
+  UpdateMemberFeeStatusBody,
 } from "@workspace/api-zod";
-import { requireAuth } from "../middlewares/requireAuth";
-import { memberToApi, paymentToApi } from "../lib/serializers";
+import { requireAuth, type AuthedRequest } from "../middlewares/requireAuth";
+import { memberToApi } from "../lib/serializers";
 import { logAudit } from "../lib/audit";
 
 const router: IRouter = Router();
@@ -55,6 +57,8 @@ router.post("/members", async (req, res): Promise<void> => {
   }
 
   try {
+    const feeStatus = parsed.data.feeStatus ?? "unpaid";
+    const actor = (req as AuthedRequest).userId ?? "";
     const [created] = await db
       .insert(membersTable)
       .values({
@@ -64,7 +68,12 @@ router.post("/members", async (req, res): Promise<void> => {
         city: parsed.data.city ?? "",
         country: parsed.data.country ?? "",
         designation: parsed.data.designation ?? "",
-        monthlyAmount: String(parsed.data.monthlyAmount),
+        membershipFee: String(parsed.data.membershipFee ?? 100),
+        feeStatus,
+        feePaidAt: feeStatus === "paid" ? new Date() : null,
+        feeUpdatedBy: feeStatus === "paid" ? actor : "",
+        refMemberName: parsed.data.refMemberName ?? "",
+        refMemberId: parsed.data.refMemberId ?? "",
       })
       .returning();
     if (!created) {
@@ -100,46 +109,7 @@ router.get("/members/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const [agg] = await db
-    .select({
-      total: sum(paymentsTable.amountPaid),
-      cnt: count(paymentsTable.id),
-    })
-    .from(paymentsTable)
-    .where(eq(paymentsTable.memberId, member.id));
-
-  const recent = await db
-    .select()
-    .from(paymentsTable)
-    .where(eq(paymentsTable.memberId, member.id))
-    .orderBy(desc(paymentsTable.paidAt))
-    .limit(20);
-
-  const totalPaid = Number(agg?.total ?? 0);
-  const monthly = Number(member.monthlyAmount);
-  const created = member.createdAt;
-  const now = new Date();
-  const monthsElapsed = Math.max(
-    1,
-    (now.getUTCFullYear() - created.getUTCFullYear()) * 12 +
-      (now.getUTCMonth() - created.getUTCMonth()) +
-      1,
-  );
-  const expected = monthly * monthsElapsed;
-  const totalDue = Math.max(0, expected - totalPaid);
-
-  res.json({
-    ...memberToApi(member),
-    totalPaid,
-    totalDue,
-    paymentsCount: Number(agg?.cnt ?? 0),
-    recentPayments: recent.map((p) =>
-      paymentToApi(p, {
-        fullName: member.fullName,
-        membershipId: member.membershipId,
-      }),
-    ),
-  });
+  res.json(memberToApi(member));
 });
 
 router.patch("/members/:id", async (req, res): Promise<void> => {
@@ -156,6 +126,26 @@ router.patch("/members/:id", async (req, res): Promise<void> => {
   }
 
   try {
+    const [existing] = await db
+      .select()
+      .from(membersTable)
+      .where(eq(membersTable.id, params.data.id));
+    if (!existing) {
+      res.status(404).json({ error: "Member not found" });
+      return;
+    }
+
+    const actor = (req as unknown as AuthedRequest).userId ?? "";
+    const nextFeeStatus = parsed.data.feeStatus ?? existing.feeStatus;
+    const feeChanged = nextFeeStatus !== existing.feeStatus;
+    const feeAudit = feeChanged
+      ? {
+          feeStatus: nextFeeStatus,
+          feePaidAt: nextFeeStatus === "paid" ? new Date() : null,
+          feeUpdatedBy: actor,
+        }
+      : { feeStatus: nextFeeStatus };
+
     const [updated] = await db
       .update(membersTable)
       .set({
@@ -165,7 +155,10 @@ router.patch("/members/:id", async (req, res): Promise<void> => {
         city: parsed.data.city ?? "",
         country: parsed.data.country ?? "",
         designation: parsed.data.designation ?? "",
-        monthlyAmount: String(parsed.data.monthlyAmount),
+        membershipFee: String(parsed.data.membershipFee ?? existing.membershipFee),
+        refMemberName: parsed.data.refMemberName ?? "",
+        refMemberId: parsed.data.refMemberId ?? "",
+        ...feeAudit,
       })
       .where(eq(membersTable.id, params.data.id))
       .returning();
@@ -183,6 +176,41 @@ router.patch("/members/:id", async (req, res): Promise<void> => {
     }
     throw err;
   }
+});
+
+router.patch("/members/:id/fee-status", async (req, res): Promise<void> => {
+  const params = UpdateMemberFeeStatusParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const parsed = UpdateMemberFeeStatusBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const actor = (req as unknown as AuthedRequest).userId ?? "";
+  const feeStatus = parsed.data.feeStatus;
+  const [updated] = await db
+    .update(membersTable)
+    .set({
+      feeStatus,
+      feePaidAt: feeStatus === "paid" ? new Date() : null,
+      feeUpdatedBy: actor,
+    })
+    .where(eq(membersTable.id, params.data.id))
+    .returning();
+  if (!updated) {
+    res.status(404).json({ error: "Member not found" });
+    return;
+  }
+  logAudit(req, "member_fee_status_updated", "members", {
+    entityId: updated.id,
+    entityName: updated.fullName,
+    details: `Fee status: ${feeStatus}`,
+  });
+  res.json(memberToApi(updated));
 });
 
 router.delete("/members/:id", async (req, res): Promise<void> => {

@@ -366,6 +366,38 @@ router.patch("/dkmo/memberships/:id", async (req, res): Promise<void> => {
 
   if (!updated) { res.status(404).json({ error: "Not found" }); return; }
 
+  // On approval, create a member record (if not already linked) and carry the
+  // reference member over from the application.
+  if (fields.status === "approved" && !updated.memberId) {
+    try {
+      const [createdMember] = await db
+        .insert(membersTable)
+        .values({
+          fullName: updated.fullName,
+          mobileNumber: updated.mobileSaudi || updated.mobileIndia || "",
+          membershipId: updated.dkmoNumber,
+          city: updated.areaSaudi || updated.district || "",
+          country: "Saudi Arabia",
+          designation: updated.occupation || "",
+          membershipFee: "100",
+          feeStatus: "unpaid",
+          refMemberName: updated.refMemberName,
+          refMemberId: updated.refMemberId,
+        })
+        .returning();
+      if (createdMember) {
+        await db
+          .update(dkmoMembershipsTable)
+          .set({ memberId: createdMember.id, updatedAt: now })
+          .where(eq(dkmoMembershipsTable.id, id));
+        updated.memberId = createdMember.id;
+      }
+    } catch (err) {
+      // A member with this membershipId may already exist; log and continue.
+      req.log.warn({ err }, "Failed to auto-create member on approval");
+    }
+  }
+
   if (dependents !== undefined) {
     await db.delete(dkmoMembershipDependentsTable).where(eq(dkmoMembershipDependentsTable.dkmoMembershipId, id));
     if (dependents.length > 0) {

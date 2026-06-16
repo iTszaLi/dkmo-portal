@@ -44,3 +44,25 @@ export function getCurrentMonth(): string {
 export function getCurrentYear(): string {
   return format(new Date(), "yyyy");
 }
+
+export function feeStatusLabel(status: string | undefined | null): string {
+  switch (status) {
+    case "paid":
+      return "Paid";
+    case "pending":
+      return "Pending";
+    default:
+      return "Unpaid";
+  }
+}
+
+export function feeStatusBadgeClass(status: string | undefined | null): string {
+  switch (status) {
+    case "paid":
+      return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300";
+    case "pending":
+      return "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300";
+    default:
+      return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
+  }
+}

@@ -21,52 +21,42 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const month = parsed.data.month?.trim() || currentMonth();
+  // `month` query param retained for API compatibility but no longer used —
+  // membership fee is a one-time fee tracked on the member record.
+  void parsed.data.month;
 
   const members = await db.select().from(membersTable);
-  const paymentsThisMonth = await db
-    .select()
-    .from(paymentsTable)
-    .where(eq(paymentsTable.month, month));
 
-  const allPayments = await db
-    .select({ total: sum(paymentsTable.amountPaid) })
-    .from(paymentsTable);
-
-  const paidByMember = new Map<string, number>();
-  for (const p of paymentsThisMonth) {
-    const prev = paidByMember.get(p.memberId) ?? 0;
-    paidByMember.set(p.memberId, prev + Number(p.amountPaid));
-  }
-
-  let totalCollectedThisMonth = 0;
-  let expectedThisMonth = 0;
   let paidCount = 0;
-  let partialCount = 0;
+  let pendingCount = 0;
   let unpaidCount = 0;
+  let totalFeesCollected = 0;
+  let outstandingFees = 0;
+  let membershipFeeTotal = 0;
 
   for (const m of members) {
-    const monthly = Number(m.monthlyAmount);
-    expectedThisMonth += monthly;
-    const paid = paidByMember.get(m.id) ?? 0;
-    totalCollectedThisMonth += paid;
-    if (paid <= 0) unpaidCount++;
-    else if (paid < monthly) partialCount++;
-    else paidCount++;
+    const fee = Number(m.membershipFee);
+    membershipFeeTotal += fee;
+    if (m.feeStatus === "paid") {
+      paidCount++;
+      totalFeesCollected += fee;
+    } else if (m.feeStatus === "pending") {
+      pendingCount++;
+      outstandingFees += fee;
+    } else {
+      unpaidCount++;
+      outstandingFees += fee;
+    }
   }
 
-  const pendingAmount = Math.max(0, expectedThisMonth - totalCollectedThisMonth);
-
   res.json({
-    month,
     totalMembers: members.length,
-    totalCollectedThisMonth,
-    expectedThisMonth,
-    pendingAmount,
     paidMembersCount: paidCount,
-    partialMembersCount: partialCount,
+    pendingMembersCount: pendingCount,
     unpaidMembersCount: unpaidCount,
-    totalCollectedAllTime: Number(allPayments[0]?.total ?? 0),
+    totalFeesCollected,
+    outstandingFees,
+    membershipFeeTotal,
   });
 });
 
@@ -76,27 +66,13 @@ router.get("/dashboard/pending", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const month = parsed.data.month?.trim() || currentMonth();
+  // `month` query param retained for API compatibility but no longer used.
+  void parsed.data.month;
   const members = await db.select().from(membersTable);
-  const monthPayments = await db
-    .select()
-    .from(paymentsTable)
-    .where(eq(paymentsTable.month, month));
-
-  const paidByMember = new Map<string, number>();
-  for (const p of monthPayments) {
-    const prev = paidByMember.get(p.memberId) ?? 0;
-    paidByMember.set(p.memberId, prev + Number(p.amountPaid));
-  }
 
   const result = [];
   for (const m of members) {
-    const monthly = Number(m.monthlyAmount);
-    const paid = paidByMember.get(m.id) ?? 0;
-    if (paid >= monthly && monthly > 0) continue;
-    if (monthly === 0 && paid === 0) {
-      // include but mark as unpaid since they owe 0
-    }
+    if (m.feeStatus === "paid") continue;
     result.push({
       memberId: m.id,
       fullName: m.fullName,
@@ -104,13 +80,13 @@ router.get("/dashboard/pending", async (req, res): Promise<void> => {
       membershipId: m.membershipId,
       city: m.city,
       country: m.country,
-      monthlyAmount: monthly,
-      amountPaid: paid,
-      amountDue: Math.max(0, monthly - paid),
-      status: paid > 0 ? "partial" : "unpaid",
+      membershipFee: Number(m.membershipFee),
+      feeStatus: m.feeStatus === "pending" ? "pending" : "unpaid",
+      refMemberName: m.refMemberName ?? "",
+      refMemberId: m.refMemberId ?? "",
     });
   }
-  result.sort((a, b) => b.amountDue - a.amountDue);
+  result.sort((a, b) => a.fullName.localeCompare(b.fullName));
   res.json(result);
 });
 
@@ -268,12 +244,7 @@ router.get("/dashboard/financial-summary", async (req, res): Promise<void> => {
   const { month: qMonth } = req.query;
   const month = (typeof qMonth === "string" && qMonth.trim()) || currentMonth();
 
-  // Member collections
-  const [memberAllTime, memberThisMonth, membersAll] = await Promise.all([
-    db.select({ total: sum(paymentsTable.amountPaid) }).from(paymentsTable),
-    db.select({ total: sum(paymentsTable.amountPaid) }).from(paymentsTable).where(eq(paymentsTable.month, month)),
-    db.select().from(membersTable),
-  ]);
+  const membersAll = await db.select().from(membersTable);
 
   // Sponsor collections
   const sponsorRows = await db.select().from(sponsorsTable);
@@ -286,19 +257,22 @@ router.get("/dashboard/financial-summary", async (req, res): Promise<void> => {
     if (s.status === "overdue" || s.status === "partial" || s.status === "pending") sponsorPendingCount++;
   }
 
-  const memberTotal = Number(memberAllTime[0]?.total ?? 0);
-  const memberMonth = Number(memberThisMonth[0]?.total ?? 0);
-
-  // Expected member amount this month
-  const expectedMonth = membersAll.reduce((s, m) => s + Number(m.monthlyAmount), 0);
+  // Membership fee collections (one-time fee per member)
+  let feesCollected = 0;
+  let feesOutstanding = 0;
+  for (const m of membersAll) {
+    const fee = Number(m.membershipFee);
+    if (m.feeStatus === "paid") feesCollected += fee;
+    else feesOutstanding += fee;
+  }
 
   res.json({
     month,
     members: {
-      collectedAllTime: memberTotal,
-      collectedThisMonth: memberMonth,
-      expectedThisMonth: expectedMonth,
-      pendingThisMonth: Math.max(0, expectedMonth - memberMonth),
+      collectedAllTime: feesCollected,
+      collectedThisMonth: feesCollected,
+      expectedThisMonth: feesCollected + feesOutstanding,
+      pendingThisMonth: feesOutstanding,
       totalMembers: membersAll.length,
     },
     sponsors: {
@@ -309,14 +283,13 @@ router.get("/dashboard/financial-summary", async (req, res): Promise<void> => {
       pendingCount: sponsorPendingCount,
     },
     combined: {
-      collectedAllTime: memberTotal + sponsorAllTime,
-      collectedThisMonth: memberMonth,
+      collectedAllTime: feesCollected + sponsorAllTime,
+      collectedThisMonth: feesCollected,
     },
   });
 });
 
 router.get("/dashboard/alerts", async (req, res): Promise<void> => {
-  const month = currentMonth();
   const alerts: {
     id: string;
     severity: "critical" | "warning" | "info";
@@ -327,18 +300,11 @@ router.get("/dashboard/alerts", async (req, res): Promise<void> => {
     link: string;
   }[] = [];
 
-  const [membersAll, paymentsThisMonth, paymentsAll, sponsorRows] = await Promise.all([
+  const [membersAll, paymentsAll, sponsorRows] = await Promise.all([
     db.select().from(membersTable),
-    db.select().from(paymentsTable).where(eq(paymentsTable.month, month)),
     db.select().from(paymentsTable),
     db.select().from(sponsorsTable),
   ]);
-
-  // Build paid-this-month map
-  const paidMap = new Map<string, number>();
-  for (const p of paymentsThisMonth) {
-    paidMap.set(p.memberId, (paidMap.get(p.memberId) ?? 0) + Number(p.amountPaid));
-  }
 
   // Members with missing required fields
   const missingFields = membersAll.filter(
@@ -356,37 +322,30 @@ router.get("/dashboard/alerts", async (req, res): Promise<void> => {
     });
   }
 
-  // Members unpaid this month
-  const unpaidMembers = membersAll.filter((m) => {
-    const paid = paidMap.get(m.id) ?? 0;
-    return paid === 0 && Number(m.monthlyAmount) > 0;
-  });
+  // Members who have not paid their membership fee
+  const unpaidMembers = membersAll.filter((m) => m.feeStatus === "unpaid");
   if (unpaidMembers.length > 0) {
     alerts.push({
       id: "unpaid-members",
       severity: "critical",
       type: "pending_payment",
-      title: "Members unpaid this month",
-      description: `${unpaidMembers.length} member${unpaidMembers.length === 1 ? "" : "s"} have not paid for ${month}.`,
+      title: "Unpaid membership fees",
+      description: `${unpaidMembers.length} member${unpaidMembers.length === 1 ? "" : "s"} have not paid the membership fee.`,
       count: unpaidMembers.length,
       link: "/pending",
     });
   }
 
-  // Members with partial payment this month
-  const partialMembers = membersAll.filter((m) => {
-    const paid = paidMap.get(m.id) ?? 0;
-    const due = Number(m.monthlyAmount);
-    return paid > 0 && paid < due;
-  });
-  if (partialMembers.length > 0) {
+  // Members with pending membership fee
+  const pendingMembers = membersAll.filter((m) => m.feeStatus === "pending");
+  if (pendingMembers.length > 0) {
     alerts.push({
-      id: "partial-members",
+      id: "pending-members",
       severity: "warning",
       type: "pending_payment",
-      title: "Partial payments this month",
-      description: `${partialMembers.length} member${partialMembers.length === 1 ? "" : "s"} have only paid partially for ${month}.`,
-      count: partialMembers.length,
+      title: "Pending membership fees",
+      description: `${pendingMembers.length} member${pendingMembers.length === 1 ? "" : "s"} have a pending membership fee.`,
+      count: pendingMembers.length,
       link: "/pending",
     });
   }
@@ -452,17 +411,14 @@ router.get("/dashboard/alerts", async (req, res): Promise<void> => {
   }
 
   // Positive info alerts
-  const paidCount = membersAll.filter((m) => {
-    const paid = paidMap.get(m.id) ?? 0;
-    return paid >= Number(m.monthlyAmount) && Number(m.monthlyAmount) > 0;
-  }).length;
+  const paidCount = membersAll.filter((m) => m.feeStatus === "paid").length;
   if (paidCount > 0) {
     alerts.push({
       id: "paid-members",
       severity: "info",
       type: "success",
-      title: "Members paid this month",
-      description: `${paidCount} member${paidCount === 1 ? "" : "s"} have fully paid for ${month}.`,
+      title: "Members with paid fees",
+      description: `${paidCount} member${paidCount === 1 ? "" : "s"} have paid the membership fee.`,
       count: paidCount,
       link: "/payments",
     });
