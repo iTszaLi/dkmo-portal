@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import {
   CheckCircle, XCircle, Clock, Users, Loader2, ChevronRight, ChevronLeft,
   Plus, Trash2, Download, Printer, ExternalLink, RefreshCw, Search, ChevronsUpDown, Check, ShieldCheck,
+  Stethoscope, HandHeart, Siren, Plane, Globe2, HeartHandshake, Landmark,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,16 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { generateDkmoPdf } from "@/lib/dkmo-pdf";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+const DKMO_BENEFITS = [
+  { icon: Stethoscope, title: "Medical Aid", desc: "Assistance for hospital bills, surgeries and treatment.", color: "text-rose-600 dark:text-rose-400", tile: "bg-rose-100 dark:bg-rose-900/40" },
+  { icon: HandHeart, title: "General Relief Fund", desc: "Support for families facing financial hardship.", color: "text-amber-600 dark:text-amber-400", tile: "bg-amber-100 dark:bg-amber-900/40" },
+  { icon: Siren, title: "Emergency Response", desc: "Rapid help during accidents and crises.", color: "text-red-600 dark:text-red-400", tile: "bg-red-100 dark:bg-red-900/40" },
+  { icon: Plane, title: "Air Ticket Assistance", desc: "Travel support for repatriation and emergencies.", color: "text-sky-600 dark:text-sky-400", tile: "bg-sky-100 dark:bg-sky-900/40" },
+  { icon: Globe2, title: "India Representative Support", desc: "On-ground coordination back home in India.", color: "text-green-700 dark:text-green-400", tile: "bg-green-100 dark:bg-green-900/40" },
+  { icon: HeartHandshake, title: "Family Relief Fund", desc: "Death-benefit claims for registered members.", color: "text-green-700 dark:text-green-400", tile: "bg-green-100 dark:bg-green-900/40" },
+  { icon: Landmark, title: "Interest-Free Loans", desc: "Benevolent Qard-e-Hasana loans in time of need.", color: "text-blue-700 dark:text-blue-400", tile: "bg-blue-100 dark:bg-blue-900/40" },
+];
 
 // ── Validation helpers ────────────────────────────────────────────────────────
 function isValidEmail(v: string) {
@@ -509,6 +520,34 @@ export default function DkmoApplyPage() {
 
       <form onSubmit={handleSubmit}>
         <div className="max-w-2xl mx-auto space-y-6">
+
+          {/* ── Why Join DKMO? benefits ── */}
+          {step === 0 && (
+            <Card className="rounded-2xl border-green-200/70 dark:border-green-900/40 bg-gradient-to-br from-green-50 to-white dark:from-green-950/30 dark:to-slate-900 shadow-sm overflow-hidden">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base text-green-900 dark:text-green-100">Why Join DKMO?</CardTitle>
+                <CardDescription className="dark:text-slate-400">
+                  Your membership unlocks a network of community welfare support for you and your family.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid sm:grid-cols-2 gap-3">
+                {DKMO_BENEFITS.map((b) => {
+                  const I = b.icon;
+                  return (
+                    <div key={b.title} className="flex items-start gap-3 rounded-xl bg-white/70 dark:bg-slate-800/50 border border-green-100/80 dark:border-slate-700/60 p-3">
+                      <div className={`flex h-9 w-9 items-center justify-center rounded-xl shrink-0 ${b.tile}`}>
+                        <I className={`h-4 w-4 ${b.color}`} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-green-950 dark:text-slate-100">{b.title}</p>
+                        <p className="text-xs text-green-700/70 dark:text-slate-400 mt-0.5">{b.desc}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          )}
 
           {/* ── Step 0: Personal Info ── */}
           {step === 0 && (

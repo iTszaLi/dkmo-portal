@@ -45,6 +45,7 @@ import type {
   GetPaymentMethodBreakdownParams,
   GetPendingMembersParams,
   GetRecentPaymentsParams,
+  GetWelfareStatsParams,
   HealthStatus,
   ListAuditLogs200,
   ListAuditLogsParams,
@@ -56,6 +57,7 @@ import type {
   ListReceiptRecordsParams,
   ListSponsorsParams,
   ListTasksParams,
+  ListWelfareRequestsParams,
   Member,
   MemberDetail,
   MemberInput,
@@ -76,6 +78,9 @@ import type {
   Task,
   TaskInput,
   TaskList,
+  WelfareRequest,
+  WelfareRequestInput,
+  WelfareStats,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -4890,6 +4895,544 @@ export const useDeleteFrfClaim = <
   TContext
 > => {
   return useMutation(getDeleteFrfClaimMutationOptions(options));
+};
+
+/**
+ * @summary List welfare/community-service requests
+ */
+export const getListWelfareRequestsUrl = (
+  params?: ListWelfareRequestsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/welfare/requests?${stringifiedParams}`
+    : `/api/welfare/requests`;
+};
+
+export const listWelfareRequests = async (
+  params?: ListWelfareRequestsParams,
+  options?: RequestInit,
+): Promise<WelfareRequest[]> => {
+  return customFetch<WelfareRequest[]>(getListWelfareRequestsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListWelfareRequestsQueryKey = (
+  params?: ListWelfareRequestsParams,
+) => {
+  return [`/api/welfare/requests`, ...(params ? [params] : [])] as const;
+};
+
+export const getListWelfareRequestsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listWelfareRequests>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListWelfareRequestsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listWelfareRequests>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListWelfareRequestsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listWelfareRequests>>
+  > = ({ signal }) =>
+    listWelfareRequests(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listWelfareRequests>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListWelfareRequestsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listWelfareRequests>>
+>;
+export type ListWelfareRequestsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List welfare/community-service requests
+ */
+
+export function useListWelfareRequests<
+  TData = Awaited<ReturnType<typeof listWelfareRequests>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListWelfareRequestsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listWelfareRequests>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListWelfareRequestsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a welfare request
+ */
+export const getCreateWelfareRequestUrl = () => {
+  return `/api/welfare/requests`;
+};
+
+export const createWelfareRequest = async (
+  welfareRequestInput: WelfareRequestInput,
+  options?: RequestInit,
+): Promise<WelfareRequest> => {
+  return customFetch<WelfareRequest>(getCreateWelfareRequestUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(welfareRequestInput),
+  });
+};
+
+export const getCreateWelfareRequestMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createWelfareRequest>>,
+    TError,
+    { data: BodyType<WelfareRequestInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createWelfareRequest>>,
+  TError,
+  { data: BodyType<WelfareRequestInput> },
+  TContext
+> => {
+  const mutationKey = ["createWelfareRequest"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createWelfareRequest>>,
+    { data: BodyType<WelfareRequestInput> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createWelfareRequest(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateWelfareRequestMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createWelfareRequest>>
+>;
+export type CreateWelfareRequestMutationBody = BodyType<WelfareRequestInput>;
+export type CreateWelfareRequestMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create a welfare request
+ */
+export const useCreateWelfareRequest = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createWelfareRequest>>,
+    TError,
+    { data: BodyType<WelfareRequestInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createWelfareRequest>>,
+  TError,
+  { data: BodyType<WelfareRequestInput> },
+  TContext
+> => {
+  return useMutation(getCreateWelfareRequestMutationOptions(options));
+};
+
+/**
+ * @summary Get welfare statistics
+ */
+export const getGetWelfareStatsUrl = (params?: GetWelfareStatsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/welfare/stats?${stringifiedParams}`
+    : `/api/welfare/stats`;
+};
+
+export const getWelfareStats = async (
+  params?: GetWelfareStatsParams,
+  options?: RequestInit,
+): Promise<WelfareStats> => {
+  return customFetch<WelfareStats>(getGetWelfareStatsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetWelfareStatsQueryKey = (params?: GetWelfareStatsParams) => {
+  return [`/api/welfare/stats`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetWelfareStatsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getWelfareStats>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetWelfareStatsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getWelfareStats>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetWelfareStatsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getWelfareStats>>> = ({
+    signal,
+  }) => getWelfareStats(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getWelfareStats>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetWelfareStatsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getWelfareStats>>
+>;
+export type GetWelfareStatsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get welfare statistics
+ */
+
+export function useGetWelfareStats<
+  TData = Awaited<ReturnType<typeof getWelfareStats>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetWelfareStatsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getWelfareStats>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetWelfareStatsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get a welfare request
+ */
+export const getGetWelfareRequestUrl = (id: string) => {
+  return `/api/welfare/requests/${id}`;
+};
+
+export const getWelfareRequest = async (
+  id: string,
+  options?: RequestInit,
+): Promise<WelfareRequest> => {
+  return customFetch<WelfareRequest>(getGetWelfareRequestUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetWelfareRequestQueryKey = (id: string) => {
+  return [`/api/welfare/requests/${id}`] as const;
+};
+
+export const getGetWelfareRequestQueryOptions = <
+  TData = Awaited<ReturnType<typeof getWelfareRequest>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getWelfareRequest>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetWelfareRequestQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getWelfareRequest>>
+  > = ({ signal }) => getWelfareRequest(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getWelfareRequest>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetWelfareRequestQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getWelfareRequest>>
+>;
+export type GetWelfareRequestQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get a welfare request
+ */
+
+export function useGetWelfareRequest<
+  TData = Awaited<ReturnType<typeof getWelfareRequest>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getWelfareRequest>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetWelfareRequestQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update a welfare request
+ */
+export const getUpdateWelfareRequestUrl = (id: string) => {
+  return `/api/welfare/requests/${id}`;
+};
+
+export const updateWelfareRequest = async (
+  id: string,
+  welfareRequestInput: WelfareRequestInput,
+  options?: RequestInit,
+): Promise<WelfareRequest> => {
+  return customFetch<WelfareRequest>(getUpdateWelfareRequestUrl(id), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(welfareRequestInput),
+  });
+};
+
+export const getUpdateWelfareRequestMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateWelfareRequest>>,
+    TError,
+    { id: string; data: BodyType<WelfareRequestInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateWelfareRequest>>,
+  TError,
+  { id: string; data: BodyType<WelfareRequestInput> },
+  TContext
+> => {
+  const mutationKey = ["updateWelfareRequest"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateWelfareRequest>>,
+    { id: string; data: BodyType<WelfareRequestInput> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateWelfareRequest(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateWelfareRequestMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateWelfareRequest>>
+>;
+export type UpdateWelfareRequestMutationBody = BodyType<WelfareRequestInput>;
+export type UpdateWelfareRequestMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update a welfare request
+ */
+export const useUpdateWelfareRequest = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateWelfareRequest>>,
+    TError,
+    { id: string; data: BodyType<WelfareRequestInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateWelfareRequest>>,
+  TError,
+  { id: string; data: BodyType<WelfareRequestInput> },
+  TContext
+> => {
+  return useMutation(getUpdateWelfareRequestMutationOptions(options));
+};
+
+/**
+ * @summary Delete a welfare request
+ */
+export const getDeleteWelfareRequestUrl = (id: string) => {
+  return `/api/welfare/requests/${id}`;
+};
+
+export const deleteWelfareRequest = async (
+  id: string,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteWelfareRequestUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteWelfareRequestMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteWelfareRequest>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteWelfareRequest>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["deleteWelfareRequest"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteWelfareRequest>>,
+    { id: string }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteWelfareRequest(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteWelfareRequestMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteWelfareRequest>>
+>;
+
+export type DeleteWelfareRequestMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a welfare request
+ */
+export const useDeleteWelfareRequest = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteWelfareRequest>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteWelfareRequest>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  return useMutation(getDeleteWelfareRequestMutationOptions(options));
 };
 
 /**

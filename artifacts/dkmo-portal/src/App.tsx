@@ -23,6 +23,8 @@ import TaskDetail from "@/pages/task-detail";
 import Settings from "@/pages/settings";
 import Committee from "@/pages/committee";
 import Frf from "@/pages/frf";
+import CommunityServices from "@/pages/community-services";
+import WelfareService from "@/pages/welfare-service";
 import DkmoApply from "@/pages/dkmo-apply";
 import DkmoTrack from "@/pages/dkmo-track";
 import DkmoTerms from "@/pages/dkmo-terms";
@@ -128,6 +130,8 @@ function AppRoutes() {
       <Route path="/tasks" component={() => <AuthenticatedRoute component={Tasks} />} />
       <Route path="/tasks/:id" component={() => <AuthenticatedRoute component={TaskDetail} />} />
       <Route path="/committee" component={() => <AuthenticatedRoute component={Committee} />} />
+      <Route path="/services" component={() => <AuthenticatedRoute component={CommunityServices} />} />
+      <Route path="/services/:type" component={() => <AuthenticatedRoute component={WelfareService} />} />
       <Route path="/frf" component={() => <AuthenticatedRoute component={Frf} />} />
       <Route path="/dkmo-memberships" component={() => <AuthenticatedRoute component={DkmoMemberships} />} />
       <Route path="/loans" component={() => <AuthenticatedRoute component={Loans} />} />

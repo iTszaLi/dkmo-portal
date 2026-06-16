@@ -1,2 +1,3 @@
 - [Express router auth ordering](express-router-auth-ordering.md) — public routes must mount before any catch-all requireAuth router.
 - [Public track endpoint DTO](public-track-endpoint-dto.md) — public DKMO status lookup must return a minimal non-PII DTO and match identifiers exactly (no substring enumeration).
+- [Welfare/community services](welfare-services.md) — one table+route+generic component for 5 service types; request numbers via app-code retry-on-conflict (not a SQL fn like FRF); FRF/Loans linked not rebuilt.

@@ -16,6 +16,7 @@ tags:
   - name: events
   - name: tasks
   - name: frf
+  - name: welfare
   - name: receipts
   - name: storage
   - name: audit
@@ -1122,6 +1123,121 @@ paths:
         "204":
           description: Deleted
 
+  /welfare/requests:
+    get:
+      operationId: listWelfareRequests
+      tags: [welfare]
+      summary: List welfare/community-service requests
+      parameters:
+        - in: query
+          name: serviceType
+          required: false
+          schema: { type: string }
+        - in: query
+          name: status
+          required: false
+          schema: { type: string }
+        - in: query
+          name: search
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: Welfare requests list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WelfareRequest"
+    post:
+      operationId: createWelfareRequest
+      tags: [welfare]
+      summary: Create a welfare request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WelfareRequestInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WelfareRequest"
+
+  /welfare/stats:
+    get:
+      operationId: getWelfareStats
+      tags: [welfare]
+      summary: Get welfare statistics
+      parameters:
+        - in: query
+          name: serviceType
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: Welfare stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WelfareStats"
+
+  /welfare/requests/{id}:
+    get:
+      operationId: getWelfareRequest
+      tags: [welfare]
+      summary: Get a welfare request
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Welfare request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WelfareRequest"
+    put:
+      operationId: updateWelfareRequest
+      tags: [welfare]
+      summary: Update a welfare request
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WelfareRequestInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WelfareRequest"
+    delete:
+      operationId: deleteWelfareRequest
+      tags: [welfare]
+      summary: Delete a welfare request
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Deleted
+
   /dashboard/cash-flow:
     get:
       operationId: getDashboardCashFlow
@@ -2177,6 +2293,144 @@ components:
               totalAmount: { type: number }
             required: [type, count, totalAmount]
       required: [total, pendingCount, approvedCount, rejectedCount, totalDisbursed, totalRequested, byType]
+
+    WelfareDocument:
+      type: object
+      properties:
+        name: { type: string }
+        url: { type: string }
+        uploadedAt: { type: string }
+      required: [name, url]
+
+    WelfareRequest:
+      type: object
+      properties:
+        id: { type: string }
+        requestNumber: { type: string }
+        serviceType:
+          type: string
+          enum: [medical_aid, general_relief, emergency_response, air_ticket, india_rep]
+        memberId:
+          type: ["string", "null"]
+        applicantName: { type: string }
+        membershipId: { type: string }
+        contactNumber: { type: string }
+        status:
+          type: string
+          enum: [submitted, under_review, approved, rejected, completed]
+        amountRequested: { type: number }
+        amountApproved: { type: number }
+        description: { type: string }
+        details:
+          type: object
+          additionalProperties: true
+        supportingDocuments:
+          type: array
+          items:
+            $ref: "#/components/schemas/WelfareDocument"
+        assignedTo: { type: string }
+        approvalNotes: { type: string }
+        submittedAt:
+          type: ["string", "null"]
+          format: date-time
+        underReviewAt:
+          type: ["string", "null"]
+          format: date-time
+        underReviewBy: { type: string }
+        approvedAt:
+          type: ["string", "null"]
+          format: date-time
+        approvedBy: { type: string }
+        rejectedAt:
+          type: ["string", "null"]
+          format: date-time
+        rejectedBy: { type: string }
+        completedAt:
+          type: ["string", "null"]
+          format: date-time
+        completedBy: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required:
+        - id
+        - requestNumber
+        - serviceType
+        - applicantName
+        - membershipId
+        - contactNumber
+        - status
+        - amountRequested
+        - amountApproved
+        - description
+        - details
+        - supportingDocuments
+        - assignedTo
+        - approvalNotes
+        - underReviewBy
+        - approvedBy
+        - rejectedBy
+        - completedBy
+        - createdAt
+        - updatedAt
+
+    WelfareRequestInput:
+      type: object
+      properties:
+        serviceType:
+          type: string
+          enum: [medical_aid, general_relief, emergency_response, air_ticket, india_rep]
+        memberId:
+          type: ["string", "null"]
+        applicantName: { type: string, minLength: 1 }
+        membershipId: { type: string }
+        contactNumber: { type: string }
+        status:
+          type: string
+          enum: [submitted, under_review, approved, rejected, completed]
+        amountRequested: { type: number, minimum: 0 }
+        amountApproved: { type: number, minimum: 0 }
+        description: { type: string }
+        details:
+          type: object
+          additionalProperties: true
+        supportingDocuments:
+          type: array
+          items:
+            $ref: "#/components/schemas/WelfareDocument"
+        assignedTo: { type: string }
+        approvalNotes: { type: string }
+      required: [serviceType, applicantName]
+
+    WelfareStats:
+      type: object
+      properties:
+        total: { type: integer }
+        submittedCount: { type: integer }
+        underReviewCount: { type: integer }
+        approvedCount: { type: integer }
+        rejectedCount: { type: integer }
+        completedCount: { type: integer }
+        totalRequested: { type: number }
+        totalApproved: { type: number }
+        byType:
+          type: array
+          items:
+            type: object
+            properties:
+              type: { type: string }
+              count: { type: integer }
+              totalApproved: { type: number }
+            required: [type, count, totalApproved]
+      required:
+        - total
+        - submittedCount
+        - underReviewCount
+        - approvedCount
+        - rejectedCount
+        - completedCount
+        - totalRequested
+        - totalApproved
+        - byType
 
     RequestUploadUrlBody:
       type: object

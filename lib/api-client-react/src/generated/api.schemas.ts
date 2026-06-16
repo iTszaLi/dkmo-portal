@@ -805,6 +805,133 @@ export interface FrfStats {
   byType: FrfStatsByTypeItem[];
 }
 
+export interface WelfareDocument {
+  name: string;
+  url: string;
+  uploadedAt?: string;
+}
+
+export type WelfareRequestServiceType =
+  (typeof WelfareRequestServiceType)[keyof typeof WelfareRequestServiceType];
+
+export const WelfareRequestServiceType = {
+  medical_aid: "medical_aid",
+  general_relief: "general_relief",
+  emergency_response: "emergency_response",
+  air_ticket: "air_ticket",
+  india_rep: "india_rep",
+} as const;
+
+export type WelfareRequestStatus =
+  (typeof WelfareRequestStatus)[keyof typeof WelfareRequestStatus];
+
+export const WelfareRequestStatus = {
+  submitted: "submitted",
+  under_review: "under_review",
+  approved: "approved",
+  rejected: "rejected",
+  completed: "completed",
+} as const;
+
+export type WelfareRequestDetails = { [key: string]: unknown };
+
+export interface WelfareRequest {
+  id: string;
+  requestNumber: string;
+  serviceType: WelfareRequestServiceType;
+  /** @nullable */
+  memberId?: string | null;
+  applicantName: string;
+  membershipId: string;
+  contactNumber: string;
+  status: WelfareRequestStatus;
+  amountRequested: number;
+  amountApproved: number;
+  description: string;
+  details: WelfareRequestDetails;
+  supportingDocuments: WelfareDocument[];
+  assignedTo: string;
+  approvalNotes: string;
+  /** @nullable */
+  submittedAt?: string | null;
+  /** @nullable */
+  underReviewAt?: string | null;
+  underReviewBy: string;
+  /** @nullable */
+  approvedAt?: string | null;
+  approvedBy: string;
+  /** @nullable */
+  rejectedAt?: string | null;
+  rejectedBy: string;
+  /** @nullable */
+  completedAt?: string | null;
+  completedBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type WelfareRequestInputServiceType =
+  (typeof WelfareRequestInputServiceType)[keyof typeof WelfareRequestInputServiceType];
+
+export const WelfareRequestInputServiceType = {
+  medical_aid: "medical_aid",
+  general_relief: "general_relief",
+  emergency_response: "emergency_response",
+  air_ticket: "air_ticket",
+  india_rep: "india_rep",
+} as const;
+
+export type WelfareRequestInputStatus =
+  (typeof WelfareRequestInputStatus)[keyof typeof WelfareRequestInputStatus];
+
+export const WelfareRequestInputStatus = {
+  submitted: "submitted",
+  under_review: "under_review",
+  approved: "approved",
+  rejected: "rejected",
+  completed: "completed",
+} as const;
+
+export type WelfareRequestInputDetails = { [key: string]: unknown };
+
+export interface WelfareRequestInput {
+  serviceType: WelfareRequestInputServiceType;
+  /** @nullable */
+  memberId?: string | null;
+  /** @minLength 1 */
+  applicantName: string;
+  membershipId?: string;
+  contactNumber?: string;
+  status?: WelfareRequestInputStatus;
+  /** @minimum 0 */
+  amountRequested?: number;
+  /** @minimum 0 */
+  amountApproved?: number;
+  description?: string;
+  details?: WelfareRequestInputDetails;
+  supportingDocuments?: WelfareDocument[];
+  assignedTo?: string;
+  approvalNotes?: string;
+}
+
+export type WelfareStatsByTypeItem = {
+  type: string;
+  count: number;
+  totalApproved: number;
+};
+
+export interface WelfareStats {
+  total: number;
+  submittedCount: number;
+  underReviewCount: number;
+  approvedCount: number;
+  rejectedCount: number;
+  completedCount: number;
+  totalRequested: number;
+  totalApproved: number;
+  byType: WelfareStatsByTypeItem[];
+}
+
 export interface RequestUploadUrlBody {
   name: string;
   size: number;
@@ -1057,6 +1184,16 @@ export const ListSponsorsSort = {
 export type ListFrfClaimsParams = {
   status?: string;
   claimType?: string;
+};
+
+export type ListWelfareRequestsParams = {
+  serviceType?: string;
+  status?: string;
+  search?: string;
+};
+
+export type GetWelfareStatsParams = {
+  serviceType?: string;
 };
 
 export type GetDashboardCashFlowParams = {

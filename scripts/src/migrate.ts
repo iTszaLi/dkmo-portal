@@ -316,6 +316,35 @@ async function main() {
       age INTEGER,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS welfare_requests (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      request_number TEXT NOT NULL UNIQUE,
+      service_type TEXT NOT NULL,
+      member_id UUID REFERENCES members(id) ON DELETE SET NULL,
+      applicant_name TEXT NOT NULL,
+      membership_id TEXT NOT NULL DEFAULT '',
+      contact_number TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'submitted',
+      amount_requested NUMERIC(12,2) NOT NULL DEFAULT 0,
+      amount_approved NUMERIC(12,2) NOT NULL DEFAULT 0,
+      description TEXT NOT NULL DEFAULT '',
+      details JSONB NOT NULL DEFAULT '{}'::jsonb,
+      supporting_documents JSONB NOT NULL DEFAULT '[]'::jsonb,
+      assigned_to TEXT NOT NULL DEFAULT '',
+      approval_notes TEXT NOT NULL DEFAULT '',
+      submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      under_review_at TIMESTAMPTZ,
+      under_review_by TEXT NOT NULL DEFAULT '',
+      approved_at TIMESTAMPTZ,
+      approved_by TEXT NOT NULL DEFAULT '',
+      rejected_at TIMESTAMPTZ,
+      rejected_by TEXT NOT NULL DEFAULT '',
+      completed_at TIMESTAMPTZ,
+      completed_by TEXT NOT NULL DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
   `);
 
   await pool.query(`

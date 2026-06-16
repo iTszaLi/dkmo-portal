@@ -1306,6 +1306,293 @@ export const DeleteFrfClaimParams = zod.object({
 });
 
 /**
+ * @summary List welfare/community-service requests
+ */
+export const ListWelfareRequestsQueryParams = zod.object({
+  serviceType: zod.coerce.string().optional(),
+  status: zod.coerce.string().optional(),
+  search: zod.coerce.string().optional(),
+});
+
+export const ListWelfareRequestsResponseItem = zod.object({
+  id: zod.string(),
+  requestNumber: zod.string(),
+  serviceType: zod.enum([
+    "medical_aid",
+    "general_relief",
+    "emergency_response",
+    "air_ticket",
+    "india_rep",
+  ]),
+  memberId: zod.string().nullish(),
+  applicantName: zod.string(),
+  membershipId: zod.string(),
+  contactNumber: zod.string(),
+  status: zod.enum([
+    "submitted",
+    "under_review",
+    "approved",
+    "rejected",
+    "completed",
+  ]),
+  amountRequested: zod.number(),
+  amountApproved: zod.number(),
+  description: zod.string(),
+  details: zod.record(zod.string(), zod.unknown()),
+  supportingDocuments: zod.array(
+    zod.object({
+      name: zod.string(),
+      url: zod.string(),
+      uploadedAt: zod.string().optional(),
+    }),
+  ),
+  assignedTo: zod.string(),
+  approvalNotes: zod.string(),
+  submittedAt: zod.coerce.date().nullish(),
+  underReviewAt: zod.coerce.date().nullish(),
+  underReviewBy: zod.string(),
+  approvedAt: zod.coerce.date().nullish(),
+  approvedBy: zod.string(),
+  rejectedAt: zod.coerce.date().nullish(),
+  rejectedBy: zod.string(),
+  completedAt: zod.coerce.date().nullish(),
+  completedBy: zod.string(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+export const ListWelfareRequestsResponse = zod.array(
+  ListWelfareRequestsResponseItem,
+);
+
+/**
+ * @summary Create a welfare request
+ */
+
+export const createWelfareRequestBodyAmountRequestedMin = 0;
+
+export const createWelfareRequestBodyAmountApprovedMin = 0;
+
+export const CreateWelfareRequestBody = zod.object({
+  serviceType: zod.enum([
+    "medical_aid",
+    "general_relief",
+    "emergency_response",
+    "air_ticket",
+    "india_rep",
+  ]),
+  memberId: zod.string().nullish(),
+  applicantName: zod.string().min(1),
+  membershipId: zod.string().optional(),
+  contactNumber: zod.string().optional(),
+  status: zod
+    .enum(["submitted", "under_review", "approved", "rejected", "completed"])
+    .optional(),
+  amountRequested: zod
+    .number()
+    .min(createWelfareRequestBodyAmountRequestedMin)
+    .optional(),
+  amountApproved: zod
+    .number()
+    .min(createWelfareRequestBodyAmountApprovedMin)
+    .optional(),
+  description: zod.string().optional(),
+  details: zod.record(zod.string(), zod.unknown()).optional(),
+  supportingDocuments: zod
+    .array(
+      zod.object({
+        name: zod.string(),
+        url: zod.string(),
+        uploadedAt: zod.string().optional(),
+      }),
+    )
+    .optional(),
+  assignedTo: zod.string().optional(),
+  approvalNotes: zod.string().optional(),
+});
+
+/**
+ * @summary Get welfare statistics
+ */
+export const GetWelfareStatsQueryParams = zod.object({
+  serviceType: zod.coerce.string().optional(),
+});
+
+export const GetWelfareStatsResponse = zod.object({
+  total: zod.number(),
+  submittedCount: zod.number(),
+  underReviewCount: zod.number(),
+  approvedCount: zod.number(),
+  rejectedCount: zod.number(),
+  completedCount: zod.number(),
+  totalRequested: zod.number(),
+  totalApproved: zod.number(),
+  byType: zod.array(
+    zod.object({
+      type: zod.string(),
+      count: zod.number(),
+      totalApproved: zod.number(),
+    }),
+  ),
+});
+
+/**
+ * @summary Get a welfare request
+ */
+export const GetWelfareRequestParams = zod.object({
+  id: zod.coerce.string().uuid(),
+});
+
+export const GetWelfareRequestResponse = zod.object({
+  id: zod.string(),
+  requestNumber: zod.string(),
+  serviceType: zod.enum([
+    "medical_aid",
+    "general_relief",
+    "emergency_response",
+    "air_ticket",
+    "india_rep",
+  ]),
+  memberId: zod.string().nullish(),
+  applicantName: zod.string(),
+  membershipId: zod.string(),
+  contactNumber: zod.string(),
+  status: zod.enum([
+    "submitted",
+    "under_review",
+    "approved",
+    "rejected",
+    "completed",
+  ]),
+  amountRequested: zod.number(),
+  amountApproved: zod.number(),
+  description: zod.string(),
+  details: zod.record(zod.string(), zod.unknown()),
+  supportingDocuments: zod.array(
+    zod.object({
+      name: zod.string(),
+      url: zod.string(),
+      uploadedAt: zod.string().optional(),
+    }),
+  ),
+  assignedTo: zod.string(),
+  approvalNotes: zod.string(),
+  submittedAt: zod.coerce.date().nullish(),
+  underReviewAt: zod.coerce.date().nullish(),
+  underReviewBy: zod.string(),
+  approvedAt: zod.coerce.date().nullish(),
+  approvedBy: zod.string(),
+  rejectedAt: zod.coerce.date().nullish(),
+  rejectedBy: zod.string(),
+  completedAt: zod.coerce.date().nullish(),
+  completedBy: zod.string(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Update a welfare request
+ */
+export const UpdateWelfareRequestParams = zod.object({
+  id: zod.coerce.string().uuid(),
+});
+
+export const updateWelfareRequestBodyAmountRequestedMin = 0;
+
+export const updateWelfareRequestBodyAmountApprovedMin = 0;
+
+export const UpdateWelfareRequestBody = zod.object({
+  serviceType: zod.enum([
+    "medical_aid",
+    "general_relief",
+    "emergency_response",
+    "air_ticket",
+    "india_rep",
+  ]),
+  memberId: zod.string().nullish(),
+  applicantName: zod.string().min(1),
+  membershipId: zod.string().optional(),
+  contactNumber: zod.string().optional(),
+  status: zod
+    .enum(["submitted", "under_review", "approved", "rejected", "completed"])
+    .optional(),
+  amountRequested: zod
+    .number()
+    .min(updateWelfareRequestBodyAmountRequestedMin)
+    .optional(),
+  amountApproved: zod
+    .number()
+    .min(updateWelfareRequestBodyAmountApprovedMin)
+    .optional(),
+  description: zod.string().optional(),
+  details: zod.record(zod.string(), zod.unknown()).optional(),
+  supportingDocuments: zod
+    .array(
+      zod.object({
+        name: zod.string(),
+        url: zod.string(),
+        uploadedAt: zod.string().optional(),
+      }),
+    )
+    .optional(),
+  assignedTo: zod.string().optional(),
+  approvalNotes: zod.string().optional(),
+});
+
+export const UpdateWelfareRequestResponse = zod.object({
+  id: zod.string(),
+  requestNumber: zod.string(),
+  serviceType: zod.enum([
+    "medical_aid",
+    "general_relief",
+    "emergency_response",
+    "air_ticket",
+    "india_rep",
+  ]),
+  memberId: zod.string().nullish(),
+  applicantName: zod.string(),
+  membershipId: zod.string(),
+  contactNumber: zod.string(),
+  status: zod.enum([
+    "submitted",
+    "under_review",
+    "approved",
+    "rejected",
+    "completed",
+  ]),
+  amountRequested: zod.number(),
+  amountApproved: zod.number(),
+  description: zod.string(),
+  details: zod.record(zod.string(), zod.unknown()),
+  supportingDocuments: zod.array(
+    zod.object({
+      name: zod.string(),
+      url: zod.string(),
+      uploadedAt: zod.string().optional(),
+    }),
+  ),
+  assignedTo: zod.string(),
+  approvalNotes: zod.string(),
+  submittedAt: zod.coerce.date().nullish(),
+  underReviewAt: zod.coerce.date().nullish(),
+  underReviewBy: zod.string(),
+  approvedAt: zod.coerce.date().nullish(),
+  approvedBy: zod.string(),
+  rejectedAt: zod.coerce.date().nullish(),
+  rejectedBy: zod.string(),
+  completedAt: zod.coerce.date().nullish(),
+  completedBy: zod.string(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Delete a welfare request
+ */
+export const DeleteWelfareRequestParams = zod.object({
+  id: zod.coerce.string().uuid(),
+});
+
+/**
  * @summary Get cash flow summary and upcoming events
  */
 export const getDashboardCashFlowQueryQuarterMax = 4;
