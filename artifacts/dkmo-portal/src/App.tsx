@@ -31,6 +31,7 @@ import FrfTerms from "@/pages/frf-terms";
 import FrfTrack from "@/pages/frf-track";
 import FrfAmbassadors from "@/pages/frf-ambassadors";
 import DkmoApply from "@/pages/dkmo-apply";
+import DkmoTerms from "@/pages/dkmo-terms";
 import DkmoMemberships from "@/pages/dkmo-memberships";
 import Loans from "@/pages/loans";
 import Receipts from "@/pages/receipts";
@@ -115,6 +116,7 @@ function AppRoutes() {
       <Route path="/frf-terms" component={FrfTerms} />
       <Route path="/frf-track" component={FrfTrack} />
       <Route path="/dkmo-apply" component={DkmoApply} />
+      <Route path="/dkmo-terms" component={DkmoTerms} />
       {/* Backwards-compat: redirect old Clerk paths to /login */}
       <Route path="/sign-in/:rest*" component={() => <Redirect to="/login" />} />
       <Route path="/sign-up/:rest*" component={() => <Redirect to="/login" />} />

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, type FormEvent } from "react";
 import { Link, useLocation } from "wouter";
 import {
   CheckCircle, XCircle, Clock, Users, Loader2, ChevronRight, ChevronLeft,
-  Plus, Trash2, Download, Printer, ExternalLink, RefreshCw, Search, ChevronsUpDown, Check,
+  Plus, Trash2, Download, Printer, ExternalLink, RefreshCw, Search, ChevronsUpDown, Check, ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -772,11 +772,39 @@ export default function DkmoApplyPage() {
                       placeholder="Any additional information…" />
                   </FieldRow>
 
-                  <div className="flex items-start gap-3 rounded-xl border border-green-200 dark:border-green-900/40 bg-green-50/40 dark:bg-green-950/10 p-4">
-                    <Checkbox id="terms" checked={termsAccepted} onCheckedChange={(v) => setTermsAccepted(!!v)} className="mt-0.5 border-green-600 data-[state=checked]:bg-green-700" />
-                    <label htmlFor="terms" className="text-sm text-green-900 dark:text-green-200 leading-relaxed cursor-pointer">
-                      I confirm that all the information provided is true and accurate. I understand that in case of any changes to my contact information, I must inform the General Secretary of DKMO immediately.
-                    </label>
+                  {/* Terms & Conditions */}
+                  <div className="rounded-xl border border-green-200 dark:border-green-900/40 bg-green-50/40 dark:bg-green-950/10 p-4 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="h-9 w-9 rounded-lg bg-green-100 dark:bg-green-900/40 flex items-center justify-center shrink-0">
+                        <ShieldCheck className="h-5 w-5 text-green-700 dark:text-green-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-green-900 dark:text-green-300">Terms &amp; Conditions</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                          Please read and accept the DKMO Terms &amp; Conditions before submitting your application.
+                        </p>
+                      </div>
+                    </div>
+                    <a
+                      href={`${basePath}/dkmo-terms`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-sm font-medium text-green-700 dark:text-green-400 hover:underline"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      View DKMO Terms &amp; Conditions
+                    </a>
+                    <div className="flex items-start gap-3 pt-1">
+                      <Checkbox
+                        id="terms"
+                        checked={termsAccepted}
+                        onCheckedChange={(v) => setTermsAccepted(Boolean(v))}
+                        className="mt-0.5 border-green-600 data-[state=checked]:bg-green-700"
+                      />
+                      <label htmlFor="terms" className="text-sm text-green-900 dark:text-green-200 leading-relaxed cursor-pointer">
+                        I have read and understood the DKMO Terms &amp; Conditions and agree to abide by them. I confirm that the information provided above is accurate and complete.
+                      </label>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

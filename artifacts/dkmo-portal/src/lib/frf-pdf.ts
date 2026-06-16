@@ -125,28 +125,34 @@ export async function generateFrfPdf(
   doc.text(noteLines, mL, y);
   y += (noteLines as string[]).length * 4.2 + 3;
 
-  // ── REFERENCE MEMBER GREEN BOX ───────────────────────────────────────────────
-  if (form.refMemberName || form.refMemberId) {
-    const green: [number, number, number] = [30, 120, 60];
-    const lightGreen: [number, number, number] = [220, 245, 225];
-    const boxH = 22;
-    doc.setFillColor(...lightGreen);
-    doc.setDrawColor(...green);
-    doc.setLineWidth(0.6);
+  // ── REFERENCE MEMBER GREEN BOX (always shown) ────────────────────────────────
+  {
+    const refGreen: [number, number, number] = [30, 120, 60];
+    const refLightGreen: [number, number, number] = [220, 245, 225];
+    const boxH = 16;
+    doc.setFillColor(...refLightGreen);
+    doc.setDrawColor(...refGreen);
+    doc.setLineWidth(0.5);
     doc.roundedRect(mL, y, cW, boxH, 2, 2, "FD");
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
-    doc.setTextColor(...green);
-    doc.text("Reference Member", mL + 3, y + 5);
+    doc.setFontSize(7.5);
+    doc.setTextColor(...refGreen);
+    doc.text("Reference Member", mL + 3, y + 4.5);
+    const colHalf = cW / 2 - 6;
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.setTextColor(...black);
-    doc.text(`Member Name:  ${form.refMemberName || "______________________"}`, mL + 3, y + 10);
-    doc.text(`Member ID:      ${form.refMemberId || "______________________"}`, mL + 3, y + 15);
-    doc.setFont("helvetica", "italic");
     doc.setFontSize(7);
     doc.setTextColor(...grey);
-    doc.text("This member referred me to join FRF Membership.", mL + 3, y + 20);
+    doc.text("Member Name:", mL + 3, y + 9.5);
+    doc.text("Member ID:", mL + cW / 2 + 3, y + 9.5);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...black);
+    doc.text(form.refMemberName || "__________________________________", mL + 27, y + 9.5, { maxWidth: colHalf });
+    doc.text(form.refMemberId || "__________________________________", mL + cW / 2 + 22, y + 9.5, { maxWidth: colHalf });
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(6.5);
+    doc.setTextColor(...grey);
+    doc.text("The DKMO member who referred me to join FRF Membership.", mL + 3, y + 14);
     y += boxH + 3;
   }
 

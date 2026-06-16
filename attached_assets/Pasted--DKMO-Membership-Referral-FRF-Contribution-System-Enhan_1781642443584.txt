@@ -1,0 +1,348 @@
+# DKMO Membership, Referral & FRF Contribution System Enhancement
+
+After reviewing the Members, Membership, FRF, and Referral workflows, I would like to restructure the system so that membership fees, referrals, and FRF contribution collections are fully connected.
+
+## 1. Remove Monthly Dues Completely
+
+The current "Monthly Dues" concept is incorrect and should be removed everywhere.
+
+Remove:
+
+* Monthly Dues column
+* Monthly Dues reports
+* Monthly Dues dashboard widgets
+* Monthly Dues calculations
+* Monthly Dues statistics
+
+DKMO does not have a monthly membership fee.
+
+---
+
+## 2. Replace With One-Time Membership Fee
+
+Every member pays a one-time registration fee of:
+
+**100 SAR**
+
+Add a new column in Members:
+
+| Member | Reference Member    | Membership Fee | Fee Status | Actions |
+| ------ | ------------------- | -------------- | ---------- | ------- |
+| Ahmed  | Fazlurrahman Kolkar | 100 SAR        | Paid       | ...     |
+
+Fee Status options:
+
+* Paid
+* Pending
+* Unpaid
+
+Admin actions:
+
+* Mark as Paid
+* Mark as Pending
+* Mark as Unpaid
+
+Store:
+
+* Amount
+* Status
+* Payment Date
+* Updated By
+
+---
+
+## 3. Reference Member Column
+
+Add a new column immediately after Member:
+
+**Reference Member**
+
+This should display the member or committee member who referred the applicant.
+
+The reference member selected during application should remain permanently linked to that member profile.
+
+---
+
+## 4. Advanced Referral Tracking
+
+When opening any member profile, display:
+
+### Referral Information
+
+* Reference Member Name
+* Reference Member ID
+* Committee Position (if applicable)
+* Referral Date
+
+### Referral Statistics
+
+* Total Members Referred
+* Active Members Referred
+* Pending Members Referred
+* FRF Members Referred
+* DKMO Members Referred
+
+---
+
+## 5. Referral Dashboard
+
+When clicking a Reference Member name:
+
+Open a dedicated Referral Dashboard showing:
+
+### Referring Member Details
+
+* Name
+* Member ID
+* Mobile Number
+* Position
+* Status
+
+### Referral Statistics
+
+* Total Referrals
+* Active Referrals
+* Pending Referrals
+* Paid Membership Fees
+* Unpaid Membership Fees
+
+### Referred Members List
+
+Columns:
+
+* Member Name
+* Mobile Number
+* Membership Type
+* Membership Fee Status
+* Join Date
+* Status
+
+---
+
+## 6. Follow-Up Responsibility System
+
+This is extremely important.
+
+The member who referred a new member should be responsible for following up with them regarding payments.
+
+Under every Reference Member dashboard create:
+
+### Members Under My Referral
+
+Show all members referred by that person.
+
+For each member display:
+
+* Member Name
+* Mobile Number
+* Membership Type
+* Membership Fee Status
+* FRF Contribution Status
+* Last Payment Date
+
+---
+
+## 7. Follow-Up Alerts
+
+Create automatic follow-up indicators.
+
+Examples:
+
+### Membership Fee Follow-Up
+
+Ahmed
+100 SAR Membership Fee
+Status: Unpaid
+
+Action Required:
+Follow up by Reference Member
+
+### FRF Contribution Follow-Up
+
+Saleem
+50 SAR FRF Contribution
+Status: Pending
+
+Action Required:
+Follow up by Reference Member
+
+---
+
+## 8. Referral Collection Performance
+
+For every Reference Member calculate:
+
+### Membership Fee Collection
+
+* Total Members Referred
+* Paid
+* Pending
+* Unpaid
+
+### FRF Contribution Collection
+
+* Total Members Under Referral
+* Contribution Paid
+* Contribution Pending
+* Contribution Unpaid
+
+### Collection Percentage
+
+Example:
+
+Members Referred:
+50
+
+Membership Fee Collection:
+45 Paid
+
+FRF Contribution Collection:
+40 Paid
+
+Collection Efficiency:
+90%
+
+---
+
+## 9. Committee Referral Leaderboard
+
+Create a dashboard widget:
+
+### Top Referring Committee Members
+
+Rank committee members based on:
+
+* Total Referrals
+* Membership Fee Collection
+* FRF Contribution Collection
+
+Show:
+
+| Rank | Member              | Referrals | Collection % |
+| ---- | ------------------- | --------- | ------------ |
+| 1    | Fazlurrahman Kolkar | 50        | 96%          |
+| 2    | Asif Kannur         | 40        | 92%          |
+
+Clicking any name should open the complete referral dashboard.
+
+---
+
+## 10. FRF Contribution System
+
+FRF is not a monthly fee.
+
+When an FRF member passes away and a claim is approved:
+
+Automatically create an FRF Contribution Cycle.
+
+Contribution amount:
+
+**50 SAR per active FRF member**
+
+Example:
+
+Claim:
+Mohammed Ali
+
+Contribution:
+50 SAR
+
+Eligible Members:
+850
+
+Expected Collection:
+42,500 SAR
+
+---
+
+## 11. FRF Contribution Tracking
+
+Track each member's contribution status:
+
+* Paid
+* Pending
+* Unpaid
+
+Store:
+
+* Contribution Amount
+* Payment Date
+* Receipt Number
+* Collection Status
+
+---
+
+## 12. Referral-Based FRF Collection Follow-Up
+
+The most important enhancement:
+
+For every FRF Contribution Cycle, the Reference Member should be able to see which of their referred members have not paid the 50 SAR contribution.
+
+Example:
+
+### Members Requiring Follow-Up
+
+Ahmed
+Reference: Fazlurrahman Kolkar
+FRF Contribution: 50 SAR
+Status: Unpaid
+
+Saleem
+Reference: Fazlurrahman Kolkar
+FRF Contribution: 50 SAR
+Status: Pending
+
+This allows committee members and referrers to actively follow up with the members they brought into DKMO.
+
+---
+
+## 13. Dashboard Statistics
+
+Replace Monthly Dues statistics with:
+
+### Membership Fee Dashboard
+
+* Total Members
+* Paid Members
+* Pending Members
+* Unpaid Members
+* Total Membership Fees Collected
+* Outstanding Membership Fees
+
+### FRF Dashboard
+
+* Active Contribution Cycle
+* Members Paid
+* Members Pending
+* Members Unpaid
+* Amount Collected
+* Amount Outstanding
+
+### Referral Dashboard
+
+* Total Referrals
+* Top Referrer
+* Members Requiring Follow-Up
+* Outstanding Membership Fees
+* Outstanding FRF Contributions
+
+---
+
+## 14. Search Enhancement
+
+Searching by:
+
+* Member Name
+* Mobile Number
+* Member ID
+
+Should instantly show:
+
+* Member Profile
+* Reference Member
+* Membership Fee Status
+* FRF Contribution Status
+* Referral Statistics
+* Follow-Up Requirements
+
+The referral system should become a complete member acquisition, payment collection, and follow-up management platform that helps DKMO track who brought each member and ensures both membership fees and FRF contributions are collected efficiently.
