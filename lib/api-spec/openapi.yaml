@@ -1445,6 +1445,50 @@ paths:
               schema:
                 $ref: "#/components/schemas/DashboardCashFlow"
 
+  /dashboard/impact:
+    get:
+      operationId: getDashboardImpact
+      tags: [dashboard]
+      summary: Get organization-wide impact metrics
+      responses:
+        "200":
+          description: Impact metrics aggregated across all modules
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardImpact"
+
+  /dashboard/committee-performance:
+    get:
+      operationId: getCommitteePerformance
+      tags: [dashboard]
+      summary: Get per-committee-member activity metrics
+      responses:
+        "200":
+          description: Activity metrics grouped by committee member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommitteePerformance"
+
+  /dashboard/member-assistance/{memberId}:
+    get:
+      operationId: getMemberAssistanceHistory
+      tags: [dashboard]
+      summary: Get all assistance received by a member across modules
+      parameters:
+        - in: path
+          name: memberId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Unified assistance history for the member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberAssistanceHistory"
+
   /receipts:
     get:
       operationId: listReceiptRecords
@@ -2908,3 +2952,107 @@ components:
               location: { type: string }
             required: [id, title, startDate]
       required: [totalCollected, totalDisbursed, balance, netBalance, pendingClaimsCount, eventsThisQuarter, selectedYear, selectedQuarter, upcomingEvents]
+
+    DashboardImpact:
+      type: object
+      properties:
+        totalMembers: { type: integer }
+        frfBeneficiaries: { type: integer }
+        medicalAidCases: { type: integer }
+        loanBeneficiaries: { type: integer }
+        airTicketBeneficiaries: { type: integer }
+        emergencyReliefCases: { type: integer }
+        generalReliefCases: { type: integer }
+        totalWelfareRequests: { type: integer }
+        jobsPosted: { type: integer }
+        jobPlacements: { type: integer }
+        totalAssistanceDistributed: { type: number }
+        assistanceByCategory:
+          type: array
+          items:
+            type: object
+            properties:
+              category: { type: string }
+              count: { type: integer }
+              amount: { type: number }
+            required: [category, count, amount]
+        welfareByType:
+          type: array
+          items:
+            type: object
+            properties:
+              type: { type: string }
+              count: { type: integer }
+            required: [type, count]
+      required:
+        - totalMembers
+        - frfBeneficiaries
+        - medicalAidCases
+        - loanBeneficiaries
+        - airTicketBeneficiaries
+        - emergencyReliefCases
+        - generalReliefCases
+        - totalWelfareRequests
+        - jobsPosted
+        - jobPlacements
+        - totalAssistanceDistributed
+        - assistanceByCategory
+        - welfareByType
+
+    CommitteePerformanceEntry:
+      type: object
+      properties:
+        name: { type: string }
+        membersRecruited: { type: integer }
+        feesCollected: { type: number }
+        frfCount: { type: integer }
+        frfAmount: { type: number }
+        welfareHandled: { type: integer }
+        loansProcessed: { type: integer }
+        medicalAidProcessed: { type: integer }
+        emergencyResolved: { type: integer }
+        totalActions: { type: integer }
+      required:
+        - name
+        - membersRecruited
+        - feesCollected
+        - frfCount
+        - frfAmount
+        - welfareHandled
+        - loansProcessed
+        - medicalAidProcessed
+        - emergencyResolved
+        - totalActions
+
+    CommitteePerformance:
+      type: object
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/CommitteePerformanceEntry"
+      required: [entries]
+
+    MemberAssistanceItem:
+      type: object
+      properties:
+        id: { type: string }
+        category: { type: string }
+        referenceNumber: { type: string }
+        date: { type: string, nullable: true }
+        amountRequested: { type: number }
+        amountApproved: { type: number }
+        status: { type: string }
+        description: { type: string }
+      required: [id, category, referenceNumber, date, amountRequested, amountApproved, status, description]
+
+    MemberAssistanceHistory:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/MemberAssistanceItem"
+        totalReceived: { type: number }
+        totalCount: { type: integer }
+      required: [items, totalReceived, totalCount]

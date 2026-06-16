@@ -1256,6 +1256,67 @@ export interface DashboardCashFlow {
   upcomingEvents: DashboardCashFlowUpcomingEventsItem[];
 }
 
+export type DashboardImpactAssistanceByCategoryItem = {
+  category: string;
+  count: number;
+  amount: number;
+};
+
+export type DashboardImpactWelfareByTypeItem = {
+  type: string;
+  count: number;
+};
+
+export interface DashboardImpact {
+  totalMembers: number;
+  frfBeneficiaries: number;
+  medicalAidCases: number;
+  loanBeneficiaries: number;
+  airTicketBeneficiaries: number;
+  emergencyReliefCases: number;
+  generalReliefCases: number;
+  totalWelfareRequests: number;
+  jobsPosted: number;
+  jobPlacements: number;
+  totalAssistanceDistributed: number;
+  assistanceByCategory: DashboardImpactAssistanceByCategoryItem[];
+  welfareByType: DashboardImpactWelfareByTypeItem[];
+}
+
+export interface CommitteePerformanceEntry {
+  name: string;
+  membersRecruited: number;
+  feesCollected: number;
+  frfCount: number;
+  frfAmount: number;
+  welfareHandled: number;
+  loansProcessed: number;
+  medicalAidProcessed: number;
+  emergencyResolved: number;
+  totalActions: number;
+}
+
+export interface CommitteePerformance {
+  entries: CommitteePerformanceEntry[];
+}
+
+export interface MemberAssistanceItem {
+  id: string;
+  category: string;
+  referenceNumber: string;
+  date: string | null;
+  amountRequested: number;
+  amountApproved: number;
+  status: string;
+  description: string;
+}
+
+export interface MemberAssistanceHistory {
+  items: MemberAssistanceItem[];
+  totalReceived: number;
+  totalCount: number;
+}
+
 export type ListMembersParams = {
   search?: string;
 };

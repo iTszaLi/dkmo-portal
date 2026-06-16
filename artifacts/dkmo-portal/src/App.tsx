@@ -22,6 +22,8 @@ import Tasks from "@/pages/tasks";
 import TaskDetail from "@/pages/task-detail";
 import Settings from "@/pages/settings";
 import Committee from "@/pages/committee";
+import CommitteePerformance from "@/pages/committee-performance";
+import Impact from "@/pages/impact";
 import Frf from "@/pages/frf";
 import CommunityServices from "@/pages/community-services";
 import WelfareService from "@/pages/welfare-service";
@@ -130,7 +132,9 @@ function AppRoutes() {
       <Route path="/events/:id" component={() => <AuthenticatedRoute component={EventDetail} />} />
       <Route path="/tasks" component={() => <AuthenticatedRoute component={Tasks} />} />
       <Route path="/tasks/:id" component={() => <AuthenticatedRoute component={TaskDetail} />} />
+      <Route path="/impact" component={() => <AuthenticatedRoute component={Impact} />} />
       <Route path="/committee" component={() => <AuthenticatedRoute component={Committee} />} />
+      <Route path="/committee-performance" component={() => <AuthenticatedRoute component={CommitteePerformance} />} />
       <Route path="/services" component={() => <AuthenticatedRoute component={CommunityServices} />} />
       <Route path="/services/:type" component={() => <AuthenticatedRoute component={WelfareService} />} />
       <Route path="/job-bureau" component={() => <AuthenticatedRoute component={JobBureau} />} />

@@ -1,6 +1,17 @@
 import { Router, type IRouter } from "express";
-import { eq, desc, sum, sql, lte, and, ne, gte } from "drizzle-orm";
-import { db, membersTable, paymentsTable, sponsorsTable, frfClaimsTable, eventsTable } from "@workspace/db";
+import { eq, desc, sum, sql, lte, and, ne, gte, or } from "drizzle-orm";
+import {
+  db,
+  membersTable,
+  paymentsTable,
+  sponsorsTable,
+  frfClaimsTable,
+  eventsTable,
+  welfareRequestsTable,
+  loansTable,
+  jobListingsTable,
+  jobApplicationsTable,
+} from "@workspace/db";
 import {
   GetDashboardSummaryQueryParams,
   GetPendingMembersQueryParams,
@@ -498,6 +509,247 @@ router.get("/dashboard/cash-flow", async (req, res): Promise<void> => {
     selectedQuarter,
     upcomingEvents,
   });
+});
+
+const FRF_GRANTED = ["approved", "disbursed"];
+const WELFARE_GRANTED = ["approved", "completed"];
+
+router.get("/dashboard/impact", async (_req, res): Promise<void> => {
+  const [members, frfClaims, welfare, loans, listings, applications] = await Promise.all([
+    db.select().from(membersTable),
+    db.select().from(frfClaimsTable),
+    db.select().from(welfareRequestsTable),
+    db.select().from(loansTable),
+    db.select().from(jobListingsTable),
+    db.select().from(jobApplicationsTable),
+  ]);
+
+  const frfGranted = frfClaims.filter((c) => FRF_GRANTED.includes(c.status));
+  const welfareGranted = welfare.filter((w) => WELFARE_GRANTED.includes(w.status));
+
+  const welfareOfType = (type: string) =>
+    welfareGranted.filter((w) => w.serviceType === type);
+
+  const medicalAidCases = welfareOfType("medical_aid").length;
+  const emergencyReliefCases = welfareOfType("emergency_response").length;
+  const generalReliefCases = welfareOfType("general_relief").length;
+  const airTicketBeneficiaries =
+    welfareOfType("air_ticket").length +
+    frfGranted.filter((c) => c.claimType === "air_ticket").length;
+
+  const frfAmount = frfGranted.reduce((s, c) => s + Number(c.amountApproved), 0);
+  const welfareAmount = welfareGranted.reduce((s, w) => s + Number(w.amountApproved), 0);
+  const loanAmount = loans.reduce((s, l) => s + Number(l.principalAmount), 0);
+  const medicalAmount = welfareOfType("medical_aid").reduce((s, w) => s + Number(w.amountApproved), 0);
+  const airTicketAmount =
+    welfareOfType("air_ticket").reduce((s, w) => s + Number(w.amountApproved), 0) +
+    frfGranted.filter((c) => c.claimType === "air_ticket").reduce((s, c) => s + Number(c.amountApproved), 0);
+  const emergencyAmount = welfareOfType("emergency_response").reduce((s, w) => s + Number(w.amountApproved), 0);
+  const generalAmount = welfareOfType("general_relief").reduce((s, w) => s + Number(w.amountApproved), 0);
+
+  const totalAssistanceDistributed = frfAmount + welfareAmount + loanAmount;
+
+  const assistanceByCategory = [
+    { category: "FRF", count: frfGranted.length, amount: frfAmount },
+    { category: "Medical Aid", count: medicalAidCases, amount: medicalAmount },
+    { category: "Loans", count: loans.length, amount: loanAmount },
+    { category: "Air Ticket", count: airTicketBeneficiaries, amount: airTicketAmount },
+    { category: "Emergency Relief", count: emergencyReliefCases, amount: emergencyAmount },
+    { category: "General Relief", count: generalReliefCases, amount: generalAmount },
+  ];
+
+  const welfareTypeCounts = new Map<string, number>();
+  for (const w of welfare) {
+    welfareTypeCounts.set(w.serviceType, (welfareTypeCounts.get(w.serviceType) ?? 0) + 1);
+  }
+  const welfareByType = [...welfareTypeCounts.entries()].map(([type, count]) => ({ type, count }));
+
+  res.json({
+    totalMembers: members.length,
+    frfBeneficiaries: frfGranted.length,
+    medicalAidCases,
+    loanBeneficiaries: loans.length,
+    airTicketBeneficiaries,
+    emergencyReliefCases,
+    generalReliefCases,
+    totalWelfareRequests: welfare.length,
+    jobsPosted: listings.length,
+    jobPlacements: applications.filter((a) => a.status === "placed").length,
+    totalAssistanceDistributed,
+    assistanceByCategory,
+    welfareByType,
+  });
+});
+
+interface PerfEntry {
+  name: string;
+  membersRecruited: number;
+  feesCollected: number;
+  frfCount: number;
+  frfAmount: number;
+  welfareHandled: number;
+  loansProcessed: number;
+  medicalAidProcessed: number;
+  emergencyResolved: number;
+}
+
+router.get("/dashboard/committee-performance", async (_req, res): Promise<void> => {
+  const [members, frfClaims, welfare, loans] = await Promise.all([
+    db.select().from(membersTable),
+    db.select().from(frfClaimsTable),
+    db.select().from(welfareRequestsTable),
+    db.select().from(loansTable),
+  ]);
+
+  const map = new Map<string, PerfEntry>();
+  const get = (raw: string): PerfEntry | null => {
+    const name = raw.trim();
+    if (!name) return null;
+    let entry = map.get(name);
+    if (!entry) {
+      entry = {
+        name,
+        membersRecruited: 0,
+        feesCollected: 0,
+        frfCount: 0,
+        frfAmount: 0,
+        welfareHandled: 0,
+        loansProcessed: 0,
+        medicalAidProcessed: 0,
+        emergencyResolved: 0,
+      };
+      map.set(name, entry);
+    }
+    return entry;
+  };
+
+  for (const m of members) {
+    const recruiter = get(m.refMemberName ?? "");
+    if (recruiter) recruiter.membersRecruited += 1;
+    if (m.feeStatus === "paid") {
+      const collector = get(m.feeUpdatedBy ?? "");
+      if (collector) collector.feesCollected += Number(m.membershipFee);
+    }
+  }
+
+  for (const c of frfClaims) {
+    if (!FRF_GRANTED.includes(c.status)) continue;
+    const actor = get(c.approvedBy || c.disbursedBy);
+    if (actor) {
+      actor.frfCount += 1;
+      actor.frfAmount += Number(c.amountApproved);
+    }
+  }
+
+  for (const w of welfare) {
+    if (!WELFARE_GRANTED.includes(w.status)) continue;
+    const actor = get(w.approvedBy || w.completedBy || w.assignedTo);
+    if (actor) {
+      actor.welfareHandled += 1;
+      if (w.serviceType === "medical_aid") actor.medicalAidProcessed += 1;
+      if (w.serviceType === "emergency_response") actor.emergencyResolved += 1;
+    }
+  }
+
+  for (const l of loans) {
+    const actor = get(l.convenorName ?? "");
+    if (actor) actor.loansProcessed += 1;
+  }
+
+  const entries = [...map.values()]
+    .map((e) => ({
+      ...e,
+      totalActions:
+        e.membersRecruited +
+        e.frfCount +
+        e.welfareHandled +
+        e.loansProcessed,
+    }))
+    .sort((a, b) => b.totalActions - a.totalActions);
+
+  res.json({ entries });
+});
+
+const WELFARE_CATEGORY: Record<string, string> = {
+  medical_aid: "Medical Aid",
+  air_ticket: "Air Ticket",
+  emergency_response: "Emergency Relief",
+  general_relief: "General Relief",
+  india_rep: "India Repatriation",
+};
+
+const FRF_CLAIM_LABEL: Record<string, string> = {
+  death_benefit: "FRF — Death Benefit",
+  emergency: "FRF — Emergency",
+  air_ticket: "FRF — Air Ticket",
+  other: "FRF",
+};
+
+router.get("/dashboard/member-assistance/:memberId", async (req, res): Promise<void> => {
+  const memberId = req.params.memberId;
+
+  const memberRows = await db.select().from(membersTable).where(eq(membersTable.id, memberId));
+  const member = memberRows[0];
+  if (!member) {
+    res.status(404).json({ error: "Member not found" });
+    return;
+  }
+
+  const mid = member.membershipId?.trim() ?? "";
+
+  const frfWhere = mid
+    ? or(eq(frfClaimsTable.memberId, memberId), eq(frfClaimsTable.membershipId, mid))
+    : eq(frfClaimsTable.memberId, memberId);
+  const welfareWhere = mid
+    ? or(eq(welfareRequestsTable.memberId, memberId), eq(welfareRequestsTable.membershipId, mid))
+    : eq(welfareRequestsTable.memberId, memberId);
+
+  const [frfClaims, welfare, loans] = await Promise.all([
+    db.select().from(frfClaimsTable).where(frfWhere),
+    db.select().from(welfareRequestsTable).where(welfareWhere),
+    db.select().from(loansTable).where(eq(loansTable.memberId, memberId)),
+  ]);
+
+  const items = [
+    ...frfClaims.map((c) => ({
+      id: c.id,
+      category: FRF_CLAIM_LABEL[c.claimType] ?? "FRF",
+      referenceNumber: "",
+      date: c.claimDate ? c.claimDate.toISOString() : null,
+      amountRequested: Number(c.amountRequested),
+      amountApproved: Number(c.amountApproved),
+      status: c.status,
+      description: c.description ?? "",
+    })),
+    ...welfare.map((w) => ({
+      id: w.id,
+      category: WELFARE_CATEGORY[w.serviceType] ?? w.serviceType,
+      referenceNumber: w.requestNumber ?? "",
+      date: w.submittedAt ? w.submittedAt.toISOString() : null,
+      amountRequested: Number(w.amountRequested),
+      amountApproved: Number(w.amountApproved),
+      status: w.status,
+      description: w.description ?? "",
+    })),
+    ...loans.map((l) => ({
+      id: l.id,
+      category: "Loan",
+      referenceNumber: "",
+      date: l.disbursedDate ?? null,
+      amountRequested: Number(l.principalAmount),
+      amountApproved: Number(l.principalAmount),
+      status: l.status,
+      description: l.description ?? l.loanType,
+    })),
+  ].sort((a, b) => {
+    const da = a.date ? new Date(a.date).getTime() : 0;
+    const db_ = b.date ? new Date(b.date).getTime() : 0;
+    return db_ - da;
+  });
+
+  const totalReceived = items.reduce((s, i) => s + i.amountApproved, 0);
+
+  res.json({ items, totalReceived, totalCount: items.length });
 });
 
 export default router;

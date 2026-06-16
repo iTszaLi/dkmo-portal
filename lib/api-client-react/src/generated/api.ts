@@ -17,9 +17,11 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  CommitteePerformance,
   CurrentUser,
   DashboardAlert,
   DashboardCashFlow,
+  DashboardImpact,
   DashboardSummary,
   Event,
   EventBookletInput,
@@ -67,6 +69,7 @@ import type {
   ListTasksParams,
   ListWelfareRequestsParams,
   Member,
+  MemberAssistanceHistory,
   MemberDetail,
   MemberInput,
   MonthlyCollection,
@@ -6394,6 +6397,252 @@ export function useGetDashboardCashFlow<
   },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetDashboardCashFlowQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get organization-wide impact metrics
+ */
+export const getGetDashboardImpactUrl = () => {
+  return `/api/dashboard/impact`;
+};
+
+export const getDashboardImpact = async (
+  options?: RequestInit,
+): Promise<DashboardImpact> => {
+  return customFetch<DashboardImpact>(getGetDashboardImpactUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetDashboardImpactQueryKey = () => {
+  return [`/api/dashboard/impact`] as const;
+};
+
+export const getGetDashboardImpactQueryOptions = <
+  TData = Awaited<ReturnType<typeof getDashboardImpact>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getDashboardImpact>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetDashboardImpactQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getDashboardImpact>>
+  > = ({ signal }) => getDashboardImpact({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getDashboardImpact>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetDashboardImpactQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getDashboardImpact>>
+>;
+export type GetDashboardImpactQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get organization-wide impact metrics
+ */
+
+export function useGetDashboardImpact<
+  TData = Awaited<ReturnType<typeof getDashboardImpact>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getDashboardImpact>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetDashboardImpactQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get per-committee-member activity metrics
+ */
+export const getGetCommitteePerformanceUrl = () => {
+  return `/api/dashboard/committee-performance`;
+};
+
+export const getCommitteePerformance = async (
+  options?: RequestInit,
+): Promise<CommitteePerformance> => {
+  return customFetch<CommitteePerformance>(getGetCommitteePerformanceUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetCommitteePerformanceQueryKey = () => {
+  return [`/api/dashboard/committee-performance`] as const;
+};
+
+export const getGetCommitteePerformanceQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCommitteePerformance>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getCommitteePerformance>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetCommitteePerformanceQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getCommitteePerformance>>
+  > = ({ signal }) => getCommitteePerformance({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getCommitteePerformance>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetCommitteePerformanceQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getCommitteePerformance>>
+>;
+export type GetCommitteePerformanceQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get per-committee-member activity metrics
+ */
+
+export function useGetCommitteePerformance<
+  TData = Awaited<ReturnType<typeof getCommitteePerformance>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getCommitteePerformance>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetCommitteePerformanceQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get all assistance received by a member across modules
+ */
+export const getGetMemberAssistanceHistoryUrl = (memberId: string) => {
+  return `/api/dashboard/member-assistance/${memberId}`;
+};
+
+export const getMemberAssistanceHistory = async (
+  memberId: string,
+  options?: RequestInit,
+): Promise<MemberAssistanceHistory> => {
+  return customFetch<MemberAssistanceHistory>(
+    getGetMemberAssistanceHistoryUrl(memberId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetMemberAssistanceHistoryQueryKey = (memberId: string) => {
+  return [`/api/dashboard/member-assistance/${memberId}`] as const;
+};
+
+export const getGetMemberAssistanceHistoryQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMemberAssistanceHistory>>,
+  TError = ErrorType<unknown>,
+>(
+  memberId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMemberAssistanceHistory>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetMemberAssistanceHistoryQueryKey(memberId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getMemberAssistanceHistory>>
+  > = ({ signal }) =>
+    getMemberAssistanceHistory(memberId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!memberId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMemberAssistanceHistory>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMemberAssistanceHistoryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMemberAssistanceHistory>>
+>;
+export type GetMemberAssistanceHistoryQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get all assistance received by a member across modules
+ */
+
+export function useGetMemberAssistanceHistory<
+  TData = Awaited<ReturnType<typeof getMemberAssistanceHistory>>,
+  TError = ErrorType<unknown>,
+>(
+  memberId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMemberAssistanceHistory>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMemberAssistanceHistoryQueryOptions(
+    memberId,
+    options,
+  );
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

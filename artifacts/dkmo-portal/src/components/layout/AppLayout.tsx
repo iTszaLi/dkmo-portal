@@ -24,6 +24,8 @@ import {
   Printer,
   ScrollText,
   Trophy,
+  Sparkles,
+  Activity,
 } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -56,8 +58,10 @@ interface NavItem {
 
 const navigation: NavItem[] = [
   { name: "Dashboard",         href: "/dashboard",         icon: LayoutDashboard },
+  { name: "DKMO Impact",       href: "/impact",            icon: Sparkles },
   { name: "Members",           href: "/members",           icon: Users },
   { name: "Committee",         href: "/committee",         icon: Crown },
+  { name: "Committee Performance", href: "/committee-performance", icon: Activity },
   { name: "Payments",          href: "/payments",          icon: CreditCard },
   { name: "Community Services", href: "/services",          icon: HandHelping },
   { name: "Job Bureau",        href: "/job-bureau",        icon: Briefcase },

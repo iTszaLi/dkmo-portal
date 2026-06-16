@@ -1922,6 +1922,80 @@ export const GetDashboardCashFlowResponse = zod.object({
 });
 
 /**
+ * @summary Get organization-wide impact metrics
+ */
+export const GetDashboardImpactResponse = zod.object({
+  totalMembers: zod.number(),
+  frfBeneficiaries: zod.number(),
+  medicalAidCases: zod.number(),
+  loanBeneficiaries: zod.number(),
+  airTicketBeneficiaries: zod.number(),
+  emergencyReliefCases: zod.number(),
+  generalReliefCases: zod.number(),
+  totalWelfareRequests: zod.number(),
+  jobsPosted: zod.number(),
+  jobPlacements: zod.number(),
+  totalAssistanceDistributed: zod.number(),
+  assistanceByCategory: zod.array(
+    zod.object({
+      category: zod.string(),
+      count: zod.number(),
+      amount: zod.number(),
+    }),
+  ),
+  welfareByType: zod.array(
+    zod.object({
+      type: zod.string(),
+      count: zod.number(),
+    }),
+  ),
+});
+
+/**
+ * @summary Get per-committee-member activity metrics
+ */
+export const GetCommitteePerformanceResponse = zod.object({
+  entries: zod.array(
+    zod.object({
+      name: zod.string(),
+      membersRecruited: zod.number(),
+      feesCollected: zod.number(),
+      frfCount: zod.number(),
+      frfAmount: zod.number(),
+      welfareHandled: zod.number(),
+      loansProcessed: zod.number(),
+      medicalAidProcessed: zod.number(),
+      emergencyResolved: zod.number(),
+      totalActions: zod.number(),
+    }),
+  ),
+});
+
+/**
+ * @summary Get all assistance received by a member across modules
+ */
+export const GetMemberAssistanceHistoryParams = zod.object({
+  memberId: zod.coerce.string().uuid(),
+});
+
+export const GetMemberAssistanceHistoryResponse = zod.object({
+  items: zod.array(
+    zod.object({
+      id: zod.string(),
+      category: zod.string(),
+      referenceNumber: zod.string(),
+      date: zod.string().nullable(),
+      amountRequested: zod.number(),
+      amountApproved: zod.number(),
+      status: zod.string(),
+      description: zod.string(),
+    }),
+  ),
+  totalReceived: zod.number(),
+  totalCount: zod.number(),
+});
+
+/**
  * @summary List saved receipt records
  */
 export const listReceiptRecordsQueryPageDefault = 1;

@@ -18,7 +18,7 @@ import {
   Search,
 } from "lucide-react";
 
-interface CommitteeMember {
+export interface CommitteeMember {
   id: number;
   name: string;
   role: string;
@@ -27,7 +27,7 @@ interface CommitteeMember {
   tier: "executive" | "convenor" | "member";
 }
 
-const COMMITTEE_2026_27: CommitteeMember[] = [
+export const COMMITTEE_2026_27: CommitteeMember[] = [
   { id: 1,  name: "Fazlurrahman Kolkar",       role: "President",                   department: "Executive",      departmentIcon: Crown,         tier: "executive" },
   { id: 2,  name: "Asif Kannur",               role: "Vice President",              department: "Executive",      departmentIcon: Crown,         tier: "executive" },
   { id: 3,  name: "Irshad Bajpe",              role: "General Secretary",           department: "Executive",      departmentIcon: Briefcase,     tier: "executive" },

@@ -2,7 +2,9 @@ import { useParams, Link } from "wouter";
 import {
   useGetMember,
   useUpdateMemberFeeStatus,
+  useGetMemberAssistanceHistory,
   getGetMemberQueryKey,
+  getGetMemberAssistanceHistoryQueryKey,
   getListMembersQueryKey,
 } from "@workspace/api-client-react";
 import type { FeeStatusInputFeeStatus } from "@workspace/api-client-react";
@@ -12,7 +14,21 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { formatSAR, formatDate, feeStatusLabel, feeStatusBadgeClass } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, UserCircle, MapPin, Phone, CalendarDays, CheckCircle2, Clock, XCircle, Users, HeartHandshake } from "lucide-react";
+import { ArrowLeft, UserCircle, MapPin, Phone, CalendarDays, CheckCircle2, Clock, XCircle, Users, HeartHandshake, HandHelping, Coins } from "lucide-react";
+
+function assistanceStatusClass(status: string): string {
+  const s = status.toLowerCase();
+  if (s === "approved" || s === "disbursed" || s === "completed" || s === "closed" || s === "active") {
+    return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300";
+  }
+  if (s === "rejected" || s === "defaulted") {
+    return "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300";
+  }
+  if (s === "overdue") {
+    return "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300";
+  }
+  return "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300";
+}
 
 export default function MemberDetail() {
   const { id } = useParams();
@@ -24,6 +40,10 @@ export default function MemberDetail() {
   });
 
   const updateFeeStatus = useUpdateMemberFeeStatus();
+
+  const { data: assistance, isLoading: isAssistanceLoading } = useGetMemberAssistanceHistory(id || "", {
+    query: { enabled: !!id, queryKey: getGetMemberAssistanceHistoryQueryKey(id || "") },
+  });
 
   const handleFeeStatus = (feeStatus: FeeStatusInputFeeStatus) => {
     if (!id) return;
@@ -212,20 +232,78 @@ export default function MemberDetail() {
 
           <Card className="rounded-2xl border-emerald-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-lg text-emerald-900 dark:text-slate-100 flex items-center gap-2">
-                <HeartHandshake className="h-5 w-5 text-emerald-600 dark:text-emerald-400" /> FRF Contributions
-              </CardTitle>
-              <CardDescription className="dark:text-slate-400">
-                Every DKMO member is automatically eligible for the Family Relief Fund.
-              </CardDescription>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <CardTitle className="text-lg text-emerald-900 dark:text-slate-100 flex items-center gap-2">
+                    <HandHelping className="h-5 w-5 text-emerald-600 dark:text-emerald-400" /> Assistance History
+                  </CardTitle>
+                  <CardDescription className="dark:text-slate-400">
+                    All support received across FRF, Medical Aid, Loans, Air Ticket, and Relief programs.
+                  </CardDescription>
+                </div>
+                {assistance && assistance.totalCount > 0 ? (
+                  <div className="text-right shrink-0">
+                    <p className="text-xs text-emerald-600 dark:text-slate-500">Total received</p>
+                    <p className="text-lg font-bold text-emerald-900 dark:text-green-300 inline-flex items-center gap-1">
+                      <Coins className="h-4 w-4" /> {formatSAR(assistance.totalReceived)}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 bg-emerald-50/30 dark:bg-slate-800/40 rounded-lg border border-emerald-100 dark:border-slate-800 border-dashed">
-                <HeartHandshake className="h-10 w-10 text-emerald-200 dark:text-slate-700 mx-auto mb-3" />
-                <p className="text-sm text-emerald-700 dark:text-slate-400">
-                  FRF contribution cycles will appear here once configured.
-                </p>
-              </div>
+              {isAssistanceLoading ? (
+                <div className="space-y-2">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} className="h-16 w-full" />
+                  ))}
+                </div>
+              ) : !assistance || assistance.items.length === 0 ? (
+                <div className="text-center py-8 bg-emerald-50/30 dark:bg-slate-800/40 rounded-lg border border-emerald-100 dark:border-slate-800 border-dashed">
+                  <HeartHandshake className="h-10 w-10 text-emerald-200 dark:text-slate-700 mx-auto mb-3" />
+                  <p className="text-sm text-emerald-700 dark:text-slate-400">
+                    No assistance has been recorded for this member yet.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {assistance.items.map((item) => (
+                    <div
+                      key={`${item.category}-${item.id}`}
+                      data-testid={`row-assistance-${item.id}`}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-xl border border-emerald-100 dark:border-slate-800 bg-emerald-50/30 dark:bg-slate-800/40 p-3"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-semibold text-emerald-950 dark:text-slate-100 text-sm">{item.category}</p>
+                          {item.referenceNumber ? (
+                            <span className="text-[11px] font-mono text-emerald-600 dark:text-slate-500 bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded">
+                              {item.referenceNumber}
+                            </span>
+                          ) : null}
+                        </div>
+                        {item.description ? (
+                          <p className="text-xs text-emerald-700/80 dark:text-slate-400 mt-0.5 line-clamp-1">{item.description}</p>
+                        ) : null}
+                        <p className="text-[11px] text-emerald-600/70 dark:text-slate-500 mt-0.5">
+                          {item.date ? formatDate(item.date) : "Date not recorded"}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <div className="text-right">
+                          <p className="text-sm font-bold text-emerald-900 dark:text-green-300">{formatSAR(item.amountApproved)}</p>
+                          {item.amountRequested > item.amountApproved ? (
+                            <p className="text-[11px] text-emerald-600/70 dark:text-slate-500">of {formatSAR(item.amountRequested)} req.</p>
+                          ) : null}
+                        </div>
+                        <span className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize ${assistanceStatusClass(item.status)}`}>
+                          {item.status.replace(/_/g, " ")}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
