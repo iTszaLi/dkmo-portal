@@ -80,6 +80,7 @@ import type {
   TaskList,
   WelfareRequest,
   WelfareRequestInput,
+  WelfareRequestUpdate,
   WelfareStats,
 } from "./api.schemas";
 
@@ -5273,14 +5274,14 @@ export const getUpdateWelfareRequestUrl = (id: string) => {
 
 export const updateWelfareRequest = async (
   id: string,
-  welfareRequestInput: WelfareRequestInput,
+  welfareRequestUpdate: WelfareRequestUpdate,
   options?: RequestInit,
 ): Promise<WelfareRequest> => {
   return customFetch<WelfareRequest>(getUpdateWelfareRequestUrl(id), {
     ...options,
     method: "PUT",
     headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(welfareRequestInput),
+    body: JSON.stringify(welfareRequestUpdate),
   });
 };
 
@@ -5291,14 +5292,14 @@ export const getUpdateWelfareRequestMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof updateWelfareRequest>>,
     TError,
-    { id: string; data: BodyType<WelfareRequestInput> },
+    { id: string; data: BodyType<WelfareRequestUpdate> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof updateWelfareRequest>>,
   TError,
-  { id: string; data: BodyType<WelfareRequestInput> },
+  { id: string; data: BodyType<WelfareRequestUpdate> },
   TContext
 > => {
   const mutationKey = ["updateWelfareRequest"];
@@ -5312,7 +5313,7 @@ export const getUpdateWelfareRequestMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof updateWelfareRequest>>,
-    { id: string; data: BodyType<WelfareRequestInput> }
+    { id: string; data: BodyType<WelfareRequestUpdate> }
   > = (props) => {
     const { id, data } = props ?? {};
 
@@ -5325,7 +5326,7 @@ export const getUpdateWelfareRequestMutationOptions = <
 export type UpdateWelfareRequestMutationResult = NonNullable<
   Awaited<ReturnType<typeof updateWelfareRequest>>
 >;
-export type UpdateWelfareRequestMutationBody = BodyType<WelfareRequestInput>;
+export type UpdateWelfareRequestMutationBody = BodyType<WelfareRequestUpdate>;
 export type UpdateWelfareRequestMutationError = ErrorType<unknown>;
 
 /**
@@ -5338,14 +5339,14 @@ export const useUpdateWelfareRequest = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof updateWelfareRequest>>,
     TError,
-    { id: string; data: BodyType<WelfareRequestInput> },
+    { id: string; data: BodyType<WelfareRequestUpdate> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof updateWelfareRequest>>,
   TError,
-  { id: string; data: BodyType<WelfareRequestInput> },
+  { id: string; data: BodyType<WelfareRequestUpdate> },
   TContext
 > => {
   return useMutation(getUpdateWelfareRequestMutationOptions(options));

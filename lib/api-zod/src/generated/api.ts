@@ -1500,43 +1500,49 @@ export const updateWelfareRequestBodyAmountRequestedMin = 0;
 
 export const updateWelfareRequestBodyAmountApprovedMin = 0;
 
-export const UpdateWelfareRequestBody = zod.object({
-  serviceType: zod.enum([
-    "medical_aid",
-    "general_relief",
-    "emergency_response",
-    "air_ticket",
-    "india_rep",
-  ]),
-  memberId: zod.string().nullish(),
-  applicantName: zod.string().min(1),
-  membershipId: zod.string().optional(),
-  contactNumber: zod.string().optional(),
-  status: zod
-    .enum(["submitted", "under_review", "approved", "rejected", "completed"])
-    .optional(),
-  amountRequested: zod
-    .number()
-    .min(updateWelfareRequestBodyAmountRequestedMin)
-    .optional(),
-  amountApproved: zod
-    .number()
-    .min(updateWelfareRequestBodyAmountApprovedMin)
-    .optional(),
-  description: zod.string().optional(),
-  details: zod.record(zod.string(), zod.unknown()).optional(),
-  supportingDocuments: zod
-    .array(
-      zod.object({
-        name: zod.string(),
-        url: zod.string(),
-        uploadedAt: zod.string().optional(),
-      }),
-    )
-    .optional(),
-  assignedTo: zod.string().optional(),
-  approvalNotes: zod.string().optional(),
-});
+export const UpdateWelfareRequestBody = zod
+  .object({
+    serviceType: zod
+      .enum([
+        "medical_aid",
+        "general_relief",
+        "emergency_response",
+        "air_ticket",
+        "india_rep",
+      ])
+      .optional(),
+    memberId: zod.string().nullish(),
+    applicantName: zod.string().min(1).optional(),
+    membershipId: zod.string().optional(),
+    contactNumber: zod.string().optional(),
+    status: zod
+      .enum(["submitted", "under_review", "approved", "rejected", "completed"])
+      .optional(),
+    amountRequested: zod
+      .number()
+      .min(updateWelfareRequestBodyAmountRequestedMin)
+      .optional(),
+    amountApproved: zod
+      .number()
+      .min(updateWelfareRequestBodyAmountApprovedMin)
+      .optional(),
+    description: zod.string().optional(),
+    details: zod.record(zod.string(), zod.unknown()).optional(),
+    supportingDocuments: zod
+      .array(
+        zod.object({
+          name: zod.string(),
+          url: zod.string(),
+          uploadedAt: zod.string().optional(),
+        }),
+      )
+      .optional(),
+    assignedTo: zod.string().optional(),
+    approvalNotes: zod.string().optional(),
+  })
+  .describe(
+    "Partial update \/ status transition for a welfare request. All fields optional.",
+  );
 
 export const UpdateWelfareRequestResponse = zod.object({
   id: zod.string(),

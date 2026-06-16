@@ -914,6 +914,53 @@ export interface WelfareRequestInput {
   approvalNotes?: string;
 }
 
+export type WelfareRequestUpdateServiceType =
+  (typeof WelfareRequestUpdateServiceType)[keyof typeof WelfareRequestUpdateServiceType];
+
+export const WelfareRequestUpdateServiceType = {
+  medical_aid: "medical_aid",
+  general_relief: "general_relief",
+  emergency_response: "emergency_response",
+  air_ticket: "air_ticket",
+  india_rep: "india_rep",
+} as const;
+
+export type WelfareRequestUpdateStatus =
+  (typeof WelfareRequestUpdateStatus)[keyof typeof WelfareRequestUpdateStatus];
+
+export const WelfareRequestUpdateStatus = {
+  submitted: "submitted",
+  under_review: "under_review",
+  approved: "approved",
+  rejected: "rejected",
+  completed: "completed",
+} as const;
+
+export type WelfareRequestUpdateDetails = { [key: string]: unknown };
+
+/**
+ * Partial update / status transition for a welfare request. All fields optional.
+ */
+export interface WelfareRequestUpdate {
+  serviceType?: WelfareRequestUpdateServiceType;
+  /** @nullable */
+  memberId?: string | null;
+  /** @minLength 1 */
+  applicantName?: string;
+  membershipId?: string;
+  contactNumber?: string;
+  status?: WelfareRequestUpdateStatus;
+  /** @minimum 0 */
+  amountRequested?: number;
+  /** @minimum 0 */
+  amountApproved?: number;
+  description?: string;
+  details?: WelfareRequestUpdateDetails;
+  supportingDocuments?: WelfareDocument[];
+  assignedTo?: string;
+  approvalNotes?: string;
+}
+
 export type WelfareStatsByTypeItem = {
   type: string;
   count: number;

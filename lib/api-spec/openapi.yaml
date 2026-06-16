@@ -1217,7 +1217,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/WelfareRequestInput"
+              $ref: "#/components/schemas/WelfareRequestUpdate"
       responses:
         "200":
           description: Updated
@@ -2400,6 +2400,34 @@ components:
         assignedTo: { type: string }
         approvalNotes: { type: string }
       required: [serviceType, applicantName]
+
+    WelfareRequestUpdate:
+      type: object
+      description: Partial update / status transition for a welfare request. All fields optional.
+      properties:
+        serviceType:
+          type: string
+          enum: [medical_aid, general_relief, emergency_response, air_ticket, india_rep]
+        memberId:
+          type: ["string", "null"]
+        applicantName: { type: string, minLength: 1 }
+        membershipId: { type: string }
+        contactNumber: { type: string }
+        status:
+          type: string
+          enum: [submitted, under_review, approved, rejected, completed]
+        amountRequested: { type: number, minimum: 0 }
+        amountApproved: { type: number, minimum: 0 }
+        description: { type: string }
+        details:
+          type: object
+          additionalProperties: true
+        supportingDocuments:
+          type: array
+          items:
+            $ref: "#/components/schemas/WelfareDocument"
+        assignedTo: { type: string }
+        approvalNotes: { type: string }
 
     WelfareStats:
       type: object

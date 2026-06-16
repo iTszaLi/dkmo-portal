@@ -6,6 +6,8 @@ import {
   useUpdateWelfareRequest,
   useDeleteWelfareRequest,
   type WelfareRequest,
+  type WelfareRequestInput,
+  type WelfareRequestUpdate,
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -239,7 +241,7 @@ export default function WelfareModule({ serviceType }: { serviceType: ServiceTyp
 
   function handleSubmit() {
     if (!form.applicantName.trim()) { toast({ title: "Applicant name is required", variant: "destructive" }); return; }
-    const payload = {
+    const payload: WelfareRequestInput = {
       serviceType,
       memberId: memberRef?.id ?? null,
       applicantName: form.applicantName,
@@ -254,14 +256,15 @@ export default function WelfareModule({ serviceType }: { serviceType: ServiceTyp
       assignedTo: form.assignedTo,
       approvalNotes: form.approvalNotes,
     };
-    if (editing) updateMutation.mutate({ id: editing.id, data: payload as any });
-    else createMutation.mutate({ data: payload as any });
+    if (editing) updateMutation.mutate({ id: editing.id, data: payload });
+    else createMutation.mutate({ data: payload });
   }
 
   async function quickStatus(req: WelfareRequest, status: WelfareStatus, notes?: string) {
     setIsSubmittingQuick(true);
     try {
-      await updateMutation.mutateAsync({ id: req.id, data: { status, ...(notes ? { approvalNotes: notes } : {}) } as any });
+      const data: WelfareRequestUpdate = { status, ...(notes ? { approvalNotes: notes } : {}) };
+      await updateMutation.mutateAsync({ id: req.id, data });
       toast({ title: `Marked ${STATUS_LABEL[status]}` });
       void refetch();
       setRejecting(null);
