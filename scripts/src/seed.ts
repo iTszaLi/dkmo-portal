@@ -6,8 +6,6 @@ import {
   sponsorsTable,
   tasksTable,
   frfClaimsTable,
-  frfMembershipsTable,
-  frfDependentsTable,
   loansTable,
   receiptsTable,
   eventSponsorsTable,
@@ -278,8 +276,6 @@ async function main() {
   await db.delete(eventTicketBookletsTable);
   await db.delete(eventExpensesTable);
   await db.delete(eventSponsorsTable);
-  await db.delete(frfDependentsTable);
-  await db.delete(frfMembershipsTable);
   await db.delete(frfClaimsTable);
   await db.delete(loansTable);
   await db.delete(receiptsTable);
@@ -407,62 +403,6 @@ async function main() {
     { receiptNumber: "DKMO-RC-030", receiptDate: dateStrAgo(20),  memberName: "Fazlurrahman Kolkar",     dkmoId: "DKMO-0001", jamathName: jamaaths[0], mobileNumber: "+919844100001", whatsappNumber: "+919844100001", amount: "1000", paymentTypes: JSON.stringify({ monthlyContribution: 500, donationGeneral: 500 }), createdBy: "Irshad Bajpe" },
   ];
   await db.insert(receiptsTable).values(receiptData);
-
-  // ── FRF Memberships ───────────────────────────────────────────────────────
-  console.log("  ↳ inserting FRF memberships…");
-  const frfStatuses = ["approved", "approved", "approved", "submitted", "under_review"] as const;
-  const bloodGroups = ["O+", "A+", "B+", "AB+", "O-", "A-"];
-  const frfMembershipInserts = [];
-
-  for (let i = 0; i < 22; i++) {
-    const member = insertedMembers[i];
-    frfMembershipInserts.push({
-      frfNumber: `FRF-${String(2400 + i + 1).padStart(4, "0")}`,
-      memberId: member.id,
-      fullName: member.fullName,
-      dateOfBirth: `${1970 + (i % 20)}-${String((i % 12) + 1).padStart(2, "0")}-${String((i % 28) + 1).padStart(2, "0")}`,
-      bloodGroup: bloodGroups[i % bloodGroups.length],
-      maritalStatus: i < 16 ? "married" : "single",
-      numDependents: i < 16 ? (1 + (i % 4)) : 0,
-      iqamaNumber: `10${String(23456789 + i * 7)}`,
-      passportNumber: `Z${String(1234567 + i * 13)}`,
-      occupation: rand(["Engineer", "Accountant", "Sales Manager", "Driver", "Technician", "Supervisor", "Contractor"]),
-      companyName: rand(["Saudi Aramco", "Al-Rajhi Bank", "SABIC", "Al-Futtaim Group", "Gulf Contractors", "Bin Laden Group"]),
-      mobileSaudi: `+9665${String(10000000 + i * 99997)}`,
-      mobileIndia: member.mobileNumber,
-      email: `${member.fullName.toLowerCase().replace(/[^a-z]/g, ".")}@gmail.com`,
-      areaSaudi: rand(["Riyadh", "Jeddah", "Dammam", "Makkah", "Madinah", "Khobar"]),
-      district: rand(["Dakshina Kannada", "Udupi"]),
-      nearestJamaath: rand(jamaaths),
-      nomineeName: `Nominee of ${member.fullName}`,
-      nomineeRelation: i < 16 ? "spouse" : "parent",
-      nomineeMobile: `+9198441${String(10000 + i * 3).padStart(5, "0")}`,
-      status: frfStatuses[i % frfStatuses.length],
-      membershipDate: "2024-01-01",
-      renewalDate: "2025-01-01",
-    });
-  }
-  const insertedFrfMemberships = await db.insert(frfMembershipsTable).values(frfMembershipInserts).returning();
-
-  // ── FRF Dependents ────────────────────────────────────────────────────────
-  console.log("  ↳ inserting FRF dependents…");
-  const dependentRelations = ["spouse", "son", "daughter", "mother", "father"];
-  const dependentInserts = [];
-  for (const fm of insertedFrfMemberships) {
-    if (fm.numDependents > 0) {
-      for (let d = 0; d < fm.numDependents; d++) {
-        dependentInserts.push({
-          frfMembershipId: fm.id,
-          fullName: `Dependent ${d + 1} of ${fm.fullName}`,
-          relation: dependentRelations[d % dependentRelations.length],
-          age: 5 + d * 8,
-        });
-      }
-    }
-  }
-  if (dependentInserts.length > 0) {
-    await db.insert(frfDependentsTable).values(dependentInserts);
-  }
 
   // ── FRF Claims ────────────────────────────────────────────────────────────
   console.log("  ↳ inserting FRF claims…");
@@ -602,8 +542,6 @@ async function main() {
   console.log(`   Tasks:            ${taskRows.length}`);
   console.log(`   Loans:            ${loanData.length} (incl. 4 overdue)`);
   console.log(`   Receipts:         ${receiptData.length}`);
-  console.log(`   FRF Memberships:  ${insertedFrfMemberships.length}`);
-  console.log(`   FRF Dependents:   ${dependentInserts.length}`);
   console.log(`   FRF Claims:       ${frfClaimInserts.length}`);
   console.log(`   Event Sponsors:   12`);
   console.log(`   Event Expenses:   15`);

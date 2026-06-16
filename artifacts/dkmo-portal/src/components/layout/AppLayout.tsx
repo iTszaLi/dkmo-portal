@@ -58,8 +58,6 @@ const navigation: NavItem[] = [
   { name: "Committee",         href: "/committee",         icon: Crown },
   { name: "Payments",          href: "/payments",          icon: CreditCard },
   { name: "FRF Claims",        href: "/frf",               icon: HeartHandshake },
-  { name: "FRF Membership",    href: "/frf-membership",    icon: BookUser },
-  { name: "FRF Ambassadors",   href: "/frf-ambassadors",   icon: Trophy },
   { name: "DKMO Membership",  href: "/dkmo-memberships",  icon: BookUser },
   { name: "Sponsors",          href: "/sponsors",          icon: Handshake },
   { name: "Events",            href: "/events",            icon: CalendarDays },

@@ -4,7 +4,6 @@ import {
   db,
   membersTable,
   paymentsTable,
-  frfMembershipsTable,
   eventsTable,
   sponsorsTable,
 } from "@workspace/db";
@@ -15,14 +14,14 @@ const router: IRouter = Router();
 router.get("/search", requireAuth, async (req, res): Promise<void> => {
   const q = ((req.query.q as string) ?? "").trim();
   if (q.length < 2) {
-    res.json({ members: [], payments: [], frfMemberships: [], events: [], sponsors: [] });
+    res.json({ members: [], payments: [], events: [], sponsors: [] });
     return;
   }
 
   const like = `%${q}%`;
   const LIMIT = 5;
 
-  const [members, payments, frfMemberships, events, sponsors] = await Promise.all([
+  const [members, payments, events, sponsors] = await Promise.all([
     db
       .select({
         id: membersTable.id,
@@ -60,25 +59,6 @@ router.get("/search", requireAuth, async (req, res): Promise<void> => {
           ilike(paymentsTable.month, like),
           ilike(membersTable.fullName, like),
           ilike(membersTable.membershipId, like),
-        ),
-      )
-      .limit(LIMIT),
-
-    db
-      .select({
-        id: frfMembershipsTable.id,
-        fullName: frfMembershipsTable.fullName,
-        frfNumber: frfMembershipsTable.frfNumber,
-        status: frfMembershipsTable.status,
-        mobileSaudi: frfMembershipsTable.mobileSaudi,
-      })
-      .from(frfMembershipsTable)
-      .where(
-        or(
-          ilike(frfMembershipsTable.fullName, like),
-          ilike(frfMembershipsTable.frfNumber, like),
-          ilike(frfMembershipsTable.mobileSaudi, like),
-          ilike(frfMembershipsTable.passportNumber, like),
         ),
       )
       .limit(LIMIT),
@@ -124,7 +104,6 @@ router.get("/search", requireAuth, async (req, res): Promise<void> => {
       receiptNumber: p.receiptNumber,
       paymentMethod: p.paymentMethod,
     })),
-    frfMemberships,
     events: events.map((e) => ({
       id: e.id,
       name: e.name,

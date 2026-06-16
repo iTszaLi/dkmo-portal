@@ -23,13 +23,6 @@ import TaskDetail from "@/pages/task-detail";
 import Settings from "@/pages/settings";
 import Committee from "@/pages/committee";
 import Frf from "@/pages/frf";
-import FrfMembership from "@/pages/frf-membership";
-import FrfMembershipDetail from "@/pages/frf-membership-detail";
-import FrfMembershipForm from "@/pages/frf-membership-form";
-import FrfApply from "@/pages/frf-apply";
-import FrfTerms from "@/pages/frf-terms";
-import FrfTrack from "@/pages/frf-track";
-import FrfAmbassadors from "@/pages/frf-ambassadors";
 import DkmoApply from "@/pages/dkmo-apply";
 import DkmoTerms from "@/pages/dkmo-terms";
 import DkmoMemberships from "@/pages/dkmo-memberships";
@@ -112,9 +105,6 @@ function AppRoutes() {
       <Route path="/" component={HomeRedirect} />
       <Route path="/login" component={LoginRoute} />
       {/* Public routes — no auth required */}
-      <Route path="/frf-apply" component={FrfApply} />
-      <Route path="/frf-terms" component={FrfTerms} />
-      <Route path="/frf-track" component={FrfTrack} />
       <Route path="/dkmo-apply" component={DkmoApply} />
       <Route path="/dkmo-terms" component={DkmoTerms} />
       {/* Backwards-compat: redirect old Clerk paths to /login */}
@@ -137,11 +127,6 @@ function AppRoutes() {
       <Route path="/tasks/:id" component={() => <AuthenticatedRoute component={TaskDetail} />} />
       <Route path="/committee" component={() => <AuthenticatedRoute component={Committee} />} />
       <Route path="/frf" component={() => <AuthenticatedRoute component={Frf} />} />
-      <Route path="/frf-membership/new" component={() => <AuthenticatedRoute component={FrfMembershipForm} />} />
-      <Route path="/frf-membership/:id/edit" component={() => <AuthenticatedRoute component={FrfMembershipForm} />} />
-      <Route path="/frf-membership/:id" component={() => <AuthenticatedRoute component={FrfMembershipDetail} />} />
-      <Route path="/frf-membership" component={() => <AuthenticatedRoute component={FrfMembership} />} />
-      <Route path="/frf-ambassadors" component={() => <AuthenticatedRoute component={FrfAmbassadors} />} />
       <Route path="/dkmo-memberships" component={() => <AuthenticatedRoute component={DkmoMemberships} />} />
       <Route path="/loans" component={() => <AuthenticatedRoute component={Loans} />} />
       <Route path="/receipts" component={() => <AuthenticatedRoute component={Receipts} />} />

@@ -4,7 +4,6 @@ import {
   Search,
   Users,
   CreditCard,
-  BookUser,
   CalendarDays,
   Handshake,
   Loader2,
@@ -30,12 +29,6 @@ interface SearchResultPayment {
   receiptNumber: string;
   paymentMethod: string;
 }
-interface SearchResultFrf {
-  id: string;
-  fullName: string;
-  frfNumber: string;
-  status: string;
-}
 interface SearchResultEvent {
   id: string;
   name: string;
@@ -53,7 +46,6 @@ interface SearchResultSponsor {
 interface SearchResults {
   members: SearchResultMember[];
   payments: SearchResultPayment[];
-  frfMemberships: SearchResultFrf[];
   events: SearchResultEvent[];
   sponsors: SearchResultSponsor[];
 }
@@ -89,12 +81,6 @@ export function GlobalSearch() {
           primary: `${p.memberName} — ${p.month}`,
           secondary: `AED ${Number(p.amountPaid).toLocaleString()} · Receipt ${p.receiptNumber}`,
           href: `/payments`,
-        })),
-        ...results.frfMemberships.map((f) => ({
-          key: `f-${f.id}`,
-          primary: f.fullName,
-          secondary: `${f.frfNumber} · ${f.status.replace(/_/g, " ")}`,
-          href: `/frf-membership/${f.id}`,
         })),
         ...results.events.map((e) => ({
           key: `e-${e.id}`,
@@ -212,15 +198,13 @@ export function GlobalSearch() {
     results &&
     (results.members.length > 0 ||
       results.payments.length > 0 ||
-      results.frfMemberships.length > 0 ||
       results.events.length > 0 ||
       results.sponsors.length > 0);
 
   // Per-group index offsets for keyboard selection
   const mOffset = 0;
   const pOffset = mOffset + (results?.members.length ?? 0);
-  const fOffset = pOffset + (results?.payments.length ?? 0);
-  const eOffset = fOffset + (results?.frfMemberships.length ?? 0);
+  const eOffset = pOffset + (results?.payments.length ?? 0);
   const sOffset = eOffset + (results?.events.length ?? 0);
 
   const showDropdown = open && query.trim().length >= 2;
@@ -240,7 +224,7 @@ export function GlobalSearch() {
           }}
           onFocus={() => setOpen(true)}
           onKeyDown={onKeyDown}
-          placeholder="Search members, payments, FRF…"
+          placeholder="Search members, payments…"
           aria-label="Global search"
           className="w-full h-9 pl-9 pr-16 text-sm rounded-xl border border-green-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/60 text-green-900 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-400 dark:focus:border-green-600 transition-all"
         />
@@ -323,25 +307,6 @@ export function GlobalSearch() {
                   secondary={`AED ${Number(p.amountPaid).toLocaleString()} · Receipt ${p.receiptNumber}`}
                   selected={selectedIndex === pOffset + i}
                   onClick={() => navigate(`/payments`)}
-                />
-              ))}
-            </ResultGroup>
-          )}
-
-          {/* FRF Applications */}
-          {results && results.frfMemberships.length > 0 && (
-            <ResultGroup
-              label="FRF Applications"
-              icon={<BookUser className="h-3.5 w-3.5" />}
-              colorClass="text-orange-700 dark:text-orange-400 bg-orange-50/80 dark:bg-orange-950/40"
-            >
-              {results.frfMemberships.map((f, i) => (
-                <ResultRow
-                  key={f.id}
-                  primary={f.fullName}
-                  secondary={`${f.frfNumber} · ${f.status.replace(/_/g, " ")}`}
-                  selected={selectedIndex === fOffset + i}
-                  onClick={() => navigate(`/frf-membership/${f.id}`)}
                 />
               ))}
             </ResultGroup>

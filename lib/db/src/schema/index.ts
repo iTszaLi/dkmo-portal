@@ -5,7 +5,6 @@ export * from "./events";
 export * from "./event_finances";
 export * from "./tasks";
 export * from "./frf";
-export * from "./frf_memberships";
 export * from "./loans";
 export * from "./receipts";
 export * from "./audit-logs";

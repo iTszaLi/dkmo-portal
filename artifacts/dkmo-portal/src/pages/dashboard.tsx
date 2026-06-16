@@ -5,7 +5,6 @@ import {
   useGetDashboardSponsorPipeline,
   useGetDashboardFinancialSummary,
   useGetDashboardCashFlow,
-  useGetFrfMembershipStats,
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { formatSAR, getCurrentMonth } from "@/lib/utils";
@@ -13,7 +12,6 @@ import {
   Users,
   TrendingUp,
   AlertCircle,
-  Trophy,
   CalendarRange,
   ArrowRight,
   Handshake,
@@ -23,11 +21,9 @@ import {
   Landmark,
   HeartHandshake,
   CalendarDays,
-  BookUser,
   Scale,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useQuery } from "@tanstack/react-query";
 
 export default function Dashboard() {
   const currentMonth = getCurrentMonth();
@@ -63,26 +59,6 @@ export default function Dashboard() {
   const { data: pipeline } = useGetDashboardSponsorPipeline();
   const { data: financialSummary } = useGetDashboardFinancialSummary({ month: currentMonth });
   const { data: cashFlow } = useGetDashboardCashFlow({ year: eventsYear, quarter: eventsQuarter });
-  const { data: frfStats } = useGetFrfMembershipStats();
-
-  type AmbassadorEntry = {
-    rank: number;
-    referrerMemberName: string;
-    referrerDkmoId: string;
-    referrerFrfNumber: string;
-    approvedReferrals: number;
-    points: number;
-    awardStatus: string;
-  };
-  const { data: topAmbassadors } = useQuery<AmbassadorEntry[]>({
-    queryKey: ["frf-ambassadors-dashboard"],
-    queryFn: async () => {
-      const bp = import.meta.env.BASE_URL.replace(/\/$/, "");
-      const res = await fetch(`${bp}/api/frf/ambassadors?period=all-time`, { credentials: "include" });
-      if (!res.ok) return [];
-      return res.json() as Promise<AmbassadorEntry[]>;
-    },
-  });
 
   return (
     <div className="space-y-6">
@@ -175,27 +151,8 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Secondary KPI Row — FRF + Claims + Events */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Link href="/frf-membership" className="block group">
-          <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm transition-all duration-200 group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-green-300 dark:group-hover:border-green-700 group-active:scale-[0.98] cursor-pointer h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-green-900 dark:text-slate-300">FRF Members</CardTitle>
-              <BookUser className="h-4 w-4 text-green-700 dark:text-green-400" />
-            </CardHeader>
-            <CardContent>
-              {frfStats == null ? (
-                <Skeleton className="h-8 w-16" />
-              ) : (
-                <div className="text-2xl font-bold text-green-950 dark:text-white">{frfStats.total ?? 0}</div>
-              )}
-              <p className="text-xs text-green-700/80 dark:text-slate-500 mt-1">
-                {frfStats?.approved ?? 0} approved · {frfStats?.pending ?? 0} pending
-              </p>
-            </CardContent>
-          </Card>
-        </Link>
-
+      {/* Secondary KPI Row — Claims + Events */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Link href="/frf" className="block group">
           <Card className="rounded-2xl border-orange-100 dark:border-orange-900/40 dark:bg-slate-900 shadow-sm transition-all duration-200 group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-orange-300 group-active:scale-[0.98] cursor-pointer h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -299,64 +256,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
-
-      {/* FRF Ambassadors Widget */}
-      <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-base text-green-950 dark:text-green-100 flex items-center gap-2">
-                <Trophy className="h-4 w-4 text-yellow-500" />
-                FRF Ambassadors Leaderboard
-              </CardTitle>
-              <CardDescription className="dark:text-slate-400">Top recruiters by approved FRF membership referrals</CardDescription>
-            </div>
-            <Link href="/frf-ambassadors">
-              <button type="button" className="flex items-center gap-1 text-xs font-medium text-green-700 dark:text-green-400 hover:underline">
-                View All <ArrowRight className="h-3 w-3" />
-              </button>
-            </Link>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {topAmbassadors === undefined ? (
-            <div className="space-y-2.5">
-              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 rounded-xl" />)}
-            </div>
-          ) : topAmbassadors.length === 0 ? (
-            <div className="text-center py-8">
-              <Trophy className="h-8 w-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-              <p className="text-sm text-slate-400 dark:text-slate-500">No referral data yet</p>
-              <p className="text-xs text-slate-400 dark:text-slate-600 mt-1">
-                Referrals are tracked in FRF Membership applications
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {topAmbassadors.slice(0, 3).map((entry, i) => (
-                <div key={entry.referrerDkmoId}
-                  className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
-                    i === 0 ? "bg-yellow-50/60 border-yellow-200 dark:bg-yellow-950/20 dark:border-yellow-800/40" :
-                    i === 1 ? "bg-slate-50/80 border-slate-200 dark:bg-slate-800/60 dark:border-slate-700" :
-                    "bg-orange-50/40 border-orange-100 dark:bg-orange-950/10 dark:border-orange-900/30"
-                  }`}>
-                  <div className="text-xl shrink-0">
-                    {i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉"}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm text-green-950 dark:text-white truncate">{entry.referrerMemberName || "—"}</p>
-                    <p className="text-xs text-green-700/70 dark:text-slate-400">{entry.referrerDkmoId}</p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-lg font-bold text-green-800 dark:text-green-300">{entry.approvedReferrals}</p>
-                    <p className="text-[10px] text-green-700/60 dark:text-slate-500">referrals</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Financial Summary */}
       {financialSummary && (

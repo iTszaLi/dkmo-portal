@@ -1,2 +1,1 @@
-- [Express router auth ordering](express-router-auth-ordering.md) — public routes must mount before any catch-all requireAuth router; `next_frf_number()` SQL function must be created manually in DB.
-- [FRF Ambassador referral system](frf-ambassador-system.md) — live rankings via GET /api/frf/ambassadors, history CRUD at /api/frf/ambassador-history; frfAmbassadorHistoryTable in frf_memberships schema file.
+- [Express router auth ordering](express-router-auth-ordering.md) — public routes must mount before any catch-all requireAuth router.

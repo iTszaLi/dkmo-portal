@@ -12,7 +12,12 @@ async function main() {
       city TEXT NOT NULL DEFAULT '',
       country TEXT NOT NULL DEFAULT '',
       designation TEXT NOT NULL DEFAULT '',
-      monthly_amount NUMERIC(12,2) NOT NULL DEFAULT 0,
+      membership_fee NUMERIC(12,2) NOT NULL DEFAULT 100,
+      fee_status TEXT NOT NULL DEFAULT 'unpaid',
+      fee_paid_at TIMESTAMPTZ,
+      fee_updated_by TEXT NOT NULL DEFAULT '',
+      ref_member_name TEXT NOT NULL DEFAULT '',
+      ref_member_id TEXT NOT NULL DEFAULT '',
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
@@ -72,56 +77,6 @@ async function main() {
       event_id UUID REFERENCES events(id) ON DELETE SET NULL,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-
-    CREATE TABLE IF NOT EXISTS frf_memberships (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      frf_number TEXT NOT NULL UNIQUE,
-      member_id UUID REFERENCES members(id) ON DELETE SET NULL,
-      full_name TEXT NOT NULL,
-      date_of_birth DATE,
-      blood_group TEXT NOT NULL DEFAULT '',
-      marital_status TEXT NOT NULL DEFAULT '',
-      num_dependents INTEGER NOT NULL DEFAULT 0,
-      passport_number TEXT NOT NULL DEFAULT '',
-      iqama_number TEXT NOT NULL DEFAULT '',
-      occupation TEXT NOT NULL DEFAULT '',
-      company_name TEXT NOT NULL DEFAULT '',
-      mobile_saudi TEXT NOT NULL DEFAULT '',
-      mobile_india TEXT NOT NULL DEFAULT '',
-      email TEXT NOT NULL DEFAULT '',
-      area_saudi TEXT NOT NULL DEFAULT '',
-      po_box TEXT NOT NULL DEFAULT '',
-      business_phone TEXT NOT NULL DEFAULT '',
-      emergency_name_saudi TEXT NOT NULL DEFAULT '',
-      emergency_mobile_saudi TEXT NOT NULL DEFAULT '',
-      house_name TEXT NOT NULL DEFAULT '',
-      postal_address TEXT NOT NULL DEFAULT '',
-      district TEXT NOT NULL DEFAULT '',
-      nearest_jamaath TEXT NOT NULL DEFAULT '',
-      home_phone TEXT NOT NULL DEFAULT '',
-      emergency_name_india TEXT NOT NULL DEFAULT '',
-      emergency_mobile_india TEXT NOT NULL DEFAULT '',
-      nominee_name TEXT NOT NULL DEFAULT '',
-      nominee_relation TEXT NOT NULL DEFAULT '',
-      nominee_mobile TEXT NOT NULL DEFAULT '',
-      status TEXT NOT NULL DEFAULT 'submitted',
-      decline_reason TEXT,
-      photo_url TEXT,
-      notes TEXT NOT NULL DEFAULT '',
-      membership_date DATE NOT NULL DEFAULT '2024-01-01',
-      renewal_date DATE,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-
-    CREATE TABLE IF NOT EXISTS frf_dependents (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      frf_membership_id UUID NOT NULL REFERENCES frf_memberships(id) ON DELETE CASCADE,
-      full_name TEXT NOT NULL,
-      relation TEXT NOT NULL DEFAULT '',
-      age INTEGER,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
     CREATE TABLE IF NOT EXISTS frf_claims (
@@ -231,14 +186,13 @@ async function main() {
   `);
 
   await pool.query(`
-    ALTER TABLE frf_memberships
-      ADD COLUMN IF NOT EXISTS reviewed_by TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ,
-      ADD COLUMN IF NOT EXISTS approved_by TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS approved_at TIMESTAMPTZ,
-      ADD COLUMN IF NOT EXISTS rejected_by TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS rejected_at TIMESTAMPTZ,
-      ADD COLUMN IF NOT EXISTS remarks TEXT NOT NULL DEFAULT '';
+    ALTER TABLE members
+      ADD COLUMN IF NOT EXISTS membership_fee NUMERIC(12,2) NOT NULL DEFAULT 100,
+      ADD COLUMN IF NOT EXISTS fee_status TEXT NOT NULL DEFAULT 'unpaid',
+      ADD COLUMN IF NOT EXISTS fee_paid_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS fee_updated_by TEXT NOT NULL DEFAULT '',
+      ADD COLUMN IF NOT EXISTS ref_member_name TEXT NOT NULL DEFAULT '',
+      ADD COLUMN IF NOT EXISTS ref_member_id TEXT NOT NULL DEFAULT '';
 
     ALTER TABLE frf_claims
       ADD COLUMN IF NOT EXISTS under_review_at TIMESTAMPTZ,
@@ -289,35 +243,6 @@ async function main() {
       file_size INTEGER NOT NULL DEFAULT 0,
       uploaded_by TEXT NOT NULL DEFAULT '',
       notes TEXT NOT NULL DEFAULT '',
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-  `);
-
-  // Referral tracking columns for FRF Memberships
-  await pool.query(`
-    ALTER TABLE frf_memberships
-      ADD COLUMN IF NOT EXISTS referrer_member_name TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS referrer_dkmo_id TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS referrer_frf_number TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS referral_code TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS referral_date DATE;
-  `);
-
-  // FRF Ambassador History table
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS frf_ambassador_history (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      year INTEGER NOT NULL,
-      period_type TEXT NOT NULL DEFAULT 'annual',
-      rank INTEGER NOT NULL,
-      referrer_member_name TEXT NOT NULL,
-      referrer_dkmo_id TEXT NOT NULL DEFAULT '',
-      referrer_frf_number TEXT NOT NULL DEFAULT '',
-      approved_referrals INTEGER NOT NULL DEFAULT 0,
-      points INTEGER NOT NULL DEFAULT 0,
-      award_status TEXT NOT NULL DEFAULT 'pending_review',
-      notes TEXT NOT NULL DEFAULT '',
-      created_by TEXT NOT NULL DEFAULT '',
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
   `);
@@ -402,19 +327,6 @@ async function main() {
       SELECT COALESCE(MAX(CAST(SUBSTRING(dkmo_number FROM 6) AS INT)), 0) + 1
         INTO seq FROM dkmo_memberships;
       RETURN 'DKMO-' || LPAD(seq::TEXT, 4, '0');
-    END;
-    $$ LANGUAGE plpgsql;
-  `);
-
-  await pool.query(`
-    CREATE OR REPLACE FUNCTION next_frf_number()
-    RETURNS TEXT AS $$
-    DECLARE
-      seq INT;
-    BEGIN
-      SELECT COALESCE(MAX(CAST(SUBSTRING(frf_number FROM 5) AS INT)), 0) + 1
-        INTO seq FROM frf_memberships;
-      RETURN 'FRF-' || LPAD(seq::TEXT, 4, '0');
     END;
     $$ LANGUAGE plpgsql;
   `);
