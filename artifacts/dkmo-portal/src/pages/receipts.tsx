@@ -52,7 +52,7 @@ function loadLogoDataUrl(src: string): Promise<string> {
 }
 
 async function generateReceiptPdf(data: FormValues, basePath: string, withQr = true): Promise<jsPDF> {
-  const logoDataUrl = await loadLogoDataUrl(`${basePath}/logo.png`);
+  const logoDataUrl = await loadLogoDataUrl(`${basePath}/logo-circle.png`);
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a5" });
   const W = 210;
   const maroon: [number, number, number] = [100, 25, 10];
@@ -219,7 +219,7 @@ function ReceiptPreview({ data }: { data: FormValues }) {
       style={{ width: "700px", minHeight: "394px", border: "1px solid #ccc", padding: "14px 16px 12px", fontSize: "12px", lineHeight: "1.4", boxSizing: "border-box" }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-        <img src="/logo.png" alt="DKMO" style={{ width: "60px", height: "60px", objectFit: "contain", flexShrink: 0 }} />
+        <img src="/logo-circle.png" alt="DKMO" style={{ width: "60px", height: "60px", objectFit: "cover", borderRadius: "50%", flexShrink: 0 }} />
         <div style={{ color: maroon, fontWeight: "bold", fontSize: "20px", lineHeight: "1.2" }}>
           Dakshina Karnataka Muslim Okkoota - DKMO RIYADH
         </div>

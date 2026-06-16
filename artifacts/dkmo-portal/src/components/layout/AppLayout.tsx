@@ -38,13 +38,12 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { DkmoLogo } from "@/components/DkmoLogo";
 import { useAuth, roleLabel, type Role } from "@/lib/auth";
 
 interface AppLayoutProps {
   children: ReactNode;
 }
-
-const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 interface NavItem {
   name: string;
@@ -154,7 +153,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       <aside className="hidden md:flex md:w-64 md:flex-col border-r border-green-100/70 dark:border-slate-800 bg-white/80 dark:bg-slate-900/90 backdrop-blur">
         <div className="flex h-16 items-center gap-2 border-b border-green-100/70 dark:border-slate-800 px-5">
           <Link href="/dashboard" className="flex items-center gap-2.5">
-            <img src={`${basePath}/logo.png`} alt="DKMO" className="h-9 w-auto" />
+            <DkmoLogo className="h-9 w-9" />
             <div className="flex flex-col leading-tight">
               <span className="text-sm font-bold text-green-900 dark:text-green-300">DKMO Portal</span>
               <span className="text-[10px] uppercase tracking-wider text-green-700/60 dark:text-green-500/60">
@@ -192,7 +191,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             </SheetTrigger>
             <SheetContent side="left" className="sm:max-w-xs p-0 dark:bg-slate-900 dark:border-slate-800">
               <div className="flex h-16 items-center gap-2 border-b border-green-100 dark:border-slate-800 px-5">
-                <img src={`${basePath}/logo.png`} alt="DKMO" className="h-9 w-auto" />
+                <DkmoLogo className="h-9 w-9" />
                 <div className="flex flex-col leading-tight">
                   <span className="text-sm font-bold text-green-900 dark:text-green-300">DKMO Portal</span>
                   <span className="text-[10px] uppercase tracking-wider text-green-700/60 dark:text-green-500/60">

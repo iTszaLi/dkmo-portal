@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/lib/auth";
+import { DkmoLogo } from "@/components/DkmoLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -80,11 +81,7 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-md">
         <div className="rounded-2xl border border-green-100 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur shadow-xl overflow-hidden transition-colors duration-300">
           <div className="px-8 pt-8 pb-6 flex flex-col items-center text-center">
-            <img
-              src={`${basePath}/logo.png`}
-              alt="DKMO"
-              className="h-20 w-auto mb-3"
-            />
+            <DkmoLogo className="h-20 w-20 mb-3" />
             <h1 className="text-2xl font-bold text-green-900 dark:text-green-300">DKMO Management Portal</h1>
             <p className="mt-1 text-sm text-green-700/70 dark:text-green-500/80">
               Executive sign-in only · Authorized personnel

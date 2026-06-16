@@ -8,7 +8,7 @@ const LIGHT_GREEN: [number, number, number] = [240, 253, 244];
 
 async function loadLogoBase64(): Promise<string | null> {
   try {
-    const res = await fetch(`${basePath}/logo.png`);
+    const res = await fetch(`${basePath}/logo-circle.png`);
     if (!res.ok) return null;
     const blob = await res.blob();
     return new Promise((resolve) => {

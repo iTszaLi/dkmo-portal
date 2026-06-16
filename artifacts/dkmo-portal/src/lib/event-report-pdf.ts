@@ -66,7 +66,7 @@ export async function generateEventReportPdf(data: EventReportData): Promise<voi
   const lgrey:   [number, number, number] = [190, 190, 190];
   const red:     [number, number, number] = [180, 30, 30];
 
-  const logoDataUrl = await loadImageAsBase64(`${basePath}/logo.png`);
+  const logoDataUrl = await loadImageAsBase64(`${basePath}/logo-circle.png`);
 
   // ── HEADER ────────────────────────────────────────────────────────
   if (logoDataUrl) {

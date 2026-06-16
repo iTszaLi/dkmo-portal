@@ -73,7 +73,7 @@ export async function generateDkmoPdf(
   const lgrey: [number, number, number] = [185, 185, 185];
   const hdrFill: [number, number, number] = [242, 242, 242];
 
-  const logoDataUrl = await loadImageAsBase64(`${basePath}/logo.png`);
+  const logoDataUrl = await loadImageAsBase64(`${basePath}/logo-circle.png`);
 
   // ── HEADER ──────────────────────────────────────────────────────────────────
   if (logoDataUrl) doc.addImage(logoDataUrl, "PNG", mL, 5, 24, 24);

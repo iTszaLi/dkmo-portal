@@ -251,14 +251,14 @@ export default function PrintReceipts() {
   const clearAll = () => { setSearch(""); setReceiptSearch(""); setDkmoSearch(""); setDateFrom(""); setDateTo(""); };
 
   const downloadReceiptPDF = async (payment: (typeof filteredPayments)[number]) => {
-    const logoDataUrl = await loadImageAsBase64(`${basePath}/logo.png`);
+    const logoDataUrl = await loadImageAsBase64(`${basePath}/logo-circle.png`);
     const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a5" });
     buildReceiptPdf(doc, { receiptNumber: payment.receiptNumber, memberName: payment.memberName, membershipId: payment.membershipId, paidAt: payment.paidAt, amountPaid: payment.amountPaid, notes: payment.notes }, logoDataUrl);
     doc.save(`DKMO_Receipt_${payment.receiptNumber}.pdf`);
   };
 
   const printReceipt = async (payment: (typeof filteredPayments)[number]) => {
-    const logoDataUrl = await loadImageAsBase64(`${basePath}/logo.png`);
+    const logoDataUrl = await loadImageAsBase64(`${basePath}/logo-circle.png`);
     const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a5" });
     buildReceiptPdf(doc, { receiptNumber: payment.receiptNumber, memberName: payment.memberName, membershipId: payment.membershipId, paidAt: payment.paidAt, amountPaid: payment.amountPaid, notes: payment.notes }, logoDataUrl);
     doc.autoPrint();
@@ -266,7 +266,7 @@ export default function PrintReceipts() {
   };
 
   const downloadRecordPDF = async (record: any) => {
-    const logoDataUrl = await loadImageAsBase64(`${basePath}/logo.png`);
+    const logoDataUrl = await loadImageAsBase64(`${basePath}/logo-circle.png`);
     const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a5" });
     buildReceiptPdf(doc, {
       receiptNumber: record.receiptNumber,

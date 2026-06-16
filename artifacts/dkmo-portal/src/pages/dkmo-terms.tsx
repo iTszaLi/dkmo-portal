@@ -35,7 +35,7 @@ export default function DkmoTermsPage() {
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <img src={`${basePath}/logo.png`} alt="DKMO" className="h-14 w-auto print:block" />
+          <img src={`${basePath}/logo-circle.png`} alt="DKMO" className="h-14 w-14 rounded-full object-cover print:block" />
           <div>
             <h1 className="text-xl font-bold text-green-900 dark:text-green-100">Dakshina Karnataka Muslim Ookota</h1>
             <p className="text-sm text-green-700/70 dark:text-green-400/70">DKMO Riyadh — Membership Terms &amp; Conditions</p>

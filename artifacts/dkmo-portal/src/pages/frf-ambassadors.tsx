@@ -259,7 +259,7 @@ export default function FrfAmbassadors() {
 
   async function exportMomentoRecommendation() {
     const doc = new jsPDF();
-    const logoDataUrl = await loadImageAsBase64(`${basePath}/logo.png`);
+    const logoDataUrl = await loadImageAsBase64(`${basePath}/logo-circle.png`);
     const green: [number, number, number] = [5, 150, 105];
     const gold: [number, number, number] = [180, 140, 0];
 
@@ -309,7 +309,7 @@ export default function FrfAmbassadors() {
   async function exportRecognitionReport() {
     const doc = new jsPDF({ orientation: "landscape" });
     const pageW = doc.internal.pageSize.getWidth();
-    const logoDataUrl = await loadImageAsBase64(`${basePath}/logo.png`);
+    const logoDataUrl = await loadImageAsBase64(`${basePath}/logo-circle.png`);
     const green: [number, number, number] = [5, 150, 105];
 
     doc.setFillColor(...green);
@@ -359,7 +359,7 @@ export default function FrfAmbassadors() {
     const doc = new jsPDF({ orientation: "landscape" });
     const pageW = doc.internal.pageSize.getWidth();
     const pageH = doc.internal.pageSize.getHeight();
-    const logoDataUrl = await loadImageAsBase64(`${basePath}/logo.png`);
+    const logoDataUrl = await loadImageAsBase64(`${basePath}/logo-circle.png`);
     const green: [number, number, number] = [5, 150, 105];
     const gold: [number, number, number] = [180, 140, 0];
 

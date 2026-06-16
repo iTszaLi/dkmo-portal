@@ -258,7 +258,7 @@ export default function Audit() {
   const exportPDF = async () => {
     const logs = await fetchAllLogs({ module: module !== "all" ? module : "", action: action !== "all" ? action : "", search, from, to });
     const doc = new jsPDF({ orientation: "landscape" });
-    const logoDataUrl = await loadImageAsBase64(`${basePath}/logo.png`);
+    const logoDataUrl = await loadImageAsBase64(`${basePath}/logo-circle.png`);
     const green: [number, number, number] = [5, 150, 105];
 
     doc.setFillColor(...green);

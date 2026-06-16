@@ -186,7 +186,7 @@ export default function Reports() {
   const exportMembersPDF = async () => {
     if (!members) return;
     const doc = new jsPDF();
-    const logoDataUrl = await loadImageAsBase64(`${basePath}/logo.png`);
+    const logoDataUrl = await loadImageAsBase64(`${basePath}/logo-circle.png`);
     const green: [number, number, number] = [5, 150, 105];
 
     // Header band
@@ -225,7 +225,7 @@ export default function Reports() {
   const exportPaymentsPDF = async () => {
     if (!payments) return;
     const doc = new jsPDF();
-    const logoDataUrl = await loadImageAsBase64(`${basePath}/logo.png`);
+    const logoDataUrl = await loadImageAsBase64(`${basePath}/logo-circle.png`);
     const green: [number, number, number] = [5, 150, 105];
 
     // Header band
@@ -364,7 +364,7 @@ export default function Reports() {
     const doc = new jsPDF({ orientation: "landscape" });
     const pageW = doc.internal.pageSize.getWidth();
     const green: [number, number, number] = [5, 150, 105];
-    const logoDataUrl = await loadImageAsBase64(`${basePath}/logo.png`);
+    const logoDataUrl = await loadImageAsBase64(`${basePath}/logo-circle.png`);
 
     // Header band
     doc.setFillColor(...green);

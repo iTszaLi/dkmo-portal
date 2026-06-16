@@ -70,7 +70,7 @@ export async function generateFrfPdf(
   const grey: [number, number, number] = [80, 80, 80];
   const lgrey: [number, number, number] = [160, 160, 160];
 
-  const logoDataUrl = await loadImageAsBase64(`${basePath}/logo.png`);
+  const logoDataUrl = await loadImageAsBase64(`${basePath}/logo-circle.png`);
 
   // ── HEADER ──────────────────────────────────────────────────────────────────
   if (logoDataUrl) {
