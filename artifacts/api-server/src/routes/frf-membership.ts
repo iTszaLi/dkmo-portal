@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { eq, desc, ilike, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, frfMembershipsTable, frfDependentsTable } from "@workspace/db";
-import { requireAuth } from "../middlewares/requireAuth";
+import { requireAuth, type AuthedRequest } from "../middlewares/requireAuth";
 import { getUserById } from "../lib/users";
 import { logAudit } from "../lib/audit";
 
@@ -339,6 +339,50 @@ router.get("/frf/memberships/stats", async (req, res): Promise<void> => {
   }).length;
 
   res.json({ total, pending, approved, rejected, newThisMonth });
+});
+
+router.post("/frf/memberships/bulk-status", async (req, res): Promise<void> => {
+  try {
+    const BulkStatusInput = z.object({
+      ids: z.array(z.string().uuid()).min(1, "At least one ID required"),
+      status: z.enum(["submitted", "under_review", "approved", "rejected", "completed"]),
+      remarks: z.string().optional().default(""),
+    });
+    const parsed = BulkStatusInput.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "Invalid input", details: parsed.error.flatten() });
+      return;
+    }
+    const { ids, status, remarks } = parsed.data;
+    const userId = (req as AuthedRequest).userId ?? "";
+    const now = new Date();
+
+    const extraFields: Record<string, unknown> = { remarks };
+    if (status === "approved") {
+      extraFields.approvedBy = userId;
+      extraFields.approvedAt = now;
+    } else if (status === "under_review") {
+      extraFields.reviewedBy = userId;
+      extraFields.reviewedAt = now;
+    } else if (status === "rejected") {
+      extraFields.rejectedBy = userId;
+      extraFields.rejectedAt = now;
+    }
+
+    let updated = 0;
+    for (const id of ids) {
+      await db
+        .update(frfMembershipsTable)
+        .set({ status, updatedAt: now, ...extraFields })
+        .where(eq(frfMembershipsTable.id, id));
+      updated++;
+    }
+
+    res.json({ updated, status });
+  } catch (err) {
+    req.log.error({ err }, "bulkUpdateFrfMembershipStatus failed");
+    res.status(500).json({ error: "Failed to bulk update status" });
+  }
 });
 
 router.get("/frf/memberships/:id", async (req, res): Promise<void> => {

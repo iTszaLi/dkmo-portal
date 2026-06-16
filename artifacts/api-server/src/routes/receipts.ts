@@ -5,6 +5,62 @@ import { requireAuth, type AuthedRequest } from "../middlewares/requireAuth";
 import { z } from "zod";
 
 const router: IRouter = Router();
+router.get("/receipts/next-number", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const rows = await db
+      .select({ receiptNumber: receiptsTable.receiptNumber })
+      .from(receiptsTable)
+      .orderBy(desc(receiptsTable.createdAt))
+      .limit(20);
+
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const prefix = `DKMO-RC-${year}${month}-`;
+
+    const nums = rows
+      .map((r) => {
+        const m = r.receiptNumber.match(/DKMO-RC-\d{6}-(\d+)/);
+        return m ? parseInt(m[1]!, 10) : 0;
+      })
+      .filter((n) => n > 0);
+
+    const maxNum = nums.length > 0 ? Math.max(...nums) : 0;
+    const nextNum = String(maxNum + 1).padStart(4, "0");
+    res.json({ nextNumber: `${prefix}${nextNum}` });
+  } catch (err) {
+    req.log.error({ err }, "getNextReceiptNumber failed");
+    res.status(500).json({ error: "Failed to get next receipt number" });
+  }
+});
+
+router.get("/receipts/verify/:receiptNumber", async (req, res): Promise<void> => {
+  try {
+    const { receiptNumber } = req.params;
+    const [row] = await db
+      .select()
+      .from(receiptsTable)
+      .where(eq(receiptsTable.receiptNumber, receiptNumber));
+    if (!row) {
+      res.status(404).json({ verified: false, error: "Receipt not found" });
+      return;
+    }
+    res.json({
+      verified: true,
+      receiptNumber: row.receiptNumber,
+      memberName: row.memberName,
+      dkmoId: row.dkmoId ?? "",
+      receiptDate: row.receiptDate,
+      amount: Number(row.amount),
+      paymentTypes: row.paymentTypes ?? "{}",
+      issuedAt: row.createdAt.toISOString(),
+    });
+  } catch (err) {
+    req.log.error({ err }, "verifyReceipt failed");
+    res.status(500).json({ error: "Failed to verify receipt" });
+  }
+});
+
 router.use(requireAuth);
 
 const ReceiptRecordInput = z.object({
@@ -76,9 +132,11 @@ router.post("/receipts", async (req, res): Promise<void> => {
       return;
     }
     const userId = (req as AuthedRequest).userId ?? "";
+    const { amount, ...rest } = parsed.data;
     const [row] = await db.insert(receiptsTable).values({
-      ...parsed.data,
-      createdBy: userId ?? "",
+      ...rest,
+      amount: String(amount),
+      createdBy: userId,
     }).returning();
     res.status(201).json(receiptToApi(row));
   } catch (err) {

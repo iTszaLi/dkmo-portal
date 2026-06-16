@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useLocation } from "wouter";
 import {
   useListFrfMemberships,
@@ -44,7 +44,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Search, Plus, UserCheck, Clock, CheckCircle, XCircle, Users,
   Download, FileSpreadsheet, FileText, Eye, Edit, Trash2,
-  MoreHorizontal, Printer, CheckCircle2,
+  MoreHorizontal, Printer, CheckCircle2, ChevronDown, Square, CheckSquare,
 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { generateFrfPdf } from "@/lib/frf-pdf";
@@ -176,6 +176,11 @@ export default function FrfMembershipPage() {
   const [rejectReason, setRejectReason] = useState("");
   const [isSubmittingQuick, setIsSubmittingQuick] = useState(false);
 
+  // Bulk action state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkAction, setBulkAction] = useState<string | null>(null);
+  const [isBulkSubmitting, setIsBulkSubmitting] = useState(false);
+
   const { data: memberships, isLoading, refetch } = useListFrfMemberships(
     { search: search || undefined, status: statusFilter !== "all" ? statusFilter : undefined }
   );
@@ -190,6 +195,45 @@ export default function FrfMembershipPage() {
 
   const dateStr = new Date().toISOString().split("T")[0];
   const statusStr = statusFilter !== "all" ? `_${statusFilter}` : "";
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAll = useCallback(() => {
+    if (!memberships) return;
+    if (selectedIds.size === memberships.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(memberships.map((m) => m.id)));
+    }
+  }, [memberships, selectedIds.size]);
+
+  const handleBulkStatus = useCallback(async () => {
+    if (!bulkAction || selectedIds.size === 0) return;
+    setIsBulkSubmitting(true);
+    try {
+      const resp = await fetch("/api/frf/memberships/bulk-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selectedIds), status: bulkAction }),
+      });
+      if (!resp.ok) throw new Error("Failed");
+      const { updated } = await resp.json() as { updated: number };
+      toast({ title: `${updated} application${updated !== 1 ? "s" : ""} updated to "${STATUS_MAP[bulkAction]?.label ?? bulkAction}"` });
+      setSelectedIds(new Set());
+      setBulkAction(null);
+      void refetch();
+    } catch {
+      toast({ title: "Bulk update failed", variant: "destructive" });
+    } finally {
+      setIsBulkSubmitting(false);
+    }
+  }, [bulkAction, selectedIds, toast, refetch]);
 
   async function handleQuickStatus(m: FrfMembership, status: string) {
     setIsSubmittingQuick(true);
@@ -341,6 +385,44 @@ export default function FrfMembershipPage() {
         ))}
       </div>
 
+      {/* Bulk Action Toolbar */}
+      {selectedIds.size > 0 && (
+        <div className="flex flex-wrap items-center gap-3 px-4 py-3 rounded-xl bg-green-800 dark:bg-green-900 text-white shadow">
+          <div className="flex items-center gap-2 flex-1">
+            <CheckSquare className="h-5 w-5 text-green-200" />
+            <span className="font-semibold text-sm">{selectedIds.size} selected</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant="secondary"
+              className="bg-yellow-500 hover:bg-yellow-400 text-white border-0 gap-1"
+              onClick={() => setBulkAction("under_review")}
+              disabled={isBulkSubmitting}
+            >
+              <Clock className="h-4 w-4" /> Mark Under Review
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="bg-green-400 hover:bg-green-300 text-green-950 border-0 gap-1"
+              onClick={() => setBulkAction("approved")}
+              disabled={isBulkSubmitting}
+            >
+              <CheckCircle2 className="h-4 w-4" /> Approve All
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-white hover:bg-green-700 gap-1"
+              onClick={() => setSelectedIds(new Set())}
+            >
+              <XCircle className="h-4 w-4" /> Deselect All
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
@@ -373,6 +455,13 @@ export default function FrfMembershipPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-green-100 dark:border-slate-800 bg-green-50/50 dark:bg-slate-800/50">
+                <th className="px-4 py-3 w-10">
+                  <button onClick={toggleSelectAll} className="text-green-700 dark:text-green-400 hover:text-green-900">
+                    {memberships && selectedIds.size === memberships.length && memberships.length > 0
+                      ? <CheckSquare className="h-4 w-4" />
+                      : <Square className="h-4 w-4" />}
+                  </button>
+                </th>
                 <th className="text-left px-4 py-3 font-semibold text-green-900 dark:text-green-300">FRF #</th>
                 <th className="text-left px-4 py-3 font-semibold text-green-900 dark:text-green-300">Name</th>
                 <th className="text-left px-4 py-3 font-semibold text-green-900 dark:text-green-300 hidden md:table-cell">Mobile</th>
@@ -386,14 +475,14 @@ export default function FrfMembershipPage() {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="border-b border-green-50 dark:border-slate-800">
-                    {Array.from({ length: 7 }).map((_, j) => (
+                    {Array.from({ length: 8 }).map((_, j) => (
                       <td key={j} className="px-4 py-3"><Skeleton className="h-4 w-full" /></td>
                     ))}
                   </tr>
                 ))
               ) : memberships?.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-slate-500 dark:text-slate-400">
+                  <td colSpan={8} className="px-4 py-12 text-center text-slate-500 dark:text-slate-400">
                     No FRF memberships found
                   </td>
                 </tr>
@@ -401,8 +490,14 @@ export default function FrfMembershipPage() {
                 memberships?.map((m) => {
                   const statusInfo = STATUS_MAP[m.status] ?? { label: m.status, color: "bg-slate-100 text-slate-800" };
                   const ms = m as unknown as FrfMembership;
+                  const isSelected = selectedIds.has(m.id);
                   return (
-                    <tr key={m.id} className="border-b border-green-50 dark:border-slate-800 hover:bg-green-50/40 dark:hover:bg-slate-800/40 transition-colors">
+                    <tr key={m.id} className={`border-b border-green-50 dark:border-slate-800 hover:bg-green-50/40 dark:hover:bg-slate-800/40 transition-colors ${isSelected ? "bg-green-50 dark:bg-green-950/20" : ""}`}>
+                      <td className="px-4 py-3">
+                        <button onClick={() => toggleSelect(m.id)} className="text-green-700 dark:text-green-400 hover:text-green-900">
+                          {isSelected ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
+                        </button>
+                      </td>
                       <td className="px-4 py-3 font-mono text-xs font-medium text-green-800 dark:text-green-300">{m.frfNumber}</td>
                       <td className="px-4 py-3">
                         <div className="font-medium text-green-950 dark:text-slate-100">{m.fullName}</div>
@@ -472,6 +567,31 @@ export default function FrfMembershipPage() {
           </table>
         </div>
       </Card>
+
+      {/* Bulk Status Confirmation */}
+      <AlertDialog open={!!bulkAction} onOpenChange={(o) => !o && setBulkAction(null)}>
+        <AlertDialogContent className="dark:bg-slate-900 dark:border-slate-700">
+          <AlertDialogHeader>
+            <AlertDialogTitle className={bulkAction === "approved" ? "text-green-800 dark:text-green-300" : "text-yellow-700 dark:text-yellow-400"}>
+              {bulkAction === "approved" ? "Approve Selected Applications?" : "Mark Applications Under Review?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will update <strong>{selectedIds.size}</strong> application{selectedIds.size !== 1 ? "s" : ""} to{" "}
+              <strong>{STATUS_MAP[bulkAction ?? ""]?.label}</strong>. This action is logged.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="dark:border-slate-700">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className={bulkAction === "approved" ? "bg-green-700 hover:bg-green-800 text-white" : "bg-yellow-600 hover:bg-yellow-700 text-white"}
+              onClick={handleBulkStatus}
+              disabled={isBulkSubmitting}
+            >
+              {isBulkSubmitting ? "Updating…" : `Update ${selectedIds.size} Application${selectedIds.size !== 1 ? "s" : ""}`}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Delete Dialog */}
       <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
