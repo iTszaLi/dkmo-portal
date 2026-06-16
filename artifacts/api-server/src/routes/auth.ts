@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { verifyCredentials, publicUser } from "../lib/users";
+import { logAudit } from "../lib/audit";
 
 const router: IRouter = Router();
 
@@ -38,6 +39,7 @@ router.post("/auth/login", async (req, res): Promise<void> => {
         res.status(500).json({ error: "Login failed. Please try again." });
         return;
       }
+      logAudit(req, "login", "auth", { userId: user.id, userName: user.displayName, details: `User logged in as ${user.role}` });
       res.json({ user: publicUser(user) });
     });
   });
@@ -48,6 +50,8 @@ router.post("/auth/logout", async (req, res): Promise<void> => {
     res.status(204).end();
     return;
   }
+  const userId = req.session.userId;
+  logAudit(req, "logout", "auth", { userId: userId ?? "unknown", details: "User logged out" });
   req.session.destroy((err) => {
     if (err) {
       req.log.error({ err }, "Failed to destroy session");

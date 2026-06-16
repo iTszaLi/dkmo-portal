@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { eq, desc, and } from "drizzle-orm";
 import { db, frfClaimsTable } from "@workspace/db";
 import { requireAuth, requireRole } from "../middlewares/requireAuth";
+import { logAudit } from "../lib/audit";
 import { z } from "zod";
 
 const router: IRouter = Router();
@@ -119,6 +120,7 @@ router.post("/frf/claims", requireRole("admin", "finance"), async (req, res): Pr
       description: data.description,
       notes: data.notes,
     }).returning();
+    logAudit(req, "claim_created", "frf", { entityId: created!.id, entityName: data.claimantName, details: `Type: ${data.claimType}, Status: ${data.status}` });
     res.status(201).json(frfToApi(created!));
   } catch (err) {
     req.log.error(err);
@@ -162,6 +164,8 @@ router.put("/frf/claims/:id", requireRole("admin", "finance"), async (req, res):
 
     const [updated] = await db.update(frfClaimsTable).set(updateData).where(eq(frfClaimsTable.id, id)).returning();
     if (!updated) { res.status(404).json({ error: "Not found" }); return; }
+    const action = data.status === "approved" ? "claim_approved" : data.status === "rejected" ? "claim_rejected" : "claim_updated";
+    logAudit(req, action, "frf", { entityId: updated.id, entityName: updated.claimantName, details: `Status: ${updated.status}` });
     res.json(frfToApi(updated));
   } catch (err) {
     req.log.error(err);
@@ -174,6 +178,7 @@ router.delete("/frf/claims/:id", requireRole("admin"), async (req, res): Promise
   try {
     const [deleted] = await db.delete(frfClaimsTable).where(eq(frfClaimsTable.id, id)).returning();
     if (!deleted) { res.status(404).json({ error: "Not found" }); return; }
+    logAudit(req, "claim_deleted", "frf", { entityId: deleted.id, entityName: deleted.claimantName });
     res.json({ success: true });
   } catch (err) {
     req.log.error(err);

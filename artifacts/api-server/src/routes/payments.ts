@@ -9,6 +9,7 @@ import {
 } from "@workspace/api-zod";
 import { requireAuth } from "../middlewares/requireAuth";
 import { paymentToApi } from "../lib/serializers";
+import { logAudit } from "../lib/audit";
 
 const router: IRouter = Router();
 
@@ -98,6 +99,12 @@ router.post("/payments", async (req, res): Promise<void> => {
     return;
   }
 
+  logAudit(req, "payment_created", "payments", {
+    entityId: created.id,
+    entityName: member.fullName,
+    details: `Receipt: ${created.receiptNumber}, Month: ${created.month}, Amount: ${created.amountPaid}`,
+  });
+
   res.status(201).json(
     paymentToApi(created, {
       fullName: member.fullName,
@@ -135,14 +142,21 @@ router.delete("/payments/:id", async (req, res): Promise<void> => {
     res.status(400).json({ error: params.error.message });
     return;
   }
-  const [deleted] = await db
-    .delete(paymentsTable)
-    .where(eq(paymentsTable.id, params.data.id))
-    .returning();
-  if (!deleted) {
+  const [row] = await db
+    .select({ payment: paymentsTable, member: membersTable })
+    .from(paymentsTable)
+    .innerJoin(membersTable, eq(paymentsTable.memberId, membersTable.id))
+    .where(eq(paymentsTable.id, params.data.id));
+  if (!row) {
     res.status(404).json({ error: "Payment not found" });
     return;
   }
+  await db.delete(paymentsTable).where(eq(paymentsTable.id, params.data.id));
+  logAudit(req, "payment_deleted", "payments", {
+    entityId: row.payment.id,
+    entityName: row.member.fullName,
+    details: `Receipt: ${row.payment.receiptNumber}, Month: ${row.payment.month}`,
+  });
   res.sendStatus(204);
 });
 

@@ -15,6 +15,7 @@ import storageRouter from "./storage";
 import loansRouter from "./loans";
 import receiptsRouter from "./receipts";
 import searchRouter from "./search";
+import auditRouter from "./audit";
 
 const router: IRouter = Router();
 
@@ -34,5 +35,6 @@ router.use(storageRouter);
 router.use(loansRouter);
 router.use(receiptsRouter);
 router.use(searchRouter);
+router.use(auditRouter);
 
 export default router;

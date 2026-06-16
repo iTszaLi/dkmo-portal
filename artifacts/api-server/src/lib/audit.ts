@@ -1,0 +1,40 @@
+import { db, auditLogsTable } from "@workspace/db";
+import { getUserById } from "./users";
+import type { Request } from "express";
+
+function getIp(req: Request): string {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (typeof forwarded === "string") return forwarded.split(",")[0]!.trim();
+  return req.socket.remoteAddress ?? "";
+}
+
+export async function logAudit(
+  req: Request & { userId?: string },
+  action: string,
+  module: string,
+  opts?: {
+    entityId?: string;
+    entityName?: string;
+    details?: string;
+    userId?: string;
+    userName?: string;
+  },
+): Promise<void> {
+  try {
+    const uid = opts?.userId ?? req.userId ?? "system";
+    const user = getUserById(uid);
+    const userName = opts?.userName ?? user?.displayName ?? uid;
+    await db.insert(auditLogsTable).values({
+      userId: uid,
+      userName,
+      action,
+      module,
+      entityId: opts?.entityId ?? null,
+      entityName: opts?.entityName ?? null,
+      details: opts?.details ?? null,
+      ipAddress: getIp(req),
+    });
+  } catch {
+    // Audit logging must never block main operations
+  }
+}

@@ -1759,3 +1759,38 @@ export const RequestUploadUrlResponse = zod.object({
 export const GetStorageObjectParams = zod.object({
   objectPath: zod.coerce.string(),
 });
+
+/**
+ * @summary List audit logs with filters
+ */
+export const listAuditLogsQueryPageDefault = 1;
+export const listAuditLogsQueryPageSizeDefault = 50;
+
+export const ListAuditLogsQueryParams = zod.object({
+  module: zod.coerce.string().optional(),
+  action: zod.coerce.string().optional(),
+  userId: zod.coerce.string().optional(),
+  search: zod.coerce.string().optional(),
+  from: zod.coerce.string().optional(),
+  to: zod.coerce.string().optional(),
+  page: zod.coerce.number().default(listAuditLogsQueryPageDefault),
+  pageSize: zod.coerce.number().default(listAuditLogsQueryPageSizeDefault),
+});
+
+export const ListAuditLogsResponse = zod.object({
+  items: zod.array(
+    zod.object({
+      id: zod.string(),
+      userId: zod.string(),
+      userName: zod.string(),
+      action: zod.string(),
+      module: zod.string(),
+      entityId: zod.string().nullish(),
+      entityName: zod.string().nullish(),
+      details: zod.string().nullish(),
+      ipAddress: zod.string().nullish(),
+      createdAt: zod.coerce.date(),
+    }),
+  ),
+  total: zod.number(),
+});

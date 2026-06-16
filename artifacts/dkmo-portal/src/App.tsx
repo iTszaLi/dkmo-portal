@@ -33,6 +33,7 @@ import Loans from "@/pages/loans";
 import Receipts from "@/pages/receipts";
 import PrintReceipts from "@/pages/print-receipts";
 import Documents from "@/pages/documents";
+import Audit from "@/pages/audit";
 import Forbidden from "@/pages/forbidden";
 import NotFound from "@/pages/not-found";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -138,6 +139,10 @@ function AppRoutes() {
       <Route path="/receipts" component={() => <AuthenticatedRoute component={Receipts} />} />
       <Route path="/print-receipts" component={() => <AuthenticatedRoute component={PrintReceipts} />} />
       <Route path="/documents" component={() => <AuthenticatedRoute component={Documents} />} />
+      <Route
+        path="/audit"
+        component={() => <AuthenticatedRoute component={Audit} roles={["admin", "finance"]} />}
+      />
       <Route
         path="/settings"
         component={() => <AuthenticatedRoute component={Settings} roles={["admin"]} />}

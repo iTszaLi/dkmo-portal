@@ -20,6 +20,7 @@ import {
   Receipt,
   FolderOpen,
   Printer,
+  ScrollText,
 } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -67,6 +68,7 @@ const navigation: NavItem[] = [
   { name: "Print Receipts", href: "/print-receipts",  icon: Printer },
   { name: "Documents",      href: "/documents",       icon: FolderOpen },
   { name: "Reports",        href: "/reports",         icon: FileText },
+  { name: "Audit Trail",    href: "/audit",           icon: ScrollText, roles: ["admin", "finance"] },
   { name: "Settings",       href: "/settings",        icon: Cog, roles: ["admin"] },
 ];
 

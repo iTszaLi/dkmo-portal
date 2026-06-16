@@ -5,6 +5,23 @@
  * DKMO Management Portal API
  * OpenAPI spec version: 0.1.0
  */
+export interface AuditLog {
+  id: string;
+  userId: string;
+  userName: string;
+  action: string;
+  module: string;
+  /** @nullable */
+  entityId?: string | null;
+  /** @nullable */
+  entityName?: string | null;
+  /** @nullable */
+  details?: string | null;
+  /** @nullable */
+  ipAddress?: string | null;
+  createdAt: string;
+}
+
 export interface HealthStatus {
   status: string;
 }
@@ -1148,5 +1165,21 @@ export type ListReceiptRecordsParams = {
 
 export type ListReceiptRecords200 = {
   items: ReceiptRecord[];
+  total: number;
+};
+
+export type ListAuditLogsParams = {
+  module?: string;
+  action?: string;
+  userId?: string;
+  search?: string;
+  from?: string;
+  to?: string;
+  page?: number;
+  pageSize?: number;
+};
+
+export type ListAuditLogs200 = {
+  items: AuditLog[];
   total: number;
 };

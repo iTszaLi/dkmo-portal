@@ -19,6 +19,7 @@ tags:
   - name: frf-membership
   - name: receipts
   - name: storage
+  - name: audit
 
 paths:
   /healthz:
@@ -1408,8 +1409,69 @@ paths:
                 type: string
                 format: binary
 
+  /audit-logs:
+    get:
+      operationId: listAuditLogs
+      tags: [audit]
+      summary: List audit logs with filters
+      parameters:
+        - name: module
+          in: query
+          schema: { type: string }
+        - name: action
+          in: query
+          schema: { type: string }
+        - name: userId
+          in: query
+          schema: { type: string }
+        - name: search
+          in: query
+          schema: { type: string }
+        - name: from
+          in: query
+          schema: { type: string }
+        - name: to
+          in: query
+          schema: { type: string }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: pageSize
+          in: query
+          schema: { type: integer, default: 50 }
+      responses:
+        "200":
+          description: Paginated audit logs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AuditLog"
+                  total:
+                    type: integer
+                required: [items, total]
+
 components:
   schemas:
+    AuditLog:
+      type: object
+      properties:
+        id: { type: string }
+        userId: { type: string }
+        userName: { type: string }
+        action: { type: string }
+        module: { type: string }
+        entityId: { type: ["string", "null"] }
+        entityName: { type: ["string", "null"] }
+        details: { type: ["string", "null"] }
+        ipAddress: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+      required: [id, userId, userName, action, module, createdAt]
+
     HealthStatus:
       type: object
       properties:

@@ -11,6 +11,7 @@ import {
 } from "@workspace/api-zod";
 import { requireAuth } from "../middlewares/requireAuth";
 import { memberToApi, paymentToApi } from "../lib/serializers";
+import { logAudit } from "../lib/audit";
 
 const router: IRouter = Router();
 
@@ -70,6 +71,7 @@ router.post("/members", async (req, res): Promise<void> => {
       res.status(500).json({ error: "Failed to create member" });
       return;
     }
+    logAudit(req, "member_created", "members", { entityId: created.id, entityName: created.fullName, details: `ID: ${created.membershipId}` });
     res.status(201).json(memberToApi(created));
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "";
@@ -171,6 +173,7 @@ router.patch("/members/:id", async (req, res): Promise<void> => {
       res.status(404).json({ error: "Member not found" });
       return;
     }
+    logAudit(req, "member_updated", "members", { entityId: updated.id, entityName: updated.fullName, details: `ID: ${updated.membershipId}` });
     res.json(memberToApi(updated));
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "";
@@ -196,6 +199,7 @@ router.delete("/members/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Member not found" });
     return;
   }
+  logAudit(req, "member_deleted", "members", { entityId: deleted.id, entityName: deleted.fullName, details: `ID: ${deleted.membershipId}` });
   res.sendStatus(204);
 });
 
