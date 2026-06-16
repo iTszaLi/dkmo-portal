@@ -27,7 +27,7 @@ Admins sign in to a secure dashboard that tracks members, records monthly paymen
 
 ## Data model (`lib/db/src/schema/`)
 
-- `members` — fullName, mobileNumber, membershipId (unique), city, country, monthlyAmount
+- `members` — fullName, mobileNumber, membershipId (unique), city, country, designation, membershipFee (one-time 100 SAR), feeStatus (paid|pending|unpaid), feePaidAt, feeUpdatedBy, refMemberName, refMemberId
 - `payments` — memberId (FK cascade), month (YYYY-MM), amountPaid, paymentMethod, receiptNumber, notes, paidAt
 
 ## API surface (all under `/api`)

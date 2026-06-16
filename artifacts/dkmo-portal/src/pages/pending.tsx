@@ -2,51 +2,31 @@ import { useState, useMemo } from "react";
 import {
   useGetPendingMembers,
   getGetPendingMembersQueryKey,
-  useCreatePayment,
-  getListPaymentsQueryKey,
+  useUpdateMemberFeeStatus,
+  getListMembersQueryKey,
 } from "@workspace/api-client-react";
+import type { PendingMember } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { PaymentForm } from "@/components/PaymentForm";
-import { formatSAR, getCurrentMonth, formatYearMonth } from "@/lib/utils";
+import { formatSAR, feeStatusLabel, feeStatusBadgeClass } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CalendarDays, MessageSquareWarning, UserCircle, Phone, MapPin, Send, CircleDollarSign } from "lucide-react";
+import { MessageSquareWarning, UserCircle, Phone, MapPin, Send, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-type PendingMember = {
-  memberId: string;
-  fullName: string;
-  mobileNumber: string;
-  membershipId: string;
-  city: string;
-  country: string;
-  monthlyAmount: number;
-  amountPaid: number;
-  amountDue: number;
-  status: string;
-};
 
 function formatMobileForWa(mobileNumber: string): string {
   return mobileNumber.replace(/\D/g, "");
 }
 
-function buildReminderMessage(member: PendingMember, monthLabel: string): string {
-  return `Assalamu Alaikum ${member.fullName},\n\nThis is a gentle reminder from DKMO (Dakshina Karnataka Muslim Ookota — Committed to the Community). Your monthly contribution of ${formatSAR(member.amountDue)} for ${monthLabel} is currently pending.\n\nPlease complete the payment at your earliest convenience.\n\nJazakallah Khair.`;
+function buildReminderMessage(member: PendingMember): string {
+  return `Assalamu Alaikum ${member.fullName},\n\nThis is a gentle reminder from DKMO (Dakshina Karnataka Muslim Ookota — Committed to the Community). Your one-time membership registration fee of ${formatSAR(member.membershipFee)} is currently ${member.feeStatus}.\n\nPlease complete the payment at your earliest convenience to activate your membership.\n\nJazakallah Khair.`;
 }
 
 function sendRemindersToMembers(
   members: PendingMember[],
-  monthLabel: string,
   onDone: (opened: number) => void,
   setBulkSending: (v: boolean) => void
 ) {
@@ -56,7 +36,7 @@ function sendRemindersToMembers(
   let opened = 0;
   validMembers.forEach((member, idx) => {
     setTimeout(() => {
-      const message = encodeURIComponent(buildReminderMessage(member, monthLabel));
+      const message = encodeURIComponent(buildReminderMessage(member));
       window.open(`https://wa.me/${formatMobileForWa(member.mobileNumber)}?text=${message}`, "_blank");
       opened += 1;
       if (idx === validMembers.length - 1) {
@@ -68,17 +48,14 @@ function sendRemindersToMembers(
 }
 
 export default function Pending() {
-  const [monthFilter, setMonthFilter] = useState(getCurrentMonth());
   const [bulkSending, setBulkSending] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [payingMember, setPayingMember] = useState<PendingMember | null>(null);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const createPayment = useCreatePayment();
+  const updateFeeStatus = useUpdateMemberFeeStatus();
 
-  const { data: pendingMembers, isLoading } = useGetPendingMembers({ month: monthFilter || undefined });
-  const monthLabel = formatYearMonth(monthFilter);
+  const { data: pendingMembers, isLoading } = useGetPendingMembers();
 
   const allIds = useMemo(() => (pendingMembers ?? []).map((m) => m.memberId), [pendingMembers]);
   const allSelected = allIds.length > 0 && allIds.every((id) => selectedIds.has(id));
@@ -104,14 +81,14 @@ export default function Pending() {
       toast({ title: "Cannot send reminder", description: "Member has no valid mobile number", variant: "destructive" });
       return;
     }
-    const message = encodeURIComponent(buildReminderMessage(member, monthLabel));
+    const message = encodeURIComponent(buildReminderMessage(member));
     window.open(`https://wa.me/${formattedNum}?text=${message}`, "_blank");
   };
 
   const handleBulkReminder = () => {
     if (!pendingMembers || pendingMembers.length === 0) return;
     if (!window.confirm(`Send a WhatsApp reminder to all ${pendingMembers.length} pending members? Your browser may ask permission to open multiple tabs.`)) return;
-    sendRemindersToMembers(pendingMembers, monthLabel, (opened) => {
+    sendRemindersToMembers(pendingMembers, (opened) => {
       toast({ title: "Bulk reminder sent", description: `Opened ${opened} WhatsApp tab${opened === 1 ? "" : "s"}.` });
     }, setBulkSending);
   };
@@ -120,77 +97,34 @@ export default function Pending() {
     if (!pendingMembers || selectedCount === 0) return;
     const selected = pendingMembers.filter((m) => selectedIds.has(m.memberId));
     if (!window.confirm(`Send a WhatsApp reminder to ${selected.length} selected member${selected.length === 1 ? "" : "s"}? Your browser may ask permission to open multiple tabs.`)) return;
-    sendRemindersToMembers(selected, monthLabel, (opened) => {
+    sendRemindersToMembers(selected, (opened) => {
       toast({ title: "Reminders sent", description: `Opened ${opened} WhatsApp tab${opened === 1 ? "" : "s"}.` });
       setSelectedIds(new Set());
     }, setBulkSending);
   };
 
-  const handleRecordPayment = (data: Parameters<typeof createPayment.mutate>[0]["data"]) => {
-    createPayment.mutate(
-      { data },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetPendingMembersQueryKey({ month: monthFilter }) });
-          queryClient.invalidateQueries({ queryKey: getListPaymentsQueryKey() });
-          setPayingMember(null);
-          toast({ title: "Payment recorded", description: `Payment saved for ${payingMember?.fullName}.` });
-        },
-        onError: () => {
-          toast({ title: "Error", description: "Failed to record payment. Please try again.", variant: "destructive" });
-        },
-      }
-    );
+  const handleMarkPaid = (member: PendingMember) => {
+    updateFeeStatus.mutate({ id: member.memberId, data: { feeStatus: "paid" } }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetPendingMembersQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getListMembersQueryKey() });
+        toast({ title: "Fee marked paid", description: `${member.fullName}'s membership fee is now paid.` });
+      },
+      onError: () => {
+        toast({ title: "Error", description: "Failed to update fee status. Please try again.", variant: "destructive" });
+      },
+    });
   };
 
   return (
     <div className="space-y-6">
-      {/* Record Payment Dialog */}
-      <Dialog open={!!payingMember} onOpenChange={(open) => { if (!open) setPayingMember(null); }}>
-        <DialogContent className="sm:max-w-[520px] dark:bg-slate-900 dark:border-slate-700">
-          <DialogHeader>
-            <DialogTitle className="text-emerald-950 dark:text-emerald-100">
-              Record Payment — {payingMember?.fullName}
-            </DialogTitle>
-            <p className="text-sm text-emerald-700 dark:text-slate-400">
-              {payingMember?.membershipId} · Amount due: {payingMember ? formatSAR(payingMember.amountDue) : ""}
-            </p>
-          </DialogHeader>
-          {payingMember && (
-            <PaymentForm
-              fixedMemberId={payingMember.memberId}
-              defaultValues={{
-                memberId: payingMember.memberId,
-                month: monthFilter,
-                amountPaid: payingMember.amountDue,
-                paymentMethod: "cash",
-                receiptNumber: `RCPT-${Date.now()}`,
-                notes: "",
-              }}
-              onSubmit={handleRecordPayment}
-              isSubmitting={createPayment.isPending}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-green-950 dark:text-green-100">Pending Contributions</h1>
-          <p className="text-green-800/70 dark:text-slate-400">Track unpaid and partially paid members for {monthLabel}</p>
+          <h1 className="text-3xl font-bold tracking-tight text-green-950 dark:text-green-100">Pending Membership Fees</h1>
+          <p className="text-green-800/70 dark:text-slate-400">Members whose one-time registration fee is pending or unpaid</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center space-x-2 bg-white dark:bg-slate-900 p-2 rounded-lg border border-green-100 dark:border-slate-800 shadow-sm">
-            <CalendarDays className="h-5 w-5 text-green-700 dark:text-slate-500 ml-2 shrink-0" />
-            <Input
-              type="month"
-              value={monthFilter}
-              onChange={(e) => { setMonthFilter(e.target.value); setSelectedIds(new Set()); }}
-              className="border-0 focus-visible:ring-0 shadow-none px-2 h-9 dark:bg-transparent dark:text-slate-200"
-            />
-          </div>
-
           {selectedCount > 0 && (
             <Button
               onClick={handleSelectedReminder}
@@ -228,12 +162,12 @@ export default function Pending() {
         </Card>
         <Card className="rounded-2xl border-red-100 dark:border-red-900/40 dark:bg-slate-900 shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-emerald-800 dark:text-slate-300">Total Amount Due</CardTitle>
+            <CardTitle className="text-sm font-medium text-emerald-800 dark:text-slate-300">Outstanding Fees</CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? <Skeleton className="h-8 w-32" /> : (
               <div className="text-2xl font-bold text-red-600 dark:text-red-400">
-                {formatSAR(pendingMembers?.reduce((acc, curr) => acc + curr.amountDue, 0) || 0)}
+                {formatSAR(pendingMembers?.reduce((acc, curr) => acc + curr.membershipFee, 0) || 0)}
               </div>
             )}
           </CardContent>
@@ -246,7 +180,7 @@ export default function Pending() {
             <CardContent>
               <div className="text-2xl font-bold text-[#128C7E] dark:text-[#25D366]">{selectedCount}</div>
               <p className="text-xs text-emerald-600 dark:text-slate-500 mt-1">
-                Due: {formatSAR((pendingMembers ?? []).filter((m) => selectedIds.has(m.memberId)).reduce((acc, m) => acc + m.amountDue, 0))}
+                Fees: {formatSAR((pendingMembers ?? []).filter((m) => selectedIds.has(m.memberId)).reduce((acc, m) => acc + m.membershipFee, 0))}
               </p>
             </CardContent>
           </Card>
@@ -270,9 +204,8 @@ export default function Pending() {
               </TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Member</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Contact</TableHead>
-              <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">Total Dues</TableHead>
-              <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">Amount Paid</TableHead>
-              <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">Amount Due</TableHead>
+              <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Reference Member</TableHead>
+              <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">Membership Fee</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-center">Status</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">Actions</TableHead>
             </TableRow>
@@ -284,8 +217,7 @@ export default function Pending() {
                   <TableCell><Skeleton className="h-4 w-4" /></TableCell>
                   <TableCell><Skeleton className="h-10 w-48" /></TableCell>
                   <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                  <TableCell className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
-                  <TableCell className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
+                  <TableCell><Skeleton className="h-5 w-28" /></TableCell>
                   <TableCell className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
                   <TableCell><Skeleton className="h-6 w-20 mx-auto rounded-full" /></TableCell>
                   <TableCell><Skeleton className="h-8 w-40 ml-auto" /></TableCell>
@@ -293,13 +225,13 @@ export default function Pending() {
               ))
             ) : pendingMembers?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="h-32 text-center text-emerald-600 dark:text-slate-500">
+                <TableCell colSpan={7} className="h-32 text-center text-emerald-600 dark:text-slate-500">
                   <div className="flex flex-col items-center justify-center">
                     <div className="h-12 w-12 rounded-full bg-emerald-50 dark:bg-slate-800 flex items-center justify-center mb-3">
-                      <CalendarDays className="h-6 w-6 text-emerald-300 dark:text-slate-600" />
+                      <CheckCircle2 className="h-6 w-6 text-emerald-300 dark:text-slate-600" />
                     </div>
                     <p className="font-medium text-emerald-900 dark:text-slate-300">All caught up!</p>
-                    <p className="text-sm dark:text-slate-500">No pending contributions for this month.</p>
+                    <p className="text-sm dark:text-slate-500">Every member's registration fee is paid.</p>
                   </div>
                 </TableCell>
               </TableRow>
@@ -351,35 +283,40 @@ export default function Pending() {
                         </div>
                       </div>
                     </TableCell>
+                    <TableCell>
+                      {member.refMemberName ? (
+                        <div className="text-sm">
+                          <div className="text-emerald-900 dark:text-slate-200">{member.refMemberName}</div>
+                          {member.refMemberId ? (
+                            <div className="text-xs text-emerald-600 dark:text-slate-500">ID: {member.refMemberId}</div>
+                          ) : null}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-emerald-500/70 dark:text-slate-600">—</span>
+                      )}
+                    </TableCell>
                     <TableCell className="text-right text-emerald-900 dark:text-slate-300 font-medium">
-                      {formatSAR(member.monthlyAmount)}
-                    </TableCell>
-                    <TableCell className="text-right text-emerald-700 dark:text-green-400">
-                      {formatSAR(member.amountPaid)}
-                    </TableCell>
-                    <TableCell className="text-right text-red-600 dark:text-red-400 font-bold">
-                      {formatSAR(member.amountDue)}
+                      {formatSAR(member.membershipFee)}
                     </TableCell>
                     <TableCell className="text-center">
-                      <div className={cn(
-                        "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider",
-                        member.status === 'unpaid'
-                          ? "bg-red-100 dark:bg-red-950/40 text-red-800 dark:text-red-400"
-                          : "bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-400"
+                      <span className={cn(
+                        "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold",
+                        feeStatusBadgeClass(member.feeStatus)
                       )}>
-                        {member.status}
-                      </div>
+                        {feeStatusLabel(member.feeStatus)}
+                      </span>
                     </TableCell>
                     <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1.5">
                         <Button
                           size="sm"
                           variant="outline"
+                          disabled={updateFeeStatus.isPending}
                           className="border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-slate-600 dark:text-emerald-400 dark:hover:bg-slate-800"
-                          onClick={() => setPayingMember(member)}
+                          onClick={() => handleMarkPaid(member)}
                         >
-                          <CircleDollarSign className="mr-1.5 h-4 w-4" />
-                          Pay
+                          <CheckCircle2 className="mr-1.5 h-4 w-4" />
+                          Mark Paid
                         </Button>
                         <Button
                           size="sm"

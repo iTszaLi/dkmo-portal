@@ -41,46 +41,46 @@ function rand<T>(arr: T[]): T {
 
 // ── 1. MEMBERS ────────────────────────────────────────────────────────────────
 const memberRows = [
-  { fullName: "Fazlurrahman Kolkar",     designation: "President",                 city: "Kolkar",       country: "Saudi Arabia", monthlyAmount: "500", mobileNumber: "+919844100001" },
-  { fullName: "Asif Kannur",             designation: "Vice President",            city: "Kannur",       country: "Saudi Arabia", monthlyAmount: "500", mobileNumber: "+919844100002" },
-  { fullName: "Irshad Bajpe",            designation: "General Secretary",         city: "Bajpe",        country: "Saudi Arabia", monthlyAmount: "300", mobileNumber: "+919844100003" },
-  { fullName: "Abdul Rahiman Sulaiman",  designation: "Treasurer",                 city: "Mangalore",    country: "Saudi Arabia", monthlyAmount: "300", mobileNumber: "+919844100004" },
-  { fullName: "Sameen Khan Ummer",       designation: "Joint Secretary",           city: "Mangalore",    country: "Saudi Arabia", monthlyAmount: "300", mobileNumber: "+919844100005" },
-  { fullName: "Abdul Azeez Bajpe",       designation: "Overseas Convenor",         city: "Bajpe",        country: "Saudi Arabia", monthlyAmount: "300", mobileNumber: "+919844100006" },
-  { fullName: "Salman Noor",             designation: "Advisor",                   city: "Mangalore",    country: "Saudi Arabia", monthlyAmount: "200", mobileNumber: "+919844100007" },
-  { fullName: "G.K. Shaikh",             designation: "Advisor",                   city: "Mangalore",    country: "India",        monthlyAmount: "200", mobileNumber: "+919844100008" },
-  { fullName: "Haneef B.K.",             designation: "Advisor",                   city: "Mangalore",    country: "India",        monthlyAmount: "200", mobileNumber: "+919844100009" },
-  { fullName: "Ghani Ahmed Mulki",       designation: "Loan Convenor",            city: "Mulki",        country: "Saudi Arabia", monthlyAmount: "250", mobileNumber: "+919844100010" },
-  { fullName: "Shamsuddin Addoor",       designation: "Loan Convenor (Recovery)", city: "Addoor",       country: "Saudi Arabia", monthlyAmount: "250", mobileNumber: "+919844100011" },
-  { fullName: "Yousuf Addoor",           designation: "Auditor",                   city: "Addoor",       country: "Saudi Arabia", monthlyAmount: "200", mobileNumber: "+919844100012" },
-  { fullName: "Irfan Shaikh",            designation: "Verification Team Leader", city: "Mangalore",    country: "Saudi Arabia", monthlyAmount: "200", mobileNumber: "+919844100013" },
-  { fullName: "Ashraf Kozhikan",         designation: "Event Organizer",          city: "Kozhikode",    country: "Saudi Arabia", monthlyAmount: "200", mobileNumber: "+919844100014" },
-  { fullName: "Shareef Thokur",          designation: "Event Organizer",          city: "Thokur",       country: "Saudi Arabia", monthlyAmount: "200", mobileNumber: "+919844100015" },
-  { fullName: "Hameed Nazeer",           designation: "Event Organizer",          city: "Mangalore",    country: "Saudi Arabia", monthlyAmount: "200", mobileNumber: "+919844100016" },
-  { fullName: "Nazeer Hassan",           designation: "Event Organizer",          city: "Mangalore",    country: "Saudi Arabia", monthlyAmount: "200", mobileNumber: "+919844100017" },
-  { fullName: "Sadiq Ahmed Udupi",       designation: "Employment Scheme",        city: "Udupi",        country: "Saudi Arabia", monthlyAmount: "200", mobileNumber: "+919844100018" },
-  { fullName: "Akhil Ganjimutt",         designation: "Employment Scheme",        city: "Ganjimutt",    country: "Saudi Arabia", monthlyAmount: "200", mobileNumber: "+919844100019" },
-  { fullName: "Ashraf Sheikh Koteshwar", designation: "FRF Convenor",             city: "Koteshwar",    country: "Saudi Arabia", monthlyAmount: "250", mobileNumber: "+919844100020" },
-  { fullName: "Mohammed Haris Byndoor",  designation: "FRF Convenor",             city: "Byndoor",      country: "Saudi Arabia", monthlyAmount: "250", mobileNumber: "+919844100021" },
-  { fullName: "Haneef N.S.",             designation: "Executive Member",         city: "Mangalore",    country: "Saudi Arabia", monthlyAmount: "150", mobileNumber: "+919844100022" },
-  { fullName: "Zia Ganjimutt",           designation: "Executive Member",         city: "Ganjimutt",    country: "Saudi Arabia", monthlyAmount: "150", mobileNumber: "+919844100023" },
-  { fullName: "Razik Bajpe",             designation: "Executive Member",         city: "Bajpe",        country: "Saudi Arabia", monthlyAmount: "150", mobileNumber: "+919844100024" },
-  { fullName: "Yousuf Kalanjibail",      designation: "Executive Member",         city: "Kalanjibail",  country: "Saudi Arabia", monthlyAmount: "150", mobileNumber: "+919844100025" },
-  { fullName: "Shaul Hameed",            designation: "Executive Member",         city: "Mangalore",    country: "Saudi Arabia", monthlyAmount: "150", mobileNumber: "+919844100026" },
-  { fullName: "Nayaz Ahmed",             designation: "Executive Member",         city: "Mangalore",    country: "Saudi Arabia", monthlyAmount: "150", mobileNumber: "+919844100027" },
-  { fullName: "Abdul Majeed Vittal",     designation: "Executive Member",         city: "Vittal",       country: "Saudi Arabia", monthlyAmount: "150", mobileNumber: "+919844100028" },
-  { fullName: "Rafee Hameed Uchchila",   designation: "Executive Member",         city: "Uchchila",     country: "Saudi Arabia", monthlyAmount: "150", mobileNumber: "+919844100029" },
-  { fullName: "Bilal Hussain Surathkal", designation: "Member",                   city: "Surathkal",    country: "Saudi Arabia", monthlyAmount: "100", mobileNumber: "+919844100030" },
-  { fullName: "Mohsin Ahmed Belman",     designation: "Member",                   city: "Belman",       country: "Saudi Arabia", monthlyAmount: "100", mobileNumber: "+919844100031" },
-  { fullName: "Junaid Rashid Kottara",   designation: "Member",                   city: "Kottara",      country: "Saudi Arabia", monthlyAmount: "100", mobileNumber: "+919844100032" },
-  { fullName: "Arshad Farooq Ullal",     designation: "Member",                   city: "Ullal",        country: "Saudi Arabia", monthlyAmount: "100", mobileNumber: "+919844100033" },
-  { fullName: "Faheem Abdul Kadri",      designation: "Member",                   city: "Mangalore",    country: "Saudi Arabia", monthlyAmount: "100", mobileNumber: "+919844100034" },
-  { fullName: "Tahir Mohammed Bantwal",  designation: "Member",                   city: "Bantwal",      country: "India",        monthlyAmount: "100", mobileNumber: "+919844100035" },
-  { fullName: "Zubair Khan Puttur",      designation: "Member",                   city: "Puttur",       country: "India",        monthlyAmount: "100", mobileNumber: "+919844100036" },
-  { fullName: "Imran Hussain Kundapur",  designation: "Member",                   city: "Kundapur",     country: "India",        monthlyAmount: "100", mobileNumber: "+919844100037" },
-  { fullName: "Arafath Salim Shirva",    designation: "Member",                   city: "Shirva",       country: "Saudi Arabia", monthlyAmount: "100", mobileNumber: "+919844100038" },
-  { fullName: "Basheer Ahmed Padubidri", designation: "Member",                   city: "Padubidri",    country: "Saudi Arabia", monthlyAmount: "100", mobileNumber: "+919844100039" },
-  { fullName: "Mubarak Ali Thokkottu",   designation: "Member",                   city: "Thokkottu",    country: "Saudi Arabia", monthlyAmount: "100", mobileNumber: "+919844100040" },
+  { fullName: "Fazlurrahman Kolkar",     designation: "President",                 city: "Kolkar",       country: "Saudi Arabia", mobileNumber: "+919844100001" },
+  { fullName: "Asif Kannur",             designation: "Vice President",            city: "Kannur",       country: "Saudi Arabia", mobileNumber: "+919844100002" },
+  { fullName: "Irshad Bajpe",            designation: "General Secretary",         city: "Bajpe",        country: "Saudi Arabia", mobileNumber: "+919844100003" },
+  { fullName: "Abdul Rahiman Sulaiman",  designation: "Treasurer",                 city: "Mangalore",    country: "Saudi Arabia", mobileNumber: "+919844100004" },
+  { fullName: "Sameen Khan Ummer",       designation: "Joint Secretary",           city: "Mangalore",    country: "Saudi Arabia", mobileNumber: "+919844100005" },
+  { fullName: "Abdul Azeez Bajpe",       designation: "Overseas Convenor",         city: "Bajpe",        country: "Saudi Arabia", mobileNumber: "+919844100006" },
+  { fullName: "Salman Noor",             designation: "Advisor",                   city: "Mangalore",    country: "Saudi Arabia", mobileNumber: "+919844100007" },
+  { fullName: "G.K. Shaikh",             designation: "Advisor",                   city: "Mangalore",    country: "India",        mobileNumber: "+919844100008" },
+  { fullName: "Haneef B.K.",             designation: "Advisor",                   city: "Mangalore",    country: "India",        mobileNumber: "+919844100009" },
+  { fullName: "Ghani Ahmed Mulki",       designation: "Loan Convenor",            city: "Mulki",        country: "Saudi Arabia", mobileNumber: "+919844100010" },
+  { fullName: "Shamsuddin Addoor",       designation: "Loan Convenor (Recovery)", city: "Addoor",       country: "Saudi Arabia", mobileNumber: "+919844100011" },
+  { fullName: "Yousuf Addoor",           designation: "Auditor",                   city: "Addoor",       country: "Saudi Arabia", mobileNumber: "+919844100012" },
+  { fullName: "Irfan Shaikh",            designation: "Verification Team Leader", city: "Mangalore",    country: "Saudi Arabia", mobileNumber: "+919844100013" },
+  { fullName: "Ashraf Kozhikan",         designation: "Event Organizer",          city: "Kozhikode",    country: "Saudi Arabia", mobileNumber: "+919844100014" },
+  { fullName: "Shareef Thokur",          designation: "Event Organizer",          city: "Thokur",       country: "Saudi Arabia", mobileNumber: "+919844100015" },
+  { fullName: "Hameed Nazeer",           designation: "Event Organizer",          city: "Mangalore",    country: "Saudi Arabia", mobileNumber: "+919844100016" },
+  { fullName: "Nazeer Hassan",           designation: "Event Organizer",          city: "Mangalore",    country: "Saudi Arabia", mobileNumber: "+919844100017" },
+  { fullName: "Sadiq Ahmed Udupi",       designation: "Employment Scheme",        city: "Udupi",        country: "Saudi Arabia", mobileNumber: "+919844100018" },
+  { fullName: "Akhil Ganjimutt",         designation: "Employment Scheme",        city: "Ganjimutt",    country: "Saudi Arabia", mobileNumber: "+919844100019" },
+  { fullName: "Ashraf Sheikh Koteshwar", designation: "FRF Convenor",             city: "Koteshwar",    country: "Saudi Arabia", mobileNumber: "+919844100020" },
+  { fullName: "Mohammed Haris Byndoor",  designation: "FRF Convenor",             city: "Byndoor",      country: "Saudi Arabia", mobileNumber: "+919844100021" },
+  { fullName: "Haneef N.S.",             designation: "Executive Member",         city: "Mangalore",    country: "Saudi Arabia", mobileNumber: "+919844100022" },
+  { fullName: "Zia Ganjimutt",           designation: "Executive Member",         city: "Ganjimutt",    country: "Saudi Arabia", mobileNumber: "+919844100023" },
+  { fullName: "Razik Bajpe",             designation: "Executive Member",         city: "Bajpe",        country: "Saudi Arabia", mobileNumber: "+919844100024" },
+  { fullName: "Yousuf Kalanjibail",      designation: "Executive Member",         city: "Kalanjibail",  country: "Saudi Arabia", mobileNumber: "+919844100025" },
+  { fullName: "Shaul Hameed",            designation: "Executive Member",         city: "Mangalore",    country: "Saudi Arabia", mobileNumber: "+919844100026" },
+  { fullName: "Nayaz Ahmed",             designation: "Executive Member",         city: "Mangalore",    country: "Saudi Arabia", mobileNumber: "+919844100027" },
+  { fullName: "Abdul Majeed Vittal",     designation: "Executive Member",         city: "Vittal",       country: "Saudi Arabia", mobileNumber: "+919844100028" },
+  { fullName: "Rafee Hameed Uchchila",   designation: "Executive Member",         city: "Uchchila",     country: "Saudi Arabia", mobileNumber: "+919844100029" },
+  { fullName: "Bilal Hussain Surathkal", designation: "Member",                   city: "Surathkal",    country: "Saudi Arabia", mobileNumber: "+919844100030" },
+  { fullName: "Mohsin Ahmed Belman",     designation: "Member",                   city: "Belman",       country: "Saudi Arabia", mobileNumber: "+919844100031" },
+  { fullName: "Junaid Rashid Kottara",   designation: "Member",                   city: "Kottara",      country: "Saudi Arabia", mobileNumber: "+919844100032" },
+  { fullName: "Arshad Farooq Ullal",     designation: "Member",                   city: "Ullal",        country: "Saudi Arabia", mobileNumber: "+919844100033" },
+  { fullName: "Faheem Abdul Kadri",      designation: "Member",                   city: "Mangalore",    country: "Saudi Arabia", mobileNumber: "+919844100034" },
+  { fullName: "Tahir Mohammed Bantwal",  designation: "Member",                   city: "Bantwal",      country: "India",        mobileNumber: "+919844100035" },
+  { fullName: "Zubair Khan Puttur",      designation: "Member",                   city: "Puttur",       country: "India",        mobileNumber: "+919844100036" },
+  { fullName: "Imran Hussain Kundapur",  designation: "Member",                   city: "Kundapur",     country: "India",        mobileNumber: "+919844100037" },
+  { fullName: "Arafath Salim Shirva",    designation: "Member",                   city: "Shirva",       country: "Saudi Arabia", mobileNumber: "+919844100038" },
+  { fullName: "Basheer Ahmed Padubidri", designation: "Member",                   city: "Padubidri",    country: "Saudi Arabia", mobileNumber: "+919844100039" },
+  { fullName: "Mubarak Ali Thokkottu",   designation: "Member",                   city: "Thokkottu",    country: "Saudi Arabia", mobileNumber: "+919844100040" },
 ];
 
 // ── 2. EVENTS ─────────────────────────────────────────────────────────────────
@@ -294,41 +294,24 @@ async function main() {
   const insertedMembers = await db
     .insert(membersTable)
     .values(
-      memberRows.map((m, i) => ({
-        ...m,
-        membershipId: `DKMO-${String(i + 1).padStart(4, "0")}`,
-      }))
+      memberRows.map((m, i) => {
+        // Reference member = one of the first 5 office-bearers (never self)
+        const refIdx = i === 0 ? -1 : (i - 1) % 5;
+        const feeStatus: "paid" | "pending" | "unpaid" =
+          i % 7 === 0 ? "unpaid" : i % 3 === 0 ? "pending" : "paid";
+        return {
+          ...m,
+          membershipId: `DKMO-${String(i + 1).padStart(4, "0")}`,
+          membershipFee: "100",
+          feeStatus,
+          feePaidAt: feeStatus === "paid" ? daysAgo(30 + (i % 60)) : null,
+          feeUpdatedBy: feeStatus === "paid" ? "Abdul Rahiman Sulaiman" : "",
+          refMemberName: refIdx >= 0 ? memberRows[refIdx].fullName : "",
+          refMemberId: refIdx >= 0 ? `DKMO-${String(refIdx + 1).padStart(4, "0")}` : "",
+        };
+      })
     )
     .returning();
-
-  // ── Payments (last 8 months for all members, with some gaps/partials) ─────
-  console.log("  ↳ inserting payments…");
-  const paymentMethods = ["cash", "bank_transfer", "upi", "cheque"] as const;
-  const paymentInserts = [];
-  let receiptCounter = 1000;
-
-  for (const member of insertedMembers) {
-    const monthlyAmt = parseFloat(member.monthlyAmount ?? "0");
-    for (let mo = 7; mo >= 0; mo--) {
-      const roll = Math.random();
-      if (roll < 0.12) continue;
-      const partial = roll > 0.82;
-      const amountPaid = partial
-        ? parseFloat((monthlyAmt * (0.4 + Math.random() * 0.4)).toFixed(2))
-        : monthlyAmt;
-
-      paymentInserts.push({
-        memberId: member.id,
-        month: monthsBack(mo),
-        amountPaid: String(amountPaid),
-        paymentMethod: rand([...paymentMethods]),
-        receiptNumber: `RCP-${receiptCounter++}`,
-        notes: partial ? "Partial payment received" : null,
-        paidAt: daysAgo(mo * 28 + Math.floor(Math.random() * 10)),
-      });
-    }
-  }
-  await db.insert(paymentsTable).values(paymentInserts);
 
   // ── Events ────────────────────────────────────────────────────────────────
   console.log("  ↳ inserting events…");
@@ -354,8 +337,8 @@ async function main() {
     { title: "Follow up Gulf Constructions payment", description: "Send reminder for second instalment of SAR 15,000.", assignedTo: "Irfan Shaikh", priority: "high", status: "in_progress", dueDate: daysFromNow(7), sponsorId: insertedSponsors[2].id },
     { title: "Sports Day venue inspection", description: "Visit Karnataka Ground and confirm pitch, lighting and parking.", assignedTo: "Hameed Nazeer", priority: "medium", status: "pending", dueDate: daysFromNow(60), eventId: insertedEvents[5].id },
     { title: "Collect Riyadh Electronics first payment", description: "Ensure signed contract payment is processed before deadline.", assignedTo: "Salman Noor", priority: "high", status: "pending", dueDate: daysFromNow(10), sponsorId: insertedSponsors[5].id },
-    { title: "Update member database post-AGM", description: "Record newly elected office-bearers and revised monthly amounts.", assignedTo: "Irshad Bajpe", priority: "medium", status: "completed", dueDate: new Date("2026-01-05") },
-    { title: "Send contribution reminders – June 2026", description: "WhatsApp reminders to all members with outstanding June dues.", assignedTo: "Sameen Khan Ummer", priority: "medium", status: "pending", dueDate: daysFromNow(5) },
+    { title: "Update member database post-AGM", description: "Record newly elected office-bearers and confirm membership fee status.", assignedTo: "Irshad Bajpe", priority: "medium", status: "completed", dueDate: new Date("2026-01-05") },
+    { title: "Send membership fee reminders", description: "WhatsApp reminders to all members with pending or unpaid membership fees.", assignedTo: "Sameen Khan Ummer", priority: "medium", status: "pending", dueDate: daysFromNow(5) },
     { title: "Order trophies and medals – Sports Day", description: "Source 20 trophies and 60 medals from sports supplier.", assignedTo: "Nazeer Hassan", priority: "low", status: "pending", dueDate: daysFromNow(55), eventId: insertedEvents[5].id },
     { title: "Verify FRF claims – Q2 batch", description: "Review 8 pending FRF applications and submit committee report.", assignedTo: "Ashraf Sheikh Koteshwar", priority: "high", status: "in_progress", dueDate: daysFromNow(8) },
     { title: "Al-Baraka Finance follow-up", description: "Confirm second instalment schedule and send invoice copy.", assignedTo: "Fazlurrahman Kolkar", priority: "medium", status: "pending", dueDate: daysFromNow(28), sponsorId: insertedSponsors[7].id },
@@ -614,7 +597,6 @@ async function main() {
 
   console.log("✅  Seed complete!");
   console.log(`   Members:          ${insertedMembers.length}`);
-  console.log(`   Payments:         ${paymentInserts.length}`);
   console.log(`   Events:           ${insertedEvents.length}`);
   console.log(`   Sponsors:         ${insertedSponsors.length}`);
   console.log(`   Tasks:            ${taskRows.length}`);

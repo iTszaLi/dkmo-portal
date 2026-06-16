@@ -34,6 +34,7 @@ export default function Members() {
   const createMember = useCreateMember();
   const updateMember = useUpdateMember();
   const deleteMember = useDeleteMember();
+  const updateFeeStatus = useUpdateMemberFeeStatus();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -78,6 +79,18 @@ export default function Members() {
     });
   };
 
+  const handleFeeStatus = (id: string, feeStatus: FeeStatusInputFeeStatus) => {
+    updateFeeStatus.mutate({ id, data: { feeStatus } }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListMembersQueryKey() });
+        toast({ title: "Fee status updated", variant: "default" });
+      },
+      onError: (err: any) => {
+        toast({ title: "Failed to update fee status", description: err.message, variant: "destructive" });
+      }
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -118,7 +131,9 @@ export default function Members() {
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Member</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Contact</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Location</TableHead>
-              <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">Monthly Dues</TableHead>
+              <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Reference Member</TableHead>
+              <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">Membership Fee</TableHead>
+              <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Fee Status</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -129,13 +144,15 @@ export default function Members() {
                   <TableCell><Skeleton className="h-10 w-48" /></TableCell>
                   <TableCell><Skeleton className="h-5 w-32" /></TableCell>
                   <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-5 w-28" /></TableCell>
                   <TableCell className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-20" /></TableCell>
                   <TableCell><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
                 </TableRow>
               ))
             ) : members?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center text-emerald-600 dark:text-slate-500">
+                <TableCell colSpan={7} className="h-24 text-center text-emerald-600 dark:text-slate-500">
                   No members found.
                 </TableCell>
               </TableRow>
@@ -170,8 +187,26 @@ export default function Members() {
                       {member.city}, {member.country}
                     </div>
                   </TableCell>
+                  <TableCell>
+                    {member.refMemberName ? (
+                      <div className="text-sm">
+                        <div className="text-emerald-900 dark:text-slate-200">{member.refMemberName}</div>
+                        {member.refMemberId ? (
+                          <div className="text-xs text-emerald-600 dark:text-slate-500">ID: {member.refMemberId}</div>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <span className="text-xs text-emerald-500/70 dark:text-slate-600">—</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-right font-semibold text-emerald-900 dark:text-green-300">
-                    {formatSAR(member.monthlyAmount)}
+                    {formatSAR(member.membershipFee)}
+                  </TableCell>
+                  <TableCell>
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${feeStatusBadgeClass(member.feeStatus)}`}>
+                      {member.feeStatus === "paid" ? <CheckCircle2 className="h-3 w-3" /> : member.feeStatus === "pending" ? <Clock className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                      {feeStatusLabel(member.feeStatus)}
+                    </span>
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
@@ -190,6 +225,21 @@ export default function Members() {
                         <DropdownMenuItem onClick={() => setEditingMember(member)} className="dark:text-slate-300 dark:focus:bg-slate-800">
                           <Edit className="mr-2 h-4 w-4" /> Edit
                         </DropdownMenuItem>
+                        {member.feeStatus !== "paid" && (
+                          <DropdownMenuItem onClick={() => handleFeeStatus(member.id, "paid")} className="text-emerald-700 dark:text-emerald-400 dark:focus:bg-slate-800">
+                            <CheckCircle2 className="mr-2 h-4 w-4" /> Mark Fee Paid
+                          </DropdownMenuItem>
+                        )}
+                        {member.feeStatus !== "pending" && (
+                          <DropdownMenuItem onClick={() => handleFeeStatus(member.id, "pending")} className="text-amber-700 dark:text-amber-400 dark:focus:bg-slate-800">
+                            <Clock className="mr-2 h-4 w-4" /> Mark Fee Pending
+                          </DropdownMenuItem>
+                        )}
+                        {member.feeStatus !== "unpaid" && (
+                          <DropdownMenuItem onClick={() => handleFeeStatus(member.id, "unpaid")} className="dark:text-slate-300 dark:focus:bg-slate-800">
+                            <XCircle className="mr-2 h-4 w-4" /> Mark Fee Unpaid
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem onClick={() => setDeletingMember(member)} className="text-red-600 dark:text-red-400 dark:focus:bg-slate-800">
                           <Trash className="mr-2 h-4 w-4" /> Delete
                         </DropdownMenuItem>

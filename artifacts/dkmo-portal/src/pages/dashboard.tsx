@@ -2,18 +2,13 @@ import { useMemo, useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import {
   useGetDashboardSummary,
-  useGetRecentPayments,
-  useGetMonthlyCollection,
-  useGetPaymentMethodBreakdown,
-  useListPayments,
-  useListMembers,
   useGetDashboardSponsorPipeline,
   useGetDashboardFinancialSummary,
   useGetDashboardCashFlow,
   useGetFrfMembershipStats,
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { formatSAR, getCurrentMonth, formatDate, formatYearMonth, getCurrentYear } from "@/lib/utils";
+import { formatSAR, getCurrentMonth } from "@/lib/utils";
 import {
   Users,
   TrendingUp,
@@ -21,8 +16,6 @@ import {
   Trophy,
   CalendarRange,
   ArrowRight,
-  Medal,
-  Award,
   Handshake,
   XCircle,
   Clock,
@@ -33,30 +26,12 @@ import {
   BookUser,
   Scale,
 } from "lucide-react";
-import { PaymentMethodIcon } from "@/lib/payment-icons";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Progress } from "@/components/ui/progress";
 import { useQuery } from "@tanstack/react-query";
-import { useTheme } from "@/lib/theme";
 
 export default function Dashboard() {
   const currentMonth = getCurrentMonth();
-  const currentYear = getCurrentYear();
   const [, setLocation] = useLocation();
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
 
   const today = new Date();
   const fullDateLabel = today.toLocaleDateString("en-US", {
@@ -69,11 +44,6 @@ export default function Dashboard() {
   const todayYear = today.getFullYear();
   const todayQuarter = Math.floor(today.getMonth() / 3) + 1;
 
-  // Adjustable YTD year
-  const [ytdYear, setYtdYear] = useState(todayYear);
-  const [showYtdPicker, setShowYtdPicker] = useState(false);
-  const ytdPickerRef = useRef<HTMLDivElement>(null);
-
   // Adjustable Events quarter/year
   const [eventsYear, setEventsYear] = useState(todayYear);
   const [eventsQuarter, setEventsQuarter] = useState(todayQuarter);
@@ -83,19 +53,13 @@ export default function Dashboard() {
   // Close pickers on outside click
   useEffect(() => {
     function onMouseDown(e: MouseEvent) {
-      if (ytdPickerRef.current && !ytdPickerRef.current.contains(e.target as Node)) setShowYtdPicker(false);
       if (quarterPickerRef.current && !quarterPickerRef.current.contains(e.target as Node)) setShowQuarterPicker(false);
     }
     document.addEventListener("mousedown", onMouseDown);
     return () => document.removeEventListener("mousedown", onMouseDown);
   }, []);
 
-  const { data: summary, isLoading: isLoadingSummary } = useGetDashboardSummary({ month: currentMonth });
-  const { data: recentPayments, isLoading: isLoadingRecent } = useGetRecentPayments({ limit: 5 });
-  const { data: monthlyCollection, isLoading: isLoadingCollection } = useGetMonthlyCollection({ months: 6 });
-  const { data: paymentBreakdown, isLoading: isLoadingBreakdown } = useGetPaymentMethodBreakdown({ month: currentMonth });
-  const { data: allPayments } = useListPayments();
-  const { data: members } = useListMembers();
+  const { data: summary, isLoading: isLoadingSummary } = useGetDashboardSummary();
   const { data: pipeline } = useGetDashboardSponsorPipeline();
   const { data: financialSummary } = useGetDashboardFinancialSummary({ month: currentMonth });
   const { data: cashFlow } = useGetDashboardCashFlow({ year: eventsYear, quarter: eventsQuarter });
@@ -119,53 +83,6 @@ export default function Dashboard() {
       return res.json() as Promise<AmbassadorEntry[]>;
     },
   });
-
-  const yearToDate = useMemo(() => {
-    if (!allPayments) return null;
-    return allPayments
-      .filter((p) => p.month.startsWith(String(ytdYear)))
-      .reduce((acc, p) => acc + Number(p.amountPaid), 0);
-  }, [allPayments, ytdYear]);
-
-  const topContributors = useMemo(() => {
-    if (!allPayments) return [];
-    const totals = new Map<string, { name: string; membershipId: string; total: number }>();
-    for (const p of allPayments) {
-      const prev = totals.get(p.memberId) ?? {
-        name: p.memberName,
-        membershipId: p.membershipId,
-        total: 0,
-      };
-      prev.total += Number(p.amountPaid);
-      totals.set(p.memberId, prev);
-    }
-    return Array.from(totals.entries())
-      .map(([memberId, v]) => ({ memberId, ...v }))
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 5);
-  }, [allPayments]);
-
-  const collectionRate = summary && summary.expectedThisMonth > 0
-    ? Math.round((summary.totalCollectedThisMonth / summary.expectedThisMonth) * 100)
-    : 0;
-
-  const METHOD_COLORS: Record<string, string> = {
-    cash: "#22c55e",
-    upi: "#f97316",
-    bank_transfer: "#3b82f6",
-    card: "#a855f7",
-    cheque: "#ef4444",
-    other: "#94a3b8",
-  };
-  const FALLBACK_COLORS = ["#0ea5e9", "#eab308", "#ec4899", "#14b8a6", "#f43f5e", "#8b5cf6"];
-  const colorFor = (method: string, index: number) =>
-    METHOD_COLORS[method] ?? FALLBACK_COLORS[index % FALLBACK_COLORS.length];
-
-  const chartAxisColor = isDark ? "#9ca3af" : "#6b7280";
-  const chartGridColor = isDark ? "#374151" : "#e5e7eb";
-  const chartTooltipStyle = isDark
-    ? { backgroundColor: "#1f2937", border: "1px solid #374151", borderRadius: "8px", color: "#f9fafb" }
-    : { backgroundColor: "#fff", border: "1px solid #d1fae5", borderRadius: "8px", color: "#1a2e1a" };
 
   return (
     <div className="space-y-6">
@@ -205,19 +122,18 @@ export default function Dashboard() {
         <Link href="/payments" className="block group" data-testid="link-summary-collected">
           <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-green-300 dark:group-hover:border-green-700 group-active:scale-[0.98] cursor-pointer h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-green-900 dark:text-slate-300">Collected This Month</CardTitle>
+              <CardTitle className="text-sm font-medium text-green-900 dark:text-slate-300">Fees Collected</CardTitle>
               <TrendingUp className="h-4 w-4 text-green-700 dark:text-green-400" />
             </CardHeader>
             <CardContent>
               {isLoadingSummary ? (
                 <Skeleton className="h-8 w-32" />
               ) : (
-                <>
-                  <div className="text-2xl font-bold text-green-950 dark:text-green-300">{formatSAR(summary?.totalCollectedThisMonth)}</div>
-                  <Progress value={collectionRate} className="mt-2 h-1.5" />
-                  <p className="text-xs text-green-700/80 dark:text-slate-500 mt-1">{collectionRate}% of expected</p>
-                </>
+                <div className="text-2xl font-bold text-green-950 dark:text-green-300">{formatSAR(summary?.totalFeesCollected)}</div>
               )}
+              <p className="text-xs text-green-700/80 dark:text-slate-500 mt-1">
+                {summary?.paidMembersCount || 0} members paid
+              </p>
             </CardContent>
           </Card>
         </Link>
@@ -225,63 +141,36 @@ export default function Dashboard() {
         <Link href="/pending" className="block group" data-testid="link-summary-pending">
           <Card className="rounded-2xl border-orange-100 dark:border-orange-900/40 dark:bg-slate-900 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-orange-300 group-active:scale-[0.98] cursor-pointer h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-orange-900 dark:text-orange-300">Pending Amount</CardTitle>
+              <CardTitle className="text-sm font-medium text-orange-900 dark:text-orange-300">Outstanding Fees</CardTitle>
               <AlertCircle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
             </CardHeader>
             <CardContent>
               {isLoadingSummary ? (
                 <Skeleton className="h-8 w-32" />
               ) : (
-                <div className="text-2xl font-bold text-orange-700 dark:text-orange-400">{formatSAR(summary?.pendingAmount)}</div>
+                <div className="text-2xl font-bold text-orange-700 dark:text-orange-400">{formatSAR(summary?.outstandingFees)}</div>
               )}
               <p className="text-xs text-orange-700/80 dark:text-orange-500/80 mt-1">
-                {summary?.unpaidMembersCount || 0} unpaid · {summary?.partialMembersCount || 0} partial
+                {summary?.unpaidMembersCount || 0} unpaid · {summary?.pendingMembersCount || 0} pending
               </p>
             </CardContent>
           </Card>
         </Link>
 
-        <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm h-full" data-testid="link-summary-ytd">
+        <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm h-full" data-testid="link-summary-fee-total">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-green-900 dark:text-slate-300">
-              Year-to-Date {ytdYear}
+              Expected Fee Total
             </CardTitle>
-            <div className="relative" ref={ytdPickerRef}>
-              <button
-                type="button"
-                onClick={() => setShowYtdPicker((v) => !v)}
-                title="Change year"
-                className="rounded-lg p-1 hover:bg-green-100 dark:hover:bg-slate-700 transition-colors"
-              >
-                <CalendarRange className="h-4 w-4 text-green-700 dark:text-green-400" />
-              </button>
-              {showYtdPicker && (
-                <div className="absolute right-0 top-7 z-50 bg-white dark:bg-slate-800 border border-green-200 dark:border-slate-700 rounded-xl shadow-lg p-1.5 flex flex-col gap-1 min-w-[80px]">
-                  {[todayYear - 2, todayYear - 1, todayYear].map((yr) => (
-                    <button
-                      key={yr}
-                      type="button"
-                      onClick={() => { setYtdYear(yr); setShowYtdPicker(false); }}
-                      className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors text-center ${
-                        ytdYear === yr
-                          ? "bg-green-800 text-white"
-                          : "text-green-900 dark:text-slate-300 hover:bg-green-50 dark:hover:bg-slate-700"
-                      }`}
-                    >
-                      {yr}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <Wallet className="h-4 w-4 text-green-700 dark:text-green-400" />
           </CardHeader>
           <CardContent>
-            {yearToDate == null ? (
+            {isLoadingSummary ? (
               <Skeleton className="h-8 w-32" />
             ) : (
-              <div className="text-2xl font-bold text-green-950 dark:text-green-300">{formatSAR(yearToDate)}</div>
+              <div className="text-2xl font-bold text-green-950 dark:text-green-300">{formatSAR(summary?.membershipFeeTotal)}</div>
             )}
-            <p className="text-xs text-green-700/80 dark:text-slate-500 mt-1">All payments this year</p>
+            <p className="text-xs text-green-700/80 dark:text-slate-500 mt-1">All registration fees combined</p>
           </CardContent>
         </Card>
       </div>
@@ -596,256 +485,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       )}
-
-      {/* Charts row */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-full lg:col-span-4 rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-lg text-green-950 dark:text-green-100">Collection Trend</CardTitle>
-            <CardDescription className="dark:text-slate-400">Last 6 months · click a bar to view that month's report</CardDescription>
-          </CardHeader>
-          <CardContent className="pl-2">
-            {isLoadingCollection ? (
-              <div className="h-[300px] flex items-center justify-center">
-                <Skeleton className="h-[250px] w-[90%]" />
-              </div>
-            ) : (
-              <div className="h-[300px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={monthlyCollection || []} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartGridColor} />
-                    <XAxis
-                      dataKey="month"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: chartAxisColor, fontSize: 12 }}
-                      tickFormatter={formatYearMonth}
-                      dy={10}
-                    />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: chartAxisColor, fontSize: 12 }}
-                      tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
-                    />
-                    <Tooltip
-                      formatter={(value: number) => [formatSAR(value), "Collection"]}
-                      labelFormatter={(label) => formatYearMonth(String(label))}
-                      cursor={{ fill: isDark ? "rgba(34,197,94,0.08)" : "rgba(34,197,94,0.06)" }}
-                      contentStyle={chartTooltipStyle}
-                    />
-                    <Bar
-                      dataKey="total"
-                      fill={isDark ? "#22c55e" : "hsl(121 65% 24%)"}
-                      radius={[4, 4, 0, 0]}
-                      maxBarSize={50}
-                      cursor="pointer"
-                      onClick={(data: any) => {
-                        const m = data?.month;
-                        if (m) setLocation(`/reports?month=${m}`);
-                      }}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="col-span-full lg:col-span-3 rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-lg text-green-950 dark:text-green-100">Payment Methods</CardTitle>
-            <CardDescription className="dark:text-slate-400">This month · click a slice to view payments</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoadingBreakdown ? (
-              <div className="h-[300px] flex items-center justify-center">
-                <Skeleton className="h-[200px] w-[200px] rounded-full" />
-              </div>
-            ) : (
-              <div className="h-[300px] w-full flex flex-col">
-                <div className="flex-1">
-                  {(paymentBreakdown || []).length === 0 ? (
-                    <div className="h-full flex items-center justify-center text-sm text-green-700/70 dark:text-slate-500">
-                      No payments yet this month.
-                    </div>
-                  ) : (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={paymentBreakdown || []}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={90}
-                          paddingAngle={2}
-                          dataKey="total"
-                          nameKey="method"
-                          cursor="pointer"
-                          onClick={(data: any) => {
-                            const method = data?.method ?? data?.payload?.method;
-                            setLocation(
-                              `/payments?month=${currentMonth}${method ? `&method=${method}` : ""}`,
-                            );
-                          }}
-                        >
-                          {(paymentBreakdown || []).map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={colorFor(entry.method, index)} />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          formatter={(value: number) => [formatSAR(value), "Amount"]}
-                          contentStyle={chartTooltipStyle}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-xs mt-2">
-                  {(paymentBreakdown || []).map((entry, index) => (
-                    <div key={entry.method} className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-sm shrink-0" style={{ backgroundColor: colorFor(entry.method, index) }} />
-                      <span className="capitalize text-green-900 dark:text-slate-300 font-medium">{entry.method.replace("_", " ")}</span>
-                      <span className="text-green-700/70 dark:text-slate-500 ml-auto">({entry.count})</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Top contributors + recent payments */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-full lg:col-span-3 rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <div>
-              <CardTitle className="text-lg text-green-950 dark:text-green-100">Top Contributors</CardTitle>
-              <CardDescription className="dark:text-slate-400">By total amount paid · click trophy for full leaderboard</CardDescription>
-            </div>
-            <Link
-              href="/top-contributors"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-orange-50 dark:bg-orange-950/40 ring-1 ring-orange-200 dark:ring-orange-800/50 hover:bg-orange-100 dark:hover:bg-orange-900/40 hover:ring-orange-300 transition-colors group"
-              data-testid="link-top-contributors"
-              title="View full leaderboard"
-            >
-              <Trophy className="h-5 w-5 text-orange-500 group-hover:scale-110 transition-transform" />
-            </Link>
-          </CardHeader>
-          <CardContent>
-            {topContributors.length === 0 ? (
-              <p className="text-sm text-green-700/70 dark:text-slate-500 text-center py-6">No contributions yet.</p>
-            ) : (
-              <div className="space-y-4">
-                {topContributors.map((c, i) => {
-                  const max = topContributors[0]?.total || 1;
-                  const pct = Math.round((c.total / max) * 100);
-                  const RankMedal = i === 0 ? Trophy : i === 1 ? Medal : i === 2 ? Award : null;
-                  const medalColor = i === 0 ? "text-orange-500" : i === 1 ? "text-green-500" : i === 2 ? "text-amber-500" : "";
-                  return (
-                    <Link key={c.memberId} href={`/members/${c.memberId}`} className="block group">
-                      <div className="flex items-center gap-3">
-                        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
-                          i === 0 ? "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 ring-2 ring-orange-200 dark:ring-orange-800/50"
-                          : i === 1 ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 ring-2 ring-green-200 dark:ring-green-800/50"
-                          : i === 2 ? "bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 ring-2 ring-amber-200 dark:ring-amber-800/50"
-                          : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-400"
-                        }`}>
-                          {i + 1}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-1.5 min-w-0">
-                              {RankMedal && <RankMedal className={`h-4 w-4 shrink-0 ${medalColor}`} />}
-                              <p className="text-sm font-semibold text-green-950 dark:text-slate-200 truncate group-hover:underline">{c.name}</p>
-                            </div>
-                            <p className="text-sm font-bold text-green-900 dark:text-green-300 shrink-0">{formatSAR(c.total)}</p>
-                          </div>
-                          <div className="flex items-center gap-2 mt-1">
-                            <div className="text-xs text-green-700/80 dark:text-slate-500">{c.membershipId}</div>
-                            <div className="flex-1 h-1.5 bg-green-50 dark:bg-slate-700 rounded-full overflow-hidden">
-                              <div className="h-full bg-gradient-to-r from-green-700 to-orange-400" style={{ width: `${pct}%` }} />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-                <Link
-                  href="/top-contributors"
-                  className="block text-center text-sm font-medium text-orange-700 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-300 pt-2 border-t border-green-50 dark:border-slate-800"
-                  data-testid="link-view-full-leaderboard"
-                >
-                  View full leaderboard <ArrowRight className="h-3.5 w-3.5 inline" />
-                </Link>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="col-span-full lg:col-span-4 rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <div>
-              <CardTitle className="text-lg text-green-950 dark:text-green-100">Recent Payments</CardTitle>
-              <CardDescription className="dark:text-slate-400">Latest 5 contributions</CardDescription>
-            </div>
-            <Link href="/payments" className="text-sm text-green-800 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300 font-medium inline-flex items-center gap-1">
-              View all <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </CardHeader>
-          <CardContent>
-            {isLoadingRecent ? (
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <Skeleton className="h-10 w-10 rounded-full" />
-                      <div className="space-y-2">
-                        <Skeleton className="h-4 w-[150px]" />
-                        <Skeleton className="h-3 w-[100px]" />
-                      </div>
-                    </div>
-                    <Skeleton className="h-5 w-[80px]" />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {(recentPayments || []).map((payment) => (
-                  <div key={payment.id} className="flex items-center justify-between border-b border-green-50 dark:border-slate-800 last:border-0 pb-3 last:pb-0">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-50 dark:bg-slate-800 text-green-800 dark:text-green-400 border border-green-100 dark:border-slate-700">
-                        <PaymentMethodIcon method={payment.paymentMethod} className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <Link
-                          href={`/members/${payment.memberId}`}
-                          className="text-sm font-semibold text-green-950 dark:text-slate-200 hover:text-green-700 dark:hover:text-green-300 hover:underline"
-                          data-testid={`link-recent-payment-member-${payment.memberId}`}
-                        >
-                          {payment.memberName}
-                        </Link>
-                        <p className="text-xs text-green-700/80 dark:text-slate-500">
-                          {payment.membershipId} · {formatYearMonth(payment.month)} · {formatDate(payment.paidAt)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-green-900 dark:text-green-300">{formatSAR(payment.amountPaid)}</p>
-                      <p className="text-xs text-green-700/80 dark:text-slate-500 capitalize">{payment.paymentMethod.replace("_", " ")}</p>
-                    </div>
-                  </div>
-                ))}
-                {recentPayments?.length === 0 && (
-                  <p className="text-sm text-green-700/70 dark:text-slate-500 text-center py-4">No recent payments.</p>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Sponsor pipeline */}
       {pipeline && pipeline.totalSponsors > 0 && (
