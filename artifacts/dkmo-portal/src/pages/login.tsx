@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useLocation } from "wouter";
-import { Loader2, Lock, ShieldCheck, User as UserIcon, Users, Eye, EyeOff } from "lucide-react";
+import { Loader2, Lock, ShieldCheck, User as UserIcon, Users, Eye, EyeOff, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -55,6 +55,13 @@ export default function LoginPage() {
 
       {/* Top-right controls */}
       <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+        <a
+          href={`${basePath}/dkmo-track`}
+          className="inline-flex items-center gap-1.5 rounded-full bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-800 text-green-800 dark:text-green-300 ring-1 ring-green-200 dark:ring-slate-700 text-xs font-semibold px-3.5 py-1.5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98]"
+        >
+          <Search className="h-3.5 w-3.5" />
+          Check Status
+        </a>
         <a
           href={`${basePath}/dkmo-apply`}
           className="inline-flex items-center gap-1.5 rounded-full bg-green-700 hover:bg-green-800 text-white text-xs font-semibold px-3.5 py-1.5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98]"

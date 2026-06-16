@@ -166,21 +166,45 @@ router.post("/dkmo/memberships/apply", async (req, res): Promise<void> => {
 });
 
 // ── Public: track by dkmo number or mobile ───────────────────────────────────
+// Returns a minimal, non-PII status DTO only — this is an unauthenticated endpoint.
+function membershipToPublicTrack(r: typeof dkmoMembershipsTable.$inferSelect) {
+  return {
+    dkmoNumber: r.dkmoNumber,
+    fullName: r.fullName,
+    status: r.status,
+    declineReason: r.declineReason,
+    membershipDate: r.membershipDate,
+    createdAt: r.createdAt.toISOString(),
+  };
+}
+
+const onlyDigits = (s: string) => s.replace(/\D/g, "");
+
 router.get("/dkmo/memberships/track", async (req, res): Promise<void> => {
-  const { dkmoNumber, mobile } = req.query;
-  if (!dkmoNumber && !mobile) {
+  const dkmoNumberRaw = typeof req.query.dkmoNumber === "string" ? req.query.dkmoNumber.trim() : "";
+  const mobileRaw = typeof req.query.mobile === "string" ? req.query.mobile.trim() : "";
+  if (!dkmoNumberRaw && !mobileRaw) {
     res.status(400).json({ error: "Provide dkmoNumber or mobile" });
     return;
   }
   const rows = await db.select().from(dkmoMembershipsTable).orderBy(desc(dkmoMembershipsTable.createdAt));
-  const q = ((dkmoNumber ?? mobile ?? "") as string).toLowerCase().trim();
-  const filtered = rows.filter(
-    (r) =>
-      r.dkmoNumber.toLowerCase() === q ||
-      r.mobileSaudi.includes(q) ||
-      r.mobileIndia.includes(q),
-  );
-  res.json(filtered.map(membershipToApi));
+
+  let filtered: typeof rows;
+  if (dkmoNumberRaw) {
+    const q = dkmoNumberRaw.toLowerCase();
+    filtered = rows.filter((r) => r.dkmoNumber.toLowerCase() === q);
+  } else {
+    const q = onlyDigits(mobileRaw);
+    // Require a full mobile number to avoid enumeration via partial inputs.
+    if (q.length < 10) {
+      res.status(400).json({ error: "Enter your full registered mobile number" });
+      return;
+    }
+    filtered = rows.filter(
+      (r) => onlyDigits(r.mobileSaudi) === q || onlyDigits(r.mobileIndia) === q,
+    );
+  }
+  res.json(filtered.map(membershipToPublicTrack));
 });
 
 // ── Public: member lookup list for reference member dropdown ─────────────────

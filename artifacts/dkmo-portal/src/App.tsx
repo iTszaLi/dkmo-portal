@@ -24,6 +24,7 @@ import Settings from "@/pages/settings";
 import Committee from "@/pages/committee";
 import Frf from "@/pages/frf";
 import DkmoApply from "@/pages/dkmo-apply";
+import DkmoTrack from "@/pages/dkmo-track";
 import DkmoTerms from "@/pages/dkmo-terms";
 import DkmoMemberships from "@/pages/dkmo-memberships";
 import Loans from "@/pages/loans";
@@ -106,6 +107,7 @@ function AppRoutes() {
       <Route path="/login" component={LoginRoute} />
       {/* Public routes — no auth required */}
       <Route path="/dkmo-apply" component={DkmoApply} />
+      <Route path="/dkmo-track" component={DkmoTrack} />
       <Route path="/dkmo-terms" component={DkmoTerms} />
       {/* Backwards-compat: redirect old Clerk paths to /login */}
       <Route path="/sign-in/:rest*" component={() => <Redirect to="/login" />} />

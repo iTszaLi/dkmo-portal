@@ -1,0 +1,312 @@
+# DKMO Community Services & Welfare Expansion
+
+In addition to the Membership, Referral, and FRF systems, I would like the portal to represent the complete scope of DKMO activities as shown in our official brochures and organizational objectives.
+
+The portal should not appear to be only a membership database. It should function as a complete DKMO management platform.
+
+---
+
+## Create a New Main Module
+
+### DKMO Community Services
+
+This module will serve as the central welfare and community support hub.
+
+Services include:
+
+* FRF (Family Relief Fund)
+* Medical Aid
+* General Relief Fund
+* Emergency Response Assistance
+* Loan Scheme
+* Air Ticket Assistance
+* Job Bureau
+* India Representative Support
+* Community Welfare Activities
+
+---
+
+## Public Member Benefits Section
+
+On the Membership Application page and Public Landing Page create:
+
+### Why Join DKMO?
+
+Display member benefits professionally:
+
+✓ Family Relief Fund (FRF)
+
+✓ Medical Aid Support
+
+✓ Emergency Assistance
+
+✓ Interest-Free Loan Scheme
+
+✓ Air Ticket Assistance for Stranded Members
+
+✓ Job Bureau & Employment Assistance
+
+✓ India Representative Support
+
+✓ General Relief Fund
+
+✓ Community Welfare Activities
+
+This should help prospective members understand the value of joining DKMO.
+
+---
+
+## Medical Aid Module
+
+Allow members to submit Medical Aid requests.
+
+Track:
+
+* Applicant
+* Patient Name
+* Hospital
+* Medical Condition
+* Supporting Documents
+* Requested Amount
+* Approved Amount
+* Approval Notes
+* Status
+
+Dashboard:
+
+* Total Medical Aid Cases
+* Pending Requests
+* Approved Requests
+* Total Amount Distributed
+
+---
+
+## General Relief Fund Module
+
+Track all relief assistance provided.
+
+Examples:
+
+* Financial Hardship
+* Family Support
+* Emergency Assistance
+* Community Welfare Support
+
+Store:
+
+* Beneficiary
+* Reason
+* Amount
+* Approval Status
+* Distribution Date
+
+---
+
+## Emergency Response Module
+
+For urgent situations.
+
+Track:
+
+* Incident Type
+* Member
+* Location
+* Emergency Description
+* Assigned Committee Member
+* Status
+
+Priority Levels:
+
+* Critical
+* High
+* Medium
+* Low
+
+---
+
+## Loan Scheme Module
+
+Based on DKMO's member welfare loan program.
+
+Track:
+
+* Applicant
+* Loan Amount
+* Approval Date
+* Repayment Period
+* Outstanding Balance
+* Status
+
+Statuses:
+
+* Pending
+* Approved
+* Active
+* Closed
+
+Dashboard:
+
+* Active Loans
+* Outstanding Balance
+* Recovered Amount
+* Overdue Loans
+
+---
+
+## Air Ticket Assistance Module
+
+For stranded members requiring return assistance.
+
+Track:
+
+* Applicant
+* Destination
+* Reason
+* Ticket Cost
+* Sponsor Details
+* Approval Status
+
+Dashboard:
+
+* Tickets Issued
+* Pending Requests
+* Total Support Value
+
+---
+
+## Job Bureau Module
+
+Create a dedicated employment assistance section.
+
+Features:
+
+### Job Listings
+
+* Position
+* Company
+* Location
+* Salary
+* Contact Person
+
+### Applications
+
+* Applicant
+* CV Upload
+* Application Status
+
+### Placement Tracking
+
+* Total Jobs Posted
+* Total Applicants
+* Successful Placements
+
+---
+
+## India Representative Support Module
+
+Track support requests handled in India.
+
+Examples:
+
+* Medical Assistance
+* Government Scheme Assistance
+* Documentation Support
+* Welfare Support
+
+Store:
+
+* Beneficiary
+* Assigned Representative
+* Request Type
+* Status
+* Resolution Notes
+
+---
+
+## Welfare Request Workflow
+
+All welfare services should follow a common workflow.
+
+Statuses:
+
+* Submitted
+* Under Review
+* Approved
+* Rejected
+* Completed
+
+Store:
+
+* Request Number
+* Service Type
+* Member
+* Assigned Committee Member
+* Date Submitted
+* Date Closed
+
+---
+
+## Member Welfare History
+
+Inside every member profile create:
+
+### Assistance History
+
+Display all support received by that member.
+
+Examples:
+
+* FRF Benefits
+* Medical Aid
+* Loan Assistance
+* Air Ticket Assistance
+* Emergency Relief
+* General Relief Support
+
+This should provide a complete history of assistance received.
+
+---
+
+## DKMO Impact Dashboard
+
+Create a dedicated dashboard showing organizational impact.
+
+Display:
+
+* Total Members
+* Total FRF Beneficiaries
+* Total Medical Aid Cases
+* Total Loan Beneficiaries
+* Total Air Ticket Beneficiaries
+* Total Welfare Requests
+* Total Jobs Posted
+* Total Job Placements
+* Total Assistance Amount Distributed
+
+This dashboard should visually demonstrate DKMO's contribution to the community.
+
+---
+
+## Committee Performance Dashboard
+
+Track committee involvement across all activities.
+
+Display:
+
+* Members Recruited
+* Membership Fees Collected
+* FRF Collection Performance
+* Welfare Cases Handled
+* Loan Cases Processed
+* Medical Aid Cases Processed
+* Emergency Cases Resolved
+
+This will help DKMO leadership evaluate committee engagement and community impact.
+
+---
+
+## Future-Proof Design
+
+Build all modules using reusable architecture so new welfare programs can be added later without major redesign.
+
+The DKMO Portal should become a complete Membership, Welfare, FRF, Community Services, and Committee Management platform rather than only a membership administration system.

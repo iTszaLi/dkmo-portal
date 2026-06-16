@@ -1,1 +1,2 @@
 - [Express router auth ordering](express-router-auth-ordering.md) — public routes must mount before any catch-all requireAuth router.
+- [Public track endpoint DTO](public-track-endpoint-dto.md) — public DKMO status lookup must return a minimal non-PII DTO and match identifiers exactly (no substring enumeration).
