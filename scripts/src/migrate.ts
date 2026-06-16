@@ -143,6 +143,91 @@ async function main() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS loans (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      member_id UUID REFERENCES members(id) ON DELETE SET NULL,
+      loan_type TEXT NOT NULL DEFAULT 'personal',
+      principal_amount NUMERIC(14,2) NOT NULL DEFAULT 0,
+      disbursed_date DATE,
+      emi_amount NUMERIC(14,2) NOT NULL DEFAULT 0,
+      emi_count INTEGER NOT NULL DEFAULT 0,
+      paid_emis INTEGER NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'active',
+      convenor_name TEXT NOT NULL DEFAULT '',
+      description TEXT NOT NULL DEFAULT '',
+      notes TEXT NOT NULL DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS receipts (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      receipt_number TEXT NOT NULL,
+      receipt_date TEXT NOT NULL,
+      member_name TEXT NOT NULL,
+      dkmo_id TEXT NOT NULL DEFAULT '',
+      jamath_name TEXT NOT NULL DEFAULT '',
+      mobile_number TEXT NOT NULL DEFAULT '',
+      whatsapp_number TEXT NOT NULL DEFAULT '',
+      amount NUMERIC(12,2) NOT NULL DEFAULT 0,
+      payment_types TEXT NOT NULL DEFAULT '{}',
+      created_by TEXT NOT NULL DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS event_sponsors (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+      sponsor_name TEXT NOT NULL,
+      contact_person TEXT NOT NULL DEFAULT '',
+      phone TEXT NOT NULL DEFAULT '',
+      email TEXT NOT NULL DEFAULT '',
+      amount NUMERIC(14,2) NOT NULL DEFAULT 0,
+      sponsorship_type TEXT NOT NULL DEFAULT 'cash',
+      sponsorship_date TEXT NOT NULL DEFAULT '',
+      notes TEXT NOT NULL DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS event_expenses (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+      category TEXT NOT NULL,
+      description TEXT NOT NULL DEFAULT '',
+      vendor TEXT NOT NULL DEFAULT '',
+      amount NUMERIC(14,2) NOT NULL DEFAULT 0,
+      expense_date TEXT NOT NULL DEFAULT '',
+      notes TEXT NOT NULL DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS event_ticket_booklets (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+      booklet_number TEXT NOT NULL,
+      ticket_range_start INTEGER NOT NULL,
+      ticket_range_end INTEGER NOT NULL,
+      assigned_to TEXT NOT NULL DEFAULT '',
+      assigned_date TEXT NOT NULL DEFAULT '',
+      ticket_amount NUMERIC(14,2) NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'available',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS event_tickets (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      booklet_id UUID NOT NULL REFERENCES event_ticket_booklets(id) ON DELETE CASCADE,
+      event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+      ticket_number INTEGER NOT NULL,
+      is_sold BOOLEAN NOT NULL DEFAULT FALSE,
+      sold_by TEXT NOT NULL DEFAULT '',
+      buyer_name TEXT NOT NULL DEFAULT '',
+      buyer_phone TEXT NOT NULL DEFAULT '',
+      sale_date TEXT NOT NULL DEFAULT '',
+      amount NUMERIC(14,2) NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
   `);
 
   console.log("✅  All tables created.");
