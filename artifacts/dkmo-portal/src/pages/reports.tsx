@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { FileText, FileSpreadsheet, Users, CreditCard, BarChart3, CalendarDays } from "lucide-react";
+import { FileText, FileSpreadsheet, Users, CreditCard, BarChart3, CalendarDays, Search } from "lucide-react";
 import { formatSAR, formatDate, getCurrentMonth, formatYearMonth } from "@/lib/utils";
 import ExcelJS from "exceljs";
 import jsPDF from "jspdf";
@@ -46,6 +46,7 @@ type MonthlySummaryRow = {
 
 export default function Reports() {
   const [summaryMonth, setSummaryMonth] = useState(getCurrentMonth());
+  const [reportSearch, setReportSearch] = useState("");
   const currentMonth = getCurrentMonth();
 
   const { data: members, isLoading: isMembersLoading } = useListMembers();
@@ -81,6 +82,18 @@ export default function Reports() {
       };
     });
   }, [members, payments, summaryMonth]);
+
+  const filteredSummaryRows = useMemo(() => {
+    if (!reportSearch.trim()) return monthlySummaryRows;
+    const q = reportSearch.toLowerCase();
+    return monthlySummaryRows.filter(
+      (r) =>
+        r.fullName.toLowerCase().includes(q) ||
+        r.membershipId.toLowerCase().includes(q) ||
+        r.designation.toLowerCase().includes(q) ||
+        r.city.toLowerCase().includes(q),
+    );
+  }, [monthlySummaryRows, reportSearch]);
 
   const summaryTotals = useMemo(() => ({
     totalDue: monthlySummaryRows.reduce((a, r) => a + r.monthlyDue, 0),
@@ -503,6 +516,16 @@ export default function Reports() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
+              {/* Inline search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-400 dark:text-slate-500" />
+                <Input
+                  placeholder="Search member…"
+                  value={reportSearch}
+                  onChange={(e) => setReportSearch(e.target.value)}
+                  className="pl-9 h-9 w-48 border-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:placeholder:text-slate-500"
+                />
+              </div>
               {/* Month picker */}
               <div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-emerald-100 dark:border-slate-700 shadow-sm">
                 <CalendarDays className="h-4 w-4 text-emerald-600 dark:text-slate-400 shrink-0" />
@@ -585,7 +608,7 @@ export default function Reports() {
                   ))
                 ) : (
                   <>
-                    {monthlySummaryRows.map((row, i) => (
+                    {filteredSummaryRows.map((row, i) => (
                       <TableRow
                         key={row.membershipId}
                         className={cn(

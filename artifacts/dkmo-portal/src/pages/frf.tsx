@@ -25,7 +25,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  HeartHandshake, Plus, Trash2, Edit, CheckCircle2, Clock, XCircle, DollarSign, Users,
+  HeartHandshake, Plus, Trash2, Edit, CheckCircle2, Clock, XCircle, DollarSign, Users, Search,
 } from "lucide-react";
 import { cn, formatSAR, formatDate } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
@@ -84,15 +84,28 @@ export default function Frf() {
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [searchText, setSearchText] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingClaim, setEditingClaim] = useState<any>(null);
   const [deletingClaim, setDeletingClaim] = useState<any>(null);
   const [form, setForm] = useState<FrfClaimInput>(EMPTY_FORM);
 
-  const { data: claims = [], isLoading, refetch } = useListFrfClaims({
+  const { data: rawClaims = [], isLoading, refetch } = useListFrfClaims({
     status: statusFilter !== "all" ? statusFilter : undefined,
     claimType: typeFilter !== "all" ? typeFilter : undefined,
   });
+
+  const claims = searchText.trim()
+    ? rawClaims.filter((c) => {
+        const q = searchText.toLowerCase();
+        return (
+          c.claimantName?.toLowerCase().includes(q) ||
+          c.membershipId?.toLowerCase().includes(q) ||
+          c.beneficiaryName?.toLowerCase().includes(q) ||
+          c.description?.toLowerCase().includes(q)
+        );
+      })
+    : rawClaims;
 
   const { data: stats } = useGetFrfStats();
   const createMutation = useCreateFrfClaim({ mutation: { onSuccess: () => { refetch(); setIsFormOpen(false); setForm(EMPTY_FORM); toast({ title: "FRF claim created" }); }, onError: (e) => toast({ title: "Error", description: String(e), variant: "destructive" }) } });
@@ -218,7 +231,16 @@ export default function Frf() {
                 {isLoading ? "Loading…" : `${claims.length} claim${claims.length === 1 ? "" : "s"}`}
               </CardDescription>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-400 dark:text-slate-500" />
+                <Input
+                  placeholder="Search claimant, ID, beneficiary…"
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  className="pl-9 h-9 border-green-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:placeholder:text-slate-500"
+                />
+              </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[150px] dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200">
                   <SelectValue placeholder="Status" />

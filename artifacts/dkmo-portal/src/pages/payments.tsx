@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { PaymentForm } from "@/components/PaymentForm";
-import { CreditCard, Plus, CalendarDays, UserCircle, MoreHorizontal, Trash, Wallet } from "lucide-react";
+import { CreditCard, Plus, CalendarDays, UserCircle, MoreHorizontal, Trash, Wallet, Search } from "lucide-react";
 import { PaymentMethodIcon } from "@/lib/payment-icons";
 import { formatSAR, formatDate, getCurrentMonth } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -54,6 +54,7 @@ export default function Payments() {
   const [toMonth, setToMonth] = useState(initialTo);
   const [memberFilter, setMemberFilter] = useState<string>(initialMember);
   const [methodFilter, setMethodFilter] = useState<string>(initialMethod);
+  const [textSearch, setTextSearch] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [deletingPayment, setDeletingPayment] = useState<any>(null);
 
@@ -70,12 +71,23 @@ export default function Payments() {
   }, [search]);
 
   const { data: members, isLoading: isMembersLoading } = useListMembers();
-  const { data: payments, isLoading: isPaymentsLoading } = useListPayments({
+  const { data: rawPayments, isLoading: isPaymentsLoading } = useListPayments({
     fromMonth: fromMonth || undefined,
     toMonth: toMonth || undefined,
     memberId: memberFilter === "all" ? undefined : memberFilter,
     paymentMethod: methodFilter === "all" ? undefined : methodFilter,
   });
+
+  const payments = textSearch.trim()
+    ? rawPayments?.filter((p) => {
+        const q = textSearch.toLowerCase();
+        return (
+          p.memberName?.toLowerCase().includes(q) ||
+          p.receiptNumber?.toLowerCase().includes(q) ||
+          p.membershipId?.toLowerCase().includes(q)
+        );
+      })
+    : rawPayments;
 
   const createPayment = useCreatePayment();
   const deletePayment = useDeletePayment();
@@ -155,6 +167,18 @@ export default function Payments() {
               value={toMonth}
               onChange={(e) => setToMonth(e.target.value)}
               className="border-0 focus-visible:ring-0 shadow-none px-0 h-8 bg-transparent dark:text-slate-200 dark:placeholder:text-slate-500"
+            />
+          </div>
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-emerald-700 dark:text-slate-400">Search</label>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-400 dark:text-slate-500" />
+            <Input
+              placeholder="Name, receipt, or member ID…"
+              value={textSearch}
+              onChange={(e) => setTextSearch(e.target.value)}
+              className="pl-9 h-10 border-emerald-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:placeholder:text-slate-500"
             />
           </div>
         </div>

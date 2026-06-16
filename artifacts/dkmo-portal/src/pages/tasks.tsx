@@ -31,7 +31,9 @@ import {
   XCircle,
   CalendarDays,
   Handshake,
+  Search,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -78,6 +80,7 @@ export default function Tasks() {
   const [statusFilter, setStatusFilter] = useState<string>("active");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [sort, setSort] = useState<string>("priority");
+  const [searchText, setSearchText] = useState("");
   const [page, setPage] = useState(1);
   const pageSize = 50;
 
@@ -101,13 +104,23 @@ export default function Tasks() {
   const { data, isLoading, refetch } = useListTasks(queryParams);
   const allItems = data?.items ?? [];
 
-  // Client-side filter for "active" (pending + in_progress)
+  // Client-side filter for "active" (pending + in_progress) + text search
   const items = useMemo(() => {
+    let list = allItems;
     if (statusFilter === "active") {
-      return allItems.filter((t) => t.status === "pending" || t.status === "in_progress");
+      list = list.filter((t) => t.status === "pending" || t.status === "in_progress");
     }
-    return allItems;
-  }, [allItems, statusFilter]);
+    if (searchText.trim()) {
+      const q = searchText.toLowerCase();
+      list = list.filter(
+        (t) =>
+          t.title?.toLowerCase().includes(q) ||
+          t.assignedTo?.toLowerCase().includes(q) ||
+          t.description?.toLowerCase().includes(q),
+      );
+    }
+    return list;
+  }, [allItems, statusFilter, searchText]);
 
   const total = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -202,7 +215,17 @@ export default function Tasks() {
                 {isLoading ? "Loading…" : `${items.length} shown`}
               </CardDescription>
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-400 dark:text-slate-500" />
+                <Input
+                  placeholder="Search task or assignee…"
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  className="pl-9 h-9 border-green-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:placeholder:text-slate-500"
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-2">
               <Select value={statusFilter} onValueChange={(v) => { setPage(1); setStatusFilter(v); }}>
                 <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
                 <SelectContent>
@@ -231,6 +254,7 @@ export default function Tasks() {
                   <SelectItem value="recent">Recently added</SelectItem>
                 </SelectContent>
               </Select>
+              </div>
             </div>
           </div>
         </CardHeader>

@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Crown,
   Users,
@@ -13,6 +15,7 @@ import {
   Star,
   Globe,
   Award,
+  Search,
 } from "lucide-react";
 
 interface CommitteeMember {
@@ -116,14 +119,24 @@ function initialsOf(name: string) {
 }
 
 export default function Committee() {
-  const executive = COMMITTEE_2026_27.filter((m) => m.tier === "executive");
-  const convenors = COMMITTEE_2026_27.filter((m) => m.tier === "convenor");
-  const members   = COMMITTEE_2026_27.filter((m) => m.tier === "member");
+  const [search, setSearch] = useState("");
+  const [deptFilter, setDeptFilter] = useState("all");
 
   const departments = [...new Set(COMMITTEE_2026_27.map((m) => m.department))];
   const deptCounts = Object.fromEntries(
     departments.map((d) => [d, COMMITTEE_2026_27.filter((m) => m.department === d).length])
   );
+
+  const filtered = COMMITTEE_2026_27.filter((m) => {
+    const q = search.toLowerCase();
+    const matchesSearch = !q || m.name.toLowerCase().includes(q) || m.role.toLowerCase().includes(q) || m.department.toLowerCase().includes(q);
+    const matchesDept = deptFilter === "all" || m.department === deptFilter;
+    return matchesSearch && matchesDept;
+  });
+
+  const executive = filtered.filter((m) => m.tier === "executive");
+  const convenors = filtered.filter((m) => m.tier === "convenor");
+  const members   = filtered.filter((m) => m.tier === "member");
 
   return (
     <div className="space-y-8">
@@ -143,6 +156,29 @@ export default function Committee() {
             {COMMITTEE_2026_27.length} members · Term 2026–27
           </div>
         </div>
+      </div>
+
+      {/* Search bar */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-400 dark:text-slate-500" />
+          <Input
+            placeholder="Search member, position, or department…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 border-green-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:placeholder:text-slate-500"
+          />
+        </div>
+        <select
+          value={deptFilter}
+          onChange={(e) => setDeptFilter(e.target.value)}
+          className="h-10 rounded-md border border-green-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 text-sm text-green-900 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-green-500/30"
+        >
+          <option value="all">All Departments</option>
+          {departments.map((d) => (
+            <option key={d} value={d}>{d}</option>
+          ))}
+        </select>
       </div>
 
       {/* Department breakdown */}

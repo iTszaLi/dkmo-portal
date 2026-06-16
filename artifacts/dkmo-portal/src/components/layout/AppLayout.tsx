@@ -21,7 +21,6 @@ import {
   FolderOpen,
   Printer,
 } from "lucide-react";
-import { GlobalSearch } from "@/components/GlobalSearch";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
@@ -202,7 +201,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             </SheetContent>
           </Sheet>
 
-          <GlobalSearch />
+          <div className="flex-1" />
 
           {/* Theme toggle */}
           <ThemeToggle />
