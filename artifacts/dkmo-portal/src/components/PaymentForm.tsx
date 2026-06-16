@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { PaymentInput } from "@workspace/api-client-react/src/generated/api.schemas";
+import { PaymentInput } from "@workspace/api-client-react";
 import { getCurrentMonth } from "@/lib/utils";
 import { useEffect } from "react";
 import { useListMembers } from "@workspace/api-client-react";

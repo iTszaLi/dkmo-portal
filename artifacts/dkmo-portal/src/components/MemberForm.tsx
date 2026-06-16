@@ -11,7 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { MemberInput } from "@workspace/api-client-react/src/generated/api.schemas";
+import { MemberInput } from "@workspace/api-client-react";
 import { MemberRefPicker, type MemberRefEntry } from "@/components/MemberRefPicker";
 import { useEffect, useState } from "react";
 

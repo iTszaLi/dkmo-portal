@@ -7,7 +7,7 @@ import {
   getGetMemberQueryKey,
   getListPaymentsQueryKey
 } from "@workspace/api-client-react";
-import { PaymentInput } from "@workspace/api-client-react/src/generated/api.schemas";
+import { PaymentInput } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";

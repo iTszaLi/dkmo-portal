@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { useListMembers, useCreateMember, useUpdateMember, useDeleteMember, useUpdateMemberFeeStatus, getListMembersQueryKey } from "@workspace/api-client-react";
-import { MemberInput, type FeeStatusInputFeeStatus } from "@workspace/api-client-react/src/generated/api.schemas";
+import { MemberInput, type FeeStatusInputFeeStatus } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
