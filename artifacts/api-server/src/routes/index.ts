@@ -14,6 +14,7 @@ import frfMembershipRouter from "./frf-membership";
 import storageRouter from "./storage";
 import loansRouter from "./loans";
 import receiptsRouter from "./receipts";
+import searchRouter from "./search";
 
 const router: IRouter = Router();
 
@@ -32,5 +33,6 @@ router.use(frfRouter);
 router.use(storageRouter);
 router.use(loansRouter);
 router.use(receiptsRouter);
+router.use(searchRouter);
 
 export default router;
