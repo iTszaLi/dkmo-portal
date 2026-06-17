@@ -379,6 +379,11 @@ async function main() {
       ADD COLUMN IF NOT EXISTS transfer_method TEXT NOT NULL DEFAULT 'bank_transfer';
   `);
 
+  await pool.query(`
+    ALTER TABLE members
+      ADD COLUMN IF NOT EXISTS committee_level TEXT NOT NULL DEFAULT 'regular';
+  `);
+
   console.log("✅  All tables created.");
   await pool.end();
 }

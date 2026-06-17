@@ -1,15 +1,17 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
-import { useListMembers, useCreateMember, useUpdateMember, useDeleteMember, useUpdateMemberFeeStatus, getListMembersQueryKey } from "@workspace/api-client-react";
-import { MemberInput, type FeeStatusInputFeeStatus } from "@workspace/api-client-react";
+import { useListMembers, useCreateMember, useUpdateMember, useDeleteMember, useUpdateMemberFeeStatus, useUpdateMemberCommitteeLevel, getListMembersQueryKey } from "@workspace/api-client-react";
+import { MemberInput, type FeeStatusInputFeeStatus, type CommitteeLevelInputCommitteeLevel } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { MemberForm } from "@/components/MemberForm";
-import { Search, Plus, UserCircle, MapPin, Phone, MoreHorizontal, Edit, Trash, Users, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { MemberBadges } from "@/components/MemberBadges";
+import { Search, Plus, UserCircle, MapPin, Phone, MoreHorizontal, Edit, Trash, Users, CheckCircle2, Clock, XCircle, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
 import { formatSAR, feeStatusLabel, feeStatusBadgeClass } from "@/lib/utils";
+import { normalizeCommitteeLevel } from "@/lib/committee";
 import { useToast } from "@/hooks/use-toast";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -35,6 +37,7 @@ export default function Members() {
   const updateMember = useUpdateMember();
   const deleteMember = useDeleteMember();
   const updateFeeStatus = useUpdateMemberFeeStatus();
+  const updateCommitteeLevel = useUpdateMemberCommitteeLevel();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [, navigate] = useLocation();
@@ -110,6 +113,22 @@ export default function Members() {
       },
       onError: (err: any) => {
         toast({ title: "Failed to update fee status", description: err.message, variant: "destructive" });
+      }
+    });
+  };
+
+  const handleCommitteeLevel = (
+    id: string,
+    committeeLevel: CommitteeLevelInputCommitteeLevel,
+    message: string,
+  ) => {
+    updateCommitteeLevel.mutate({ id, data: { committeeLevel } }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListMembersQueryKey() });
+        toast({ title: message, variant: "default" });
+      },
+      onError: (err: any) => {
+        toast({ title: "Failed to update committee level", description: err.message, variant: "destructive" });
       }
     });
   };
@@ -195,11 +214,11 @@ export default function Members() {
                         {(member as any).applicationNumber ? (
                           <div className="text-xs text-emerald-500/80 dark:text-slate-500">App: {(member as any).applicationNumber}</div>
                         ) : null}
-                        {(member as any).designation ? (
-                          <div className="mt-1 inline-block px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 text-[10px] font-semibold uppercase tracking-wide">
-                            {(member as any).designation}
-                          </div>
-                        ) : null}
+                        <MemberBadges
+                          committeeLevel={(member as any).committeeLevel}
+                          designation={(member as any).designation}
+                          className="mt-1"
+                        />
                       </div>
                     </Link>
                   </TableCell>
@@ -269,6 +288,33 @@ export default function Members() {
                         <DropdownMenuItem onClick={() => setEditingMember(member)} className="dark:text-slate-300 dark:focus:bg-slate-800">
                           <Edit className="mr-2 h-4 w-4" /> Edit
                         </DropdownMenuItem>
+                        {(() => {
+                          const level = normalizeCommitteeLevel((member as any).committeeLevel);
+                          return (
+                            <>
+                              {(level === "regular" || level === "core") && (
+                                <DropdownMenuItem onClick={() => handleCommitteeLevel(member.id, "executive", `${member.fullName} promoted to Executive`)} className="text-yellow-700 dark:text-yellow-400 dark:focus:bg-slate-800">
+                                  <ArrowUpCircle className="mr-2 h-4 w-4" /> Promote to Executive
+                                </DropdownMenuItem>
+                              )}
+                              {level === "regular" && (
+                                <DropdownMenuItem onClick={() => handleCommitteeLevel(member.id, "core", `${member.fullName} promoted to Core Committee`)} className="text-slate-700 dark:text-slate-300 dark:focus:bg-slate-800">
+                                  <ArrowUpCircle className="mr-2 h-4 w-4" /> Promote to Core Committee
+                                </DropdownMenuItem>
+                              )}
+                              {level === "executive" && (
+                                <DropdownMenuItem onClick={() => handleCommitteeLevel(member.id, "core", `${member.fullName} removed from Executive`)} className="text-amber-700 dark:text-amber-400 dark:focus:bg-slate-800">
+                                  <ArrowDownCircle className="mr-2 h-4 w-4" /> Remove from Executive
+                                </DropdownMenuItem>
+                              )}
+                              {(level === "core" || level === "executive") && (
+                                <DropdownMenuItem onClick={() => handleCommitteeLevel(member.id, "regular", `${member.fullName} removed from Core Committee`)} className="dark:text-slate-300 dark:focus:bg-slate-800">
+                                  <ArrowDownCircle className="mr-2 h-4 w-4" /> Remove from Core Committee
+                                </DropdownMenuItem>
+                              )}
+                            </>
+                          );
+                        })()}
                         {member.feeStatus !== "paid" && (
                           <DropdownMenuItem onClick={() => handleFeeStatus(member.id, "paid")} className="text-emerald-700 dark:text-emerald-400 dark:focus:bg-slate-800">
                             <CheckCircle2 className="mr-2 h-4 w-4" /> Mark Fee Paid

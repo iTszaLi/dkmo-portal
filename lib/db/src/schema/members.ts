@@ -13,6 +13,7 @@ export const membersTable = pgTable("members", {
   city: text("city").notNull().default(""),
   country: text("country").notNull().default(""),
   designation: text("designation").notNull().default(""),
+  committeeLevel: text("committee_level").notNull().default("regular"),
   membershipFee: numeric("membership_fee", { precision: 12, scale: 2 })
     .notNull()
     .default("100"),

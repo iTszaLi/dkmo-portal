@@ -28,6 +28,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MemberForm } from "@/components/MemberForm";
+import { MemberBadges } from "@/components/MemberBadges";
 import { formatSAR, formatDate, feeStatusLabel, feeStatusBadgeClass } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -359,11 +360,12 @@ export default function MemberDetail() {
                 <p className="text-sm font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 dark:text-emerald-400 inline-block px-2 py-1 rounded-md mt-1">
                   ID: {member.membershipId}
                 </p>
-                {member.designation ? (
-                  <p className="mt-2 text-xs font-bold uppercase tracking-wide text-amber-800 bg-amber-100 dark:bg-amber-900/40 dark:text-amber-300 inline-block px-3 py-1 rounded-full">
-                    {member.designation}
-                  </p>
-                ) : null}
+                <MemberBadges
+                  committeeLevel={(member as any).committeeLevel}
+                  designation={member.designation}
+                  size="md"
+                  className="mt-2 justify-center"
+                />
               </div>
               <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${feeStatusBadgeClass(member.feeStatus)}`}>
                 {member.feeStatus === "paid" ? <CheckCircle2 className="h-3 w-3" /> : member.feeStatus === "pending" ? <Clock className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}

@@ -10,6 +10,8 @@ import {
   ListMembersQueryParams,
   UpdateMemberFeeStatusParams,
   UpdateMemberFeeStatusBody,
+  UpdateMemberCommitteeLevelParams,
+  UpdateMemberCommitteeLevelBody,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthedRequest } from "../middlewares/requireAuth";
 import { memberToApi } from "../lib/serializers";
@@ -152,6 +154,7 @@ router.post("/members", async (req, res): Promise<void> => {
         city: parsed.data.city ?? "",
         country: parsed.data.country ?? "",
         designation: parsed.data.designation ?? "",
+        committeeLevel: parsed.data.committeeLevel ?? "regular",
         membershipFee: String(parsed.data.membershipFee ?? 100),
         feeStatus,
         feePaidAt: feeStatus === "paid" ? new Date() : null,
@@ -252,6 +255,7 @@ router.patch("/members/:id", async (req, res): Promise<void> => {
         city: parsed.data.city ?? "",
         country: parsed.data.country ?? "",
         designation: parsed.data.designation ?? "",
+        committeeLevel: parsed.data.committeeLevel ?? existing.committeeLevel,
         membershipFee: String(parsed.data.membershipFee ?? existing.membershipFee),
         refMemberName: parsed.data.refMemberName ?? "",
         refMemberId: parsed.data.refMemberId ?? "",
@@ -306,6 +310,36 @@ router.patch("/members/:id/fee-status", async (req, res): Promise<void> => {
     entityId: updated.id,
     entityName: updated.fullName,
     details: `Fee status: ${feeStatus}`,
+  });
+  res.json(memberToApi(updated));
+});
+
+router.patch("/members/:id/committee-level", async (req, res): Promise<void> => {
+  const params = UpdateMemberCommitteeLevelParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const parsed = UpdateMemberCommitteeLevelBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const committeeLevel = parsed.data.committeeLevel;
+  const [updated] = await db
+    .update(membersTable)
+    .set({ committeeLevel })
+    .where(eq(membersTable.id, params.data.id))
+    .returning();
+  if (!updated) {
+    res.status(404).json({ error: "Member not found" });
+    return;
+  }
+  logAudit(req, "member_committee_level_updated", "members", {
+    entityId: updated.id,
+    entityName: updated.fullName,
+    details: `Committee level: ${committeeLevel}`,
   });
   res.json(memberToApi(updated));
 });

@@ -155,6 +155,15 @@ export interface SponsorList {
   total: number;
 }
 
+export type MemberCommitteeLevel =
+  (typeof MemberCommitteeLevel)[keyof typeof MemberCommitteeLevel];
+
+export const MemberCommitteeLevel = {
+  regular: "regular",
+  core: "core",
+  executive: "executive",
+} as const;
+
 export type MemberFeeStatus =
   (typeof MemberFeeStatus)[keyof typeof MemberFeeStatus];
 
@@ -184,6 +193,7 @@ export interface Member {
   city: string;
   country: string;
   designation: string;
+  committeeLevel: MemberCommitteeLevel;
   membershipFee: number;
   feeStatus: MemberFeeStatus;
   /** @nullable */
@@ -195,6 +205,15 @@ export interface Member {
   createdAt: string;
   updatedAt: string;
 }
+
+export type MemberDetailCommitteeLevel =
+  (typeof MemberDetailCommitteeLevel)[keyof typeof MemberDetailCommitteeLevel];
+
+export const MemberDetailCommitteeLevel = {
+  regular: "regular",
+  core: "core",
+  executive: "executive",
+} as const;
 
 export type MemberDetailFeeStatus =
   (typeof MemberDetailFeeStatus)[keyof typeof MemberDetailFeeStatus];
@@ -225,6 +244,7 @@ export interface MemberDetail {
   city: string;
   country: string;
   designation: string;
+  committeeLevel: MemberDetailCommitteeLevel;
   membershipFee: number;
   feeStatus: MemberDetailFeeStatus;
   /** @nullable */
@@ -236,6 +256,15 @@ export interface MemberDetail {
   createdAt: string;
   updatedAt: string;
 }
+
+export type MemberInputCommitteeLevel =
+  (typeof MemberInputCommitteeLevel)[keyof typeof MemberInputCommitteeLevel];
+
+export const MemberInputCommitteeLevel = {
+  regular: "regular",
+  core: "core",
+  executive: "executive",
+} as const;
 
 export type MemberInputFeeStatus =
   (typeof MemberInputFeeStatus)[keyof typeof MemberInputFeeStatus];
@@ -268,6 +297,7 @@ export interface MemberInput {
   city?: string;
   country?: string;
   designation?: string;
+  committeeLevel?: MemberInputCommitteeLevel;
   membershipFee?: number;
   feeStatus?: MemberInputFeeStatus;
   frfStatus?: MemberInputFrfStatus;
@@ -286,6 +316,19 @@ export const FeeStatusInputFeeStatus = {
 
 export interface FeeStatusInput {
   feeStatus: FeeStatusInputFeeStatus;
+}
+
+export type CommitteeLevelInputCommitteeLevel =
+  (typeof CommitteeLevelInputCommitteeLevel)[keyof typeof CommitteeLevelInputCommitteeLevel];
+
+export const CommitteeLevelInputCommitteeLevel = {
+  regular: "regular",
+  core: "core",
+  executive: "executive",
+} as const;
+
+export interface CommitteeLevelInput {
+  committeeLevel: CommitteeLevelInputCommitteeLevel;
 }
 
 export type MemberReferralItemFeeStatus =

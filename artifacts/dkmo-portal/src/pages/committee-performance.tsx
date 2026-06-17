@@ -1,27 +1,29 @@
 import { useMemo } from "react";
 import type { CommitteePerformanceEntry } from "@workspace/api-client-react";
-import { useGetCommitteePerformance } from "@workspace/api-client-react";
+import { useGetCommitteePerformance, useListMembers } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { formatSAR, cn } from "@/lib/utils";
-import { COMMITTEE_2026_27 } from "@/pages/committee";
+import { initialsOf, isCommitteeLevel } from "@/lib/committee";
 import { Trophy, UserPlus, Coins, HeartHandshake, Landmark, Activity } from "lucide-react";
-
-function initialsOf(name: string) {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase();
-  return (parts[0]![0]! + parts[parts.length - 1]![0]!).toUpperCase();
-}
 
 export default function CommitteePerformance() {
   const { data, isLoading } = useGetCommitteePerformance();
+  const { data: allMembers } = useListMembers();
+
+  // Live committee roster derived from the single DB source of truth.
+  const roster = useMemo(
+    () =>
+      (allMembers ?? []).filter((m) => isCommitteeLevel((m as any).committeeLevel)),
+    [allMembers],
+  );
 
   const roleByName = useMemo(() => {
     const m = new Map<string, string>();
-    for (const c of COMMITTEE_2026_27) m.set(c.name.toLowerCase(), c.role);
+    for (const c of roster) m.set(c.fullName.toLowerCase(), (c as any).designation || "Committee Member");
     return m;
-  }, []);
+  }, [roster]);
 
   const entries = useMemo(() => {
     const apiEntries = data?.entries ?? [];
@@ -44,18 +46,18 @@ export default function CommitteePerformance() {
     });
 
     // Every committee member appears, even with zero activity.
-    const merged: CommitteePerformanceEntry[] = COMMITTEE_2026_27.map(
-      (c) => byName.get(c.name.toLowerCase()) ?? emptyEntry(c.name),
+    const merged: CommitteePerformanceEntry[] = roster.map(
+      (c) => byName.get(c.fullName.toLowerCase()) ?? emptyEntry(c.fullName),
     );
 
     // Plus any active non-committee contributors (staff) not on the roster.
-    const rosterNames = new Set(COMMITTEE_2026_27.map((c) => c.name.toLowerCase()));
+    const rosterNames = new Set(roster.map((c) => c.fullName.toLowerCase()));
     for (const e of apiEntries) {
       if (!rosterNames.has(e.name.toLowerCase())) merged.push(e);
     }
 
     return merged.sort((a, b) => b.totalContributionScore - a.totalContributionScore);
-  }, [data]);
+  }, [data, roster]);
 
   const activeCount = (data?.entries ?? []).length;
 

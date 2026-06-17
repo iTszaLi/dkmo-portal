@@ -12,6 +12,7 @@ export function memberToApi(m: Member) {
     city: m.city,
     country: m.country,
     designation: m.designation ?? "",
+    committeeLevel: m.committeeLevel ?? "regular",
     membershipFee: Number(m.membershipFee),
     feeStatus: m.feeStatus,
     feePaidAt: m.feePaidAt ? m.feePaidAt.toISOString() : null,

@@ -43,6 +43,7 @@ import {
   Percent,
 } from "lucide-react";
 import { formatDate, cn } from "@/lib/utils";
+import { isCommitteeLevel, isExecutiveLevel } from "@/lib/committee";
 import { useToast } from "@/hooks/use-toast";
 import ExcelJS from "exceljs";
 import jsPDF from "jspdf";
@@ -65,29 +66,14 @@ async function loadImageAsBase64(url: string): Promise<string> {
   }
 }
 
-// Executive members are an explicit subset of the core committee (the office
-// bearers + key convenors). Identified by name because the same designation
-// (e.g. "Advisor") can belong to both executive and non-executive members.
-const EXECUTIVE_NAMES = new Set([
-  "Fazlurrahman Kolkar",
-  "Asif Kannur",
-  "Irshad Bajpe",
-  "Abdul Rahiman Sulaiman",
-  "Abdul Azeez Bajpe",
-  "Salman Noor",
-  "G.K. Shaikh",
-  "Ghani Ahmed Mulki",
-]);
-
-function isExecutiveMember(m: { fullName?: string | null }): boolean {
-  return EXECUTIVE_NAMES.has((m.fullName ?? "").trim());
+// Committee membership now derives from the single DB source of truth
+// (members.committeeLevel). Executives are a subset of the core committee.
+function isExecutiveMember(m: { committeeLevel?: string | null }): boolean {
+  return isExecutiveLevel((m as any).committeeLevel);
 }
 
-// Core committee = any member holding a real committee role (i.e. not a plain
-// "Member"). Executives are a subset of this group.
-function isCommitteeMember(m: { designation?: string | null }): boolean {
-  const d = (m.designation ?? "").trim();
-  return d !== "" && d.toLowerCase() !== "member";
+function isCommitteeMember(m: { committeeLevel?: string | null }): boolean {
+  return isCommitteeLevel((m as any).committeeLevel);
 }
 
 type TypeFilter = "all" | "executive" | "core";

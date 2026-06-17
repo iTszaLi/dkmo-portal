@@ -166,6 +166,31 @@ paths:
               schema:
                 $ref: "#/components/schemas/Member"
 
+  /members/{id}/committee-level:
+    patch:
+      operationId: updateMemberCommitteeLevel
+      tags: [members]
+      summary: Update a member's committee level (Regular / Core / Executive)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommitteeLevelInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+
   /members/{id}/referrals:
     get:
       operationId: getMemberReferrals
@@ -1728,6 +1753,9 @@ components:
           type: string
         designation:
           type: string
+        committeeLevel:
+          type: string
+          enum: [regular, core, executive]
         membershipFee:
           type: number
         feeStatus:
@@ -1762,6 +1790,7 @@ components:
         - city
         - country
         - designation
+        - committeeLevel
         - membershipFee
         - feeStatus
         - feePaidAt
@@ -1795,6 +1824,9 @@ components:
           type: string
         designation:
           type: string
+        committeeLevel:
+          type: string
+          enum: [regular, core, executive]
         membershipFee:
           type: number
         feeStatus:
@@ -1829,6 +1861,7 @@ components:
         - city
         - country
         - designation
+        - committeeLevel
         - membershipFee
         - feeStatus
         - feePaidAt
@@ -1865,6 +1898,9 @@ components:
           type: string
         designation:
           type: string
+        committeeLevel:
+          type: string
+          enum: [regular, core, executive]
         membershipFee:
           type: number
         feeStatus:
@@ -1889,6 +1925,15 @@ components:
           enum: [paid, pending, unpaid]
       required:
         - feeStatus
+
+    CommitteeLevelInput:
+      type: object
+      properties:
+        committeeLevel:
+          type: string
+          enum: [regular, core, executive]
+      required:
+        - committeeLevel
 
     MemberReferralItem:
       type: object

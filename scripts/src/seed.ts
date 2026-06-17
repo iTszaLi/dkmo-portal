@@ -41,6 +41,28 @@ function rand<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+// Maps a designation to the seeded committee level. Office-bearers and the
+// literal "Executive Member" role become Executive; any other real committee
+// role (convenors, advisors, auditors, leads) becomes Core; plain "Member"
+// (or blank) stays Regular. This makes the new committeeLevel field the single
+// source of truth from first seed, matching the prior hardcoded rosters.
+const EXECUTIVE_DESIGNATIONS = new Set([
+  "President",
+  "Vice President",
+  "General Secretary",
+  "Joint Secretary",
+  "Treasurer",
+  "Executive Member",
+]);
+function committeeLevelForDesignation(
+  designation: string,
+): "regular" | "core" | "executive" {
+  const d = (designation ?? "").trim();
+  if (EXECUTIVE_DESIGNATIONS.has(d)) return "executive";
+  if (d === "" || d.toLowerCase() === "member") return "regular";
+  return "core";
+}
+
 // ── 1. MEMBERS ────────────────────────────────────────────────────────────────
 const memberRows = [
   { fullName: "Fazlurrahman Kolkar",     designation: "President",                 city: "Kolkar",       country: "Saudi Arabia", mobileNumber: "+919844100001" },
@@ -362,6 +384,7 @@ async function main() {
     allRows.push({
       fullName: m.fullName,
       designation: m.designation,
+      committeeLevel: committeeLevelForDesignation(m.designation),
       city: m.city,
       country: m.country,
       mobileNumber: nextMobile(),

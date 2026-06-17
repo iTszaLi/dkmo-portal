@@ -38,6 +38,12 @@ const DESIGNATION_OPTIONS = [
 
 const FEE_STATUS_OPTIONS = ["unpaid", "pending", "paid"] as const;
 
+const COMMITTEE_LEVEL_OPTIONS = [
+  { value: "regular", label: "Regular Member" },
+  { value: "core", label: "Core Committee Member" },
+  { value: "executive", label: "Executive Member" },
+] as const;
+
 const formSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
   mobileNumber: z.string().min(1, "Mobile number is required"),
@@ -48,6 +54,7 @@ const formSchema = z.object({
   city: z.string().optional(),
   country: z.string().optional(),
   designation: z.string().optional(),
+  committeeLevel: z.enum(["regular", "core", "executive"]),
   membershipFee: z.coerce.number().min(0, "Amount must be positive"),
   feeStatus: z.enum(FEE_STATUS_OPTIONS),
 });
@@ -81,6 +88,7 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
       city: defaultValues?.city || "",
       country: defaultValues?.country || "",
       designation: (defaultValues as any)?.designation || "",
+      committeeLevel: ((defaultValues as any)?.committeeLevel as "regular" | "core" | "executive") || "regular",
       membershipFee: defaultValues?.membershipFee ?? 100,
       feeStatus: (defaultValues?.feeStatus as (typeof FEE_STATUS_OPTIONS)[number]) || "unpaid",
     },
@@ -98,6 +106,7 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
         city: defaultValues.city || "",
         country: defaultValues.country || "",
         designation: (defaultValues as any).designation || "",
+        committeeLevel: ((defaultValues as any).committeeLevel as "regular" | "core" | "executive") || "regular",
         membershipFee: defaultValues.membershipFee ?? 100,
         feeStatus: (defaultValues.feeStatus as (typeof FEE_STATUS_OPTIONS)[number]) || "unpaid",
       });
@@ -234,28 +243,52 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
             )}
           />
         </div>
-        <FormField
-          control={form.control}
-          name="designation"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Designation / Post</FormLabel>
-              <FormControl>
-                <select
-                  {...field}
-                  className="w-full border border-input rounded-md px-3 h-10 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  {DESIGNATION_OPTIONS.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt === "" ? "— None —" : opt}
-                    </option>
-                  ))}
-                </select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="designation"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Designation / Post</FormLabel>
+                <FormControl>
+                  <select
+                    {...field}
+                    className="w-full border border-input rounded-md px-3 h-10 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    {DESIGNATION_OPTIONS.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt === "" ? "— None —" : opt}
+                      </option>
+                    ))}
+                  </select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="committeeLevel"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Committee Level</FormLabel>
+                <FormControl>
+                  <select
+                    {...field}
+                    className="w-full border border-input rounded-md px-3 h-10 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    {COMMITTEE_LEVEL_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         <div className="space-y-2">
           <Label>Reference Member — Who referred this member?</Label>
           <MemberRefPicker value={refMember} onChange={setRefMember} />
