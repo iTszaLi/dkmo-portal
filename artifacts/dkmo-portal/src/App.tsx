@@ -23,6 +23,7 @@ import TaskDetail from "@/pages/task-detail";
 import Settings from "@/pages/settings";
 import Committee from "@/pages/committee";
 import CommitteePerformance from "@/pages/committee-performance";
+import Meetings from "@/pages/meetings";
 import Impact from "@/pages/impact";
 import Frf from "@/pages/frf";
 import CommunityServices from "@/pages/community-services";
@@ -135,6 +136,7 @@ function AppRoutes() {
       <Route path="/impact" component={() => <AuthenticatedRoute component={Impact} />} />
       <Route path="/committee" component={() => <AuthenticatedRoute component={Committee} />} />
       <Route path="/committee-performance" component={() => <AuthenticatedRoute component={CommitteePerformance} />} />
+      <Route path="/meetings" component={() => <AuthenticatedRoute component={Meetings} />} />
       <Route path="/services" component={() => <AuthenticatedRoute component={CommunityServices} />} />
       <Route path="/services/:type" component={() => <AuthenticatedRoute component={WelfareService} />} />
       <Route path="/frf" component={() => <AuthenticatedRoute component={Frf} />} />

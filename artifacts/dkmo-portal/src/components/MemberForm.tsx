@@ -41,7 +41,7 @@ const FEE_STATUS_OPTIONS = ["unpaid", "pending", "paid"] as const;
 const formSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
   mobileNumber: z.string().min(1, "Mobile number is required"),
-  membershipId: z.string().min(1, "Membership ID is required"),
+  membershipId: z.string().optional(),
   applicationNumber: z.string().optional(),
   iqamaNumber: z.string().optional(),
   jamaath: z.string().optional(),
@@ -156,9 +156,9 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
             name="membershipId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Membership ID</FormLabel>
+                <FormLabel>Membership ID (auto if blank)</FormLabel>
                 <FormControl>
-                  <Input placeholder="DKMO-1001" {...field} />
+                  <Input placeholder="Leave blank to auto-generate" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

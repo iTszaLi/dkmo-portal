@@ -1467,6 +1467,114 @@ paths:
                     type: integer
                 required: [items, total]
 
+  /meetings:
+    get:
+      operationId: listMeetings
+      tags: [meetings]
+      summary: List all meetings with attendance summary
+      responses:
+        "200":
+          description: Meetings ordered by date (most recent first)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Meeting"
+    post:
+      operationId: createMeeting
+      tags: [meetings]
+      summary: Create a meeting session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeetingInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetingDetail"
+
+  /meetings/{id}:
+    get:
+      operationId: getMeeting
+      tags: [meetings]
+      summary: Get a meeting with its full attendance register
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Meeting detail with attendance rows
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetingDetail"
+    patch:
+      operationId: updateMeeting
+      tags: [meetings]
+      summary: Update meeting information
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeetingInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetingDetail"
+    delete:
+      operationId: deleteMeeting
+      tags: [meetings]
+      summary: Delete a meeting and its attendance records
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Deleted
+
+  /meetings/{id}/attendance:
+    put:
+      operationId: setMeetingAttendance
+      tags: [meetings]
+      summary: Set attendance status for members in a meeting
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AttendanceUpdate"
+      responses:
+        "200":
+          description: Updated meeting detail with attendance rows
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetingDetail"
+
 components:
   schemas:
     AuditLog:
@@ -1735,7 +1843,9 @@ components:
           minLength: 1
         membershipId:
           type: string
-          minLength: 1
+          description: >-
+            Optional. When omitted or blank the server auto-generates the next
+            membership number in the format DKMO-YYYY-XXXX.
         applicationNumber:
           type: string
         iqamaNumber:
@@ -1763,7 +1873,6 @@ components:
       required:
         - fullName
         - mobileNumber
-        - membershipId
 
     FeeStatusInput:
       type: object
@@ -2748,6 +2857,8 @@ components:
         loansProcessed: { type: integer }
         medicalAidProcessed: { type: integer }
         emergencyResolved: { type: integer }
+        frfReferred: { type: integer }
+        totalContributionScore: { type: integer }
         totalActions: { type: integer }
       required:
         - name
@@ -2759,6 +2870,8 @@ components:
         - loansProcessed
         - medicalAidProcessed
         - emergencyResolved
+        - frfReferred
+        - totalContributionScore
         - totalActions
 
     CommitteePerformance:
@@ -2793,3 +2906,113 @@ components:
         totalReceived: { type: number }
         totalCount: { type: integer }
       required: [items, totalReceived, totalCount]
+
+    Meeting:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        meetingDate: { type: string }
+        location: { type: string }
+        notes: { type: string }
+        totalCount: { type: integer }
+        presentCount: { type: integer }
+        absentCount: { type: integer }
+        attendancePercentage: { type: number }
+        createdAt: { type: string }
+      required:
+        - id
+        - title
+        - meetingDate
+        - location
+        - notes
+        - totalCount
+        - presentCount
+        - absentCount
+        - attendancePercentage
+        - createdAt
+
+    MeetingInput:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+        meetingDate:
+          type: string
+          minLength: 1
+        location: { type: string }
+        notes: { type: string }
+      required:
+        - title
+        - meetingDate
+
+    AttendanceRow:
+      type: object
+      properties:
+        memberId: { type: string, format: uuid }
+        membershipId: { type: string }
+        fullName: { type: string }
+        location: { type: string }
+        mobileNumber: { type: string }
+        status:
+          type: string
+          enum: [present, absent]
+      required:
+        - memberId
+        - membershipId
+        - fullName
+        - location
+        - mobileNumber
+        - status
+
+    MeetingDetail:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        meetingDate: { type: string }
+        location: { type: string }
+        notes: { type: string }
+        totalCount: { type: integer }
+        presentCount: { type: integer }
+        absentCount: { type: integer }
+        attendancePercentage: { type: number }
+        createdAt: { type: string }
+        attendance:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttendanceRow"
+      required:
+        - id
+        - title
+        - meetingDate
+        - location
+        - notes
+        - totalCount
+        - presentCount
+        - absentCount
+        - attendancePercentage
+        - createdAt
+        - attendance
+
+    AttendanceRecordInput:
+      type: object
+      properties:
+        memberId: { type: string, format: uuid }
+        status:
+          type: string
+          enum: [present, absent]
+      required:
+        - memberId
+        - status
+
+    AttendanceUpdate:
+      type: object
+      properties:
+        records:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttendanceRecordInput"
+      required:
+        - records

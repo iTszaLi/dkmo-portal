@@ -4,3 +4,4 @@
 - [Applying DB schema changes](db-schema-apply.md) — `db push` can hang on interactive rename prompts; use additive DDL in scripts/src/migrate.ts (`run migrate`) for new tables/columns.
 - [DKMO payments & recruitment model](dkmo-payments-model.md) — no monthly dues; FRF contributions are payments rows (SAR 50/claim) not a separate table; recruitment leaderboard keys on member UUID, seed must two-pass link refMemberId.
 - [Member reference / group FRF responsibility](member-reference-responsibility.md) — members.refMemberId is TEXT holding the referrer's UUID; group = refMemberId===X.id; FRF responsibility = count × SAR 50.
+- [Documents per-entity views](documents-per-entity-views.md) — /api/documents is paginated; per-member views must filter server-side by linkedEntityType+linkedEntityId, never client-filter page 1.

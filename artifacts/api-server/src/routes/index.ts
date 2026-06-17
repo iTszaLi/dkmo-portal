@@ -18,6 +18,7 @@ import receiptsRouter from "./receipts";
 import searchRouter from "./search";
 import auditRouter from "./audit";
 import documentsRouter from "./documents";
+import meetingsRouter from "./meetings";
 
 const router: IRouter = Router();
 
@@ -40,5 +41,6 @@ router.use(receiptsRouter);
 router.use(searchRouter);
 router.use(auditRouter);
 router.use(documentsRouter);
+router.use(meetingsRouter);
 
 export default router;

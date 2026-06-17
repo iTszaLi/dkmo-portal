@@ -71,6 +71,8 @@ export interface ListDocumentsParams {
   search?: string;
   category?: string;
   status?: string;
+  linkedEntityType?: string;
+  linkedEntityId?: string;
   page?: number;
   pageSize?: number;
 }

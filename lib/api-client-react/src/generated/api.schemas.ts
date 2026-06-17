@@ -240,8 +240,8 @@ export interface MemberInput {
   fullName: string;
   /** @minLength 1 */
   mobileNumber: string;
-  /** @minLength 1 */
-  membershipId: string;
+  /** Optional. When omitted or blank the server auto-generates the next membership number in the format DKMO-YYYY-XXXX. */
+  membershipId?: string;
   applicationNumber?: string;
   iqamaNumber?: string;
   jamaath?: string;
@@ -1187,6 +1187,8 @@ export interface CommitteePerformanceEntry {
   loansProcessed: number;
   medicalAidProcessed: number;
   emergencyResolved: number;
+  frfReferred: number;
+  totalContributionScore: number;
   totalActions: number;
 }
 
@@ -1209,6 +1211,76 @@ export interface MemberAssistanceHistory {
   items: MemberAssistanceItem[];
   totalReceived: number;
   totalCount: number;
+}
+
+export interface Meeting {
+  id: string;
+  title: string;
+  meetingDate: string;
+  location: string;
+  notes: string;
+  totalCount: number;
+  presentCount: number;
+  absentCount: number;
+  attendancePercentage: number;
+  createdAt: string;
+}
+
+export interface MeetingInput {
+  /** @minLength 1 */
+  title: string;
+  /** @minLength 1 */
+  meetingDate: string;
+  location?: string;
+  notes?: string;
+}
+
+export type AttendanceRowStatus =
+  (typeof AttendanceRowStatus)[keyof typeof AttendanceRowStatus];
+
+export const AttendanceRowStatus = {
+  present: "present",
+  absent: "absent",
+} as const;
+
+export interface AttendanceRow {
+  memberId: string;
+  membershipId: string;
+  fullName: string;
+  location: string;
+  mobileNumber: string;
+  status: AttendanceRowStatus;
+}
+
+export interface MeetingDetail {
+  id: string;
+  title: string;
+  meetingDate: string;
+  location: string;
+  notes: string;
+  totalCount: number;
+  presentCount: number;
+  absentCount: number;
+  attendancePercentage: number;
+  createdAt: string;
+  attendance: AttendanceRow[];
+}
+
+export type AttendanceRecordInputStatus =
+  (typeof AttendanceRecordInputStatus)[keyof typeof AttendanceRecordInputStatus];
+
+export const AttendanceRecordInputStatus = {
+  present: "present",
+  absent: "absent",
+} as const;
+
+export interface AttendanceRecordInput {
+  memberId: string;
+  status: AttendanceRecordInputStatus;
+}
+
+export interface AttendanceUpdate {
+  records: AttendanceRecordInput[];
 }
 
 export type ListMembersParams = {

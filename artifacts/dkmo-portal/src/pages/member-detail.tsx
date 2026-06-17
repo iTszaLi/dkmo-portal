@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useParams, Link } from "wouter";
 import {
   useGetMember,
@@ -8,11 +8,16 @@ import {
   useGetMemberReferrals,
   useListPayments,
   useCreatePayment,
+  useGetCommitteePerformance,
+  useListDocuments,
+  useCreateDocument,
+  customFetch,
   getListPaymentsQueryKey,
   getGetMemberQueryKey,
   getGetMemberAssistanceHistoryQueryKey,
   getGetMemberReferralsQueryKey,
   getListMembersQueryKey,
+  getGetCommitteePerformanceQueryKey,
 } from "@workspace/api-client-react";
 import type { FeeStatusInputFeeStatus, MemberInput } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -30,7 +35,10 @@ import {
   ArrowLeft, UserCircle, MapPin, Phone, CalendarDays, CheckCircle2, Clock, XCircle, Users,
   HeartHandshake, HandHelping, Coins, IdCard, FileText, Building2, ChevronDown, ChevronUp,
   Wallet, Pencil, Plus, Printer, Receipt, ArrowRight, Award, UserCheck,
+  FolderOpen, Upload, ExternalLink, Download,
 } from "lucide-react";
+
+const STANDARD_DOCS = ["Passport", "Iqama", "Photo", "Membership Form"] as const;
 
 const PAYMENT_TYPE_LABELS: Record<string, string> = {
   membership_fee: "Membership Fee",
@@ -126,6 +134,87 @@ export default function MemberDetail() {
   );
 
   const isCommittee = !!member?.designation;
+
+  // Committee contribution — sourced from the same committee-performance endpoint
+  // so the figures stay consistent across the portal (single source of truth).
+  const { data: committeePerf } = useGetCommitteePerformance({
+    query: { enabled: isCommittee, queryKey: getGetCommitteePerformanceQueryKey() },
+  });
+  const committeeEntry = useMemo(() => {
+    if (!member?.fullName) return undefined;
+    return (committeePerf?.entries ?? []).find((e) => e.name === member.fullName);
+  }, [committeePerf, member?.fullName]);
+
+  // Documents linked to this member (item 15)
+  const { data: docsResp, isLoading: isDocsLoading, refetch: refetchDocs } = useListDocuments({
+    linkedEntityType: "member",
+    linkedEntityId: id || "",
+    pageSize: 100,
+  });
+  const memberDocs = useMemo(() => docsResp?.items ?? [], [docsResp]);
+  const hasDoc = useCallback(
+    (label: string) =>
+      memberDocs.some((d) => d.title.trim().toLowerCase() === label.trim().toLowerCase()),
+    [memberDocs],
+  );
+
+  const [docDialogOpen, setDocDialogOpen] = useState(false);
+  const [docTitle, setDocTitle] = useState<string>(STANDARD_DOCS[0]);
+  const [docFile, setDocFile] = useState<{ fileUrl: string; fileName: string; fileSize: number; mimeType: string } | null>(null);
+  const [docUploading, setDocUploading] = useState(false);
+
+  const createDocument = useCreateDocument();
+
+  const handleDocUpload = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      setDocUploading(true);
+      try {
+        const res = await customFetch<{ uploadURL: string; objectPath: string }>(
+          "/api/storage/uploads/request-url",
+          { method: "POST", body: JSON.stringify({ fileName: file.name, contentType: file.type }) },
+        );
+        const put = await fetch(res.uploadURL, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
+        if (!put.ok) throw new Error(`Upload failed with status ${put.status}`);
+        const publicUrl = `/api/storage/public-objects/${res.objectPath}`;
+        setDocFile({ fileUrl: publicUrl, fileName: file.name, fileSize: file.size, mimeType: file.type });
+        toast({ title: "File uploaded" });
+      } catch {
+        toast({ title: "Upload failed", variant: "destructive" });
+      } finally {
+        setDocUploading(false);
+        e.target.value = "";
+      }
+    },
+    [toast],
+  );
+
+  const handleDocSave = async () => {
+    if (!id) return;
+    if (!docTitle.trim()) { toast({ title: "Document label is required", variant: "destructive" }); return; }
+    if (!docFile) { toast({ title: "Please choose a file first", variant: "destructive" }); return; }
+    try {
+      await createDocument.mutateAsync({
+        title: docTitle.trim(),
+        category: "member_docs",
+        status: "active",
+        fileUrl: docFile.fileUrl,
+        fileName: docFile.fileName,
+        fileSize: docFile.fileSize,
+        mimeType: docFile.mimeType,
+        linkedEntityType: "member",
+        linkedEntityId: id,
+      });
+      toast({ title: "Document attached" });
+      setDocDialogOpen(false);
+      setDocFile(null);
+      setDocTitle(STANDARD_DOCS[0]);
+      void refetchDocs();
+    } catch (err) {
+      toast({ title: "Failed to attach document", description: String(err), variant: "destructive" });
+    }
+  };
 
   const invalidateMember = () => {
     if (!id) return;
@@ -320,6 +409,7 @@ export default function MemberDetail() {
               <TabsTrigger value="membership">Membership</TabsTrigger>
               <TabsTrigger value="payments">Payments</TabsTrigger>
               <TabsTrigger value="referrals">Referrals</TabsTrigger>
+              <TabsTrigger value="documents">Documents</TabsTrigger>
               <TabsTrigger value="history">History</TabsTrigger>
               {isCommittee ? <TabsTrigger value="committee">Committee</TabsTrigger> : null}
             </TabsList>
@@ -491,6 +581,84 @@ export default function MemberDetail() {
               </Card>
             </TabsContent>
 
+            {/* DOCUMENTS */}
+            <TabsContent value="documents" className="mt-4">
+              <Card className="rounded-2xl border-emerald-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+                <CardHeader>
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <CardTitle className="text-lg text-emerald-900 dark:text-slate-100 flex items-center gap-2">
+                        <FolderOpen className="h-5 w-5 text-emerald-600 dark:text-emerald-400" /> Documents
+                      </CardTitle>
+                      <CardDescription className="dark:text-slate-400">Identity and membership documents attached to this member.</CardDescription>
+                    </div>
+                    <Button size="sm" variant="outline" className="border-emerald-200 text-emerald-700 dark:border-slate-700 dark:text-emerald-400 shrink-0" onClick={() => setDocDialogOpen(true)}>
+                      <Plus className="mr-1.5 h-4 w-4" /> Attach
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-5">
+                  {/* Standard document checklist */}
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    {STANDARD_DOCS.map((label) => {
+                      const present = hasDoc(label);
+                      return (
+                        <div
+                          key={label}
+                          className={`flex items-center gap-2 rounded-xl border p-3 text-sm font-medium ${
+                            present
+                              ? "border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/70 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-300"
+                              : "border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/40 text-slate-400 dark:text-slate-500"
+                          }`}
+                        >
+                          {present ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <XCircle className="h-4 w-4 shrink-0" />}
+                          <span className="truncate">{label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Attached documents list */}
+                  {isDocsLoading ? (
+                    <div className="space-y-2">{Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}</div>
+                  ) : memberDocs.length === 0 ? (
+                    <div className="text-center py-8 bg-emerald-50/30 dark:bg-slate-800/40 rounded-lg border border-emerald-100 dark:border-slate-800 border-dashed">
+                      <FileText className="h-10 w-10 text-emerald-200 dark:text-slate-700 mx-auto mb-3" />
+                      <p className="text-sm text-emerald-700 dark:text-slate-400">No documents attached yet. Use "Attach" to upload Passport, Iqama, Photo, or the Membership Form.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {memberDocs.map((d) => (
+                        <div key={d.id} className="flex items-center justify-between gap-2 rounded-xl border border-emerald-100 dark:border-slate-800 bg-emerald-50/30 dark:bg-slate-800/40 p-3">
+                          <div className="min-w-0 flex items-center gap-3">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 shrink-0">
+                              <FileText className="h-4 w-4" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-semibold text-emerald-950 dark:text-slate-100 text-sm truncate">{d.title}</p>
+                              <p className="text-[11px] text-emerald-600/70 dark:text-slate-500 truncate">{d.fileName || "Attached file"}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {d.fileUrl ? (
+                              <>
+                                <Button size="icon" variant="ghost" className="h-8 w-8 text-emerald-700 dark:text-emerald-400" onClick={() => window.open(d.fileUrl, "_blank")} title="Open">
+                                  <ExternalLink className="h-4 w-4" />
+                                </Button>
+                                <Button size="icon" variant="ghost" className="h-8 w-8 text-emerald-700 dark:text-emerald-400" title="Download" onClick={() => { const a = document.createElement("a"); a.href = d.fileUrl; a.download = d.fileName || d.title; a.click(); }}>
+                                  <Download className="h-4 w-4" />
+                                </Button>
+                              </>
+                            ) : null}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
             {/* HISTORY */}
             <TabsContent value="history" className="mt-4">
               <Card className="rounded-2xl border-emerald-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
@@ -573,6 +741,14 @@ export default function MemberDetail() {
                         <p className="text-xs font-medium text-emerald-600 dark:text-slate-500">FRF Responsibility</p>
                         <p className="mt-1 text-2xl font-bold text-emerald-900 dark:text-green-300">{formatSAR(referrals?.frfResponsibilityAmount ?? 0)}</p>
                       </div>
+                      <div className="rounded-xl bg-emerald-50/60 dark:bg-slate-800/50 p-4">
+                        <p className="text-xs font-medium text-emerald-600 dark:text-slate-500">Payments Collected</p>
+                        <p className="mt-1 text-2xl font-bold text-emerald-900 dark:text-green-300">{formatSAR(committeeEntry?.feesCollected ?? 0)}</p>
+                      </div>
+                      <div className="rounded-xl bg-emerald-50/60 dark:bg-slate-800/50 p-4">
+                        <p className="text-xs font-medium text-emerald-600 dark:text-slate-500">FRF Members Added</p>
+                        <p className="mt-1 text-2xl font-bold text-emerald-900 dark:text-slate-100">{committeeEntry?.frfReferred ?? 0}</p>
+                      </div>
                     </div>
                     <Link href="/committee-performance" className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-emerald-700 dark:text-emerald-400 hover:underline">
                       View full committee performance <ArrowRight className="h-4 w-4" />
@@ -617,6 +793,59 @@ export default function MemberDetail() {
           });
         }}
       />
+
+      {/* Attach Document dialog */}
+      <Dialog open={docDialogOpen} onOpenChange={(v) => { setDocDialogOpen(v); if (!v) { setDocFile(null); setDocTitle(STANDARD_DOCS[0]); } }}>
+        <DialogContent className="sm:max-w-[460px] dark:bg-slate-900 dark:border-slate-800">
+          <DialogHeader>
+            <DialogTitle className="text-emerald-900 dark:text-slate-100">Attach Document</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label className="dark:text-slate-300">Document Type</Label>
+              <select
+                value={docTitle}
+                onChange={(e) => setDocTitle(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
+              >
+                {STANDARD_DOCS.map((label) => <option key={label} value={label}>{label}</option>)}
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            {docTitle === "Other" || !STANDARD_DOCS.includes(docTitle as (typeof STANDARD_DOCS)[number]) ? (
+              <div className="space-y-1.5">
+                <Label className="dark:text-slate-300">Custom Label</Label>
+                <Input
+                  value={docTitle === "Other" ? "" : docTitle}
+                  placeholder="e.g. Sponsor Letter"
+                  onChange={(e) => setDocTitle(e.target.value)}
+                  className="dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
+                />
+              </div>
+            ) : null}
+            <div className="space-y-1.5">
+              <Label className="dark:text-slate-300">File</Label>
+              <Input
+                type="file"
+                onChange={handleDocUpload}
+                disabled={docUploading}
+                className="dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
+              />
+              {docUploading ? (
+                <p className="text-xs text-emerald-600 dark:text-slate-400 flex items-center gap-1.5"><Upload className="h-3.5 w-3.5 animate-pulse" /> Uploading…</p>
+              ) : docFile ? (
+                <p className="text-xs text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5" /> {docFile.fileName}</p>
+              ) : null}
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" className="dark:border-slate-700 dark:text-slate-300" onClick={() => setDocDialogOpen(false)}>Cancel</Button>
+              <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={handleDocSave} disabled={createDocument.isPending || docUploading || !docFile}>
+                {createDocument.isPending ? "Saving…" : "Attach"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

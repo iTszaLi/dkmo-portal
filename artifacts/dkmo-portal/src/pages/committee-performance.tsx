@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { formatSAR, cn } from "@/lib/utils";
 import { COMMITTEE_2026_27 } from "@/pages/committee";
-import { Trophy, UserPlus, Coins, HeartHandshake, Landmark, Stethoscope, LifeBuoy, Activity } from "lucide-react";
+import { Trophy, UserPlus, Coins, HeartHandshake, Landmark, Activity } from "lucide-react";
 
 function initialsOf(name: string) {
   const parts = name.trim().split(/\s+/);
@@ -38,6 +38,8 @@ export default function CommitteePerformance() {
       loansProcessed: 0,
       medicalAidProcessed: 0,
       emergencyResolved: 0,
+      frfReferred: 0,
+      totalContributionScore: 0,
       totalActions: 0,
     });
 
@@ -52,7 +54,7 @@ export default function CommitteePerformance() {
       if (!rosterNames.has(e.name.toLowerCase())) merged.push(e);
     }
 
-    return merged.sort((a, b) => b.totalActions - a.totalActions);
+    return merged.sort((a, b) => b.totalContributionScore - a.totalContributionScore);
   }, [data]);
 
   const activeCount = (data?.entries ?? []).length;
@@ -61,12 +63,12 @@ export default function CommitteePerformance() {
     (acc, e) => {
       acc.recruited += e.membersRecruited;
       acc.fees += e.feesCollected;
-      acc.frf += e.frfCount;
-      acc.welfare += e.welfareHandled;
+      acc.frfReferred += e.frfReferred;
       acc.loans += e.loansProcessed;
+      acc.score += e.totalContributionScore;
       return acc;
     },
-    { recruited: 0, fees: 0, frf: 0, welfare: 0, loans: 0 },
+    { recruited: 0, fees: 0, frfReferred: 0, loans: 0, score: 0 },
   );
 
   return (
@@ -87,10 +89,10 @@ export default function CommitteePerformance() {
       {/* Totals row */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
         <TotalCard icon={UserPlus} label="Members Recruited" value={totals.recruited} accent="text-green-700 dark:text-green-400" loading={isLoading} />
-        <TotalCard icon={Coins} label="Fees Collected" value={formatSAR(totals.fees)} accent="text-emerald-700 dark:text-emerald-400" loading={isLoading} />
-        <TotalCard icon={HeartHandshake} label="FRF Handled" value={totals.frf} accent="text-rose-600 dark:text-rose-400" loading={isLoading} />
-        <TotalCard icon={Stethoscope} label="Welfare Handled" value={totals.welfare} accent="text-sky-600 dark:text-sky-400" loading={isLoading} />
+        <TotalCard icon={Coins} label="Membership Fees Collected" value={formatSAR(totals.fees)} accent="text-emerald-700 dark:text-emerald-400" loading={isLoading} />
+        <TotalCard icon={HeartHandshake} label="FRF Members Referred" value={totals.frfReferred} accent="text-rose-600 dark:text-rose-400" loading={isLoading} />
         <TotalCard icon={Landmark} label="Loans Processed" value={totals.loans} accent="text-purple-600 dark:text-purple-400" loading={isLoading} />
+        <TotalCard icon={Activity} label="Total Contribution Score" value={totals.score} accent="text-amber-600 dark:text-amber-400" loading={isLoading} />
       </div>
 
       <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
@@ -121,14 +123,11 @@ export default function CommitteePerformance() {
                   <tr className="text-left text-xs uppercase tracking-wider text-green-700/70 dark:text-slate-500 border-b border-green-100 dark:border-slate-800">
                     <th className="py-2 pr-3 font-medium">#</th>
                     <th className="py-2 pr-3 font-medium">Committee Member</th>
-                    <th className="py-2 px-2 font-medium text-right">Recruited</th>
-                    <th className="py-2 px-2 font-medium text-right">Fees</th>
-                    <th className="py-2 px-2 font-medium text-right">FRF</th>
-                    <th className="py-2 px-2 font-medium text-right">Welfare</th>
-                    <th className="py-2 px-2 font-medium text-right">Medical</th>
-                    <th className="py-2 px-2 font-medium text-right">Emergency</th>
+                    <th className="py-2 px-2 font-medium text-right">Members Recruited</th>
+                    <th className="py-2 px-2 font-medium text-right">Fees Collected</th>
+                    <th className="py-2 px-2 font-medium text-right">FRF Referred</th>
                     <th className="py-2 px-2 font-medium text-right">Loans</th>
-                    <th className="py-2 pl-2 font-medium text-right">Total</th>
+                    <th className="py-2 pl-2 font-medium text-right">Score</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -162,12 +161,9 @@ export default function CommitteePerformance() {
                         <td className="py-3 px-2 text-right tabular-nums text-emerald-700 dark:text-emerald-400 font-medium">
                           {e.feesCollected > 0 ? formatSAR(e.feesCollected) : "—"}
                         </td>
-                        <NumCell value={e.frfCount} />
-                        <NumCell value={e.welfareHandled} />
-                        <NumCell value={e.medicalAidProcessed} />
-                        <NumCell value={e.emergencyResolved} />
+                        <NumCell value={e.frfReferred} />
                         <NumCell value={e.loansProcessed} />
-                        <td className="py-3 pl-2 text-right tabular-nums font-bold text-green-950 dark:text-white">{e.totalActions}</td>
+                        <td className="py-3 pl-2 text-right tabular-nums font-bold text-green-950 dark:text-white">{e.totalContributionScore}</td>
                       </tr>
                     );
                   })}

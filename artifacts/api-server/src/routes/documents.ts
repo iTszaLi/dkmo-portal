@@ -73,6 +73,8 @@ router.get("/documents", async (req, res): Promise<void> => {
       search,
       category,
       status,
+      linkedEntityType,
+      linkedEntityId,
       page = "1",
       pageSize = "25",
     } = req.query as Record<string, string>;
@@ -81,6 +83,14 @@ router.get("/documents", async (req, res): Promise<void> => {
     const ps = Math.min(100, Math.max(1, parseInt(pageSize, 10)));
 
     const conditions = [];
+
+    if (linkedEntityType) {
+      conditions.push(eq(documentsTable.linkedEntityType, linkedEntityType));
+    }
+
+    if (linkedEntityId) {
+      conditions.push(eq(documentsTable.linkedEntityId, linkedEntityId));
+    }
 
     if (search) {
       const pattern = `%${search}%`;

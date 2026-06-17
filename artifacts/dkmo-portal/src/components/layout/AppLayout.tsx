@@ -25,6 +25,7 @@ import {
   Trophy,
   Sparkles,
   Activity,
+  ClipboardCheck,
 } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -61,6 +62,7 @@ const navigation: NavItem[] = [
   { name: "Members",           href: "/members",           icon: Users },
   { name: "Committee",         href: "/committee",         icon: Crown },
   { name: "Committee Performance", href: "/committee-performance", icon: Activity },
+  { name: "Meeting Attendance", href: "/meetings", icon: ClipboardCheck },
   { name: "Recruitment Leaderboard", href: "/recruitment-leaderboard", icon: Trophy },
   { name: "Payments",          href: "/payments",          icon: CreditCard },
   { name: "Community Services", href: "/services",          icon: HandHelping },

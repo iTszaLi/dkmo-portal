@@ -14,6 +14,8 @@ import {
   eventTicketBookletsTable,
   eventTicketsTable,
   auditLogsTable,
+  meetingsTable,
+  meetingAttendanceTable,
 } from "@workspace/db";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -263,6 +265,8 @@ async function main() {
 
   // ── Clear existing data (order respects FK constraints) ──────────────────
   console.log("  ↳ clearing old data…");
+  await db.delete(meetingAttendanceTable);
+  await db.delete(meetingsTable);
   await db.delete(eventTicketsTable);
   await db.delete(eventTicketBookletsTable);
   await db.delete(eventExpensesTable);
@@ -367,14 +371,23 @@ async function main() {
     });
   });
 
-  // 2) Referred members — 5 unique regular members under EACH committee member.
-  //    Never placed under another committee/executive member, and each generated
-  //    person appears under exactly one reference (no duplicate referrals).
-  const REFERRALS_PER_COMMITTEE = 5;
+  // 2) Referred members — a VARYING number of regular members under each
+  //    committee member so the recruitment leaderboard reflects a real ranking
+  //    (not a uniform count). Some committee members intentionally have 0
+  //    referrals to prove the leaderboard shows 0 when no referrals exist.
+  //    Each generated person appears under exactly one reference.
+  const REFERRAL_DISTRIBUTION = [
+    23, 18, 15, 13, 12, 10, 9, 8, 7, 6, 6, 5, 5, 4, 4, 3, 3, 2, 2, 1, 1, 0, 2,
+    1, 0, 3, 1, 0, 2, 1,
+  ];
+  const referralCountFor = (ci: number): number =>
+    REFERRAL_DISTRIBUTION[ci] ?? (ci % 4 === 0 ? 0 : (ci % 3) + 1);
+  let refIdx = 0;
   memberRows.forEach((committee, ci) => {
-    for (let r = 0; r < REFERRALS_PER_COMMITTEE; r++) {
+    const count = referralCountFor(ci);
+    for (let r = 0; r < count; r++) {
       const person = nextPerson();
-      const k = ci * REFERRALS_PER_COMMITTEE + r;
+      const k = refIdx++;
       // Vary status for realism so pending/unpaid views are populated.
       const feeStatus: "paid" | "pending" | "unpaid" =
         k % 9 === 0 ? "unpaid" : k % 4 === 0 ? "pending" : "paid";
@@ -449,6 +462,34 @@ async function main() {
   // ── Sponsors ──────────────────────────────────────────────────────────────
   console.log("  ↳ inserting sponsors…");
   const insertedSponsors = await db.insert(sponsorsTable).values(sponsorRows).returning();
+
+  // ── Meetings & Attendance ──────────────────────────────────────────────────
+  console.log("  ↳ inserting meetings…");
+  const insertedMeetings = await db
+    .insert(meetingsTable)
+    .values([
+      { title: "Executive Committee Meeting — June 2026", meetingDate: daysAgo(7), location: "DKMO Office, Riyadh", notes: "Reviewed FRF claims, membership drive progress and upcoming Sports Day budget." },
+      { title: "Core Committee Monthly Meeting — May 2026", meetingDate: daysAgo(38), location: "Community Hall, Riyadh", notes: "Monthly review of collections, pending members and welfare applications." },
+      { title: "Annual General Body Meeting 2025", meetingDate: daysAgo(190), location: "Mangalore Community Hall", notes: "Election of office-bearers, presentation of annual financial report and FRF disbursements." },
+    ])
+    .returning();
+
+  // Committee members occupy indices 0..28. Vary attendance per meeting so the
+  // present/absent figures are realistic rather than uniform.
+  const committeeCount = Math.min(29, insertedMembers.length);
+  const attendanceRows: { meetingId: string; memberId: string; status: string }[] = [];
+  for (let m = 0; m < insertedMeetings.length; m++) {
+    for (let i = 0; i < committeeCount; i++) {
+      // Recent meetings have higher turnout; deterministic pattern for stable seeds.
+      const absent = m === 0 ? i % 7 === 0 : m === 1 ? i % 5 === 0 : i % 4 === 0;
+      attendanceRows.push({
+        meetingId: insertedMeetings[m].id,
+        memberId: insertedMembers[i].id,
+        status: absent ? "absent" : "present",
+      });
+    }
+  }
+  await db.insert(meetingAttendanceTable).values(attendanceRows);
 
   // ── Tasks ─────────────────────────────────────────────────────────────────
   console.log("  ↳ inserting tasks…");
@@ -776,6 +817,7 @@ async function main() {
   console.log(`   Members:          ${insertedMembers.length}`);
   console.log(`   Events:           ${insertedEvents.length}`);
   console.log(`   Sponsors:         ${insertedSponsors.length}`);
+  console.log(`   Meetings:         ${insertedMeetings.length} (with attendance)`);
   console.log(`   Tasks:            ${taskRows.length}`);
   console.log(`   Loans:            ${loanData.length} (incl. 4 overdue)`);
   console.log(`   Receipts:         ${receiptData.length}`);

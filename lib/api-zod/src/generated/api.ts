@@ -64,7 +64,12 @@ export const ListMembersResponse = zod.array(ListMembersResponseItem);
 export const CreateMemberBody = zod.object({
   fullName: zod.string().min(1),
   mobileNumber: zod.string().min(1),
-  membershipId: zod.string().min(1),
+  membershipId: zod
+    .string()
+    .optional()
+    .describe(
+      "Optional. When omitted or blank the server auto-generates the next membership number in the format DKMO-YYYY-XXXX.",
+    ),
   applicationNumber: zod.string().optional(),
   iqamaNumber: zod.string().optional(),
   jamaath: zod.string().optional(),
@@ -117,7 +122,12 @@ export const UpdateMemberParams = zod.object({
 export const UpdateMemberBody = zod.object({
   fullName: zod.string().min(1),
   mobileNumber: zod.string().min(1),
-  membershipId: zod.string().min(1),
+  membershipId: zod
+    .string()
+    .optional()
+    .describe(
+      "Optional. When omitted or blank the server auto-generates the next membership number in the format DKMO-YYYY-XXXX.",
+    ),
   applicationNumber: zod.string().optional(),
   iqamaNumber: zod.string().optional(),
   jamaath: zod.string().optional(),
@@ -1727,6 +1737,8 @@ export const GetCommitteePerformanceResponse = zod.object({
       loansProcessed: zod.number(),
       medicalAidProcessed: zod.number(),
       emergencyResolved: zod.number(),
+      frfReferred: zod.number(),
+      totalContributionScore: zod.number(),
       totalActions: zod.number(),
     }),
   ),
@@ -1874,4 +1886,145 @@ export const ListAuditLogsResponse = zod.object({
     }),
   ),
   total: zod.number(),
+});
+
+/**
+ * @summary List all meetings with attendance summary
+ */
+export const ListMeetingsResponseItem = zod.object({
+  id: zod.string().uuid(),
+  title: zod.string(),
+  meetingDate: zod.string(),
+  location: zod.string(),
+  notes: zod.string(),
+  totalCount: zod.number(),
+  presentCount: zod.number(),
+  absentCount: zod.number(),
+  attendancePercentage: zod.number(),
+  createdAt: zod.string(),
+});
+export const ListMeetingsResponse = zod.array(ListMeetingsResponseItem);
+
+/**
+ * @summary Create a meeting session
+ */
+
+export const CreateMeetingBody = zod.object({
+  title: zod.string().min(1),
+  meetingDate: zod.string().min(1),
+  location: zod.string().optional(),
+  notes: zod.string().optional(),
+});
+
+/**
+ * @summary Get a meeting with its full attendance register
+ */
+export const GetMeetingParams = zod.object({
+  id: zod.coerce.string().uuid(),
+});
+
+export const GetMeetingResponse = zod.object({
+  id: zod.string().uuid(),
+  title: zod.string(),
+  meetingDate: zod.string(),
+  location: zod.string(),
+  notes: zod.string(),
+  totalCount: zod.number(),
+  presentCount: zod.number(),
+  absentCount: zod.number(),
+  attendancePercentage: zod.number(),
+  createdAt: zod.string(),
+  attendance: zod.array(
+    zod.object({
+      memberId: zod.string().uuid(),
+      membershipId: zod.string(),
+      fullName: zod.string(),
+      location: zod.string(),
+      mobileNumber: zod.string(),
+      status: zod.enum(["present", "absent"]),
+    }),
+  ),
+});
+
+/**
+ * @summary Update meeting information
+ */
+export const UpdateMeetingParams = zod.object({
+  id: zod.coerce.string().uuid(),
+});
+
+export const UpdateMeetingBody = zod.object({
+  title: zod.string().min(1),
+  meetingDate: zod.string().min(1),
+  location: zod.string().optional(),
+  notes: zod.string().optional(),
+});
+
+export const UpdateMeetingResponse = zod.object({
+  id: zod.string().uuid(),
+  title: zod.string(),
+  meetingDate: zod.string(),
+  location: zod.string(),
+  notes: zod.string(),
+  totalCount: zod.number(),
+  presentCount: zod.number(),
+  absentCount: zod.number(),
+  attendancePercentage: zod.number(),
+  createdAt: zod.string(),
+  attendance: zod.array(
+    zod.object({
+      memberId: zod.string().uuid(),
+      membershipId: zod.string(),
+      fullName: zod.string(),
+      location: zod.string(),
+      mobileNumber: zod.string(),
+      status: zod.enum(["present", "absent"]),
+    }),
+  ),
+});
+
+/**
+ * @summary Delete a meeting and its attendance records
+ */
+export const DeleteMeetingParams = zod.object({
+  id: zod.coerce.string().uuid(),
+});
+
+/**
+ * @summary Set attendance status for members in a meeting
+ */
+export const SetMeetingAttendanceParams = zod.object({
+  id: zod.coerce.string().uuid(),
+});
+
+export const SetMeetingAttendanceBody = zod.object({
+  records: zod.array(
+    zod.object({
+      memberId: zod.string().uuid(),
+      status: zod.enum(["present", "absent"]),
+    }),
+  ),
+});
+
+export const SetMeetingAttendanceResponse = zod.object({
+  id: zod.string().uuid(),
+  title: zod.string(),
+  meetingDate: zod.string(),
+  location: zod.string(),
+  notes: zod.string(),
+  totalCount: zod.number(),
+  presentCount: zod.number(),
+  absentCount: zod.number(),
+  attendancePercentage: zod.number(),
+  createdAt: zod.string(),
+  attendance: zod.array(
+    zod.object({
+      memberId: zod.string().uuid(),
+      membershipId: zod.string(),
+      fullName: zod.string(),
+      location: zod.string(),
+      mobileNumber: zod.string(),
+      status: zod.enum(["present", "absent"]),
+    }),
+  ),
 });

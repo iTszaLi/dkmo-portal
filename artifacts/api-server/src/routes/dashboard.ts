@@ -590,6 +590,7 @@ interface PerfEntry {
   loansProcessed: number;
   medicalAidProcessed: number;
   emergencyResolved: number;
+  frfReferred: number;
 }
 
 router.get("/dashboard/committee-performance", async (_req, res): Promise<void> => {
@@ -616,6 +617,7 @@ router.get("/dashboard/committee-performance", async (_req, res): Promise<void> 
         loansProcessed: 0,
         medicalAidProcessed: 0,
         emergencyResolved: 0,
+        frfReferred: 0,
       };
       map.set(name, entry);
     }
@@ -624,7 +626,10 @@ router.get("/dashboard/committee-performance", async (_req, res): Promise<void> 
 
   for (const m of members) {
     const recruiter = get(m.refMemberName ?? "");
-    if (recruiter) recruiter.membersRecruited += 1;
+    if (recruiter) {
+      recruiter.membersRecruited += 1;
+      if (m.frfStatus === "active") recruiter.frfReferred += 1;
+    }
     if (m.feeStatus === "paid") {
       const collector = get(m.feeUpdatedBy ?? "");
       if (collector) collector.feesCollected += Number(m.membershipFee);
@@ -658,13 +663,19 @@ router.get("/dashboard/committee-performance", async (_req, res): Promise<void> 
   const entries = [...map.values()]
     .map((e) => ({
       ...e,
+      totalContributionScore:
+        e.membersRecruited * 10 +
+        e.frfReferred * 5 +
+        e.loansProcessed * 8 +
+        e.welfareHandled * 5 +
+        Math.round(e.feesCollected / 100),
       totalActions:
         e.membersRecruited +
         e.frfCount +
         e.welfareHandled +
         e.loansProcessed,
     }))
-    .sort((a, b) => b.totalActions - a.totalActions);
+    .sort((a, b) => b.totalContributionScore - a.totalContributionScore);
 
   res.json({ entries });
 });
