@@ -19,43 +19,46 @@ export function MemberBadges({
 }) {
   const level = normalizeCommitteeLevel(committeeLevel);
   const rawDes = (designation ?? "").trim();
-  const levelBadge = level !== "regular" ? COMMITTEE_LEVEL_BADGE[level] : null;
-  // Hide the designation badge when it merely restates the committee level
-  // (e.g. level "executive" + designation "Executive Member"). Real roles
-  // like "President" still render alongside the level badge.
-  const redundant =
-    rawDes.toLowerCase() === COMMITTEE_LEVEL_LABEL[level].toLowerCase();
+  // Committee tiers are nested: an Executive member is also part of the Core
+  // committee, so they earn both tier badges. Order: Executive (gold) then
+  // Core Committee (silver).
+  const tiers: ("executive" | "core")[] =
+    level === "executive"
+      ? ["executive", "core"]
+      : level === "core"
+        ? ["core"]
+        : [];
+  // Hide the designation ("main role") badge when it merely restates a tier the
+  // member already shows (e.g. designation "Executive Member" + executive tier).
+  // Real roles like "President" still render alongside the tier badges.
+  const redundant = tiers.some(
+    (t) => rawDes.toLowerCase() === COMMITTEE_LEVEL_LABEL[t].toLowerCase(),
+  );
   const des = redundant ? "" : rawDes;
 
-  if (!levelBadge && !des) return null;
+  if (tiers.length === 0 && !des) return null;
 
   const pad =
     size === "md" ? "px-2.5 py-0.5 text-[11px]" : "px-2 py-0.5 text-[10px]";
 
+  const badgeBase =
+    "inline-block rounded-full font-semibold uppercase tracking-wide";
+
   return (
     <div className={cn("flex flex-wrap items-center gap-1.5", className)}>
-      {levelBadge ? (
-        <span
-          className={cn(
-            "inline-block rounded-full font-semibold uppercase tracking-wide",
-            pad,
-            levelBadge.className,
-          )}
-        >
-          {levelBadge.label}
-        </span>
-      ) : null}
       {des ? (
-        <span
-          className={cn(
-            "inline-block rounded-full font-semibold uppercase tracking-wide",
-            pad,
-            designationBadgeClass(des),
-          )}
-        >
+        <span className={cn(badgeBase, pad, designationBadgeClass(des))}>
           {des}
         </span>
       ) : null}
+      {tiers.map((tier) => (
+        <span
+          key={tier}
+          className={cn(badgeBase, pad, COMMITTEE_LEVEL_BADGE[tier].className)}
+        >
+          {COMMITTEE_LEVEL_BADGE[tier].label}
+        </span>
+      ))}
     </div>
   );
 }
