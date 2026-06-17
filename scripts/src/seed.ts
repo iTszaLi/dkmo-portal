@@ -70,17 +70,6 @@ const memberRows = [
   { fullName: "Nayaz Ahmed",             designation: "Executive Member",         city: "Mangalore",    country: "Saudi Arabia", mobileNumber: "+919844100027" },
   { fullName: "Abdul Majeed Vittal",     designation: "Executive Member",         city: "Vittal",       country: "Saudi Arabia", mobileNumber: "+919844100028" },
   { fullName: "Rafee Hameed Uchchila",   designation: "Executive Member",         city: "Uchchila",     country: "Saudi Arabia", mobileNumber: "+919844100029" },
-  { fullName: "Bilal Hussain Surathkal", designation: "Member",                   city: "Surathkal",    country: "Saudi Arabia", mobileNumber: "+919844100030" },
-  { fullName: "Mohsin Ahmed Belman",     designation: "Member",                   city: "Belman",       country: "Saudi Arabia", mobileNumber: "+919844100031" },
-  { fullName: "Junaid Rashid Kottara",   designation: "Member",                   city: "Kottara",      country: "Saudi Arabia", mobileNumber: "+919844100032" },
-  { fullName: "Arshad Farooq Ullal",     designation: "Member",                   city: "Ullal",        country: "Saudi Arabia", mobileNumber: "+919844100033" },
-  { fullName: "Faheem Abdul Kadri",      designation: "Member",                   city: "Mangalore",    country: "Saudi Arabia", mobileNumber: "+919844100034" },
-  { fullName: "Tahir Mohammed Bantwal",  designation: "Member",                   city: "Bantwal",      country: "India",        mobileNumber: "+919844100035" },
-  { fullName: "Zubair Khan Puttur",      designation: "Member",                   city: "Puttur",       country: "India",        mobileNumber: "+919844100036" },
-  { fullName: "Imran Hussain Kundapur",  designation: "Member",                   city: "Kundapur",     country: "India",        mobileNumber: "+919844100037" },
-  { fullName: "Arafath Salim Shirva",    designation: "Member",                   city: "Shirva",       country: "Saudi Arabia", mobileNumber: "+919844100038" },
-  { fullName: "Basheer Ahmed Padubidri", designation: "Member",                   city: "Padubidri",    country: "Saudi Arabia", mobileNumber: "+919844100039" },
-  { fullName: "Mubarak Ali Thokkottu",   designation: "Member",                   city: "Thokkottu",    country: "Saudi Arabia", mobileNumber: "+919844100040" },
 ];
 
 // ── 2. EVENTS ─────────────────────────────────────────────────────────────────
@@ -290,48 +279,166 @@ async function main() {
 
   // ── Members ──────────────────────────────────────────────────────────────
   console.log("  ↳ inserting members…");
+
+  // Sequential, collision-free generators shared across every member so that
+  // membership IDs, application numbers, Iqama numbers and mobiles are unique.
+  let membershipSeq = 0;
+  const nextMembershipId = () => `DKMO-${String(++membershipSeq).padStart(4, "0")}`;
+  let appSeq = 1000;
+  const nextApplicationNumber = () => `APP-${++appSeq}`;
+  let iqamaSeq = 2100000000;
+  const nextIqamaNumber = () => `${(iqamaSeq += 173)}`;
+  // KSA mobile format: leading 0 + 9 digits → e.g. 0502260256 (no +91).
+  let mobileSeq = 502260256;
+  const nextMobile = () => `0${mobileSeq++}`;
+
+  const jamaathOptions = [
+    "Mangalore Jamaath",
+    "Ullal Jamaath",
+    "Bantwal Jamaath",
+    "Puttur Jamaath",
+    "Kasaragod Jamaath",
+    "Mukkam Jamaath",
+    "Surathkal Jamaath",
+    "Moodbidri Jamaath",
+  ];
+
+  // Name pools for generated (referred + standalone) members. Iterating with the
+  // first name varying fastest makes the first thousands of combos unique.
+  const FIRST = [
+    "Bilal", "Mohsin", "Junaid", "Arshad", "Faheem", "Tahir", "Zubair", "Imran",
+    "Arafath", "Basheer", "Mubarak", "Rizwan", "Saleem", "Naveed", "Anwar",
+    "Firoz", "Shahid", "Aslam", "Kareem", "Mansoor", "Nadeem", "Owais", "Parvez",
+    "Qadir", "Rasheed", "Sajid", "Tariq", "Usman", "Wasim", "Yaseen", "Zahid",
+    "Adil", "Bashir", "Dilshad", "Ejaz", "Faisal", "Gulzar", "Haroon", "Ibrahim",
+    "Jamal", "Kamran", "Latif", "Maqbool", "Noman", "Osman", "Rafiq", "Sohail",
+    "Tauseef", "Umar", "Waheed",
+  ];
+  const MIDDLE = [
+    "Ahmed", "Hussain", "Rashid", "Salim", "Abdul", "Mohammed", "Khan", "Ali",
+    "Hassan", "Yusuf", "Ibrahim", "Farooq",
+  ];
+  const PLACE = [
+    "Surathkal", "Belman", "Kottara", "Ullal", "Bantwal", "Puttur", "Kundapur",
+    "Shirva", "Padubidri", "Thokkottu", "Mulki", "Vittal", "Uchchila",
+    "Kalanjibail", "Ganjimutt", "Koteshwar", "Byndoor", "Thokur", "Moodbidri",
+    "Karkala", "Hebri", "Belthangady", "Sullia", "Venoor", "Kadaba",
+    "Kinnigoli", "Mangalore", "Mangaluru", "Bajpe", "Addoor",
+  ];
+  let nameSeq = 0;
+  const usedNames = new Set<string>();
+  const nextPerson = (): { fullName: string; city: string } => {
+    for (;;) {
+      const idx = nameSeq++;
+      const first = FIRST[idx % FIRST.length];
+      const mid = MIDDLE[Math.floor(idx / FIRST.length) % MIDDLE.length];
+      const place = PLACE[Math.floor(idx / (FIRST.length * MIDDLE.length)) % PLACE.length];
+      const fullName = `${first} ${mid} ${place}`;
+      if (!usedNames.has(fullName)) {
+        usedNames.add(fullName);
+        return { fullName, city: place };
+      }
+    }
+  };
+
+  type SeedMember = typeof membersTable.$inferInsert & { __refCommitteeIndex?: number };
+  const allRows: SeedMember[] = [];
+
+  // 1) Committee / executive members — top-level (no reference), PAID + ACTIVE
+  //    membership and ACTIVE FRF. Order preserved so they occupy indices 0..28.
+  memberRows.forEach((m, i) => {
+    allRows.push({
+      fullName: m.fullName,
+      designation: m.designation,
+      city: m.city,
+      country: m.country,
+      mobileNumber: nextMobile(),
+      membershipId: nextMembershipId(),
+      applicationNumber: nextApplicationNumber(),
+      iqamaNumber: nextIqamaNumber(),
+      jamaath: jamaathOptions[i % jamaathOptions.length],
+      membershipFee: "100",
+      feeStatus: "paid",
+      feePaidAt: daysAgo(30 + (i % 60)),
+      feeUpdatedBy: "Abdul Rahiman Sulaiman",
+      frfStatus: "active",
+      refMemberName: "",
+      refMemberId: "",
+    });
+  });
+
+  // 2) Referred members — 5 unique regular members under EACH committee member.
+  //    Never placed under another committee/executive member, and each generated
+  //    person appears under exactly one reference (no duplicate referrals).
+  const REFERRALS_PER_COMMITTEE = 5;
+  memberRows.forEach((committee, ci) => {
+    for (let r = 0; r < REFERRALS_PER_COMMITTEE; r++) {
+      const person = nextPerson();
+      const k = ci * REFERRALS_PER_COMMITTEE + r;
+      // Vary status for realism so pending/unpaid views are populated.
+      const feeStatus: "paid" | "pending" | "unpaid" =
+        k % 9 === 0 ? "unpaid" : k % 4 === 0 ? "pending" : "paid";
+      const frfStatus: "active" | "suspended" | "inactive" =
+        k % 17 === 0 ? "inactive" : k % 13 === 0 ? "suspended" : "active";
+      allRows.push({
+        fullName: person.fullName,
+        designation: "Member",
+        city: person.city,
+        country: k % 5 === 0 ? "India" : "Saudi Arabia",
+        mobileNumber: nextMobile(),
+        membershipId: nextMembershipId(),
+        applicationNumber: nextApplicationNumber(),
+        iqamaNumber: nextIqamaNumber(),
+        jamaath: jamaathOptions[k % jamaathOptions.length],
+        membershipFee: "100",
+        feeStatus,
+        feePaidAt: feeStatus === "paid" ? daysAgo(20 + (k % 90)) : null,
+        feeUpdatedBy: feeStatus === "paid" ? "Abdul Rahiman Sulaiman" : "",
+        frfStatus,
+        refMemberName: committee.fullName,
+        refMemberId: "",
+        __refCommitteeIndex: ci,
+      });
+    }
+  });
+
+  // 3) Standalone members — 10 independent members (no reference), PAID + ACTIVE
+  //    membership and ACTIVE FRF.
+  for (let s = 0; s < 10; s++) {
+    const person = nextPerson();
+    allRows.push({
+      fullName: person.fullName,
+      designation: "Member",
+      city: person.city,
+      country: "Saudi Arabia",
+      mobileNumber: nextMobile(),
+      membershipId: nextMembershipId(),
+      applicationNumber: nextApplicationNumber(),
+      iqamaNumber: nextIqamaNumber(),
+      jamaath: jamaathOptions[s % jamaathOptions.length],
+      membershipFee: "100",
+      feeStatus: "paid",
+      feePaidAt: daysAgo(15 + s * 3),
+      feeUpdatedBy: "Abdul Rahiman Sulaiman",
+      frfStatus: "active",
+      refMemberName: "",
+      refMemberId: "",
+    });
+  }
+
   const insertedMembers = await db
     .insert(membersTable)
-    .values(
-      memberRows.map((m, i) => {
-        // Recruiter = one of the first 10 committee members (never self)
-        const refIdx = i === 0 ? -1 : (i - 1) % 10;
-        const feeStatus: "paid" | "pending" | "unpaid" =
-          i % 7 === 0 ? "unpaid" : i % 3 === 0 ? "pending" : "paid";
-        const frfStatus: "active" | "suspended" | "inactive" =
-          i % 13 === 0 ? "inactive" : i % 11 === 0 ? "suspended" : "active";
-        const jamaathOptions = [
-          "Mangalore Jamaath",
-          "Ullal Jamaath",
-          "Bantwal Jamaath",
-          "Puttur Jamaath",
-          "Kasaragod Jamaath",
-          "Mukkam Jamaath",
-        ];
-        return {
-          ...m,
-          membershipId: `DKMO-${String(i + 1).padStart(4, "0")}`,
-          applicationNumber: `APP-${String(1000 + i + 1)}`,
-          iqamaNumber: `2${String(100000000 + i * 137).padStart(9, "0")}`,
-          jamaath: jamaathOptions[i % jamaathOptions.length],
-          membershipFee: "100",
-          feeStatus,
-          feePaidAt: feeStatus === "paid" ? daysAgo(30 + (i % 60)) : null,
-          feeUpdatedBy: feeStatus === "paid" ? "Abdul Rahiman Sulaiman" : "",
-          frfStatus,
-          refMemberName: refIdx >= 0 ? memberRows[refIdx].fullName : "",
-          refMemberId: "",
-        };
-      })
-    )
+    .values(allRows.map(({ __refCommitteeIndex: _drop, ...row }) => row))
     .returning();
 
-  // Link referral UUIDs now that members have ids (leaderboard keys on member.id)
-  for (let i = 1; i < insertedMembers.length; i++) {
-    const refIdx = (i - 1) % 10;
+  // Link referral UUIDs now that members have ids. Committee members occupy the
+  // same indices (0..28) in insertedMembers as in memberRows.
+  for (let i = 0; i < allRows.length; i++) {
+    const ci = allRows[i].__refCommitteeIndex;
+    if (ci === undefined) continue;
     await db
       .update(membersTable)
-      .set({ refMemberId: insertedMembers[refIdx].id })
+      .set({ refMemberId: insertedMembers[ci].id })
       .where(eq(membersTable.id, insertedMembers[i].id));
   }
 
