@@ -46,6 +46,7 @@ export const ListMembersResponseItem = zod.object({
   feeStatus: zod.enum(["paid", "pending", "unpaid"]),
   feePaidAt: zod.coerce.date().nullable(),
   feeUpdatedBy: zod.string(),
+  frfStatus: zod.enum(["active", "suspended", "inactive"]),
   refMemberName: zod.string(),
   refMemberId: zod.string(),
   createdAt: zod.coerce.date(),
@@ -66,6 +67,7 @@ export const CreateMemberBody = zod.object({
   designation: zod.string().optional(),
   membershipFee: zod.number().optional(),
   feeStatus: zod.enum(["paid", "pending", "unpaid"]).optional(),
+  frfStatus: zod.enum(["active", "suspended", "inactive"]).optional(),
   refMemberName: zod.string().optional(),
   refMemberId: zod.string().optional(),
 });
@@ -89,6 +91,7 @@ export const GetMemberResponse = zod.object({
   feeStatus: zod.enum(["paid", "pending", "unpaid"]),
   feePaidAt: zod.coerce.date().nullable(),
   feeUpdatedBy: zod.string(),
+  frfStatus: zod.enum(["active", "suspended", "inactive"]),
   refMemberName: zod.string(),
   refMemberId: zod.string(),
   createdAt: zod.coerce.date(),
@@ -111,6 +114,7 @@ export const UpdateMemberBody = zod.object({
   designation: zod.string().optional(),
   membershipFee: zod.number().optional(),
   feeStatus: zod.enum(["paid", "pending", "unpaid"]).optional(),
+  frfStatus: zod.enum(["active", "suspended", "inactive"]).optional(),
   refMemberName: zod.string().optional(),
   refMemberId: zod.string().optional(),
 });
@@ -127,6 +131,7 @@ export const UpdateMemberResponse = zod.object({
   feeStatus: zod.enum(["paid", "pending", "unpaid"]),
   feePaidAt: zod.coerce.date().nullable(),
   feeUpdatedBy: zod.string(),
+  frfStatus: zod.enum(["active", "suspended", "inactive"]),
   refMemberName: zod.string(),
   refMemberId: zod.string(),
   createdAt: zod.coerce.date(),
@@ -163,6 +168,7 @@ export const UpdateMemberFeeStatusResponse = zod.object({
   feeStatus: zod.enum(["paid", "pending", "unpaid"]),
   feePaidAt: zod.coerce.date().nullable(),
   feeUpdatedBy: zod.string(),
+  frfStatus: zod.enum(["active", "suspended", "inactive"]),
   refMemberName: zod.string(),
   refMemberId: zod.string(),
   createdAt: zod.coerce.date(),
@@ -174,20 +180,14 @@ export const UpdateMemberFeeStatusResponse = zod.object({
  */
 export const ListPaymentsQueryParams = zod.object({
   memberId: zod.coerce.string().optional(),
-  month: zod.coerce
-    .string()
+  paymentType: zod
+    .enum(["membership_fee", "frf_contribution"])
     .optional()
-    .describe(
-      "Format: YYYY-MM (single month, ignored if fromMonth\/toMonth provided)",
-    ),
-  fromMonth: zod.coerce
-    .string()
+    .describe("Filter by payment type"),
+  status: zod
+    .enum(["paid", "pending", "overdue"])
     .optional()
-    .describe("Format: YYYY-MM (inclusive start of range)"),
-  toMonth: zod.coerce
-    .string()
-    .optional()
-    .describe("Format: YYYY-MM (inclusive end of range)"),
+    .describe("Filter by status"),
   paymentMethod: zod.coerce
     .string()
     .optional()
@@ -199,8 +199,11 @@ export const ListPaymentsResponseItem = zod.object({
   memberId: zod.string(),
   memberName: zod.string(),
   membershipId: zod.string(),
-  month: zod.string().describe("YYYY-MM"),
+  paymentType: zod.enum(["membership_fee", "frf_contribution"]),
+  frfClaimId: zod.string().nullish(),
+  amountDue: zod.number(),
   amountPaid: zod.number(),
+  status: zod.enum(["paid", "pending", "overdue"]),
   paymentMethod: zod.enum([
     "cash",
     "upi",
@@ -211,6 +214,7 @@ export const ListPaymentsResponseItem = zod.object({
   ]),
   receiptNumber: zod.string(),
   notes: zod.string().nullish(),
+  dueDate: zod.coerce.date().nullish(),
   paidAt: zod.coerce.date(),
   createdAt: zod.coerce.date(),
 });
@@ -222,8 +226,11 @@ export const ListPaymentsResponse = zod.array(ListPaymentsResponseItem);
 
 export const CreatePaymentBody = zod.object({
   memberId: zod.string(),
-  month: zod.string().describe("YYYY-MM"),
+  paymentType: zod.enum(["membership_fee", "frf_contribution"]).optional(),
+  frfClaimId: zod.string().nullish(),
+  amountDue: zod.number().optional(),
   amountPaid: zod.number(),
+  status: zod.enum(["paid", "pending", "overdue"]).optional(),
   paymentMethod: zod.enum([
     "cash",
     "upi",
@@ -234,6 +241,7 @@ export const CreatePaymentBody = zod.object({
   ]),
   receiptNumber: zod.string().min(1),
   notes: zod.string().nullish(),
+  dueDate: zod.coerce.date().nullish(),
   paidAt: zod.coerce.date().nullish(),
 });
 
@@ -249,8 +257,11 @@ export const GetPaymentResponse = zod.object({
   memberId: zod.string(),
   memberName: zod.string(),
   membershipId: zod.string(),
-  month: zod.string().describe("YYYY-MM"),
+  paymentType: zod.enum(["membership_fee", "frf_contribution"]),
+  frfClaimId: zod.string().nullish(),
+  amountDue: zod.number(),
   amountPaid: zod.number(),
+  status: zod.enum(["paid", "pending", "overdue"]),
   paymentMethod: zod.enum([
     "cash",
     "upi",
@@ -261,6 +272,7 @@ export const GetPaymentResponse = zod.object({
   ]),
   receiptNumber: zod.string(),
   notes: zod.string().nullish(),
+  dueDate: zod.coerce.date().nullish(),
   paidAt: zod.coerce.date(),
   createdAt: zod.coerce.date(),
 });
@@ -330,7 +342,7 @@ export const GetRecentPaymentsResponseItem = zod.object({
   memberId: zod.string(),
   memberName: zod.string(),
   membershipId: zod.string(),
-  month: zod.string(),
+  paymentType: zod.string(),
   amountPaid: zod.number(),
   paymentMethod: zod.string(),
   receiptNumber: zod.string(),
@@ -357,10 +369,10 @@ export const GetMonthlyCollectionResponse = zod.array(
 );
 
 /**
- * @summary Payment method totals for given month
+ * @summary Payment method totals
  */
 export const GetPaymentMethodBreakdownQueryParams = zod.object({
-  month: zod.coerce.string().optional(),
+  paymentType: zod.coerce.string().optional(),
 });
 
 export const GetPaymentMethodBreakdownResponseItem = zod.object({

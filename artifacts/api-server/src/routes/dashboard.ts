@@ -124,7 +124,7 @@ router.get("/dashboard/recent-payments", async (req, res): Promise<void> => {
         memberId: api.memberId,
         memberName: api.memberName,
         membershipId: api.membershipId,
-        month: api.month,
+        paymentType: api.paymentType,
         amountPaid: api.amountPaid,
         paymentMethod: api.paymentMethod,
         receiptNumber: api.receiptNumber,
@@ -142,14 +142,15 @@ router.get("/dashboard/monthly-collection", async (req, res): Promise<void> => {
   }
   const months = Math.min(24, Math.max(1, parsed.data.months ?? 6));
 
+  const monthExpr = sql<string>`to_char(${paymentsTable.paidAt}, 'YYYY-MM')`;
   const rows = await db
     .select({
-      month: paymentsTable.month,
+      month: monthExpr,
       total: sum(paymentsTable.amountPaid),
       cnt: sql<number>`count(${paymentsTable.id})`,
     })
     .from(paymentsTable)
-    .groupBy(paymentsTable.month);
+    .groupBy(monthExpr);
 
   const map = new Map<string, { total: number; count: number }>();
   for (const r of rows) {
@@ -179,7 +180,7 @@ router.get(
       res.status(400).json({ error: parsed.error.message });
       return;
     }
-    const month = parsed.data.month?.trim() || currentMonth();
+    const paymentType = parsed.data.paymentType?.trim();
     const rows = await db
       .select({
         method: paymentsTable.paymentMethod,
@@ -187,7 +188,11 @@ router.get(
         cnt: sql<number>`count(${paymentsTable.id})`,
       })
       .from(paymentsTable)
-      .where(eq(paymentsTable.month, month))
+      .where(
+        paymentType
+          ? eq(paymentsTable.paymentType, paymentType)
+          : undefined,
+      )
       .groupBy(paymentsTable.paymentMethod);
     res.json(
       rows.map((r) => ({

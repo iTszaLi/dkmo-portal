@@ -2,3 +2,4 @@
 - [Public track endpoint DTO](public-track-endpoint-dto.md) — public DKMO status lookup must return a minimal non-PII DTO and match identifiers exactly (no substring enumeration).
 - [Welfare/community services](welfare-services.md) — one table+route+generic component for 5 service types; request numbers via app-code retry-on-conflict (not a SQL fn like FRF); FRF/Loans linked not rebuilt.
 - [Applying DB schema changes](db-schema-apply.md) — `db push` can hang on interactive rename prompts; use additive DDL in scripts/src/migrate.ts (`run migrate`) for new tables/columns.
+- [DKMO payments & recruitment model](dkmo-payments-model.md) — no monthly dues; FRF contributions are payments rows (SAR 50/claim) not a separate table; recruitment leaderboard keys on member UUID, seed must two-pass link refMemberId.

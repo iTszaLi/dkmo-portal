@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import { db, pool } from "@workspace/db";
 import {
   membersTable,
@@ -291,10 +292,12 @@ async function main() {
     .insert(membersTable)
     .values(
       memberRows.map((m, i) => {
-        // Reference member = one of the first 5 office-bearers (never self)
-        const refIdx = i === 0 ? -1 : (i - 1) % 5;
+        // Recruiter = one of the first 10 committee members (never self)
+        const refIdx = i === 0 ? -1 : (i - 1) % 10;
         const feeStatus: "paid" | "pending" | "unpaid" =
           i % 7 === 0 ? "unpaid" : i % 3 === 0 ? "pending" : "paid";
+        const frfStatus: "active" | "suspended" | "inactive" =
+          i % 13 === 0 ? "inactive" : i % 11 === 0 ? "suspended" : "active";
         return {
           ...m,
           membershipId: `DKMO-${String(i + 1).padStart(4, "0")}`,
@@ -302,12 +305,22 @@ async function main() {
           feeStatus,
           feePaidAt: feeStatus === "paid" ? daysAgo(30 + (i % 60)) : null,
           feeUpdatedBy: feeStatus === "paid" ? "Abdul Rahiman Sulaiman" : "",
+          frfStatus,
           refMemberName: refIdx >= 0 ? memberRows[refIdx].fullName : "",
-          refMemberId: refIdx >= 0 ? `DKMO-${String(refIdx + 1).padStart(4, "0")}` : "",
+          refMemberId: "",
         };
       })
     )
     .returning();
+
+  // Link referral UUIDs now that members have ids (leaderboard keys on member.id)
+  for (let i = 1; i < insertedMembers.length; i++) {
+    const refIdx = (i - 1) % 10;
+    await db
+      .update(membersTable)
+      .set({ refMemberId: insertedMembers[refIdx].id })
+      .where(eq(membersTable.id, insertedMembers[i].id));
+  }
 
   // ── Events ────────────────────────────────────────────────────────────────
   console.log("  ↳ inserting events…");
@@ -370,38 +383,30 @@ async function main() {
   // ── Receipts (official DKMO receipts) ─────────────────────────────────────
   console.log("  ↳ inserting receipts…");
   const jamaaths = ["Bajpe Masjid Jamaath", "Mangalore Jumma Masjid", "Mulki Jame Masjid", "Udupi Masjid", "Koteshwar Jamaath", "Addoor Masjid Jamaath", "Vittal Jame Masjid"];
-  const receiptData = [
-    { receiptNumber: "DKMO-RC-001", receiptDate: dateStrAgo(180), memberName: "Fazlurrahman Kolkar",     dkmoId: "DKMO-0001", jamathName: jamaaths[0], mobileNumber: "+919844100001", whatsappNumber: "+919844100001", amount: "500",  paymentTypes: JSON.stringify({ monthlyContribution: 500 }),                         createdBy: "Irshad Bajpe" },
-    { receiptNumber: "DKMO-RC-002", receiptDate: dateStrAgo(175), memberName: "Asif Kannur",             dkmoId: "DKMO-0002", jamathName: jamaaths[1], mobileNumber: "+919844100002", whatsappNumber: "+919844100002", amount: "500",  paymentTypes: JSON.stringify({ monthlyContribution: 500 }),                         createdBy: "Irshad Bajpe" },
-    { receiptNumber: "DKMO-RC-003", receiptDate: dateStrAgo(170), memberName: "Irshad Bajpe",            dkmoId: "DKMO-0003", jamathName: jamaaths[0], mobileNumber: "+919844100003", whatsappNumber: "+919844100003", amount: "300",  paymentTypes: JSON.stringify({ monthlyContribution: 300 }),                         createdBy: "Abdul Rahiman Sulaiman" },
-    { receiptNumber: "DKMO-RC-004", receiptDate: dateStrAgo(165), memberName: "Abdul Rahiman Sulaiman",  dkmoId: "DKMO-0004", jamathName: jamaaths[1], mobileNumber: "+919844100004", whatsappNumber: "+919844100004", amount: "600",  paymentTypes: JSON.stringify({ monthlyContribution: 300, loanRepayment: 300 }),    createdBy: "Irshad Bajpe" },
-    { receiptNumber: "DKMO-RC-005", receiptDate: dateStrAgo(160), memberName: "Ghani Ahmed Mulki",       dkmoId: "DKMO-0010", jamathName: jamaaths[2], mobileNumber: "+919844100010", whatsappNumber: "+919844100010", amount: "1750", paymentTypes: JSON.stringify({ monthlyContribution: 250, loanRepayment: 1500 }),   createdBy: "Irshad Bajpe" },
-    { receiptNumber: "DKMO-RC-006", receiptDate: dateStrAgo(155), memberName: "Haneef B.K.",             dkmoId: "DKMO-0009", jamathName: jamaaths[1], mobileNumber: "+919844100009", whatsappNumber: "+919844100009", amount: "200",  paymentTypes: JSON.stringify({ monthlyContribution: 200 }),                         createdBy: "Abdul Rahiman Sulaiman" },
-    { receiptNumber: "DKMO-RC-007", receiptDate: dateStrAgo(150), memberName: "Ashraf Sheikh Koteshwar", dkmoId: "DKMO-0020", jamathName: jamaaths[4], mobileNumber: "+919844100020", whatsappNumber: "+919844100020", amount: "750",  paymentTypes: JSON.stringify({ monthlyContribution: 250, frfContribution: 500 }), createdBy: "Irshad Bajpe" },
-    { receiptNumber: "DKMO-RC-008", receiptDate: dateStrAgo(145), memberName: "Mohammed Haris Byndoor",  dkmoId: "DKMO-0021", jamathName: jamaaths[3], mobileNumber: "+919844100021", whatsappNumber: "+919844100021", amount: "250",  paymentTypes: JSON.stringify({ monthlyContribution: 250 }),                         createdBy: "Abdul Rahiman Sulaiman" },
-    { receiptNumber: "DKMO-RC-009", receiptDate: dateStrAgo(140), memberName: "Yousuf Addoor",           dkmoId: "DKMO-0012", jamathName: jamaaths[5], mobileNumber: "+919844100012", whatsappNumber: "+919844100012", amount: "400",  paymentTypes: JSON.stringify({ monthlyContribution: 200, donationGeneral: 200 }), createdBy: "Irshad Bajpe" },
-    { receiptNumber: "DKMO-RC-010", receiptDate: dateStrAgo(135), memberName: "Razik Bajpe",             dkmoId: "DKMO-0024", jamathName: jamaaths[0], mobileNumber: "+919844100024", whatsappNumber: "+919844100024", amount: "150",  paymentTypes: JSON.stringify({ monthlyContribution: 150 }),                         createdBy: "Irshad Bajpe" },
-    { receiptNumber: "DKMO-RC-011", receiptDate: dateStrAgo(120), memberName: "Sameen Khan Ummer",       dkmoId: "DKMO-0005", jamathName: jamaaths[1], mobileNumber: "+919844100005", whatsappNumber: "+919844100005", amount: "300",  paymentTypes: JSON.stringify({ monthlyContribution: 300 }),                         createdBy: "Abdul Rahiman Sulaiman" },
-    { receiptNumber: "DKMO-RC-012", receiptDate: dateStrAgo(115), memberName: "Abdul Majeed Vittal",     dkmoId: "DKMO-0028", jamathName: jamaaths[6], mobileNumber: "+919844100028", whatsappNumber: "+919844100028", amount: "300",  paymentTypes: JSON.stringify({ monthlyContribution: 150, loanRepayment: 150 }),   createdBy: "Irshad Bajpe" },
-    { receiptNumber: "DKMO-RC-013", receiptDate: dateStrAgo(110), memberName: "Nayaz Ahmed",             dkmoId: "DKMO-0027", jamathName: jamaaths[1], mobileNumber: "+919844100027", whatsappNumber: "+919844100027", amount: "150",  paymentTypes: JSON.stringify({ monthlyContribution: 150 }),                         createdBy: "Abdul Rahiman Sulaiman" },
-    { receiptNumber: "DKMO-RC-014", receiptDate: dateStrAgo(105), memberName: "Irfan Shaikh",            dkmoId: "DKMO-0013", jamathName: jamaaths[1], mobileNumber: "+919844100013", whatsappNumber: "+919844100013", amount: "200",  paymentTypes: JSON.stringify({ monthlyContribution: 200 }),                         createdBy: "Irshad Bajpe" },
-    { receiptNumber: "DKMO-RC-015", receiptDate: dateStrAgo(100), memberName: "Zia Ganjimutt",           dkmoId: "DKMO-0023", jamathName: jamaaths[2], mobileNumber: "+919844100023", whatsappNumber: "+919844100023", amount: "650",  paymentTypes: JSON.stringify({ monthlyContribution: 150, donationEvent: 500 }),   createdBy: "Irshad Bajpe" },
-    { receiptNumber: "DKMO-RC-016", receiptDate: dateStrAgo(90),  memberName: "Shaul Hameed",            dkmoId: "DKMO-0026", jamathName: jamaaths[1], mobileNumber: "+919844100026", whatsappNumber: "+919844100026", amount: "150",  paymentTypes: JSON.stringify({ monthlyContribution: 150 }),                         createdBy: "Abdul Rahiman Sulaiman" },
-    { receiptNumber: "DKMO-RC-017", receiptDate: dateStrAgo(85),  memberName: "Sadiq Ahmed Udupi",       dkmoId: "DKMO-0018", jamathName: jamaaths[3], mobileNumber: "+919844100018", whatsappNumber: "+919844100018", amount: "200",  paymentTypes: JSON.stringify({ monthlyContribution: 200 }),                         createdBy: "Irshad Bajpe" },
-    { receiptNumber: "DKMO-RC-018", receiptDate: dateStrAgo(80),  memberName: "Akhil Ganjimutt",         dkmoId: "DKMO-0019", jamathName: jamaaths[2], mobileNumber: "+919844100019", whatsappNumber: "+919844100019", amount: "200",  paymentTypes: JSON.stringify({ monthlyContribution: 200 }),                         createdBy: "Abdul Rahiman Sulaiman" },
-    { receiptNumber: "DKMO-RC-019", receiptDate: dateStrAgo(75),  memberName: "Bilal Hussain Surathkal", dkmoId: "DKMO-0030", jamathName: jamaaths[0], mobileNumber: "+919844100030", whatsappNumber: "+919844100030", amount: "100",  paymentTypes: JSON.stringify({ monthlyContribution: 100 }),                         createdBy: "Irshad Bajpe" },
-    { receiptNumber: "DKMO-RC-020", receiptDate: dateStrAgo(70),  memberName: "Mohsin Ahmed Belman",     dkmoId: "DKMO-0031", jamathName: jamaaths[2], mobileNumber: "+919844100031", whatsappNumber: "+919844100031", amount: "100",  paymentTypes: JSON.stringify({ monthlyContribution: 100 }),                         createdBy: "Irshad Bajpe" },
-    { receiptNumber: "DKMO-RC-021", receiptDate: dateStrAgo(65),  memberName: "Junaid Rashid Kottara",   dkmoId: "DKMO-0032", jamathName: jamaaths[1], mobileNumber: "+919844100032", whatsappNumber: "+919844100032", amount: "100",  paymentTypes: JSON.stringify({ monthlyContribution: 100 }),                         createdBy: "Abdul Rahiman Sulaiman" },
-    { receiptNumber: "DKMO-RC-022", receiptDate: dateStrAgo(60),  memberName: "Arshad Farooq Ullal",     dkmoId: "DKMO-0033", jamathName: jamaaths[5], mobileNumber: "+919844100033", whatsappNumber: "+919844100033", amount: "100",  paymentTypes: JSON.stringify({ monthlyContribution: 100 }),                         createdBy: "Irshad Bajpe" },
-    { receiptNumber: "DKMO-RC-023", receiptDate: dateStrAgo(55),  memberName: "Faheem Abdul Kadri",      dkmoId: "DKMO-0034", jamathName: jamaaths[1], mobileNumber: "+919844100034", whatsappNumber: "+919844100034", amount: "100",  paymentTypes: JSON.stringify({ monthlyContribution: 100 }),                         createdBy: "Abdul Rahiman Sulaiman" },
-    { receiptNumber: "DKMO-RC-024", receiptDate: dateStrAgo(50),  memberName: "Ashraf Kozhikan",         dkmoId: "DKMO-0014", jamathName: jamaaths[3], mobileNumber: "+919844100014", whatsappNumber: "+919844100014", amount: "700",  paymentTypes: JSON.stringify({ monthlyContribution: 200, donationGeneral: 500 }), createdBy: "Irshad Bajpe" },
-    { receiptNumber: "DKMO-RC-025", receiptDate: dateStrAgo(45),  memberName: "Hameed Nazeer",           dkmoId: "DKMO-0016", jamathName: jamaaths[1], mobileNumber: "+919844100016", whatsappNumber: "+919844100016", amount: "200",  paymentTypes: JSON.stringify({ monthlyContribution: 200 }),                         createdBy: "Abdul Rahiman Sulaiman" },
-    { receiptNumber: "DKMO-RC-026", receiptDate: dateStrAgo(40),  memberName: "Nazeer Hassan",           dkmoId: "DKMO-0017", jamathName: jamaaths[1], mobileNumber: "+919844100017", whatsappNumber: "+919844100017", amount: "200",  paymentTypes: JSON.stringify({ monthlyContribution: 200 }),                         createdBy: "Irshad Bajpe" },
-    { receiptNumber: "DKMO-RC-027", receiptDate: dateStrAgo(35),  memberName: "Haneef N.S.",             dkmoId: "DKMO-0022", jamathName: jamaaths[1], mobileNumber: "+919844100022", whatsappNumber: "+919844100022", amount: "150",  paymentTypes: JSON.stringify({ monthlyContribution: 150 }),                         createdBy: "Abdul Rahiman Sulaiman" },
-    { receiptNumber: "DKMO-RC-028", receiptDate: dateStrAgo(30),  memberName: "Yousuf Kalanjibail",      dkmoId: "DKMO-0025", jamathName: jamaaths[6], mobileNumber: "+919844100025", whatsappNumber: "+919844100025", amount: "150",  paymentTypes: JSON.stringify({ monthlyContribution: 150 }),                         createdBy: "Irshad Bajpe" },
-    { receiptNumber: "DKMO-RC-029", receiptDate: dateStrAgo(25),  memberName: "Rafee Hameed Uchchila",   dkmoId: "DKMO-0029", jamathName: jamaaths[4], mobileNumber: "+919844100029", whatsappNumber: "+919844100029", amount: "150",  paymentTypes: JSON.stringify({ monthlyContribution: 150 }),                         createdBy: "Abdul Rahiman Sulaiman" },
-    { receiptNumber: "DKMO-RC-030", receiptDate: dateStrAgo(20),  memberName: "Fazlurrahman Kolkar",     dkmoId: "DKMO-0001", jamathName: jamaaths[0], mobileNumber: "+919844100001", whatsappNumber: "+919844100001", amount: "1000", paymentTypes: JSON.stringify({ monthlyContribution: 500, donationGeneral: 500 }), createdBy: "Irshad Bajpe" },
-  ];
+  const receiptData = insertedMembers.slice(0, 30).map((mem, i) => {
+    const roll = i % 5;
+    const pt = {
+      lifeMembership: roll === 0,
+      frfCase: roll === 1 ? `FRF-${String((i % 6) + 1).padStart(3, "0")}` : "",
+      voluntaryYearly: roll === 2,
+      donation: roll === 3,
+      loanRecovery: roll === 4,
+      others: false,
+    };
+    const amount = roll === 0 ? "100" : roll === 1 ? "50" : roll === 4 ? "1500" : "500";
+    return {
+      receiptNumber: `DKMO-RC-${String(i + 1).padStart(3, "0")}`,
+      receiptDate: dateStrAgo(180 - i * 5),
+      memberName: mem.fullName,
+      dkmoId: mem.membershipId,
+      jamathName: jamaaths[i % jamaaths.length],
+      mobileNumber: mem.mobileNumber,
+      whatsappNumber: mem.mobileNumber,
+      amount,
+      paymentTypes: JSON.stringify(pt),
+      createdBy: i % 2 === 0 ? "Irshad Bajpe" : "Abdul Rahiman Sulaiman",
+    };
+  });
   await db.insert(receiptsTable).values(receiptData);
 
   // ── FRF Claims ────────────────────────────────────────────────────────────
@@ -419,7 +424,69 @@ async function main() {
     { memberId: insertedMembers[17].id, claimantName: insertedMembers[17].fullName, membershipId: insertedMembers[17].membershipId, claimType: "marriage",      amountRequested: "15000", amountApproved: "15000", status: "approved",     claimDate: daysAgo(300), approvedDate: daysAgo(282), approvedBy: "Abdul Rahiman Sulaiman",  beneficiaryName: "Sadiq Ahmed Udupi",   beneficiaryRelation: "self",   description: "Marriage assistance for self.", notes: "Approved under standard marriage benefit." },
     { memberId: insertedMembers[32].id, claimantName: insertedMembers[32].fullName, membershipId: insertedMembers[32].membershipId, claimType: "emergency",     amountRequested: "7000",  amountApproved: "7000",  status: "approved",     claimDate: daysAgo(35),  approvedDate: daysAgo(28),  approvedBy: "Fazlurrahman Kolkar",      beneficiaryName: "Junaid Rashid Kottara", beneficiaryRelation: "self", description: "Emergency funds for flood damage to house in Kottara.", notes: "Emergency approved. Relief disbursed." },
   ];
-  await db.insert(frfClaimsTable).values(frfClaimInserts);
+  const insertedClaims = await db
+    .insert(frfClaimsTable)
+    .values(frfClaimInserts)
+    .returning();
+
+  // ── Payments (membership fees + FRF contributions) ────────────────────────
+  console.log("  ↳ inserting payments…");
+  const methods = ["cash", "bank_transfer", "upi", "cheque"];
+  const paymentInserts: (typeof paymentsTable.$inferInsert)[] = [];
+  let mfSeq = 1;
+  insertedMembers.forEach((mem, i) => {
+    if (mem.feeStatus === "paid") {
+      paymentInserts.push({
+        memberId: mem.id,
+        paymentType: "membership_fee",
+        amountDue: "100",
+        amountPaid: "100",
+        status: "paid",
+        paymentMethod: methods[i % methods.length],
+        receiptNumber: `DKMO-MF-${String(mfSeq++).padStart(4, "0")}`,
+        notes: "One-time DKMO membership fee (SAR 100)",
+        paidAt: mem.feePaidAt ?? daysAgo(30 + (i % 60)),
+      });
+    } else {
+      paymentInserts.push({
+        memberId: mem.id,
+        paymentType: "membership_fee",
+        amountDue: "100",
+        amountPaid: "0",
+        status: mem.feeStatus === "pending" ? "pending" : "overdue",
+        paymentMethod: methods[i % methods.length],
+        receiptNumber: `DKMO-MF-${String(mfSeq++).padStart(4, "0")}`,
+        notes: "Membership fee outstanding",
+        dueDate: daysFromNow(mem.feeStatus === "pending" ? 15 : -20),
+      });
+    }
+  });
+
+  // FRF contributions: every active member is liable SAR 50 per approved claim event
+  let frfSeq = 1;
+  const approvedClaims = insertedClaims.filter((c) => c.status === "approved");
+  approvedClaims.forEach((claim, ci) => {
+    insertedMembers.forEach((mem, mi) => {
+      if (mem.frfStatus !== "active") return;
+      const roll = (ci + mi) % 5;
+      const status = roll === 0 ? "overdue" : roll === 1 ? "pending" : "paid";
+      paymentInserts.push({
+        memberId: mem.id,
+        paymentType: "frf_contribution",
+        frfClaimId: claim.id,
+        amountDue: "50",
+        amountPaid: status === "paid" ? "50" : "0",
+        status,
+        paymentMethod: methods[mi % methods.length],
+        receiptNumber: `DKMO-FRF-${String(frfSeq++).padStart(5, "0")}`,
+        notes: `FRF contribution for claim ${claim.membershipId}`,
+        ...(status === "paid"
+          ? { paidAt: daysAgo((ci * 7 + mi) % 90) }
+          : { dueDate: daysFromNow(status === "overdue" ? -10 : 12) }),
+      });
+    });
+  });
+  await db.insert(paymentsTable).values(paymentInserts);
 
   // ── Event Sponsors ────────────────────────────────────────────────────────
   console.log("  ↳ inserting event sponsors…");

@@ -25,11 +25,15 @@ async function main() {
     CREATE TABLE IF NOT EXISTS payments (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       member_id UUID NOT NULL REFERENCES members(id) ON DELETE CASCADE,
-      month TEXT NOT NULL,
+      payment_type TEXT NOT NULL DEFAULT 'membership_fee',
+      frf_claim_id UUID,
+      amount_due NUMERIC(12,2) NOT NULL DEFAULT 0,
       amount_paid NUMERIC(12,2) NOT NULL,
+      status TEXT NOT NULL DEFAULT 'paid',
       payment_method TEXT NOT NULL,
       receipt_number TEXT NOT NULL,
       notes TEXT,
+      due_date TIMESTAMPTZ,
       paid_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
@@ -191,8 +195,19 @@ async function main() {
       ADD COLUMN IF NOT EXISTS fee_status TEXT NOT NULL DEFAULT 'unpaid',
       ADD COLUMN IF NOT EXISTS fee_paid_at TIMESTAMPTZ,
       ADD COLUMN IF NOT EXISTS fee_updated_by TEXT NOT NULL DEFAULT '',
+      ADD COLUMN IF NOT EXISTS frf_status TEXT NOT NULL DEFAULT 'active',
       ADD COLUMN IF NOT EXISTS ref_member_name TEXT NOT NULL DEFAULT '',
       ADD COLUMN IF NOT EXISTS ref_member_id TEXT NOT NULL DEFAULT '';
+
+    ALTER TABLE payments
+      ADD COLUMN IF NOT EXISTS payment_type TEXT NOT NULL DEFAULT 'membership_fee',
+      ADD COLUMN IF NOT EXISTS frf_claim_id UUID,
+      ADD COLUMN IF NOT EXISTS amount_due NUMERIC(12,2) NOT NULL DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'paid',
+      ADD COLUMN IF NOT EXISTS due_date TIMESTAMPTZ;
+
+    ALTER TABLE payments ALTER COLUMN month DROP NOT NULL;
+    ALTER TABLE payments DROP COLUMN IF EXISTS month;
 
     ALTER TABLE frf_claims
       ADD COLUMN IF NOT EXISTS under_review_at TIMESTAMPTZ,

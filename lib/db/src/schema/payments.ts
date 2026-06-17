@@ -14,11 +14,17 @@ export const paymentsTable = pgTable("payments", {
   memberId: uuid("member_id")
     .notNull()
     .references(() => membersTable.id, { onDelete: "cascade" }),
-  month: text("month").notNull(),
+  paymentType: text("payment_type").notNull().default("membership_fee"),
+  frfClaimId: uuid("frf_claim_id"),
+  amountDue: numeric("amount_due", { precision: 12, scale: 2 })
+    .notNull()
+    .default("0"),
   amountPaid: numeric("amount_paid", { precision: 12, scale: 2 }).notNull(),
+  status: text("status").notNull().default("paid"),
   paymentMethod: text("payment_method").notNull(),
   receiptNumber: text("receipt_number").notNull(),
   notes: text("notes"),
+  dueDate: timestamp("due_date", { withTimezone: true }),
   paidAt: timestamp("paid_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

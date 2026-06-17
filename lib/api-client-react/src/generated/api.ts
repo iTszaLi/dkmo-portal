@@ -1521,7 +1521,7 @@ export function useGetMonthlyCollection<
 }
 
 /**
- * @summary Payment method totals for given month
+ * @summary Payment method totals
  */
 export const getGetPaymentMethodBreakdownUrl = (
   params?: GetPaymentMethodBreakdownParams,
@@ -1600,7 +1600,7 @@ export type GetPaymentMethodBreakdownQueryResult = NonNullable<
 export type GetPaymentMethodBreakdownQueryError = ErrorType<unknown>;
 
 /**
- * @summary Payment method totals for given month
+ * @summary Payment method totals
  */
 
 export function useGetPaymentMethodBreakdown<

@@ -154,7 +154,7 @@ export default function Reports() {
         { header: "Date", key: "date", width: 16 },
         { header: "Member ID", key: "memberId", width: 16 },
         { header: "Member Name", key: "memberName", width: 24 },
-        { header: "Month", key: "month", width: 12 },
+        { header: "Type", key: "type", width: 16 },
         { header: "Method", key: "method", width: 14 },
         { header: "Amount", key: "amount", width: 12 },
         { header: "Notes", key: "notes", width: 24 },
@@ -164,7 +164,7 @@ export default function Reports() {
         date: formatDate(p.paidAt),
         memberId: p.membershipId,
         memberName: p.memberName,
-        month: p.month,
+        type: p.paymentType === "frf_contribution" ? "FRF Contribution" : "Membership Fee",
         method: p.paymentMethod,
         amount: p.amountPaid,
         notes: p.notes ?? "",
@@ -250,8 +250,8 @@ export default function Reports() {
 
     autoTable(doc, {
       startY: 44,
-      head: [["Receipt", "Date", "Member", "Month", "Amount"]],
-      body: payments.map((p) => [p.receiptNumber, formatDate(p.paidAt), p.memberName, p.month, `SAR ${p.amountPaid}`]),
+      head: [["Receipt", "Date", "Member", "Type", "Amount"]],
+      body: payments.map((p) => [p.receiptNumber, formatDate(p.paidAt), p.memberName, p.paymentType === "frf_contribution" ? "FRF Contribution" : "Membership Fee", `SAR ${p.amountPaid}`]),
       theme: "grid",
       headStyles: { fillColor: green },
     });

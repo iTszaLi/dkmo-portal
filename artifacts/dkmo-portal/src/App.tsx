@@ -123,6 +123,7 @@ function AppRoutes() {
       <Route path="/payments" component={() => <AuthenticatedRoute component={Payments} />} />
       <Route path="/pending" component={() => <AuthenticatedRoute component={Pending} />} />
       <Route path="/reports" component={() => <AuthenticatedRoute component={Reports} />} />
+      <Route path="/recruitment-leaderboard" component={() => <AuthenticatedRoute component={TopContributors} />} />
       <Route path="/top-contributors" component={() => <AuthenticatedRoute component={TopContributors} />} />
 
       <Route path="/sponsors" component={() => <AuthenticatedRoute component={Sponsors} />} />

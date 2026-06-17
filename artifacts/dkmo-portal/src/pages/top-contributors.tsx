@@ -1,9 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link } from "wouter";
-import { useListPayments, useListMembers } from "@workspace/api-client-react";
+import { useListMembers } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -13,20 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Trophy, Search, Users, ArrowLeft, Award, Medal } from "lucide-react";
-import { formatSAR, formatDate } from "@/lib/utils";
-
-function getMonthOptions(monthsBack = 24): { value: string; label: string }[] {
-  const options: { value: string; label: string }[] = [];
-  const now = new Date();
-  for (let i = 0; i < monthsBack; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-    const label = d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
-    options.push({ value, label });
-  }
-  return options;
-}
+import { Trophy, Search, Users, ArrowLeft, Award, Medal, UserPlus } from "lucide-react";
 
 function rankBadgeClass(rank: number): string {
   if (rank === 1) return "bg-yellow-100 text-yellow-800 ring-2 ring-yellow-300";
@@ -52,34 +38,11 @@ function RankIcon({ rank }: { rank: number }) {
   return null;
 }
 
-export default function TopContributors() {
+export default function RecruitmentLeaderboard() {
   const [search, setSearch] = useState("");
-  const monthOptions = useMemo(() => getMonthOptions(24), []);
+  const { data: members, isLoading } = useListMembers();
 
-  const earliest = monthOptions[monthOptions.length - 1]?.value ?? "";
-  const latest = monthOptions[0]?.value ?? "";
-
-  const [fromMonth, setFromMonth] = useState<string>(earliest);
-  const [toMonth, setToMonth] = useState<string>(latest);
-
-  const { data: allPayments, isLoading: paymentsLoading } = useListPayments();
-  const { data: members, isLoading: membersLoading } = useListMembers();
-
-  const isLoading = paymentsLoading || membersLoading;
-
-  const inRange = (m: string) => {
-    if (fromMonth && m < fromMonth) return false;
-    if (toMonth && m > toMonth) return false;
-    return true;
-  };
-
-  const filteredPayments = useMemo(() => {
-    if (!allPayments) return [];
-    return allPayments.filter((p) => inRange(p.month));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allPayments, fromMonth, toMonth]);
-
-  const memberMap = useMemo(() => {
+  const memberById = useMemo(() => {
     const m = new Map<string, { city?: string; country?: string }>();
     (members || []).forEach((mem) =>
       m.set(mem.id, { city: mem.city, country: mem.country }),
@@ -94,30 +57,31 @@ export default function TopContributors() {
         memberId: string;
         name: string;
         membershipId: string;
-        total: number;
-        count: number;
-        lastPaid: string;
+        recruits: number;
       }
     >();
-    for (const p of filteredPayments) {
-      const prev = totals.get(p.memberId) ?? {
-        memberId: p.memberId,
-        name: p.memberName,
-        membershipId: p.membershipId,
-        total: 0,
-        count: 0,
-        lastPaid: p.paidAt,
-      };
-      prev.total += Number(p.amountPaid);
-      prev.count += 1;
-      if (new Date(p.paidAt) > new Date(prev.lastPaid)) prev.lastPaid = p.paidAt;
-      totals.set(p.memberId, prev);
+    // Seed every member at 0 recruits so recruiters with members appear.
+    for (const mem of members || []) {
+      totals.set(mem.id, {
+        memberId: mem.id,
+        name: mem.fullName,
+        membershipId: mem.membershipId,
+        recruits: 0,
+      });
     }
-    return Array.from(totals.values()).sort((a, b) => b.total - a.total);
-  }, [filteredPayments]);
+    // Count recruits: each member referred by someone increments that recruiter.
+    for (const mem of members || []) {
+      if (mem.refMemberId && totals.has(mem.refMemberId)) {
+        totals.get(mem.refMemberId)!.recruits += 1;
+      }
+    }
+    return Array.from(totals.values())
+      .filter((t) => t.recruits > 0)
+      .sort((a, b) => b.recruits - a.recruits);
+  }, [members]);
 
-  const grandTotal = useMemo(
-    () => leaderboard.reduce((acc, l) => acc + l.total, 0),
+  const totalRecruited = useMemo(
+    () => leaderboard.reduce((acc, l) => acc + l.recruits, 0),
     [leaderboard],
   );
 
@@ -126,7 +90,7 @@ export default function TopContributors() {
   const visible = leaderboard.filter((l) => {
     if (!search) return true;
     const q = search.toLowerCase();
-    const loc = memberMap.get(l.memberId);
+    const loc = memberById.get(l.memberId);
     return (
       l.name.toLowerCase().includes(q) ||
       l.membershipId.toLowerCase().includes(q) ||
@@ -135,7 +99,7 @@ export default function TopContributors() {
     );
   });
 
-  const maxTotal = leaderboard[0]?.total || 1;
+  const maxRecruits = leaderboard[0]?.recruits || 1;
 
   return (
     <div className="space-y-6">
@@ -153,11 +117,11 @@ export default function TopContributors() {
             <div className="flex items-center gap-3">
               <Trophy className="h-8 w-8 text-orange-500" />
               <h1 className="text-3xl font-bold tracking-tight text-green-950">
-                Top Contributors
+                Membership Recruitment Leaderboard
               </h1>
             </div>
             <p className="text-sm text-green-800/70 mt-1">
-              Members ranked by total amount contributed across selected months.
+              Members ranked by the number of new members they have recruited into DKMO.
             </p>
           </div>
           <div className="flex items-center gap-2 bg-white border border-green-200 rounded-lg px-3 py-1.5 shadow-sm w-full sm:w-72">
@@ -173,68 +137,12 @@ export default function TopContributors() {
         </div>
       </div>
 
-      {/* Month Range Filter */}
-      <Card className="rounded-2xl border-green-100 shadow-sm">
-        <CardContent className="py-4">
-          <div className="flex flex-col sm:flex-row sm:items-end gap-4">
-            <div className="flex-1 min-w-[160px]">
-              <label className="text-xs font-medium text-green-900 mb-1 block">
-                From month
-              </label>
-              <select
-                value={fromMonth}
-                onChange={(e) => setFromMonth(e.target.value)}
-                className="w-full border border-green-200 rounded-md px-3 py-2 text-sm bg-white text-green-950 focus:outline-none focus:ring-2 focus:ring-green-300"
-                data-testid="select-from-month"
-              >
-                {monthOptions
-                  .slice()
-                  .reverse()
-                  .map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-              </select>
-            </div>
-            <div className="flex-1 min-w-[160px]">
-              <label className="text-xs font-medium text-green-900 mb-1 block">
-                To month
-              </label>
-              <select
-                value={toMonth}
-                onChange={(e) => setToMonth(e.target.value)}
-                className="w-full border border-green-200 rounded-md px-3 py-2 text-sm bg-white text-green-950 focus:outline-none focus:ring-2 focus:ring-green-300"
-                data-testid="select-to-month"
-              >
-                {monthOptions.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <Button
-              variant="outline"
-              className="border-green-200 text-green-800 hover:bg-green-50"
-              onClick={() => {
-                setFromMonth(earliest);
-                setToMonth(latest);
-              }}
-              data-testid="button-reset-range"
-            >
-              Reset range
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Summary cards */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="rounded-2xl border-green-100 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-green-900">
-              Total Contributors
+              Active Recruiters
             </CardTitle>
             <Users className="h-4 w-4 text-green-700" />
           </CardHeader>
@@ -247,7 +155,7 @@ export default function TopContributors() {
               </div>
             )}
             <p className="text-xs text-green-700/80 mt-1">
-              Members with at least one payment
+              Members who recruited at least one member
             </p>
           </CardContent>
         </Card>
@@ -255,20 +163,20 @@ export default function TopContributors() {
         <Card className="rounded-2xl border-green-100 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-green-900">
-              Grand Total
+              Total Recruited
             </CardTitle>
-            <Trophy className="h-4 w-4 text-green-700" />
+            <UserPlus className="h-4 w-4 text-green-700" />
           </CardHeader>
           <CardContent>
             {isLoading ? (
               <Skeleton className="h-8 w-32" />
             ) : (
               <div className="text-3xl font-bold text-green-950">
-                {formatSAR(grandTotal)}
+                {totalRecruited}
               </div>
             )}
             <p className="text-xs text-green-700/80 mt-1">
-              Across all members in range
+              New members brought in via referrals
             </p>
           </CardContent>
         </Card>
@@ -276,7 +184,7 @@ export default function TopContributors() {
         <Card className="rounded-2xl border-yellow-300 shadow-sm bg-gradient-to-br from-yellow-100 via-amber-50 to-yellow-50 ring-1 ring-yellow-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-semibold text-yellow-900">
-              #1 Contributor
+              Top Recruiter
             </CardTitle>
             <Trophy className="h-5 w-5 text-yellow-500 drop-shadow" />
           </CardHeader>
@@ -295,11 +203,11 @@ export default function TopContributors() {
                   </Link>
                 </div>
                 <p className="text-xs text-yellow-800/80 mt-1">
-                  {formatSAR(topOne.total)} · {topOne.count} payments
+                  {topOne.recruits} recruit{topOne.recruits === 1 ? "" : "s"}
                 </p>
               </>
             ) : (
-              <div className="text-sm text-yellow-800/70">No contributions yet.</div>
+              <div className="text-sm text-yellow-800/70">No recruits yet.</div>
             )}
           </CardContent>
         </Card>
@@ -310,7 +218,7 @@ export default function TopContributors() {
         <CardHeader>
           <CardTitle className="text-lg text-green-950">Leaderboard</CardTitle>
           <CardDescription>
-            {visible.length} of {leaderboard.length} contributors shown
+            {visible.length} of {leaderboard.length} recruiters shown
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -327,14 +235,8 @@ export default function TopContributors() {
                   <TableHead className="font-medium text-green-900">
                     Location
                   </TableHead>
-                  <TableHead className="font-medium text-green-900 text-center">
-                    Payments
-                  </TableHead>
-                  <TableHead className="font-medium text-green-900">
-                    Last Paid
-                  </TableHead>
                   <TableHead className="font-medium text-green-900 text-right">
-                    Total
+                    Recruits
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -351,12 +253,6 @@ export default function TopContributors() {
                       <TableCell>
                         <Skeleton className="h-5 w-28" />
                       </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-5 w-8 mx-auto" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-5 w-24" />
-                      </TableCell>
                       <TableCell className="text-right">
                         <Skeleton className="h-5 w-20 ml-auto" />
                       </TableCell>
@@ -365,22 +261,22 @@ export default function TopContributors() {
                 ) : visible.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={6}
+                      colSpan={4}
                       className="text-center text-green-700/70 py-8"
                     >
-                      No contributors found for this range.
+                      No recruiters found.
                     </TableCell>
                   </TableRow>
                 ) : (
                   visible.map((row) => {
                     const rank = leaderboard.findIndex((l) => l.memberId === row.memberId) + 1;
-                    const loc = memberMap.get(row.memberId);
-                    const pct = Math.round((row.total / maxTotal) * 100);
+                    const loc = memberById.get(row.memberId);
+                    const pct = Math.round((row.recruits / maxRecruits) * 100);
                     return (
                       <TableRow
                         key={row.memberId}
                         className={rankRowClass(rank)}
-                        data-testid={`row-contributor-${row.memberId}`}
+                        data-testid={`row-recruiter-${row.memberId}`}
                       >
                         <TableCell>
                           <div
@@ -408,15 +304,9 @@ export default function TopContributors() {
                         <TableCell className="text-green-800 text-sm">
                           {[loc?.city, loc?.country].filter(Boolean).join(", ") || "—"}
                         </TableCell>
-                        <TableCell className="text-center text-green-900 font-medium">
-                          {row.count}
-                        </TableCell>
-                        <TableCell className="text-green-800 text-sm">
-                          {formatDate(row.lastPaid)}
-                        </TableCell>
                         <TableCell className="text-right">
                           <div className="font-bold text-green-900">
-                            {formatSAR(row.total)}
+                            {row.recruits}
                           </div>
                           <div className="h-1.5 mt-1 bg-green-50 rounded-full overflow-hidden ml-auto w-32">
                             <div

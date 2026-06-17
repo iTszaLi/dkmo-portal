@@ -144,6 +144,15 @@ export const MemberFeeStatus = {
   unpaid: "unpaid",
 } as const;
 
+export type MemberFrfStatus =
+  (typeof MemberFrfStatus)[keyof typeof MemberFrfStatus];
+
+export const MemberFrfStatus = {
+  active: "active",
+  suspended: "suspended",
+  inactive: "inactive",
+} as const;
+
 export interface Member {
   id: string;
   fullName: string;
@@ -157,6 +166,7 @@ export interface Member {
   /** @nullable */
   feePaidAt: string | null;
   feeUpdatedBy: string;
+  frfStatus: MemberFrfStatus;
   refMemberName: string;
   refMemberId: string;
   createdAt: string;
@@ -172,6 +182,15 @@ export const MemberDetailFeeStatus = {
   unpaid: "unpaid",
 } as const;
 
+export type MemberDetailFrfStatus =
+  (typeof MemberDetailFrfStatus)[keyof typeof MemberDetailFrfStatus];
+
+export const MemberDetailFrfStatus = {
+  active: "active",
+  suspended: "suspended",
+  inactive: "inactive",
+} as const;
+
 export interface MemberDetail {
   id: string;
   fullName: string;
@@ -185,6 +204,7 @@ export interface MemberDetail {
   /** @nullable */
   feePaidAt: string | null;
   feeUpdatedBy: string;
+  frfStatus: MemberDetailFrfStatus;
   refMemberName: string;
   refMemberId: string;
   createdAt: string;
@@ -200,6 +220,15 @@ export const MemberInputFeeStatus = {
   unpaid: "unpaid",
 } as const;
 
+export type MemberInputFrfStatus =
+  (typeof MemberInputFrfStatus)[keyof typeof MemberInputFrfStatus];
+
+export const MemberInputFrfStatus = {
+  active: "active",
+  suspended: "suspended",
+  inactive: "inactive",
+} as const;
+
 export interface MemberInput {
   /** @minLength 1 */
   fullName: string;
@@ -212,6 +241,7 @@ export interface MemberInput {
   designation?: string;
   membershipFee?: number;
   feeStatus?: MemberInputFeeStatus;
+  frfStatus?: MemberInputFrfStatus;
   refMemberName?: string;
   refMemberId?: string;
 }
@@ -228,6 +258,22 @@ export const FeeStatusInputFeeStatus = {
 export interface FeeStatusInput {
   feeStatus: FeeStatusInputFeeStatus;
 }
+
+export type PaymentPaymentType =
+  (typeof PaymentPaymentType)[keyof typeof PaymentPaymentType];
+
+export const PaymentPaymentType = {
+  membership_fee: "membership_fee",
+  frf_contribution: "frf_contribution",
+} as const;
+
+export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus];
+
+export const PaymentStatus = {
+  paid: "paid",
+  pending: "pending",
+  overdue: "overdue",
+} as const;
 
 export type PaymentPaymentMethod =
   (typeof PaymentPaymentMethod)[keyof typeof PaymentPaymentMethod];
@@ -246,16 +292,38 @@ export interface Payment {
   memberId: string;
   memberName: string;
   membershipId: string;
-  /** YYYY-MM */
-  month: string;
+  paymentType: PaymentPaymentType;
+  /** @nullable */
+  frfClaimId?: string | null;
+  amountDue: number;
   amountPaid: number;
+  status: PaymentStatus;
   paymentMethod: PaymentPaymentMethod;
   receiptNumber: string;
   /** @nullable */
   notes?: string | null;
+  /** @nullable */
+  dueDate?: string | null;
   paidAt: string;
   createdAt: string;
 }
+
+export type PaymentInputPaymentType =
+  (typeof PaymentInputPaymentType)[keyof typeof PaymentInputPaymentType];
+
+export const PaymentInputPaymentType = {
+  membership_fee: "membership_fee",
+  frf_contribution: "frf_contribution",
+} as const;
+
+export type PaymentInputStatus =
+  (typeof PaymentInputStatus)[keyof typeof PaymentInputStatus];
+
+export const PaymentInputStatus = {
+  paid: "paid",
+  pending: "pending",
+  overdue: "overdue",
+} as const;
 
 export type PaymentInputPaymentMethod =
   (typeof PaymentInputPaymentMethod)[keyof typeof PaymentInputPaymentMethod];
@@ -271,14 +339,19 @@ export const PaymentInputPaymentMethod = {
 
 export interface PaymentInput {
   memberId: string;
-  /** YYYY-MM */
-  month: string;
+  paymentType?: PaymentInputPaymentType;
+  /** @nullable */
+  frfClaimId?: string | null;
+  amountDue?: number;
   amountPaid: number;
+  status?: PaymentInputStatus;
   paymentMethod: PaymentInputPaymentMethod;
   /** @minLength 1 */
   receiptNumber: string;
   /** @nullable */
   notes?: string | null;
+  /** @nullable */
+  dueDate?: string | null;
   /** @nullable */
   paidAt?: string | null;
 }
@@ -319,7 +392,7 @@ export interface RecentPayment {
   memberId: string;
   memberName: string;
   membershipId: string;
-  month: string;
+  paymentType: string;
   amountPaid: number;
   paymentMethod: string;
   receiptNumber: string;
@@ -1111,22 +1184,35 @@ export type ListMembersParams = {
 export type ListPaymentsParams = {
   memberId?: string;
   /**
-   * Format: YYYY-MM (single month, ignored if fromMonth/toMonth provided)
+   * Filter by payment type
    */
-  month?: string;
+  paymentType?: ListPaymentsPaymentType;
   /**
-   * Format: YYYY-MM (inclusive start of range)
+   * Filter by status
    */
-  fromMonth?: string;
-  /**
-   * Format: YYYY-MM (inclusive end of range)
-   */
-  toMonth?: string;
+  status?: ListPaymentsStatus;
   /**
    * Filter by payment method
    */
   paymentMethod?: string;
 };
+
+export type ListPaymentsPaymentType =
+  (typeof ListPaymentsPaymentType)[keyof typeof ListPaymentsPaymentType];
+
+export const ListPaymentsPaymentType = {
+  membership_fee: "membership_fee",
+  frf_contribution: "frf_contribution",
+} as const;
+
+export type ListPaymentsStatus =
+  (typeof ListPaymentsStatus)[keyof typeof ListPaymentsStatus];
+
+export const ListPaymentsStatus = {
+  paid: "paid",
+  pending: "pending",
+  overdue: "overdue",
+} as const;
 
 export type GetDashboardSummaryParams = {
   /**
@@ -1151,7 +1237,7 @@ export type GetMonthlyCollectionParams = {
 };
 
 export type GetPaymentMethodBreakdownParams = {
-  month?: string;
+  paymentType?: string;
 };
 
 export type ListEventsParams = {

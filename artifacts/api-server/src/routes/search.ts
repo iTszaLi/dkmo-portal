@@ -44,7 +44,7 @@ router.get("/search", requireAuth, async (req, res): Promise<void> => {
     db
       .select({
         id: paymentsTable.id,
-        month: paymentsTable.month,
+        paymentType: paymentsTable.paymentType,
         amountPaid: paymentsTable.amountPaid,
         receiptNumber: paymentsTable.receiptNumber,
         paymentMethod: paymentsTable.paymentMethod,
@@ -56,7 +56,7 @@ router.get("/search", requireAuth, async (req, res): Promise<void> => {
       .where(
         or(
           ilike(paymentsTable.receiptNumber, like),
-          ilike(paymentsTable.month, like),
+          ilike(paymentsTable.paymentType, like),
           ilike(membersTable.fullName, like),
           ilike(membersTable.membershipId, like),
         ),
@@ -99,7 +99,7 @@ router.get("/search", requireAuth, async (req, res): Promise<void> => {
       id: p.id,
       memberName: p.memberFullName ?? "Unknown",
       membershipId: p.memberMembershipId ?? "",
-      month: p.month,
+      paymentType: p.paymentType,
       amountPaid: p.amountPaid,
       receiptNumber: p.receiptNumber,
       paymentMethod: p.paymentMethod,

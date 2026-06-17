@@ -20,14 +20,15 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { PaymentInput } from "@workspace/api-client-react";
-import { getCurrentMonth } from "@/lib/utils";
 import { useEffect } from "react";
 import { useListMembers } from "@workspace/api-client-react";
 
 const formSchema = z.object({
   memberId: z.string().min(1, "Member is required"),
-  month: z.string().regex(/^\d{4}-\d{2}$/, "Format must be YYYY-MM"),
+  paymentType: z.enum(["membership_fee", "frf_contribution"]),
+  amountDue: z.coerce.number().min(0),
   amountPaid: z.coerce.number().min(1, "Amount must be greater than 0"),
+  status: z.enum(["paid", "pending", "overdue"]),
   paymentMethod: z.enum(["cash", "upi", "bank_transfer", "card", "cheque", "other"]),
   receiptNumber: z.string().min(1, "Receipt number is required"),
   notes: z.string().optional(),
@@ -47,8 +48,10 @@ export function PaymentForm({ defaultValues, fixedMemberId, onSubmit, isSubmitti
     resolver: zodResolver(formSchema),
     defaultValues: {
       memberId: fixedMemberId || defaultValues?.memberId || "",
-      month: defaultValues?.month || getCurrentMonth(),
+      paymentType: defaultValues?.paymentType || "membership_fee",
+      amountDue: defaultValues?.amountDue ?? 0,
       amountPaid: defaultValues?.amountPaid || 0,
+      status: defaultValues?.status || "paid",
       paymentMethod: defaultValues?.paymentMethod || "cash",
       receiptNumber: defaultValues?.receiptNumber || `RCPT-${Date.now()}`,
       notes: defaultValues?.notes || "",
@@ -59,8 +62,10 @@ export function PaymentForm({ defaultValues, fixedMemberId, onSubmit, isSubmitti
     if (defaultValues) {
       form.reset({
         memberId: fixedMemberId || defaultValues.memberId || "",
-        month: defaultValues.month || getCurrentMonth(),
+        paymentType: defaultValues.paymentType || "membership_fee",
+        amountDue: defaultValues.amountDue ?? 0,
         amountPaid: defaultValues.amountPaid || 0,
+        status: defaultValues.status || "paid",
         paymentMethod: defaultValues.paymentMethod || "cash",
         receiptNumber: defaultValues.receiptNumber || `RCPT-${Date.now()}`,
         notes: defaultValues.notes || "",
@@ -101,12 +106,62 @@ export function PaymentForm({ defaultValues, fixedMemberId, onSubmit, isSubmitti
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="month"
+            name="paymentType"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Month (YYYY-MM)</FormLabel>
+                <FormLabel>Payment Type</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="membership_fee">
+                      Membership Fee (one-time SAR 100)
+                    </SelectItem>
+                    <SelectItem value="frf_contribution">
+                      FRF Contribution (SAR 50 / claim)
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Status</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="paid">Paid</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="overdue">Overdue</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="amountDue"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Amount Due (SAR)</FormLabel>
                 <FormControl>
-                  <Input placeholder="2023-10" {...field} />
+                  <Input type="number" placeholder="100" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -117,9 +172,9 @@ export function PaymentForm({ defaultValues, fixedMemberId, onSubmit, isSubmitti
             name="amountPaid"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Amount Paid (SAR )</FormLabel>
+                <FormLabel>Amount Paid (SAR)</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="500" {...field} />
+                  <Input type="number" placeholder="100" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

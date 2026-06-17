@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, desc, gte, lte } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { db, membersTable, paymentsTable } from "@workspace/db";
 import {
   CreatePaymentBody,
@@ -25,15 +25,11 @@ router.get("/payments", async (req, res): Promise<void> => {
   if (parsed.data.memberId) {
     conds.push(eq(paymentsTable.memberId, parsed.data.memberId));
   }
-  if (parsed.data.fromMonth || parsed.data.toMonth) {
-    if (parsed.data.fromMonth) {
-      conds.push(gte(paymentsTable.month, parsed.data.fromMonth));
-    }
-    if (parsed.data.toMonth) {
-      conds.push(lte(paymentsTable.month, parsed.data.toMonth));
-    }
-  } else if (parsed.data.month) {
-    conds.push(eq(paymentsTable.month, parsed.data.month));
+  if (parsed.data.paymentType) {
+    conds.push(eq(paymentsTable.paymentType, parsed.data.paymentType));
+  }
+  if (parsed.data.status) {
+    conds.push(eq(paymentsTable.status, parsed.data.status));
   }
   if (parsed.data.paymentMethod) {
     conds.push(eq(paymentsTable.paymentMethod, parsed.data.paymentMethod));
@@ -85,11 +81,15 @@ router.post("/payments", async (req, res): Promise<void> => {
     .insert(paymentsTable)
     .values({
       memberId: parsed.data.memberId,
-      month: parsed.data.month,
+      paymentType: parsed.data.paymentType ?? "membership_fee",
+      frfClaimId: parsed.data.frfClaimId ?? null,
+      amountDue: String(parsed.data.amountDue ?? parsed.data.amountPaid),
       amountPaid: String(parsed.data.amountPaid),
+      status: parsed.data.status ?? "paid",
       paymentMethod: parsed.data.paymentMethod,
       receiptNumber: parsed.data.receiptNumber,
       notes: parsed.data.notes ?? null,
+      dueDate: parsed.data.dueDate ? new Date(parsed.data.dueDate) : null,
       paidAt,
     })
     .returning();
@@ -102,7 +102,7 @@ router.post("/payments", async (req, res): Promise<void> => {
   logAudit(req, "payment_created", "payments", {
     entityId: created.id,
     entityName: member.fullName,
-    details: `Receipt: ${created.receiptNumber}, Month: ${created.month}, Amount: ${created.amountPaid}`,
+    details: `Receipt: ${created.receiptNumber}, Type: ${created.paymentType}, Amount: ${created.amountPaid}`,
   });
 
   res.status(201).json(
@@ -155,7 +155,7 @@ router.delete("/payments/:id", async (req, res): Promise<void> => {
   logAudit(req, "payment_deleted", "payments", {
     entityId: row.payment.id,
     entityName: row.member.fullName,
-    details: `Receipt: ${row.payment.receiptNumber}, Month: ${row.payment.month}`,
+    details: `Receipt: ${row.payment.receiptNumber}, Type: ${row.payment.paymentType}`,
   });
   res.sendStatus(204);
 });

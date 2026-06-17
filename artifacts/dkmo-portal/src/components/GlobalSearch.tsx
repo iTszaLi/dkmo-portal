@@ -24,7 +24,7 @@ interface SearchResultPayment {
   id: string;
   memberName: string;
   membershipId: string;
-  month: string;
+  paymentType: string;
   amountPaid: string;
   receiptNumber: string;
   paymentMethod: string;
@@ -78,8 +78,8 @@ export function GlobalSearch() {
         })),
         ...results.payments.map((p) => ({
           key: `p-${p.id}`,
-          primary: `${p.memberName} — ${p.month}`,
-          secondary: `AED ${Number(p.amountPaid).toLocaleString()} · Receipt ${p.receiptNumber}`,
+          primary: `${p.memberName} — ${p.paymentType === "frf_contribution" ? "FRF Contribution" : "Membership Fee"}`,
+          secondary: `SAR ${Number(p.amountPaid).toLocaleString()} · Receipt ${p.receiptNumber}`,
           href: `/payments`,
         })),
         ...results.events.map((e) => ({
@@ -303,8 +303,8 @@ export function GlobalSearch() {
               {results.payments.map((p, i) => (
                 <ResultRow
                   key={p.id}
-                  primary={`${p.memberName} — ${p.month}`}
-                  secondary={`AED ${Number(p.amountPaid).toLocaleString()} · Receipt ${p.receiptNumber}`}
+                  primary={`${p.memberName} — ${p.paymentType === "frf_contribution" ? "FRF Contribution" : "Membership Fee"}`}
+                  secondary={`SAR ${Number(p.amountPaid).toLocaleString()} · Receipt ${p.receiptNumber}`}
                   selected={selectedIndex === pOffset + i}
                   onClick={() => navigate(`/payments`)}
                 />

@@ -134,6 +134,7 @@ export default function Members() {
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Reference Member</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">Membership Fee</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Fee Status</TableHead>
+              <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">FRF Status</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -147,12 +148,13 @@ export default function Members() {
                   <TableCell><Skeleton className="h-5 w-28" /></TableCell>
                   <TableCell className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
                   <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-20" /></TableCell>
                   <TableCell><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
                 </TableRow>
               ))
             ) : members?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center text-emerald-600 dark:text-slate-500">
+                <TableCell colSpan={8} className="h-24 text-center text-emerald-600 dark:text-slate-500">
                   No members found.
                 </TableCell>
               </TableRow>
@@ -207,6 +209,22 @@ export default function Members() {
                       {member.feeStatus === "paid" ? <CheckCircle2 className="h-3 w-3" /> : member.feeStatus === "pending" ? <Clock className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
                       {feeStatusLabel(member.feeStatus)}
                     </span>
+                  </TableCell>
+                  <TableCell>
+                    {(() => {
+                      const s = (member as any).frfStatus ?? "active";
+                      const cls =
+                        s === "active"
+                          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
+                          : s === "suspended"
+                          ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
+                          : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-400";
+                      return (
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${cls}`}>
+                          {s}
+                        </span>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>

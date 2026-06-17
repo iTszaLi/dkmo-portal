@@ -61,6 +61,7 @@ const navigation: NavItem[] = [
   { name: "Members",           href: "/members",           icon: Users },
   { name: "Committee",         href: "/committee",         icon: Crown },
   { name: "Committee Performance", href: "/committee-performance", icon: Activity },
+  { name: "Recruitment Leaderboard", href: "/recruitment-leaderboard", icon: Trophy },
   { name: "Payments",          href: "/payments",          icon: CreditCard },
   { name: "Community Services", href: "/services",          icon: HandHelping },
   { name: "FRF Claims",        href: "/frf",               icon: HeartHandshake },

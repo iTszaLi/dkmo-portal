@@ -212,7 +212,7 @@ export default function PrintReceipts() {
   const monthScopedPayments = useMemo(() => {
     if (!payments) return [];
     if (!monthFilter) return payments;
-    return payments.filter((p) => p.month === monthFilter);
+    return payments.filter((p) => p.paidAt.slice(0, 7) === monthFilter);
   }, [payments, monthFilter]);
 
   const monthTotal = useMemo(
@@ -440,7 +440,7 @@ export default function PrintReceipts() {
                             <div className="text-xs text-emerald-600 dark:text-slate-500">{payment.membershipId}</div>
                           </TableCell>
                           <TableCell className="hidden sm:table-cell text-sm text-emerald-700 dark:text-slate-400">
-                            {formatYearMonth(payment.month)}
+                            {formatYearMonth(payment.paidAt.slice(0, 7))}
                           </TableCell>
                           <TableCell className="hidden md:table-cell text-sm text-emerald-700 dark:text-slate-400">
                             {formatDate(payment.paidAt)}
