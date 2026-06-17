@@ -41,6 +41,9 @@ const formSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
   mobileNumber: z.string().min(1, "Mobile number is required"),
   membershipId: z.string().min(1, "Membership ID is required"),
+  applicationNumber: z.string().optional(),
+  iqamaNumber: z.string().optional(),
+  jamaath: z.string().optional(),
   city: z.string().optional(),
   country: z.string().optional(),
   designation: z.string().optional(),
@@ -71,6 +74,9 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
       fullName: defaultValues?.fullName || "",
       mobileNumber: defaultValues?.mobileNumber || "",
       membershipId: defaultValues?.membershipId || "",
+      applicationNumber: (defaultValues as any)?.applicationNumber || "",
+      iqamaNumber: (defaultValues as any)?.iqamaNumber || "",
+      jamaath: (defaultValues as any)?.jamaath || "",
       city: defaultValues?.city || "",
       country: defaultValues?.country || "",
       designation: (defaultValues as any)?.designation || "",
@@ -85,6 +91,9 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
         fullName: defaultValues.fullName || "",
         mobileNumber: defaultValues.mobileNumber || "",
         membershipId: defaultValues.membershipId || "",
+        applicationNumber: (defaultValues as any).applicationNumber || "",
+        iqamaNumber: (defaultValues as any).iqamaNumber || "",
+        jamaath: (defaultValues as any).jamaath || "",
         city: defaultValues.city || "",
         country: defaultValues.country || "",
         designation: (defaultValues as any).designation || "",
@@ -158,10 +167,51 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
+            name="applicationNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Application No</FormLabel>
+                <FormControl>
+                  <Input placeholder="APP-12345" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="iqamaNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Iqama No</FormLabel>
+                <FormControl>
+                  <Input placeholder="2xxxxxxxxx" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="jamaath"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Jamaath</FormLabel>
+                <FormControl>
+                  <Input placeholder="Nearest Jamaath" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
             name="city"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>City</FormLabel>
+                <FormLabel>Place / Location</FormLabel>
                 <FormControl>
                   <Input placeholder="Mangaluru" {...field} />
                 </FormControl>

@@ -39,6 +39,9 @@ export const ListMembersResponseItem = zod.object({
   fullName: zod.string(),
   mobileNumber: zod.string(),
   membershipId: zod.string(),
+  applicationNumber: zod.string(),
+  iqamaNumber: zod.string(),
+  jamaath: zod.string(),
   city: zod.string(),
   country: zod.string(),
   designation: zod.string(),
@@ -62,6 +65,9 @@ export const CreateMemberBody = zod.object({
   fullName: zod.string().min(1),
   mobileNumber: zod.string().min(1),
   membershipId: zod.string().min(1),
+  applicationNumber: zod.string().optional(),
+  iqamaNumber: zod.string().optional(),
+  jamaath: zod.string().optional(),
   city: zod.string().optional(),
   country: zod.string().optional(),
   designation: zod.string().optional(),
@@ -84,6 +90,9 @@ export const GetMemberResponse = zod.object({
   fullName: zod.string(),
   mobileNumber: zod.string(),
   membershipId: zod.string(),
+  applicationNumber: zod.string(),
+  iqamaNumber: zod.string(),
+  jamaath: zod.string(),
   city: zod.string(),
   country: zod.string(),
   designation: zod.string(),
@@ -109,6 +118,9 @@ export const UpdateMemberBody = zod.object({
   fullName: zod.string().min(1),
   mobileNumber: zod.string().min(1),
   membershipId: zod.string().min(1),
+  applicationNumber: zod.string().optional(),
+  iqamaNumber: zod.string().optional(),
+  jamaath: zod.string().optional(),
   city: zod.string().optional(),
   country: zod.string().optional(),
   designation: zod.string().optional(),
@@ -124,6 +136,9 @@ export const UpdateMemberResponse = zod.object({
   fullName: zod.string(),
   mobileNumber: zod.string(),
   membershipId: zod.string(),
+  applicationNumber: zod.string(),
+  iqamaNumber: zod.string(),
+  jamaath: zod.string(),
   city: zod.string(),
   country: zod.string(),
   designation: zod.string(),
@@ -161,6 +176,9 @@ export const UpdateMemberFeeStatusResponse = zod.object({
   fullName: zod.string(),
   mobileNumber: zod.string(),
   membershipId: zod.string(),
+  applicationNumber: zod.string(),
+  iqamaNumber: zod.string(),
+  jamaath: zod.string(),
   city: zod.string(),
   country: zod.string(),
   designation: zod.string(),
@@ -173,6 +191,29 @@ export const UpdateMemberFeeStatusResponse = zod.object({
   refMemberId: zod.string(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
+});
+
+/**
+ * @summary List members referred by this member and their FRF responsibility
+ */
+export const GetMemberReferralsParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const GetMemberReferralsResponse = zod.object({
+  referenceMemberName: zod.string(),
+  totalCount: zod.number(),
+  frfResponsibilityAmount: zod.number(),
+  members: zod.array(
+    zod.object({
+      id: zod.string(),
+      fullName: zod.string(),
+      membershipId: zod.string(),
+      mobileNumber: zod.string(),
+      city: zod.string(),
+      feeStatus: zod.enum(["paid", "pending", "unpaid"]),
+    }),
+  ),
 });
 
 /**

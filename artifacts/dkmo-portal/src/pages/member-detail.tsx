@@ -1,10 +1,13 @@
+import { useState } from "react";
 import { useParams, Link } from "wouter";
 import {
   useGetMember,
   useUpdateMemberFeeStatus,
   useGetMemberAssistanceHistory,
+  useGetMemberReferrals,
   getGetMemberQueryKey,
   getGetMemberAssistanceHistoryQueryKey,
+  getGetMemberReferralsQueryKey,
   getListMembersQueryKey,
 } from "@workspace/api-client-react";
 import type { FeeStatusInputFeeStatus } from "@workspace/api-client-react";
@@ -14,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { formatSAR, formatDate, feeStatusLabel, feeStatusBadgeClass } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, UserCircle, MapPin, Phone, CalendarDays, CheckCircle2, Clock, XCircle, Users, HeartHandshake, HandHelping, Coins } from "lucide-react";
+import { ArrowLeft, UserCircle, MapPin, Phone, CalendarDays, CheckCircle2, Clock, XCircle, Users, HeartHandshake, HandHelping, Coins, IdCard, FileText, Building2, ChevronDown, ChevronUp, Wallet } from "lucide-react";
 
 function assistanceStatusClass(status: string): string {
   const s = status.toLowerCase();
@@ -44,6 +47,12 @@ export default function MemberDetail() {
   const { data: assistance, isLoading: isAssistanceLoading } = useGetMemberAssistanceHistory(id || "", {
     query: { enabled: !!id, queryKey: getGetMemberAssistanceHistoryQueryKey(id || "") },
   });
+
+  const { data: referrals, isLoading: isReferralsLoading } = useGetMemberReferrals(id || "", {
+    query: { enabled: !!id, queryKey: getGetMemberReferralsQueryKey(id || "") },
+  });
+
+  const [referralsExpanded, setReferralsExpanded] = useState(false);
 
   const handleFeeStatus = (feeStatus: FeeStatusInputFeeStatus) => {
     if (!id) return;
@@ -134,6 +143,39 @@ export default function MemberDetail() {
                   <p className="text-emerald-900 dark:text-slate-200 font-medium">{member.city}, {member.country}</p>
                 </div>
               </div>
+              {(member as any).applicationNumber ? (
+                <div className="flex items-center gap-3 text-sm">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400">
+                    <FileText className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-emerald-500 dark:text-slate-500 text-xs font-medium">Application No</p>
+                    <p className="text-emerald-900 dark:text-slate-200 font-medium">{(member as any).applicationNumber}</p>
+                  </div>
+                </div>
+              ) : null}
+              {(member as any).iqamaNumber ? (
+                <div className="flex items-center gap-3 text-sm">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400">
+                    <IdCard className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-emerald-500 dark:text-slate-500 text-xs font-medium">Iqama No</p>
+                    <p className="text-emerald-900 dark:text-slate-200 font-medium">{(member as any).iqamaNumber}</p>
+                  </div>
+                </div>
+              ) : null}
+              {(member as any).jamaath ? (
+                <div className="flex items-center gap-3 text-sm">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400">
+                    <Building2 className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-emerald-500 dark:text-slate-500 text-xs font-medium">Jamaath</p>
+                    <p className="text-emerald-900 dark:text-slate-200 font-medium">{(member as any).jamaath}</p>
+                  </div>
+                </div>
+              ) : null}
               <div className="flex items-center gap-3 text-sm">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400">
                   <CalendarDays className="h-4 w-4" />
@@ -227,6 +269,85 @@ export default function MemberDetail() {
                   <XCircle className="mr-2 h-4 w-4" /> Mark Unpaid
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-2xl border-emerald-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg text-emerald-900 dark:text-slate-100 flex items-center gap-2">
+                <Users className="h-5 w-5 text-emerald-600 dark:text-emerald-400" /> Reference / Group Responsibility
+              </CardTitle>
+              <CardDescription className="dark:text-slate-400">
+                Members registered under this member's reference and the FRF responsibility they carry (SAR 50 per member).
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isReferralsLoading ? (
+                <div className="space-y-2">
+                  {Array.from({ length: 2 }).map((_, i) => (
+                    <Skeleton key={i} className="h-16 w-full" />
+                  ))}
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="rounded-xl bg-emerald-50/60 dark:bg-slate-800/50 p-4">
+                      <p className="text-xs font-medium text-emerald-600 dark:text-slate-500 flex items-center gap-1">
+                        <Users className="h-3.5 w-3.5" /> Members Under Reference
+                      </p>
+                      <p className="mt-1 text-2xl font-bold text-emerald-900 dark:text-slate-100">{referrals?.totalCount ?? 0}</p>
+                    </div>
+                    <div className="rounded-xl bg-emerald-50/60 dark:bg-slate-800/50 p-4">
+                      <p className="text-xs font-medium text-emerald-600 dark:text-slate-500 flex items-center gap-1">
+                        <Wallet className="h-3.5 w-3.5" /> FRF Responsibility
+                      </p>
+                      <p className="mt-1 text-2xl font-bold text-emerald-900 dark:text-green-300">{formatSAR(referrals?.frfResponsibilityAmount ?? 0)}</p>
+                      <p className="text-[11px] text-emerald-600/70 dark:text-slate-500 mt-0.5">{referrals?.totalCount ?? 0} × SAR 50</p>
+                    </div>
+                  </div>
+
+                  {referrals && referrals.totalCount > 0 ? (
+                    <div className="mt-4">
+                      <button
+                        type="button"
+                        onClick={() => setReferralsExpanded((v) => !v)}
+                        className="flex w-full items-center justify-between rounded-lg border border-emerald-100 dark:border-slate-800 bg-emerald-50/40 dark:bg-slate-800/40 px-3 py-2 text-sm font-medium text-emerald-800 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-slate-800 transition-colors"
+                      >
+                        <span>{referralsExpanded ? "Hide" : "Show"} member list ({referrals.totalCount})</span>
+                        {referralsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      </button>
+                      {referralsExpanded ? (
+                        <div className="mt-3 space-y-2">
+                          {referrals.members.map((rm) => (
+                            <Link
+                              key={rm.id}
+                              href={`/members/${rm.id}`}
+                              className="flex items-center justify-between gap-2 rounded-xl border border-emerald-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 hover:bg-emerald-50/40 dark:hover:bg-slate-800/50 transition-colors"
+                            >
+                              <div className="min-w-0">
+                                <p className="font-medium text-emerald-950 dark:text-slate-100 text-sm truncate">{rm.fullName}</p>
+                                <p className="text-xs text-emerald-600 dark:text-slate-500">
+                                  ID: {rm.membershipId}{rm.city ? ` • ${rm.city}` : ""}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-3 shrink-0">
+                                <span className="text-xs text-emerald-700 dark:text-slate-400">{rm.mobileNumber}</span>
+                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${feeStatusBadgeClass(rm.feeStatus)}`}>
+                                  {feeStatusLabel(rm.feeStatus)}
+                                </span>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <div className="mt-4 text-center py-6 bg-emerald-50/30 dark:bg-slate-800/40 rounded-lg border border-emerald-100 dark:border-slate-800 border-dashed">
+                      <p className="text-sm text-emerald-700 dark:text-slate-400">No members registered under this member's reference.</p>
+                    </div>
+                  )}
+                </>
+              )}
             </CardContent>
           </Card>
 

@@ -166,6 +166,25 @@ paths:
               schema:
                 $ref: "#/components/schemas/Member"
 
+  /members/{id}/referrals:
+    get:
+      operationId: getMemberReferrals
+      tags: [members]
+      summary: List members referred by this member and their FRF responsibility
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Reference/group responsibility summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberReferralSummary"
+
   /payments:
     get:
       operationId: listPayments
@@ -1582,6 +1601,12 @@ components:
           type: string
         membershipId:
           type: string
+        applicationNumber:
+          type: string
+        iqamaNumber:
+          type: string
+        jamaath:
+          type: string
         city:
           type: string
         country:
@@ -1616,6 +1641,9 @@ components:
         - fullName
         - mobileNumber
         - membershipId
+        - applicationNumber
+        - iqamaNumber
+        - jamaath
         - city
         - country
         - designation
@@ -1640,6 +1668,12 @@ components:
           type: string
         membershipId:
           type: string
+        applicationNumber:
+          type: string
+        iqamaNumber:
+          type: string
+        jamaath:
+          type: string
         city:
           type: string
         country:
@@ -1674,6 +1708,9 @@ components:
         - fullName
         - mobileNumber
         - membershipId
+        - applicationNumber
+        - iqamaNumber
+        - jamaath
         - city
         - country
         - designation
@@ -1699,6 +1736,12 @@ components:
         membershipId:
           type: string
           minLength: 1
+        applicationNumber:
+          type: string
+        iqamaNumber:
+          type: string
+        jamaath:
+          type: string
         city:
           type: string
         country:
@@ -1730,6 +1773,49 @@ components:
           enum: [paid, pending, unpaid]
       required:
         - feeStatus
+
+    MemberReferralItem:
+      type: object
+      properties:
+        id:
+          type: string
+        fullName:
+          type: string
+        membershipId:
+          type: string
+        mobileNumber:
+          type: string
+        city:
+          type: string
+        feeStatus:
+          type: string
+          enum: [paid, pending, unpaid]
+      required:
+        - id
+        - fullName
+        - membershipId
+        - mobileNumber
+        - city
+        - feeStatus
+
+    MemberReferralSummary:
+      type: object
+      properties:
+        referenceMemberName:
+          type: string
+        totalCount:
+          type: integer
+        frfResponsibilityAmount:
+          type: number
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/MemberReferralItem"
+      required:
+        - referenceMemberName
+        - totalCount
+        - frfResponsibilityAmount
+        - members
 
     Payment:
       type: object

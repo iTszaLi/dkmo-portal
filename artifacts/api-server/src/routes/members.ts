@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, ilike, or, desc } from "drizzle-orm";
+import { eq, ilike, or, desc, sql, type SQL } from "drizzle-orm";
 import { db, membersTable } from "@workspace/db";
 import {
   CreateMemberBody,
@@ -27,24 +27,39 @@ router.get("/members", async (req, res): Promise<void> => {
   }
   const search = parsed.data.search?.trim();
 
-  const rows = search
-    ? await db
-        .select()
-        .from(membersTable)
-        .where(
-          or(
-            ilike(membersTable.fullName, `%${search}%`),
-            ilike(membersTable.mobileNumber, `%${search}%`),
-            ilike(membersTable.membershipId, `%${search}%`),
-            ilike(membersTable.city, `%${search}%`),
-            ilike(membersTable.country, `%${search}%`),
-          ),
-        )
-        .orderBy(desc(membersTable.createdAt))
-    : await db
-        .select()
-        .from(membersTable)
-        .orderBy(desc(membersTable.createdAt));
+  let rows;
+  if (search) {
+    const like = `%${search}%`;
+    const conditions: SQL[] = [
+      ilike(membersTable.fullName, like),
+      ilike(membersTable.mobileNumber, like),
+      ilike(membersTable.membershipId, like),
+      ilike(membersTable.applicationNumber, like),
+      ilike(membersTable.iqamaNumber, like),
+      ilike(membersTable.jamaath, like),
+      ilike(membersTable.city, like),
+      ilike(membersTable.country, like),
+    ];
+    // Mobile search: users type the KSA number without the leading zero
+    // (e.g. 502260256). Normalize stored numbers to digits-only and match,
+    // so leading zeros / country codes don't block the lookup.
+    const digits = search.replace(/\D/g, "").replace(/^0+/, "");
+    if (digits.length > 0) {
+      conditions.push(
+        sql`regexp_replace(${membersTable.mobileNumber}, '\D', '', 'g') ILIKE ${"%" + digits + "%"}`,
+      );
+    }
+    rows = await db
+      .select()
+      .from(membersTable)
+      .where(or(...conditions))
+      .orderBy(desc(membersTable.createdAt));
+  } else {
+    rows = await db
+      .select()
+      .from(membersTable)
+      .orderBy(desc(membersTable.createdAt));
+  }
 
   res.json(rows.map(memberToApi));
 });
@@ -65,6 +80,9 @@ router.post("/members", async (req, res): Promise<void> => {
         fullName: parsed.data.fullName,
         mobileNumber: parsed.data.mobileNumber,
         membershipId: parsed.data.membershipId,
+        applicationNumber: parsed.data.applicationNumber ?? "",
+        iqamaNumber: parsed.data.iqamaNumber ?? "",
+        jamaath: parsed.data.jamaath ?? "",
         city: parsed.data.city ?? "",
         country: parsed.data.country ?? "",
         designation: parsed.data.designation ?? "",
@@ -152,6 +170,9 @@ router.patch("/members/:id", async (req, res): Promise<void> => {
         fullName: parsed.data.fullName,
         mobileNumber: parsed.data.mobileNumber,
         membershipId: parsed.data.membershipId,
+        applicationNumber: parsed.data.applicationNumber ?? "",
+        iqamaNumber: parsed.data.iqamaNumber ?? "",
+        jamaath: parsed.data.jamaath ?? "",
         city: parsed.data.city ?? "",
         country: parsed.data.country ?? "",
         designation: parsed.data.designation ?? "",
@@ -211,6 +232,45 @@ router.patch("/members/:id/fee-status", async (req, res): Promise<void> => {
     details: `Fee status: ${feeStatus}`,
   });
   res.json(memberToApi(updated));
+});
+
+router.get("/members/:id/referrals", async (req, res): Promise<void> => {
+  const params = GetMemberParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const [reference] = await db
+    .select()
+    .from(membersTable)
+    .where(eq(membersTable.id, params.data.id));
+  if (!reference) {
+    res.status(404).json({ error: "Member not found" });
+    return;
+  }
+
+  const referred = await db
+    .select()
+    .from(membersTable)
+    .where(eq(membersTable.refMemberId, params.data.id))
+    .orderBy(desc(membersTable.createdAt));
+
+  const FRF_RESPONSIBILITY_PER_MEMBER = 50;
+
+  res.json({
+    referenceMemberName: reference.fullName,
+    totalCount: referred.length,
+    frfResponsibilityAmount: referred.length * FRF_RESPONSIBILITY_PER_MEMBER,
+    members: referred.map((m) => ({
+      id: m.id,
+      fullName: m.fullName,
+      membershipId: m.membershipId,
+      mobileNumber: m.mobileNumber,
+      city: m.city,
+      feeStatus: m.feeStatus,
+    })),
+  });
 });
 
 router.delete("/members/:id", async (req, res): Promise<void> => {

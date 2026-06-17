@@ -64,6 +64,7 @@ import type {
   MemberAssistanceHistory,
   MemberDetail,
   MemberInput,
+  MemberReferralSummary,
   MonthlyCollection,
   Payment,
   PaymentInput,
@@ -768,6 +769,93 @@ export const useUpdateMemberFeeStatus = <
 > => {
   return useMutation(getUpdateMemberFeeStatusMutationOptions(options));
 };
+
+/**
+ * @summary List members referred by this member and their FRF responsibility
+ */
+export const getGetMemberReferralsUrl = (id: string) => {
+  return `/api/members/${id}/referrals`;
+};
+
+export const getMemberReferrals = async (
+  id: string,
+  options?: RequestInit,
+): Promise<MemberReferralSummary> => {
+  return customFetch<MemberReferralSummary>(getGetMemberReferralsUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMemberReferralsQueryKey = (id: string) => {
+  return [`/api/members/${id}/referrals`] as const;
+};
+
+export const getGetMemberReferralsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMemberReferrals>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMemberReferrals>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMemberReferralsQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getMemberReferrals>>
+  > = ({ signal }) => getMemberReferrals(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMemberReferrals>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMemberReferralsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMemberReferrals>>
+>;
+export type GetMemberReferralsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List members referred by this member and their FRF responsibility
+ */
+
+export function useGetMemberReferrals<
+  TData = Awaited<ReturnType<typeof getMemberReferrals>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMemberReferrals>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMemberReferralsQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary List payments

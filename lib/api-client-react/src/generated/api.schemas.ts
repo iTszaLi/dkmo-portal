@@ -158,6 +158,9 @@ export interface Member {
   fullName: string;
   mobileNumber: string;
   membershipId: string;
+  applicationNumber: string;
+  iqamaNumber: string;
+  jamaath: string;
   city: string;
   country: string;
   designation: string;
@@ -196,6 +199,9 @@ export interface MemberDetail {
   fullName: string;
   mobileNumber: string;
   membershipId: string;
+  applicationNumber: string;
+  iqamaNumber: string;
+  jamaath: string;
   city: string;
   country: string;
   designation: string;
@@ -236,6 +242,9 @@ export interface MemberInput {
   mobileNumber: string;
   /** @minLength 1 */
   membershipId: string;
+  applicationNumber?: string;
+  iqamaNumber?: string;
+  jamaath?: string;
   city?: string;
   country?: string;
   designation?: string;
@@ -257,6 +266,31 @@ export const FeeStatusInputFeeStatus = {
 
 export interface FeeStatusInput {
   feeStatus: FeeStatusInputFeeStatus;
+}
+
+export type MemberReferralItemFeeStatus =
+  (typeof MemberReferralItemFeeStatus)[keyof typeof MemberReferralItemFeeStatus];
+
+export const MemberReferralItemFeeStatus = {
+  paid: "paid",
+  pending: "pending",
+  unpaid: "unpaid",
+} as const;
+
+export interface MemberReferralItem {
+  id: string;
+  fullName: string;
+  membershipId: string;
+  mobileNumber: string;
+  city: string;
+  feeStatus: MemberReferralItemFeeStatus;
+}
+
+export interface MemberReferralSummary {
+  referenceMemberName: string;
+  totalCount: number;
+  frfResponsibilityAmount: number;
+  members: MemberReferralItem[];
 }
 
 export type PaymentPaymentType =

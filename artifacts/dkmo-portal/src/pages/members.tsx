@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "wouter";
+import { useState, useEffect, useRef } from "react";
+import { Link, useLocation } from "wouter";
 import { useListMembers, useCreateMember, useUpdateMember, useDeleteMember, useUpdateMemberFeeStatus, getListMembersQueryKey } from "@workspace/api-client-react";
 import { MemberInput, type FeeStatusInputFeeStatus } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -37,6 +37,29 @@ export default function Members() {
   const updateFeeStatus = useUpdateMemberFeeStatus();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [, navigate] = useLocation();
+  const lastNavigatedRef = useRef<string>("");
+
+  // Auto-load: when a valid Member ID or mobile number is entered, open the
+  // member record immediately (mirrors the old MS Access lookup workflow).
+  useEffect(() => {
+    const q = search.trim();
+    if (!q || !members || members.length === 0) return;
+    const ql = q.toLowerCase();
+    const qDigits = q.replace(/\D/g, "").replace(/^0+/, "");
+    const exact = members.filter((m) => {
+      if (m.membershipId.toLowerCase() === ql) return true;
+      if (qDigits.length >= 7) {
+        const md = m.mobileNumber.replace(/\D/g, "").replace(/^0+/, "");
+        if (md === qDigits || md.endsWith(qDigits)) return true;
+      }
+      return false;
+    });
+    if (exact.length === 1 && lastNavigatedRef.current !== exact[0].id) {
+      lastNavigatedRef.current = exact[0].id;
+      navigate(`/members/${exact[0].id}`);
+    }
+  }, [search, members, navigate]);
 
   const handleCreate = (data: MemberInput) => {
     createMember.mutate({ data }, {
@@ -117,7 +140,7 @@ export default function Members() {
       <div className="flex items-center space-x-2 bg-white dark:bg-slate-900 p-2 rounded-lg border border-emerald-100 dark:border-slate-800 shadow-sm max-w-md">
         <Search className="h-5 w-5 text-emerald-400 dark:text-slate-500 ml-2 shrink-0" />
         <Input
-          placeholder="Search by name, ID, or phone..."
+          placeholder="Search by Member ID, mobile (no leading 0), name, Iqama, application no, Jamaath, or place..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="border-0 focus-visible:ring-0 shadow-none px-2 h-9 dark:bg-transparent dark:text-slate-200 dark:placeholder:text-slate-500"
@@ -169,6 +192,9 @@ export default function Members() {
                       <div>
                         <div className="font-medium text-emerald-950 dark:text-slate-200">{member.fullName}</div>
                         <div className="text-xs text-emerald-600 dark:text-slate-500">ID: {member.membershipId}</div>
+                        {(member as any).applicationNumber ? (
+                          <div className="text-xs text-emerald-500/80 dark:text-slate-500">App: {(member as any).applicationNumber}</div>
+                        ) : null}
                         {(member as any).designation ? (
                           <div className="mt-1 inline-block px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 text-[10px] font-semibold uppercase tracking-wide">
                             {(member as any).designation}

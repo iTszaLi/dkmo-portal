@@ -300,9 +300,20 @@ async function main() {
           i % 7 === 0 ? "unpaid" : i % 3 === 0 ? "pending" : "paid";
         const frfStatus: "active" | "suspended" | "inactive" =
           i % 13 === 0 ? "inactive" : i % 11 === 0 ? "suspended" : "active";
+        const jamaathOptions = [
+          "Mangalore Jamaath",
+          "Ullal Jamaath",
+          "Bantwal Jamaath",
+          "Puttur Jamaath",
+          "Kasaragod Jamaath",
+          "Mukkam Jamaath",
+        ];
         return {
           ...m,
           membershipId: `DKMO-${String(i + 1).padStart(4, "0")}`,
+          applicationNumber: `APP-${String(1000 + i + 1)}`,
+          iqamaNumber: `2${String(100000000 + i * 137).padStart(9, "0")}`,
+          jamaath: jamaathOptions[i % jamaathOptions.length],
           membershipFee: "100",
           feeStatus,
           feePaidAt: feeStatus === "paid" ? daysAgo(30 + (i % 60)) : null,
