@@ -139,7 +139,7 @@ function StatusIcon({ status }: { status: AppStatus }) {
 }
 
 // ── Reference member searchable dropdown ──────────────────────────────────────
-function MemberPicker({ value, onChange }: { value: MemberEntry | null; onChange: (m: MemberEntry | null) => void }) {
+function MemberPicker({ value, onChange, error }: { value: MemberEntry | null; onChange: (m: MemberEntry | null) => void; error?: boolean }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [members, setMembers] = useState<MemberEntry[]>([]);
@@ -174,7 +174,9 @@ function MemberPicker({ value, onChange }: { value: MemberEntry | null; onChange
         type="button"
         onClick={() => setOpen((o) => !o)}
         className={`w-full flex items-center justify-between rounded-md border px-3 py-2 text-sm text-left transition-colors ${
-          value
+          error
+            ? "border-red-400 dark:border-red-600 bg-red-50/40 dark:bg-red-900/10"
+            : value
             ? "border-green-400 dark:border-green-600 bg-green-50/60 dark:bg-green-900/20"
             : "border-green-200 dark:border-slate-700 bg-white dark:bg-slate-800/60"
         } text-green-900 dark:text-slate-100`}
@@ -264,7 +266,16 @@ export default function DkmoApplyPage() {
       const saved = sessionStorage.getItem("dkmoApplyDraft");
       if (saved) {
         const parsed = JSON.parse(saved) as { form?: FormData; dependents?: Dependent[]; step?: number };
-        if (parsed.form) setForm(parsed.form);
+        if (parsed.form) {
+          setForm(parsed.form);
+          if (parsed.form.refMemberId && parsed.form.refMemberName) {
+            setRefMember({
+              id: parsed.form.refMemberId,
+              fullName: parsed.form.refMemberName,
+              membershipId: parsed.form.refMemberId,
+            });
+          }
+        }
         if (parsed.dependents) setDependents(parsed.dependents);
         if (typeof parsed.step === "number") setStep(parsed.step);
       }
@@ -313,6 +324,7 @@ export default function DkmoApplyPage() {
       } else if (!isValidIqama(form.iqamaNumber)) {
         errs.iqamaNumber = "Iqama must be exactly 10 digits.";
       }
+      if (!refMember) errs.refMember = "Please select the member who referred you.";
     }
     if (step === 1) {
       if (!form.mobileSaudi.trim()) {
@@ -619,13 +631,15 @@ export default function DkmoApplyPage() {
 
                 {/* Reference Member */}
                 <div className="sm:col-span-2">
-                  <FieldRow label="Reference Member — Who referred you to join DKMO?">
-                    <MemberPicker value={refMember} onChange={(m) => {
+                  <FieldRow label="Reference Member * — Who referred you to join DKMO?">
+                    <MemberPicker value={refMember} error={showValidation && !!stepErrors.refMember} onChange={(m) => {
                       setRefMember(m);
                       if (m) { set("refMemberName", m.fullName); set("refMemberId", m.membershipId); }
                       else { set("refMemberName", ""); set("refMemberId", ""); }
                     }} />
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Optional — select the DKMO member who referred you</p>
+                    {showValidation && stepErrors.refMember
+                      ? <p className="text-xs text-red-500 mt-1">{stepErrors.refMember}</p>
+                      : <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Required — select the DKMO member who referred you</p>}
                   </FieldRow>
                 </div>
 

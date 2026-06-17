@@ -13,6 +13,7 @@ import {
   eventExpensesTable,
   eventTicketBookletsTable,
   eventTicketsTable,
+  auditLogsTable,
 } from "@workspace/db";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -284,6 +285,7 @@ async function main() {
   await db.delete(sponsorsTable);
   await db.delete(eventsTable);
   await db.delete(paymentsTable);
+  await db.delete(auditLogsTable);
   await db.delete(membersTable);
 
   // ── Members ──────────────────────────────────────────────────────────────
@@ -602,6 +604,56 @@ async function main() {
   ];
   await db.insert(eventTicketsTable).values(ticketInserts);
 
+  // ── Audit trail (sample activity log) ─────────────────────────────────────
+  console.log("  ↳ inserting audit logs…");
+  const auditInserts: (typeof auditLogsTable.$inferInsert)[] = [
+    {
+      userId: "u_admin1",
+      userName: "Administrator",
+      action: "login",
+      module: "auth",
+      entityId: "u_admin1",
+      entityName: "Administrator",
+      details: "Signed in to the DKMO management portal.",
+      ipAddress: "37.224.18.42",
+      createdAt: daysAgo(2),
+    },
+    {
+      userId: "u_admin1",
+      userName: "Administrator",
+      action: "member_created",
+      module: "members",
+      entityId: insertedMembers[3].id,
+      entityName: insertedMembers[3].fullName,
+      details: `Added new member ${insertedMembers[3].fullName} (${insertedMembers[3].membershipId}).`,
+      ipAddress: "37.224.18.42",
+      createdAt: daysAgo(2),
+    },
+    {
+      userId: "u_finance1",
+      userName: "Finance Lead",
+      action: "payment_created",
+      module: "payments",
+      entityId: insertedMembers[5].id,
+      entityName: insertedMembers[5].fullName,
+      details: `Recorded one-time membership fee (SAR 100) for ${insertedMembers[5].fullName}.`,
+      ipAddress: "5.42.190.77",
+      createdAt: daysAgo(1),
+    },
+    {
+      userId: "u_finance1",
+      userName: "Finance Lead",
+      action: "claim_approved",
+      module: "frf",
+      entityId: insertedClaims[0].id,
+      entityName: insertedClaims[0].claimantName,
+      details: `Approved FRF ${insertedClaims[0].claimType.replace(/_/g, " ")} claim for ${insertedClaims[0].claimantName} (SAR ${insertedClaims[0].amountApproved}).`,
+      ipAddress: "5.42.190.77",
+      createdAt: daysAgo(1),
+    },
+  ];
+  await db.insert(auditLogsTable).values(auditInserts);
+
   console.log("✅  Seed complete!");
   console.log(`   Members:          ${insertedMembers.length}`);
   console.log(`   Events:           ${insertedEvents.length}`);
@@ -614,6 +666,7 @@ async function main() {
   console.log(`   Event Expenses:   15`);
   console.log(`   Ticket Booklets:  ${insertedBooklets.length} (all 6 events)`);
   console.log(`   Tickets:          ${ticketInserts.length}`);
+  console.log(`   Audit Logs:       ${auditInserts.length}`);
 
   await pool.end();
 }
