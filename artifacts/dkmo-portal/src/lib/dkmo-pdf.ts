@@ -119,7 +119,7 @@ export async function generateDkmoPdf(
   y += noteLines.length * 3.5 + 3;
 
   // ── REFERENCE MEMBER GREEN BOX (always shown) ────────────────────────────────
-  const refBoxH = 16;
+  const refBoxH = 15;
   doc.setFillColor(...lightGreen);
   doc.setDrawColor(...green);
   doc.setLineWidth(0.5);
@@ -150,7 +150,7 @@ export async function generateDkmoPdf(
   doc.setFont("helvetica", "italic");
   doc.setFontSize(6.5);
   doc.setTextColor(...grey);
-  doc.text("The DKMO member who referred me to join this membership.", mL + 3, y + 14);
+  doc.text("The DKMO member who referred me to join this membership.", mL + 3, y + 13);
 
   y += refBoxH + 3;
 
@@ -208,30 +208,30 @@ export async function generateDkmoPdf(
     }
   }
 
-  const nameH = 10;
+  const nameH = 9;
   field("Full Name of the Applicant", form.fullName || "", mL, y, mainW, nameH);
-  y += nameH + 1;
+  y += nameH + 0.5;
 
   const colW = (mainW - 3) / 2;
-  const rowH = 9;
+  const rowH = 8;
 
   field("Date of Birth", form.dateOfBirth || "", mL, y, colW, rowH);
   field("Passport No.", form.passportNumber || "", mL + colW + 3, y, colW, rowH);
-  y += rowH + 1;
+  y += rowH + 0.5;
 
   field("Occupation / Job Title", form.occupation || "", mL, y, colW, rowH);
   field("Iqama / Residence ID No.", form.iqamaNumber || "", mL + colW + 3, y, colW, rowH);
-  y += rowH + 1;
+  y += rowH + 0.5;
 
   field("Company / Employer Name", form.companyName || "", mL, y, mainW, rowH);
-  y += rowH + 1;
+  y += rowH + 0.5;
 
   field("Marital Status", form.maritalStatus || "", mL, y, colW, rowH);
   field("Family living in Saudi (Yes / No)", form.familyInSaudi || "", mL + colW + 3, y, colW, rowH);
-  y += rowH + 1;
+  y += rowH + 0.5;
 
   field("Blood Group", form.bloodGroup || "", mL, y, colW, rowH);
-  y += rowH + 2;
+  y += rowH + 1.5;
 
   // Advance past photo if still overlapping
   y = Math.max(y, photoY + photoH + 4);
@@ -255,7 +255,7 @@ export async function generateDkmoPdf(
   doc.text("Contact details in India", mL + leftW + rightW / 2, y + 4.2, { align: "center" });
   y += 6.5;
 
-  const contactRowH = 9;
+  const contactRowH = 8;
   const contactRows: [string, string, string, string][] = [
     ["Area / Location in Saudi Arabia", form.areaSaudi || "", "Name of Home / House", form.houseName || ""],
     ["P.O. Box No. & Pin Code", form.poBox || "", "Postal Address", form.postalAddress || ""],
@@ -287,8 +287,8 @@ export async function generateDkmoPdf(
     doc.setFont("helvetica", "bold");
     doc.setFontSize(7.5);
     doc.setTextColor(...black);
-    if (lVal) doc.text(String(lVal), mL + 1.5, y + 7, { maxWidth: leftW - 3 });
-    if (rVal) doc.text(String(rVal), mL + leftW + 1.5, y + 7, { maxWidth: rightW - 3 });
+    if (lVal) doc.text(String(lVal), mL + 1.5, y + 6.3, { maxWidth: leftW - 3 });
+    if (rVal) doc.text(String(rVal), mL + leftW + 1.5, y + 6.3, { maxWidth: rightW - 3 });
     y += contactRowH;
   }
   y += 3;
@@ -322,7 +322,7 @@ export async function generateDkmoPdf(
   }
   y += 5.5;
 
-  const depRowH = 7;
+  const depRowH = 6;
   for (let i = 0; i < 7; i++) {
     const dep = dependents[i];
     cx = mL;

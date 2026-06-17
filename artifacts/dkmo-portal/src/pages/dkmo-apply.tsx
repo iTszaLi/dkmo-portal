@@ -340,9 +340,8 @@ export default function DkmoApplyPage() {
     }
     if (step === 2) {
       if (!form.houseName.trim()) errs.houseName = "House name / address is required.";
-      if (!form.mobileIndia.trim()) {
-        errs.mobileIndia = "India mobile number is required.";
-      } else if (!isValidIndiaMobile(form.mobileIndia)) {
+      if (!form.homePhone.trim()) errs.homePhone = "Home phone (India) is required.";
+      if (form.mobileIndia.trim() && !isValidIndiaMobile(form.mobileIndia)) {
         errs.mobileIndia = "India mobile must be exactly 10 digits.";
       }
     }
@@ -747,13 +746,15 @@ export default function DkmoApplyPage() {
                   <Input value={form.nearestJamaath} onChange={(e) => set("nearestJamaath", e.target.value)} className={inputClass()} placeholder="Nearest Jama'at" />
                 </FieldRow>
 
-                <FieldRow label="Home Phone (India)">
-                  <Input value={form.homePhone} onChange={(e) => set("homePhone", e.target.value)} className={inputClass()} placeholder="Home landline" />
+                <FieldRow label="Home Phone * (India)" id="homePhone">
+                  <Input id="homePhone" value={form.homePhone} onChange={(e) => set("homePhone", e.target.value)}
+                    className={inputClass(errCls(showValidation && !!stepErrors.homePhone))} placeholder="Home landline / mobile" />
+                  {showValidation && stepErrors.homePhone && <p className="text-xs text-red-500 mt-1">{stepErrors.homePhone}</p>}
                 </FieldRow>
 
-                <FieldRow label="Mobile Number * (India — 10 digits)" id="mobileIndia">
+                <FieldRow label="Mobile Number (India — 10 digits)" id="mobileIndia">
                   <Input id="mobileIndia" value={form.mobileIndia} onChange={(e) => set("mobileIndia", e.target.value.replace(/\D/g, "").slice(0, 10))}
-                    className={inputClass(errCls(showValidation && !!stepErrors.mobileIndia))} placeholder="10-digit mobile" maxLength={10} />
+                    className={inputClass(errCls(showValidation && !!stepErrors.mobileIndia))} placeholder="10-digit mobile (optional)" maxLength={10} />
                   {showValidation && stepErrors.mobileIndia && <p className="text-xs text-red-500 mt-1">{stepErrors.mobileIndia}</p>}
                 </FieldRow>
 
