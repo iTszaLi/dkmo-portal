@@ -1,0 +1,478 @@
+DKMO Portal Improvement & Data Accuracy Update
+
+Please improve the DKMO Portal while keeping it simple, clean, reliable, and easy for non-technical committee members to use.
+
+Important Requirements:
+
+* Do NOT add enterprise-level complexity.
+* Do NOT create unnecessary modules.
+* Improve existing modules first.
+* Use actual DKMO data and relationships instead of placeholder/demo values.
+* Ensure all calculations, rankings, and statistics are generated automatically from real records.
+
+---
+
+1. MEMBER PROFILE PAGE IMPROVEMENTS
+
+---
+
+Create a complete Member Profile page organized using tabs or cards:
+
+* Profile
+* Membership
+* Payments
+* FRF
+* Documents
+* History
+
+The profile page should display:
+
+* Personal details
+* Membership information
+* Membership status
+* Paid/unpaid/pending
+* Receipts
+* FRF membership information
+* Uploaded documents
+* Committee information (if applicable)
+
+Add quick action buttons:
+
+* Edit Member
+* Add Payment
+* Generate Receipt
+* Print Membership Card
+* View Documents
+
+Reduce unused white space and improve layout efficiency.
+
+---
+
+3. DASHBOARD IMPROVEMENTS
+
+---
+
+Display only useful KPIs:
+
+* Total Members
+* Active Members
+* Pending FRF Claims
+* Monthly Collections
+* Top 5 Recruiters
+
+Remove unnecessary dashboard widgets that do not provide meaningful information.
+
+---
+
+4. DUPLICATE MEMBER PROTECTION
+
+---
+
+Prevent duplicate records using:
+
+* Mobile Number
+* Passport Number
+* Iqama Number
+
+If a duplicate is detected, show a clear warning and prevent saving.
+
+---
+
+5. RECEIPTS
+
+---
+
+Improve Receipts module:
+
+* Download PDF
+* Print Receipt
+
+Keep it simple and reliable.
+
+---
+
+6. MEMBER SEARCH
+
+---
+
+Improve search functionality:
+
+Search by:
+
+* Name
+* Mobile Number
+* Membership Number
+
+Results should be fast and accurate.
+
+---
+
+7. MEMBERSHIP NUMBER GENERATION
+
+---
+
+Automatically generate membership numbers.
+
+Format:
+
+DKMO-YYYY-XXXX
+
+Examples:
+
+DKMO-2026-0001
+DKMO-2026-0002
+DKMO-2026-0003
+
+Do not require manual entry.
+
+---
+
+8. AUDIT LOG
+
+---
+
+Maintain a simple audit trail showing:
+
+* Record Created
+* Record Updated
+* Record Deleted
+
+Include:
+
+* User
+* Date
+* Time
+
+---
+
+9. MEETING ATTENDANCE SYSTEM
+   DKMO Meeting Attendance Module
+
+   Please create a new **Meeting Attendance** module in the DKMO Portal.
+
+   Keep the design simple, clean, mobile-friendly, and consistent with the rest of the portal.
+
+   #### Header Statistics
+
+   At the top of the Attendance page, display summary cards showing:
+
+   * Total Members
+   * Executive Members
+   * Core Committee Members
+     These numbers should automatically update from the member database.
+
+   ---
+
+   ### Attendance Register
+
+   Below the summary cards, display a searchable attendance table with the following columns:
+
+   * DKMO ID
+   * Full Name
+   * Location
+   * Mobile Number
+   * Attendance Status
+     Attendance Status should allow:
+   * Present ✅
+   * Absent ❌
+     Admins should be able to quickly mark attendance for each member.
+
+   Add:
+
+   * Search Member
+   * Filter by Member Type
+
+     * All Members
+     * Executive Members
+     * Core Committee Members
+
+   ---
+
+   ### Meeting Information
+
+   At the top of each attendance session include:
+
+   * Meeting Title
+   * Meeting Date
+   * Meeting Location
+   * Notes (optional)
+     Store attendance records for future reference.
+
+   ---
+
+   ### Attendance Reports
+
+   Add export options:
+
+   #### Export to PDF
+
+   Generate a professional PDF report containing:
+
+   * DKMO Logo in the header
+   * DKMO Name
+   * Meeting Title
+   * Meeting Date
+   * Attendance Summary
+   * Attendance Table
+     The PDF should have a clean official DKMO format suitable for committee records and sharing.
+
+   #### Export to Excel
+
+   Generate an Excel file containing:
+
+   * DKMO ID
+   * Full Name
+   * Location
+   * Mobile Number
+   * Attendance Status
+   * Meeting Date
+
+   ---
+
+   ### Additional Requirements
+
+   * Attendance records should remain saved permanently.
+   * Previous meeting attendance should be viewable from an Attendance History section.
+   * Show attendance totals:
+
+     * Total Present
+     * Total Absent
+     * Attendance Percentage
+   * Support both desktop and mobile screens.
+   * Use existing member data from the DKMO database.
+   * Do not create duplicate member records.
+   * Do not change or affect any existing DKMO Portal modules.
+     The goal is to have a simple and reliable meeting attendance system for DKMO meetings, committee meetings, and member gatherings.
+
+---
+
+---
+
+10. RECRUITMENT LEADERBOARD CORRECTIONS
+
+---
+
+The current leaderboard appears to use placeholder/demo values.
+
+Please fix it.
+
+Requirements:
+
+* Calculate rankings from actual member referrals.
+* Do not assign the same recruit count to every member.
+* If referral data does not exist, display 0.
+* Rankings must be based only on real referral records.
+
+Example:
+
+1. Fazlurrahman Kolkar - 23 Recruits
+2. Asif Kannur - 18 Recruits
+3. Irshad Bajpe - 15 Recruits
+
+If no recruits exist:
+
+1. Fazlurrahman Kolkar - 0
+2. Asif Kannur - 0
+
+Do not use sample values.
+
+---
+
+11. COMMITTEE PERFORMANCE SIMPLIFICATION
+
+---
+
+Simplify Committee Performance to only:
+
+* Members Recruited
+* Membership Fees Collected
+* FRF Members Referred
+* Loans Processed
+* Total Contribution Score
+
+Remove unnecessary categories that are not actively used.
+
+All values must be calculated automatically from existing records and transactions.
+
+If no activity exists, display 0.
+
+Do not use seeded/demo data.
+
+---
+
+12. MEMBER REFERENCE & FRF CORRECTIONS
+
+---
+
+The current Member Details page shows contradictory information.
+
+Example:
+
+"No reference member recorded"
+
+while simultaneously showing
+
+"Members Under Reference: 5"
+
+This must be corrected.
+
+Clearly separate:
+
+* Referred By
+* Members Referred
+
+Example:
+
+Referred By:
+Asif Kannur
+
+Members Referred:
+5
+
+Remove contradictory information.
+
+---
+
+13. FRF RESPONSIBILITY CALCULATION
+
+---
+
+FRF Responsibility should never be stored as a fixed value.
+
+Calculate automatically using active referred members.
+
+Example:
+
+5 Active Members × SAR 50 = SAR 250
+
+If a referred member becomes inactive, is removed, or transferred:
+
+FRF Responsibility must update automatically.
+
+---
+
+14. PAYMENT HISTORY
+
+---
+
+Add a proper payment history section.
+
+Example:
+
+18 May 2026
+Membership Fee
+SAR 100
+Paid
+
+22 Jun 2026
+FRF Contribution
+SAR 50
+Paid
+
+---
+
+15. DOCUMENT SUMMARY
+
+---
+
+Add a document attachment where one can attatch section. and also label it
+
+Example:
+
+✓ Passport
+✓ Iqama
+✓ Photo
+✓ Membership Form
+
+---
+
+16. COMMITTEE MEMBER INFORMATION
+
+---
+
+For committee members display:
+
+* Committee Role
+* Committee Since
+* Members Referred
+* Payments Collected
+* FRF Members Added
+
+---
+
+17. DATA ACCURACY AUDIT
+
+---
+
+Review and verify the relationship between:
+
+Members
+Referrals
+FRF Responsibility
+Recruitment Leaderboard
+Committee Performance
+
+Ensure all modules use a single source of truth and actual DKMO records.
+
+No placeholder values.
+No seeded demo statistics.
+No hardcoded referral counts.
+
+All totals, rankings, leaderboards, and contribution scores must be mathematically correct and generated from real database records.
+
+SAMPLE DATA & TEST RECORDS
+
+To ensure every module can be properly tested and reviewed, please populate all newly created or updated pages with realistic sample records where actual DKMO data does not yet exist.
+
+Requirements:
+
+* Do not leave tables, cards, reports, dashboards, or sections completely empty.
+* Display 5–10 sample rows/records in each module for testing purposes.
+* Sample records must clearly be marked as test/demo data and must not affect real DKMO records.
+* Once actual DKMO data exists, the system should automatically replace demo content with real data.
+
+Examples:
+
+Members Module:
+
+* Show 5–10 sample member records if no members exist.
+
+Meeting Attendance:
+
+* Show 5–10 attendance entries for testing.
+* Include Present and Absent examples.
+
+Reports:
+
+* Show sample report rows if no data exists.
+
+Committee Performance:
+
+* Show sample performance records only when no real records are available.
+
+Recruitment Leaderboard:
+
+* Show realistic sample rankings only when no referral data exists.
+
+Member Profile:
+
+* Display example payment history, document records, and activity history when testing.
+
+Dashboard:
+
+* Display sample statistics only when the database is empty.
+
+Important:
+
+* Never use hardcoded fake values when real DKMO records are available.
+* Real database records must always take priority.
+* Sample data should exist only to demonstrate functionality and prevent blank screens during testing.
+* Clearly identify demo/test records so administrators can distinguish them from actual DKMO data.
+
+Goal:
+
+Every module should be visually complete and testable during development, while still using real DKMO data whenever available.
+
+Goal:
+
+Make the portal simple, professional, accurate, and fully driven by actual DKMO data while maintaining stability and ease of use.
