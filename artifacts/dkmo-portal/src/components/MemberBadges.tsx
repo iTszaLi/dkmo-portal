@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import {
   COMMITTEE_LEVEL_BADGE,
+  COMMITTEE_LEVEL_LABEL,
   designationBadgeClass,
   normalizeCommitteeLevel,
 } from "@/lib/committee";
@@ -17,8 +18,14 @@ export function MemberBadges({
   className?: string;
 }) {
   const level = normalizeCommitteeLevel(committeeLevel);
-  const des = (designation ?? "").trim();
+  const rawDes = (designation ?? "").trim();
   const levelBadge = level !== "regular" ? COMMITTEE_LEVEL_BADGE[level] : null;
+  // Hide the designation badge when it merely restates the committee level
+  // (e.g. level "executive" + designation "Executive Member"). Real roles
+  // like "President" still render alongside the level badge.
+  const redundant =
+    rawDes.toLowerCase() === COMMITTEE_LEVEL_LABEL[level].toLowerCase();
+  const des = redundant ? "" : rawDes;
 
   if (!levelBadge && !des) return null;
 
