@@ -67,6 +67,15 @@ export const SponsorStatus = {
   overdue: "overdue",
 } as const;
 
+export type SponsorTransferMethod =
+  (typeof SponsorTransferMethod)[keyof typeof SponsorTransferMethod];
+
+export const SponsorTransferMethod = {
+  bank_transfer: "bank_transfer",
+  cash: "cash",
+  cheque: "cheque",
+} as const;
+
 export interface Sponsor {
   id: string;
   sponsorName: string;
@@ -79,6 +88,7 @@ export interface Sponsor {
   paidAmount: number;
   pendingAmount: number;
   status: SponsorStatus;
+  transferMethod: SponsorTransferMethod;
   assignedStaff: string;
   linkedEvent: string;
   /** @nullable */
@@ -108,6 +118,15 @@ export const SponsorInputStatus = {
   overdue: "overdue",
 } as const;
 
+export type SponsorInputTransferMethod =
+  (typeof SponsorInputTransferMethod)[keyof typeof SponsorInputTransferMethod];
+
+export const SponsorInputTransferMethod = {
+  bank_transfer: "bank_transfer",
+  cash: "cash",
+  cheque: "cheque",
+} as const;
+
 export interface SponsorInput {
   /** @minLength 1 */
   sponsorName: string;
@@ -121,6 +140,7 @@ export interface SponsorInput {
   /** @minimum 0 */
   paidAmount?: number;
   status?: SponsorInputStatus;
+  transferMethod?: SponsorInputTransferMethod;
   assignedStaff?: string;
   linkedEvent?: string;
   /** @nullable */

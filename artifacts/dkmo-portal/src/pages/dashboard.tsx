@@ -1,10 +1,12 @@
 import { useMemo } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import {
   useGetDashboardSummary,
   useGetDashboardFinancialSummary,
   useGetDashboardCashFlow,
   useListMembers,
+  useListEvents,
+  useListSponsors,
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { formatSAR, getCurrentMonth } from "@/lib/utils";
@@ -14,12 +16,52 @@ import {
   HeartHandshake,
   TrendingUp,
   CalendarRange,
+  CalendarClock,
+  Clock,
+  MapPin,
+  HandCoins,
   Trophy,
   ArrowRight,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
+const TRANSFER_METHOD_LABELS: Record<string, string> = {
+  bank_transfer: "Bank Transfer",
+  cash: "Cash",
+  cheque: "Cheque",
+};
+
+function eventDayParts(iso: string) {
+  const d = new Date(iso);
+  return { day: d.getDate(), month: d.toLocaleDateString("en-US", { month: "short" }) };
+}
+
+function formatEventTime(iso: string) {
+  return new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+}
+
+function daysUntil(iso: string) {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const d = new Date(iso);
+  d.setHours(0, 0, 0, 0);
+  return Math.round((d.getTime() - now.getTime()) / 86_400_000);
+}
+
+function countdownLabel(n: number) {
+  if (n <= 0) return "Today";
+  if (n === 1) return "Starts Tomorrow";
+  return `Starts in ${n} Days`;
+}
+
+function collectionStatus(total: number, paid: number): "Collected" | "Partial" | "Pending" {
+  if (total > 0 && paid >= total) return "Collected";
+  if (paid > 0) return "Partial";
+  return "Pending";
+}
+
 export default function Dashboard() {
+  const [, navigate] = useLocation();
   const currentMonth = getCurrentMonth();
 
   const today = new Date();
@@ -60,6 +102,53 @@ export default function Dashboard() {
       .filter((t) => t.recruits > 0)
       .sort((a, b) => b.recruits - a.recruits)
       .slice(0, 5);
+  }, [members]);
+
+  // Upcoming Events — real records, future-dated, sorted by nearest date.
+  const { data: eventsData, isLoading: isLoadingEvents } = useListEvents({
+    sort: "dateAsc",
+    pageSize: 200,
+  });
+  const upcomingEvents = useMemo(() => {
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    return (eventsData?.items ?? [])
+      .filter(
+        (e) =>
+          e.eventDate &&
+          e.status !== "cancelled" &&
+          e.status !== "completed" &&
+          new Date(e.eventDate) >= startOfToday,
+      )
+      .sort((a, b) => new Date(a.eventDate!).getTime() - new Date(b.eventDate!).getTime())
+      .slice(0, 5);
+  }, [eventsData]);
+
+  // Top Sponsors & Collection Responsibility — real sponsor records.
+  const { data: sponsorsData, isLoading: isLoadingSponsors } = useListSponsors({
+    sort: "totalDesc",
+    pageSize: 200,
+  });
+  const sponsors = sponsorsData?.items ?? [];
+  const sponsorSummary = useMemo(() => {
+    let committed = 0;
+    let collected = 0;
+    for (const s of sponsors) {
+      committed += s.totalAmount;
+      collected += s.paidAmount;
+    }
+    return { committed, collected, outstanding: Math.max(committed - collected, 0) };
+  }, [sponsors]);
+  const topSponsors = useMemo(
+    () => [...sponsors].sort((a, b) => b.totalAmount - a.totalAmount).slice(0, 5),
+    [sponsors],
+  );
+
+  // Map committee member names → ids so "Assigned To" links to member profiles.
+  const memberIdByName = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const mem of members || []) map.set(mem.fullName.trim().toLowerCase(), mem.id);
+    return map;
   }, [members]);
 
   const monthlyCollection = financialSummary?.members.collectedThisMonth ?? 0;
@@ -213,6 +302,246 @@ export default function Dashboard() {
                 </li>
               ))}
             </ol>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Upcoming Events — real future-dated event records */}
+      <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+          <div>
+            <CardTitle className="text-base text-green-950 dark:text-green-100 flex items-center gap-2">
+              <CalendarClock className="h-4 w-4 text-green-700 dark:text-green-400" />
+              Upcoming Events
+            </CardTitle>
+            <CardDescription className="dark:text-slate-400">
+              Next scheduled DKMO events, sorted by nearest date
+            </CardDescription>
+          </div>
+          <Link
+            href="/events"
+            className="text-sm text-green-800 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300 font-medium inline-flex items-center gap-1 shrink-0"
+            data-testid="link-view-all-events"
+          >
+            View All Events <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </CardHeader>
+        <CardContent>
+          {isLoadingEvents ? (
+            <div className="space-y-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-16 w-full" />
+              ))}
+            </div>
+          ) : upcomingEvents.length === 0 ? (
+            <div className="py-8 text-center">
+              <CalendarClock className="h-8 w-8 mx-auto text-green-300 dark:text-slate-600 mb-2" />
+              <p className="text-sm text-green-700/70 dark:text-slate-500">No Upcoming Events Scheduled</p>
+            </div>
+          ) : (
+            <ul className="space-y-2">
+              {upcomingEvents.map((e) => {
+                const n = daysUntil(e.eventDate!);
+                const soon = n <= 7;
+                const parts = eventDayParts(e.eventDate!);
+                return (
+                  <li key={e.id}>
+                    <Link
+                      href={`/events/${e.id}`}
+                      data-testid={`event-${e.id}`}
+                      className={
+                        "flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-colors " +
+                        (soon
+                          ? "border-amber-200 bg-amber-50/60 hover:bg-amber-50 dark:border-amber-900/40 dark:bg-amber-900/10 dark:hover:bg-amber-900/20"
+                          : "border-green-100 bg-green-50/40 hover:bg-green-50 dark:border-slate-800 dark:bg-slate-800/40 dark:hover:bg-slate-800")
+                      }
+                    >
+                      <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-lg bg-green-100 text-green-800 dark:bg-slate-800 dark:text-green-300">
+                        <span className="text-base font-bold leading-none">{parts.day}</span>
+                        <span className="text-[10px] font-medium uppercase">{parts.month}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-green-950 dark:text-green-100 truncate">{e.name}</p>
+                        <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-green-700/70 dark:text-slate-500">
+                          <span className="inline-flex items-center gap-1">
+                            <Clock className="h-3 w-3 shrink-0" />
+                            {formatEventTime(e.eventDate!)}
+                          </span>
+                          {e.location && (
+                            <span className="inline-flex items-center gap-1 min-w-0">
+                              <MapPin className="h-3 w-3 shrink-0" />
+                              <span className="truncate">{e.location}</span>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex shrink-0 flex-col items-end gap-1">
+                        <span
+                          className={
+                            "rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap " +
+                            (n <= 0
+                              ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
+                              : soon
+                                ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                                : "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300")
+                          }
+                        >
+                          {countdownLabel(n)}
+                        </span>
+                        <span className="text-[11px] text-green-700/60 dark:text-slate-500">
+                          {n <= 0 ? "Today" : "Upcoming"}
+                        </span>
+                      </div>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Top Sponsors & Collection Responsibility — real sponsor records */}
+      <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+          <div>
+            <CardTitle className="text-base text-green-950 dark:text-green-100 flex items-center gap-2">
+              <HandCoins className="h-4 w-4 text-green-700 dark:text-green-400" />
+              Top Sponsors &amp; Collection Responsibility
+            </CardTitle>
+            <CardDescription className="dark:text-slate-400">
+              Sponsorship commitments and collection accountability
+            </CardDescription>
+          </div>
+          <Link
+            href="/sponsors"
+            className="text-sm text-green-800 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300 font-medium inline-flex items-center gap-1 shrink-0"
+            data-testid="link-view-all-sponsors"
+          >
+            View All Sponsors <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {isLoadingSponsors ? (
+            <div className="space-y-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-24 w-full" />
+              ))}
+            </div>
+          ) : topSponsors.length === 0 ? (
+            <div className="py-8 text-center">
+              <HandCoins className="h-8 w-8 mx-auto text-green-300 dark:text-slate-600 mb-2" />
+              <p className="text-sm text-green-700/70 dark:text-slate-500">No Sponsors Recorded Yet</p>
+            </div>
+          ) : (
+            <>
+              {/* Summary */}
+              <div className="grid grid-cols-3 gap-2">
+                <div className="rounded-xl border border-green-100 dark:border-slate-800 bg-green-50/40 dark:bg-slate-800/40 px-3 py-2">
+                  <p className="text-[11px] text-green-700/70 dark:text-slate-500">Total Committed</p>
+                  <p className="text-sm font-bold text-green-950 dark:text-green-100 tabular-nums">
+                    {formatSAR(sponsorSummary.committed)}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-green-100 dark:border-slate-800 bg-green-50/40 dark:bg-slate-800/40 px-3 py-2">
+                  <p className="text-[11px] text-green-700/70 dark:text-slate-500">Total Collected</p>
+                  <p className="text-sm font-bold text-green-700 dark:text-green-400 tabular-nums">
+                    {formatSAR(sponsorSummary.collected)}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-amber-100 dark:border-amber-900/40 bg-amber-50/40 dark:bg-amber-900/10 px-3 py-2">
+                  <p className="text-[11px] text-amber-700/80 dark:text-amber-500/80">Outstanding</p>
+                  <p className="text-sm font-bold text-amber-700 dark:text-amber-400 tabular-nums">
+                    {formatSAR(sponsorSummary.outstanding)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Top sponsors */}
+              <ul className="space-y-2">
+                {topSponsors.map((s) => {
+                  const cs = collectionStatus(s.totalAmount, s.paidAmount);
+                  const memId = memberIdByName.get(s.assignedStaff.trim().toLowerCase());
+                  const statusClass =
+                    cs === "Collected"
+                      ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
+                      : cs === "Partial"
+                        ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                        : "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300";
+                  return (
+                    <li key={s.id}>
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => navigate(`/sponsors/${s.id}`)}
+                        onKeyDown={(ev) => {
+                          if (ev.target !== ev.currentTarget) return;
+                          if (ev.key === "Enter" || ev.key === " ") {
+                            ev.preventDefault();
+                            navigate(`/sponsors/${s.id}`);
+                          }
+                        }}
+                        data-testid={`sponsor-${s.id}`}
+                        className="cursor-pointer rounded-xl border border-green-100 dark:border-slate-800 bg-green-50/40 dark:bg-slate-800/40 px-3 py-2.5 transition-colors hover:bg-green-50 dark:hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-green-950 dark:text-green-100 truncate">
+                              {s.sponsorName}
+                            </p>
+                            <p className="text-xs text-green-700/70 dark:text-slate-500">
+                              {TRANSFER_METHOD_LABELS[s.transferMethod] ?? s.transferMethod}
+                            </p>
+                          </div>
+                          <span
+                            className={"rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap " + statusClass}
+                          >
+                            {cs}
+                          </span>
+                        </div>
+                        <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
+                          <div>
+                            <p className="text-green-700/60 dark:text-slate-500">Committed</p>
+                            <p className="font-semibold text-green-950 dark:text-green-100 tabular-nums">
+                              {formatSAR(s.totalAmount)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-green-700/60 dark:text-slate-500">Collected</p>
+                            <p className="font-semibold text-green-700 dark:text-green-400 tabular-nums">
+                              {formatSAR(s.paidAmount)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-green-700/60 dark:text-slate-500">Balance</p>
+                            <p className="font-semibold text-amber-700 dark:text-amber-400 tabular-nums">
+                              {formatSAR(s.pendingAmount)}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="mt-2 flex items-center gap-1.5 text-xs text-green-700/70 dark:text-slate-500">
+                          <span>Assigned to:</span>
+                          {memId ? (
+                            <Link
+                              href={`/members/${memId}`}
+                              onClick={(ev) => ev.stopPropagation()}
+                              className="font-medium text-green-800 dark:text-green-400 hover:underline"
+                              data-testid={`sponsor-assigned-${s.id}`}
+                            >
+                              {s.assignedStaff}
+                            </Link>
+                          ) : (
+                            <span className="font-medium text-green-900 dark:text-slate-300">
+                              {s.assignedStaff || "Unassigned"}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
           )}
         </CardContent>
       </Card>

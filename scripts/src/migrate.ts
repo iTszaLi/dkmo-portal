@@ -206,7 +206,6 @@ async function main() {
       ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'paid',
       ADD COLUMN IF NOT EXISTS due_date TIMESTAMPTZ;
 
-    ALTER TABLE payments ALTER COLUMN month DROP NOT NULL;
     ALTER TABLE payments DROP COLUMN IF EXISTS month;
 
     ALTER TABLE frf_claims
@@ -373,6 +372,11 @@ async function main() {
       RETURN 'DKMO-' || LPAD(seq::TEXT, 4, '0');
     END;
     $$ LANGUAGE plpgsql;
+  `);
+
+  await pool.query(`
+    ALTER TABLE sponsors
+      ADD COLUMN IF NOT EXISTS transfer_method TEXT NOT NULL DEFAULT 'bank_transfer';
   `);
 
   console.log("✅  All tables created.");

@@ -1637,6 +1637,9 @@ components:
         status:
           type: string
           enum: [pending, partial, paid, overdue]
+        transferMethod:
+          type: string
+          enum: [bank_transfer, cash, cheque]
         assignedStaff: { type: string }
         linkedEvent: { type: string }
         dueDate:
@@ -1657,6 +1660,7 @@ components:
         - paidAmount
         - pendingAmount
         - status
+        - transferMethod
         - assignedStaff
         - linkedEvent
         - notes
@@ -1679,6 +1683,9 @@ components:
         status:
           type: string
           enum: [pending, partial, paid, overdue]
+        transferMethod:
+          type: string
+          enum: [bank_transfer, cash, cheque]
         assignedStaff: { type: string }
         linkedEvent: { type: string }
         dueDate:

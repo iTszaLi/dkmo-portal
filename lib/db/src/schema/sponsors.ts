@@ -17,6 +17,7 @@ export const sponsorsTable = pgTable("sponsors", {
     .notNull()
     .default("0"),
   status: text("status").notNull().default("pending"),
+  transferMethod: text("transfer_method").notNull().default("bank_transfer"),
   assignedStaff: text("assigned_staff").notNull().default(""),
   linkedEvent: text("linked_event").notNull().default(""),
   dueDate: timestamp("due_date", { withTimezone: true }),

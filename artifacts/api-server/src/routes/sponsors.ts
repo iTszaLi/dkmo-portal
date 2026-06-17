@@ -8,6 +8,7 @@ const router: IRouter = Router();
 
 const TIERS = ["platinum", "gold", "silver", "bronze"] as const;
 const STATUSES = ["pending", "partial", "paid", "overdue"] as const;
+const TRANSFER_METHODS = ["bank_transfer", "cash", "cheque"] as const;
 
 const SponsorInputSchema = z.object({
   sponsorName: z.string().min(1, "Sponsor name is required"),
@@ -19,6 +20,7 @@ const SponsorInputSchema = z.object({
   totalAmount: z.coerce.number().nonnegative().default(0),
   paidAmount: z.coerce.number().nonnegative().default(0),
   status: z.enum(STATUSES).default("pending"),
+  transferMethod: z.enum(TRANSFER_METHODS).default("bank_transfer"),
   assignedStaff: z.string().default(""),
   linkedEvent: z.string().default(""),
   dueDate: z.string().datetime().nullable().optional(),
@@ -52,6 +54,7 @@ function rowToApi(r: typeof sponsorsTable.$inferSelect) {
     paidAmount: paid,
     pendingAmount: pending,
     status: r.status,
+    transferMethod: r.transferMethod,
     assignedStaff: r.assignedStaff,
     linkedEvent: r.linkedEvent,
     dueDate: r.dueDate ? r.dueDate.toISOString() : null,
@@ -155,6 +158,7 @@ router.post(
         totalAmount: String(data.totalAmount),
         paidAmount: String(data.paidAmount),
         status: data.status,
+        transferMethod: data.transferMethod,
         assignedStaff: data.assignedStaff,
         linkedEvent: data.linkedEvent,
         dueDate: data.dueDate ? new Date(data.dueDate) : null,
@@ -191,6 +195,7 @@ router.put(
     if (d.totalAmount !== undefined) updates.totalAmount = String(d.totalAmount);
     if (d.paidAmount !== undefined) updates.paidAmount = String(d.paidAmount);
     if (d.status !== undefined) updates.status = d.status;
+    if (d.transferMethod !== undefined) updates.transferMethod = d.transferMethod;
     if (d.assignedStaff !== undefined) updates.assignedStaff = d.assignedStaff;
     if (d.linkedEvent !== undefined) updates.linkedEvent = d.linkedEvent;
     if (d.dueDate !== undefined) updates.dueDate = d.dueDate ? new Date(d.dueDate) : null;
