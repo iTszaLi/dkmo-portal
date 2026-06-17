@@ -1,0 +1,75 @@
+Existing Committee Members
+
+The following 29 individuals are already valid DKMO members and should be treated as fully registered members:
+
+Membership Fee Status: PAID
+Membership Status: ACTIVE
+FRF Status: ACTIVE
+Member Records: Existing (Do Not Create Duplicates)
+
+The system must not create duplicate member records for any of the following committee members:
+
+Fazlurrahman Kolkar – President
+Asif Kannur – Vice President
+Irshad Bajpe – General Secretary
+Abdul Rahiman Sulaiman – Treasurer
+Sameen Khan Ummer – Joint Secretary
+Abdul Azeez Bajpe – Overseas Convenor
+Salman Noor – Advisor
+G.K. Shaikh – Advisor
+Haneef B.K. – Advisor
+Ghani Ahmed Mulki – Loan Convenor
+Shamsuddin Addoor – Loan Convenor (Recovery)
+Yousuf Addoor – Auditor
+Irfan Shaikh – Verification Team Leader
+Ashraf Kozhikan – Event Organizer
+Shareef Thokur – Event Organizer
+Hameed Nazeer – Event Organizer
+Nazeer Hassan – Event Organizer
+Sadiq Ahmed Udupi – Employment Scheme
+Akhil Ganjimutt – Employment Scheme
+Ashraf Sheikh Koteshwar – FRF Convenor
+Mohammed Haris Byndoor – FRF Convenor
+Haneef N.S. – Executive Member
+Zia Ganjimutt – Executive Member
+Razik Bajpe – Executive Member
+Yousuf Kalanjibail – Executive Member
+Shaul Hameed – Executive Member
+Nayaz Ahmed – Executive Member
+Abdul Majeed Vittal – Executive Member
+Rafee Hameed Uchchila – Executive Member
+Referral Structure
+
+Do NOT place any Committee Member or Executive Member under another Committee Member or Executive Member.
+
+Instead:
+
+Keep all committee/executive members as top-level members.
+Under each of the above members, create approximately 5 unique regular members as referred members.
+These referred members should be realistic sample members with unique names, member IDs, application numbers, mobile numbers, and member records.
+No duplicate sample members should exist anywhere in the database.
+The same sample member must never appear under more than one reference member.
+Additional Sample Members
+
+In addition to the referral members above, create 10 completely separate standalone DKMO members with unique data for testing.
+
+Requirements:
+
+Unique names
+Unique member IDs
+Unique application numbers
+Unique mobile numbers
+Unique Iqama numbers
+Active membership status
+Membership fee marked as PAID
+FRF status ACTIVE
+Display Requirements
+
+When opening any committee/executive member profile, show:
+
+Total Members Under Reference
+List of Members Under Reference
+Member Details for each referred member
+Total FRF Responsibility Amount (Member Count × SAR 50)
+
+The goal is to simulate a realistic DKMO membership structure while ensuring there are no duplicate committee members, no duplicate referrals, and all committee members remain active paid members in the system.
