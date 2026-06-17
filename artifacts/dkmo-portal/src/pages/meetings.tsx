@@ -65,26 +65,33 @@ async function loadImageAsBase64(url: string): Promise<string> {
   }
 }
 
-const EXECUTIVE_ROLES = new Set([
-  "president",
-  "vice president",
-  "general secretary",
-  "secretary",
-  "joint secretary",
-  "treasurer",
-  "joint treasurer",
+// Executive members are an explicit subset of the core committee (the office
+// bearers + key convenors). Identified by name because the same designation
+// (e.g. "Advisor") can belong to both executive and non-executive members.
+const EXECUTIVE_NAMES = new Set([
+  "Fazlurrahman Kolkar",
+  "Asif Kannur",
+  "Irshad Bajpe",
+  "Abdul Rahiman Sulaiman",
+  "Abdul Azeez Bajpe",
+  "Salman Noor",
+  "G.K. Shaikh",
+  "Ghani Ahmed Mulki",
 ]);
 
-type MemberType = "executive" | "core" | "none";
+function isExecutiveMember(m: { fullName?: string | null }): boolean {
+  return EXECUTIVE_NAMES.has((m.fullName ?? "").trim());
+}
 
-function classifyDesignation(designation: string | undefined | null): MemberType {
-  const d = (designation ?? "").trim();
-  if (!d) return "none";
-  if (EXECUTIVE_ROLES.has(d.toLowerCase())) return "executive";
-  return "core";
+// Core committee = any member holding a real committee role (i.e. not a plain
+// "Member"). Executives are a subset of this group.
+function isCommitteeMember(m: { designation?: string | null }): boolean {
+  const d = (m.designation ?? "").trim();
+  return d !== "" && d.toLowerCase() !== "member";
 }
 
 type TypeFilter = "all" | "executive" | "core";
+type MemberView = "total" | "executive" | "core" | null;
 
 export default function Meetings() {
   const { toast } = useToast();
@@ -113,23 +120,43 @@ export default function Meetings() {
   }, [meetings]);
 
   // ── header stats ──────────────────────────────────────────────────────────
+  // Executives are a subset of the core committee, so a member can be counted in
+  // both the "Executive" and "Core Committee" cards.
   const memberStats = useMemo(() => {
     const list: Member[] = members ?? [];
     let executive = 0;
     let core = 0;
     for (const m of list) {
-      const t = classifyDesignation(m.designation);
-      if (t === "executive") executive += 1;
-      else if (t === "core") core += 1;
+      if (isExecutiveMember(m)) executive += 1;
+      if (isCommitteeMember(m)) core += 1;
     }
     return { total: list.length, executive, core };
   }, [members]);
 
-  const memberTypeById = useMemo(() => {
-    const map = new Map<string, MemberType>();
-    for (const m of members ?? []) map.set(m.id, classifyDesignation(m.designation));
-    return map;
+  const executiveIds = useMemo(() => {
+    const s = new Set<string>();
+    for (const m of members ?? []) if (isExecutiveMember(m)) s.add(m.id);
+    return s;
   }, [members]);
+
+  const committeeIds = useMemo(() => {
+    const s = new Set<string>();
+    for (const m of members ?? []) if (isCommitteeMember(m)) s.add(m.id);
+    return s;
+  }, [members]);
+
+  // ── clickable summary cards → member list ───────────────────────────────────
+  const [memberView, setMemberView] = useState<MemberView>(null);
+  const toggleMemberView = (v: Exclude<MemberView, null>) =>
+    setMemberView((prev) => (prev === v ? null : v));
+
+  const viewMembers = useMemo(() => {
+    const list: Member[] = members ?? [];
+    if (memberView === "executive") return list.filter(isExecutiveMember);
+    if (memberView === "core") return list.filter(isCommitteeMember);
+    if (memberView === "total") return list;
+    return [];
+  }, [members, memberView]);
 
   // ── create / edit dialog ────────────────────────────────────────────────────
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -255,14 +282,13 @@ export default function Meetings() {
         r.fullName.toLowerCase().includes(q) ||
         r.membershipId.toLowerCase().includes(q) ||
         r.mobileNumber.toLowerCase().includes(q);
-      const t = memberTypeById.get(r.memberId) ?? "none";
       const matchesType =
         typeFilter === "all" ||
-        (typeFilter === "executive" && t === "executive") ||
-        (typeFilter === "core" && t === "core");
+        (typeFilter === "executive" && executiveIds.has(r.memberId)) ||
+        (typeFilter === "core" && committeeIds.has(r.memberId));
       return matchesSearch && matchesType;
     });
-  }, [detail, search, typeFilter, memberTypeById]);
+  }, [detail, search, typeFilter, executiveIds, committeeIds]);
 
   const liveTotals = useMemo(() => {
     const rows = detail?.attendance ?? [];
@@ -419,12 +445,117 @@ export default function Meetings() {
         </Button>
       </div>
 
-      {/* Header summary cards */}
+      {/* Header summary cards — click to view that group's members */}
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
-        <StatCard icon={Users} label="Total Members" value={memberStats.total} accent="text-green-700 dark:text-green-400" />
-        <StatCard icon={Crown} label="Executive Members" value={memberStats.executive} accent="text-amber-600 dark:text-amber-400" />
-        <StatCard icon={ShieldCheck} label="Core Committee Members" value={memberStats.core} accent="text-emerald-700 dark:text-emerald-400" />
+        <StatCard
+          icon={Users}
+          label="Total Members"
+          value={memberStats.total}
+          accent="text-green-700 dark:text-green-400"
+          active={memberView === "total"}
+          onClick={() => toggleMemberView("total")}
+        />
+        <StatCard
+          icon={Crown}
+          label="Executive Members"
+          value={memberStats.executive}
+          accent="text-amber-600 dark:text-amber-400"
+          active={memberView === "executive"}
+          onClick={() => toggleMemberView("executive")}
+        />
+        <StatCard
+          icon={ShieldCheck}
+          label="Core Committee Members"
+          value={memberStats.core}
+          accent="text-emerald-700 dark:text-emerald-400"
+          active={memberView === "core"}
+          onClick={() => toggleMemberView("core")}
+        />
       </div>
+
+      {/* Member list for the selected card */}
+      {memberView ? (
+        <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+          <CardHeader>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <CardTitle className="text-base text-green-950 dark:text-green-100 flex items-center gap-2">
+                  {memberView === "total" ? (
+                    <Users className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  ) : memberView === "executive" ? (
+                    <Crown className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                  ) : (
+                    <ShieldCheck className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
+                  )}
+                  {memberView === "total"
+                    ? "All Members"
+                    : memberView === "executive"
+                      ? "Executive Members"
+                      : "Core Committee Members"}
+                  <span className="text-green-700/60 dark:text-slate-500 font-normal">
+                    ({viewMembers.length})
+                  </span>
+                </CardTitle>
+                <CardDescription className="dark:text-slate-400">
+                  {memberView === "executive"
+                    ? "Office bearers and key convenors of DKMO."
+                    : memberView === "core"
+                      ? "All committee members holding a designated role."
+                      : "Every registered DKMO member."}
+                </CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setMemberView(null)}
+                className="border-green-200 dark:border-slate-700 text-green-700 dark:text-slate-300 hover:bg-green-50 dark:hover:bg-slate-800"
+                data-testid="button-close-member-list"
+              >
+                <XCircle className="mr-1.5 h-3.5 w-3.5" /> Close
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {viewMembers.length === 0 ? (
+              <p className="py-8 text-center text-sm text-green-700/70 dark:text-slate-500">
+                No members in this group.
+              </p>
+            ) : (
+              <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                {viewMembers.map((m) => (
+                  <div
+                    key={m.id}
+                    data-testid={`member-card-${m.id}`}
+                    className="rounded-xl border border-green-100 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-3"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-semibold text-green-950 dark:text-slate-100 leading-snug">
+                        {m.fullName}
+                      </p>
+                      {isExecutiveMember(m) ? (
+                        <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-2 py-0.5 text-[10px] font-medium">
+                          <Crown className="h-3 w-3" /> Exec
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="text-xs text-green-700/80 dark:text-slate-400 mt-0.5">
+                      {m.designation?.trim() ? m.designation : "Member"}
+                    </p>
+                    <div className="mt-2 space-y-1 text-xs text-green-700/70 dark:text-slate-500">
+                      <p className="font-medium text-green-800 dark:text-slate-400">{m.membershipId}</p>
+                      <p className="flex items-center gap-1.5">
+                        <MapPin className="h-3 w-3" />
+                        {[m.city, m.country].filter(Boolean).join(", ") || "—"}
+                      </p>
+                      <p>{m.mobileNumber}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ) : null}
 
       {/* Attendance History */}
       <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
@@ -798,20 +929,53 @@ function StatCard({
   label,
   value,
   accent,
+  active = false,
+  onClick,
 }: {
   icon: typeof Users;
   label: string;
   value: number;
   accent: string;
+  active?: boolean;
+  onClick?: () => void;
 }) {
+  const clickable = typeof onClick === "function";
   return (
-    <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+    <Card
+      role={clickable ? "button" : undefined}
+      aria-pressed={clickable ? active : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={
+        clickable
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onClick?.();
+              }
+            }
+          : undefined
+      }
+      data-testid={`card-stat-${label.toLowerCase().replace(/\s+/g, "-")}`}
+      className={cn(
+        "rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm",
+        clickable &&
+          "cursor-pointer transition-all hover:shadow-md hover:border-green-300 dark:hover:border-green-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500/40",
+        active &&
+          "border-green-400 dark:border-green-600 ring-2 ring-green-500/40 bg-green-50/60 dark:bg-green-900/20",
+      )}
+    >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-xs font-medium text-green-900 dark:text-slate-300">{label}</CardTitle>
         <Icon className={`h-4 w-4 ${accent}`} />
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold text-green-950 dark:text-white">{value}</div>
+        {clickable ? (
+          <p className="mt-1 text-[11px] text-green-700/60 dark:text-slate-500">
+            {active ? "Showing list below" : "Click to view list"}
+          </p>
+        ) : null}
       </CardContent>
     </Card>
   );

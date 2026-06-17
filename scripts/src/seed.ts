@@ -376,12 +376,15 @@ async function main() {
   //    (not a uniform count). Some committee members intentionally have 0
   //    referrals to prove the leaderboard shows 0 when no referrals exist.
   //    Each generated person appears under exactly one reference.
+  // Keep the demo dataset small & clean: only a handful of referred members so
+  // the recruitment leaderboard still shows a real (varied) ranking. Total
+  // members stay at 40 (29 committee + 8 referred + 3 standalone).
   const REFERRAL_DISTRIBUTION = [
-    23, 18, 15, 13, 12, 10, 9, 8, 7, 6, 6, 5, 5, 4, 4, 3, 3, 2, 2, 1, 1, 0, 2,
-    1, 0, 3, 1, 0, 2, 1,
+    3, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0,
   ];
   const referralCountFor = (ci: number): number =>
-    REFERRAL_DISTRIBUTION[ci] ?? (ci % 4 === 0 ? 0 : (ci % 3) + 1);
+    REFERRAL_DISTRIBUTION[ci] ?? 0;
   let refIdx = 0;
   memberRows.forEach((committee, ci) => {
     const count = referralCountFor(ci);
@@ -415,9 +418,9 @@ async function main() {
     }
   });
 
-  // 3) Standalone members — 10 independent members (no reference), PAID + ACTIVE
+  // 3) Standalone members — 3 independent members (no reference), PAID + ACTIVE
   //    membership and ACTIVE FRF.
-  for (let s = 0; s < 10; s++) {
+  for (let s = 0; s < 3; s++) {
     const person = nextPerson();
     allRows.push({
       fullName: person.fullName,
@@ -544,7 +547,7 @@ async function main() {
   // ── Receipts (official DKMO receipts) ─────────────────────────────────────
   console.log("  ↳ inserting receipts…");
   const jamaaths = ["Bajpe Masjid Jamaath", "Mangalore Jumma Masjid", "Mulki Jame Masjid", "Udupi Masjid", "Koteshwar Jamaath", "Addoor Masjid Jamaath", "Vittal Jame Masjid"];
-  const receiptData = insertedMembers.slice(0, 30).map((mem, i) => {
+  const receiptData = insertedMembers.slice(0, 20).map((mem, i) => {
     const roll = i % 5;
     const pt = {
       lifeMembership: roll === 0,
@@ -623,9 +626,13 @@ async function main() {
     }
   });
 
-  // FRF contributions: every active member is liable SAR 50 per approved claim event
+  // FRF contributions: every active member is liable SAR 50 per approved claim
+  // event. For a clean demo we only generate contributions for the 2 most recent
+  // approved claims so the receipts list stays small and realistic.
   let frfSeq = 1;
-  const approvedClaims = insertedClaims.filter((c) => c.status === "approved");
+  const approvedClaims = insertedClaims
+    .filter((c) => c.status === "approved")
+    .slice(0, 2);
   approvedClaims.forEach((claim, ci) => {
     insertedMembers.forEach((mem, mi) => {
       if (mem.frfStatus !== "active") return;
