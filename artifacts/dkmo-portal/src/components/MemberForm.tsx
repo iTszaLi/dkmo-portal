@@ -11,6 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { MemberInput } from "@workspace/api-client-react";
 import { MemberRefPicker, type MemberRefEntry } from "@/components/MemberRefPicker";
 import { useEffect, useState } from "react";
@@ -255,10 +256,10 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
             </FormItem>
           )}
         />
-        <FormItem>
-          <FormLabel>Reference Member — Who referred this member?</FormLabel>
+        <div className="space-y-2">
+          <Label>Reference Member — Who referred this member?</Label>
           <MemberRefPicker value={refMember} onChange={setRefMember} />
-        </FormItem>
+        </div>
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
