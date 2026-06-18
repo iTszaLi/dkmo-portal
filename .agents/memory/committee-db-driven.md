@@ -21,6 +21,11 @@ removing one membership must never change the other or the role.
 - Shared helpers live in `artifacts/dkmo-portal/src/lib/committee.ts` (badge classes,
   designation→department map, initials). No normalize/isCommitteeLevel/isExecutiveLevel.
 - Badges render independently in order ROLE | EXECUTIVE COMMITTEE (gold) | CORE COMMITTEE (silver).
+- Badge dedup rule (MemberBadges): generic designations "Member" and "Executive Member" are
+  NEVER shown as a role badge — they merely restate committee membership and produced confusing
+  "EXECUTIVE MEMBER" + "EXECUTIVE COMMITTEE" pairs. A single "MEMBER" fallback badge shows only
+  when a member has no distinct role AND no committee. Distinct roles (President, Treasurer, etc.)
+  still render alongside committee badges.
 - Toggling goes through `PATCH /members/:id/committee-status` with a partial body
   ({ isExecutiveCommittee? , isCoreCommittee? }); only provided flags change. Audit action
   `member_committee_status_updated`; UI uses generated `useUpdateMemberCommitteeStatus`.
