@@ -45,7 +45,8 @@ export const ListMembersResponseItem = zod.object({
   city: zod.string(),
   country: zod.string(),
   designation: zod.string(),
-  committeeLevel: zod.enum(["regular", "core", "executive"]),
+  isExecutiveCommittee: zod.boolean(),
+  isCoreCommittee: zod.boolean(),
   membershipFee: zod.number(),
   feeStatus: zod.enum(["paid", "pending", "unpaid"]),
   feePaidAt: zod.coerce.date().nullable(),
@@ -77,7 +78,8 @@ export const CreateMemberBody = zod.object({
   city: zod.string().optional(),
   country: zod.string().optional(),
   designation: zod.string().optional(),
-  committeeLevel: zod.enum(["regular", "core", "executive"]).optional(),
+  isExecutiveCommittee: zod.boolean().optional(),
+  isCoreCommittee: zod.boolean().optional(),
   membershipFee: zod.number().optional(),
   feeStatus: zod.enum(["paid", "pending", "unpaid"]).optional(),
   frfStatus: zod.enum(["active", "suspended", "inactive"]).optional(),
@@ -103,7 +105,8 @@ export const GetMemberResponse = zod.object({
   city: zod.string(),
   country: zod.string(),
   designation: zod.string(),
-  committeeLevel: zod.enum(["regular", "core", "executive"]),
+  isExecutiveCommittee: zod.boolean(),
+  isCoreCommittee: zod.boolean(),
   membershipFee: zod.number(),
   feeStatus: zod.enum(["paid", "pending", "unpaid"]),
   feePaidAt: zod.coerce.date().nullable(),
@@ -137,7 +140,8 @@ export const UpdateMemberBody = zod.object({
   city: zod.string().optional(),
   country: zod.string().optional(),
   designation: zod.string().optional(),
-  committeeLevel: zod.enum(["regular", "core", "executive"]).optional(),
+  isExecutiveCommittee: zod.boolean().optional(),
+  isCoreCommittee: zod.boolean().optional(),
   membershipFee: zod.number().optional(),
   feeStatus: zod.enum(["paid", "pending", "unpaid"]).optional(),
   frfStatus: zod.enum(["active", "suspended", "inactive"]).optional(),
@@ -156,7 +160,8 @@ export const UpdateMemberResponse = zod.object({
   city: zod.string(),
   country: zod.string(),
   designation: zod.string(),
-  committeeLevel: zod.enum(["regular", "core", "executive"]),
+  isExecutiveCommittee: zod.boolean(),
+  isCoreCommittee: zod.boolean(),
   membershipFee: zod.number(),
   feeStatus: zod.enum(["paid", "pending", "unpaid"]),
   feePaidAt: zod.coerce.date().nullable(),
@@ -197,7 +202,8 @@ export const UpdateMemberFeeStatusResponse = zod.object({
   city: zod.string(),
   country: zod.string(),
   designation: zod.string(),
-  committeeLevel: zod.enum(["regular", "core", "executive"]),
+  isExecutiveCommittee: zod.boolean(),
+  isCoreCommittee: zod.boolean(),
   membershipFee: zod.number(),
   feeStatus: zod.enum(["paid", "pending", "unpaid"]),
   feePaidAt: zod.coerce.date().nullable(),
@@ -210,17 +216,22 @@ export const UpdateMemberFeeStatusResponse = zod.object({
 });
 
 /**
- * @summary Update a member's committee level (Regular / Core / Executive)
+ * @summary Update a member's committee membership. Executive Committee and Core Committee are fully independent; only the provided flags are changed.
  */
-export const UpdateMemberCommitteeLevelParams = zod.object({
+export const UpdateMemberCommitteeStatusParams = zod.object({
   id: zod.coerce.string(),
 });
 
-export const UpdateMemberCommitteeLevelBody = zod.object({
-  committeeLevel: zod.enum(["regular", "core", "executive"]),
-});
+export const UpdateMemberCommitteeStatusBody = zod
+  .object({
+    isExecutiveCommittee: zod.boolean().optional(),
+    isCoreCommittee: zod.boolean().optional(),
+  })
+  .describe(
+    "Partial update of a member's committee membership. Executive Committee and Core Committee are independent; supply only the flag you want to change. Omitting a flag leaves it untouched.",
+  );
 
-export const UpdateMemberCommitteeLevelResponse = zod.object({
+export const UpdateMemberCommitteeStatusResponse = zod.object({
   id: zod.string(),
   fullName: zod.string(),
   mobileNumber: zod.string(),
@@ -231,7 +242,8 @@ export const UpdateMemberCommitteeLevelResponse = zod.object({
   city: zod.string(),
   country: zod.string(),
   designation: zod.string(),
-  committeeLevel: zod.enum(["regular", "core", "executive"]),
+  isExecutiveCommittee: zod.boolean(),
+  isCoreCommittee: zod.boolean(),
   membershipFee: zod.number(),
   feeStatus: zod.enum(["paid", "pending", "unpaid"]),
   feePaidAt: zod.coerce.date().nullable(),

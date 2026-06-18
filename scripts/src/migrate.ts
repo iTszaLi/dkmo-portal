@@ -379,9 +379,27 @@ async function main() {
       ADD COLUMN IF NOT EXISTS transfer_method TEXT NOT NULL DEFAULT 'bank_transfer';
   `);
 
+  // Replace the single committee_level enum with two fully independent boolean
+  // flags. Add the columns, backfill from the legacy column (executive members
+  // were also part of the core committee), then drop the legacy column.
   await pool.query(`
     ALTER TABLE members
-      ADD COLUMN IF NOT EXISTS committee_level TEXT NOT NULL DEFAULT 'regular';
+      ADD COLUMN IF NOT EXISTS is_executive_committee BOOLEAN NOT NULL DEFAULT false,
+      ADD COLUMN IF NOT EXISTS is_core_committee BOOLEAN NOT NULL DEFAULT false;
+  `);
+  await pool.query(`
+    DO $$
+    BEGIN
+      IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'members' AND column_name = 'committee_level'
+      ) THEN
+        UPDATE members SET
+          is_executive_committee = (committee_level = 'executive'),
+          is_core_committee = (committee_level IN ('executive', 'core'));
+        ALTER TABLE members DROP COLUMN committee_level;
+      END IF;
+    END $$;
   `);
 
   console.log("✅  All tables created.");

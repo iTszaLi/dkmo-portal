@@ -1,0 +1,137 @@
+### Committee Management Enhancement
+
+Please update the **Add Member** and **Edit Member** forms.
+
+#### Replace Current Committee Level Field
+
+Currently there is only one **Committee Level** dropdown:
+
+* Regular Member
+* Core Committee Member
+* Executive Member
+
+This structure is causing limitations.
+
+Instead, please use **three separate independent fields**:
+
+### 1. Assigned Role
+
+Dropdown:
+
+* — None —
+
+  President
+
+  Vice President
+
+  General Secretary
+
+  Joint Secretary
+
+  Treasurer
+
+  Overseas Convenor
+
+  Advisor
+
+  Loan Convenor
+
+  Loan Convenor (Recovery)
+
+  Auditor
+
+  Verification Team Leader
+
+  Event organizer
+
+  FRF Convenor
+
+  Executive Member
+
+  Member
+
+### 2. Executive Committee Status
+
+* Yes / No
+
+### 3. Core Committee Status
+
+* Yes / No
+
+### Important
+
+These three fields must be completely independent of each other.
+
+* Assigned Role must not control Executive Committee Status.
+* Assigned Role must not control Core Committee Status.
+* Executive Committee Status must not control Core Committee Status.
+* Core Committee Status must not control Executive Committee Status.
+
+There should be absolutely no hidden links, dependencies, automatic assignments, or automatic removals between these three fields.
+
+### Examples
+
+Valid combinations:
+
+* President + Executive Committee + Core Committee
+* President only
+* Advisor + Executive Committee
+* Treasurer + Core Committee
+* Executive Committee only
+* Core Committee only
+* Advisor only
+
+### Badge Display
+
+Show independent badges under member names:
+
+* Assigned Role Badge
+* Executive Committee Badge
+* Core Committee Badge
+
+Examples:
+
+PRESIDENT | EXECUTIVE COMMITTEE | CORE COMMITTEE
+
+ADVISOR | EXECUTIVE COMMITTEE
+
+TREASURER | CORE COMMITTEE
+
+### Actions Menu
+
+Replace the current one-way promotion system with dynamic actions:
+
+* Add to Executive Committee
+* Remove from Executive Committee
+* Add to Core Committee
+* Remove from Core Committee
+
+Show the appropriate action depending on the member's current status.
+
+### Critical Logic Requirement
+
+If a member has:
+
+PRESIDENT | EXECUTIVE COMMITTEE | CORE COMMITTEE
+
+and I remove **Executive Committee**, the result should become:
+
+PRESIDENT | CORE COMMITTEE
+
+If I remove **Core Committee**, the result should become:
+
+PRESIDENT | EXECUTIVE COMMITTEE
+
+If I remove **President role**, the result should become:
+
+EXECUTIVE COMMITTEE | CORE COMMITTEE
+
+Removing or adding any one of these three values must only affect that specific value and must never change the other two.
+
+### Additional Enhancement
+
+The Mobile Number field is still using Indian format (+91).
+
+Please change it to Saudi Arabia format (+966) throughout the Add Member and Edit Member forms and use Saudi mobile number validation by default.
+
+Do not redesign the form. Only enhance the existing structure and logic.

@@ -43,7 +43,6 @@ import {
   Percent,
 } from "lucide-react";
 import { formatDate, cn } from "@/lib/utils";
-import { isCommitteeLevel, isExecutiveLevel } from "@/lib/committee";
 import { useToast } from "@/hooks/use-toast";
 import ExcelJS from "exceljs";
 import jsPDF from "jspdf";
@@ -66,14 +65,15 @@ async function loadImageAsBase64(url: string): Promise<string> {
   }
 }
 
-// Committee membership now derives from the single DB source of truth
-// (members.committeeLevel). Executives are a subset of the core committee.
-function isExecutiveMember(m: { committeeLevel?: string | null }): boolean {
-  return isExecutiveLevel((m as any).committeeLevel);
+// Committee membership derives from two fully independent DB flags:
+// isExecutiveCommittee and isCoreCommittee. A member may be on either, both,
+// or neither — there is no implied link between them.
+function isExecutiveMember(m: { isExecutiveCommittee?: boolean | null }): boolean {
+  return (m as any).isExecutiveCommittee === true;
 }
 
-function isCommitteeMember(m: { committeeLevel?: string | null }): boolean {
-  return isCommitteeLevel((m as any).committeeLevel);
+function isCoreMember(m: { isCoreCommittee?: boolean | null }): boolean {
+  return (m as any).isCoreCommittee === true;
 }
 
 type TypeFilter = "all" | "executive" | "core";
@@ -106,15 +106,16 @@ export default function Meetings() {
   }, [meetings]);
 
   // ── header stats ──────────────────────────────────────────────────────────
-  // Executives are a subset of the core committee, so a member can be counted in
-  // both the "Executive" and "Core Committee" cards.
+  // Executive Committee and Core Committee are fully independent flags. A member
+  // is counted in a card only if that specific flag is set; the two cards do not
+  // imply one another.
   const memberStats = useMemo(() => {
     const list: Member[] = members ?? [];
     let executive = 0;
     let core = 0;
     for (const m of list) {
       if (isExecutiveMember(m)) executive += 1;
-      if (isCommitteeMember(m)) core += 1;
+      if (isCoreMember(m)) core += 1;
     }
     return { total: list.length, executive, core };
   }, [members]);
@@ -125,9 +126,9 @@ export default function Meetings() {
     return s;
   }, [members]);
 
-  const committeeIds = useMemo(() => {
+  const coreIds = useMemo(() => {
     const s = new Set<string>();
-    for (const m of members ?? []) if (isCommitteeMember(m)) s.add(m.id);
+    for (const m of members ?? []) if (isCoreMember(m)) s.add(m.id);
     return s;
   }, [members]);
 
@@ -139,7 +140,7 @@ export default function Meetings() {
   const viewMembers = useMemo(() => {
     const list: Member[] = members ?? [];
     if (memberView === "executive") return list.filter(isExecutiveMember);
-    if (memberView === "core") return list.filter(isCommitteeMember);
+    if (memberView === "core") return list.filter(isCoreMember);
     if (memberView === "total") return list;
     return [];
   }, [members, memberView]);
@@ -271,10 +272,10 @@ export default function Meetings() {
       const matchesType =
         typeFilter === "all" ||
         (typeFilter === "executive" && executiveIds.has(r.memberId)) ||
-        (typeFilter === "core" && committeeIds.has(r.memberId));
+        (typeFilter === "core" && coreIds.has(r.memberId));
       return matchesSearch && matchesType;
     });
-  }, [detail, search, typeFilter, executiveIds, committeeIds]);
+  }, [detail, search, typeFilter, executiveIds, coreIds]);
 
   const liveTotals = useMemo(() => {
     const rows = detail?.attendance ?? [];

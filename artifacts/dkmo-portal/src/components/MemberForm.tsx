@@ -38,15 +38,18 @@ const DESIGNATION_OPTIONS = [
 
 const FEE_STATUS_OPTIONS = ["unpaid", "pending", "paid"] as const;
 
-const COMMITTEE_LEVEL_OPTIONS = [
-  { value: "regular", label: "Regular Member" },
-  { value: "core", label: "Core Committee Member" },
-  { value: "executive", label: "Executive Member" },
-] as const;
+// Saudi mobile: optional +966 / 966 / leading 0, then a 5 and 8 more digits.
+const SAUDI_MOBILE_RE = /^(\+?966|0)?5\d{8}$/;
 
 const formSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
-  mobileNumber: z.string().min(1, "Mobile number is required"),
+  mobileNumber: z
+    .string()
+    .min(1, "Mobile number is required")
+    .refine(
+      (val) => SAUDI_MOBILE_RE.test(val.replace(/[\s-]/g, "")),
+      "Enter a valid Saudi mobile (e.g. +966 5XXXXXXXX)",
+    ),
   membershipId: z.string().optional(),
   applicationNumber: z.string().optional(),
   iqamaNumber: z.string().optional(),
@@ -54,7 +57,8 @@ const formSchema = z.object({
   city: z.string().optional(),
   country: z.string().optional(),
   designation: z.string().optional(),
-  committeeLevel: z.enum(["regular", "core", "executive"]),
+  isExecutiveCommittee: z.boolean(),
+  isCoreCommittee: z.boolean(),
   membershipFee: z.coerce.number().min(0, "Amount must be positive"),
   feeStatus: z.enum(FEE_STATUS_OPTIONS),
 });
@@ -88,7 +92,8 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
       city: defaultValues?.city || "",
       country: defaultValues?.country || "",
       designation: (defaultValues as any)?.designation || "",
-      committeeLevel: ((defaultValues as any)?.committeeLevel as "regular" | "core" | "executive") || "regular",
+      isExecutiveCommittee: (defaultValues as any)?.isExecutiveCommittee === true,
+      isCoreCommittee: (defaultValues as any)?.isCoreCommittee === true,
       membershipFee: defaultValues?.membershipFee ?? 100,
       feeStatus: (defaultValues?.feeStatus as (typeof FEE_STATUS_OPTIONS)[number]) || "unpaid",
     },
@@ -106,7 +111,8 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
         city: defaultValues.city || "",
         country: defaultValues.country || "",
         designation: (defaultValues as any).designation || "",
-        committeeLevel: ((defaultValues as any).committeeLevel as "regular" | "core" | "executive") || "regular",
+        isExecutiveCommittee: (defaultValues as any).isExecutiveCommittee === true,
+        isCoreCommittee: (defaultValues as any).isCoreCommittee === true,
         membershipFee: defaultValues.membershipFee ?? 100,
         feeStatus: (defaultValues.feeStatus as (typeof FEE_STATUS_OPTIONS)[number]) || "unpaid",
       });
@@ -154,7 +160,7 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
               <FormItem>
                 <FormLabel>Mobile Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="+91 9876543210" {...field} />
+                  <Input placeholder="+966 5XXXXXXXX" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -236,7 +242,7 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
               <FormItem>
                 <FormLabel>Country</FormLabel>
                 <FormControl>
-                  <Input placeholder="India" {...field} />
+                  <Input placeholder="Saudi Arabia" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -249,7 +255,7 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
             name="designation"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Designation / Post</FormLabel>
+                <FormLabel>Assigned Role</FormLabel>
                 <FormControl>
                   <select
                     {...field}
@@ -266,22 +272,48 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
               </FormItem>
             )}
           />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="committeeLevel"
+            name="isExecutiveCommittee"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Committee Level</FormLabel>
+                <FormLabel>Executive Committee</FormLabel>
                 <FormControl>
                   <select
-                    {...field}
+                    value={field.value ? "yes" : "no"}
+                    onChange={(e) => field.onChange(e.target.value === "yes")}
+                    onBlur={field.onBlur}
+                    name={field.name}
+                    ref={field.ref}
                     className="w-full border border-input rounded-md px-3 h-10 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                   >
-                    {COMMITTEE_LEVEL_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
+                    <option value="no">No</option>
+                    <option value="yes">Yes</option>
+                  </select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="isCoreCommittee"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Core Committee</FormLabel>
+                <FormControl>
+                  <select
+                    value={field.value ? "yes" : "no"}
+                    onChange={(e) => field.onChange(e.target.value === "yes")}
+                    onBlur={field.onBlur}
+                    name={field.name}
+                    ref={field.ref}
+                    className="w-full border border-input rounded-md px-3 h-10 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="no">No</option>
+                    <option value="yes">Yes</option>
                   </select>
                 </FormControl>
                 <FormMessage />

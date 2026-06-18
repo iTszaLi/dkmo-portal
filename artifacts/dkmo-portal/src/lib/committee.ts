@@ -12,39 +12,17 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-export type CommitteeLevel = "regular" | "core" | "executive";
-
-export const COMMITTEE_LEVEL_LABEL: Record<CommitteeLevel, string> = {
-  regular: "Regular Member",
-  core: "Core Committee Member",
-  executive: "Executive Member",
-};
-
-/** Coerce an unknown/legacy value into a valid committee level. */
-export function normalizeCommitteeLevel(value?: string | null): CommitteeLevel {
-  return value === "executive" || value === "core" ? value : "regular";
-}
-
-/** Executive is a senior subset of the committee; both count as "committee". */
-export function isCommitteeLevel(value?: string | null): boolean {
-  const level = normalizeCommitteeLevel(value);
-  return level === "core" || level === "executive";
-}
-
-export function isExecutiveLevel(value?: string | null): boolean {
-  return normalizeCommitteeLevel(value) === "executive";
-}
-
 /**
- * Badge styling for the two committee tiers. Executive renders as a shiny gold
- * pill, Core as a shiny silver pill. Regular members get no committee badge.
+ * Badge styling for the two committee memberships. Executive renders as a shiny
+ * gold pill, Core as a shiny silver pill. The two are fully independent — a
+ * member may have either, both, or neither.
  */
 export const COMMITTEE_LEVEL_BADGE: Record<
   "core" | "executive",
   { label: string; className: string }
 > = {
   executive: {
-    label: "Executive",
+    label: "Executive Committee",
     className:
       "bg-gradient-to-b from-amber-200 to-yellow-400 text-yellow-950 ring-1 ring-yellow-500/60 shadow-sm dark:from-amber-300 dark:to-yellow-500 dark:text-yellow-950",
   },

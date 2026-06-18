@@ -41,11 +41,12 @@ function rand<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-// Maps a designation to the seeded committee level. Office-bearers and the
-// literal "Executive Member" role become Executive; any other real committee
-// role (convenors, advisors, auditors, leads) becomes Core; plain "Member"
-// (or blank) stays Regular. This makes the new committeeLevel field the single
-// source of truth from first seed, matching the prior hardcoded rosters.
+// Maps a designation to seeded committee membership. Executive Committee and
+// Core Committee are two fully independent flags. Office-bearers and the literal
+// "Executive Member" role are seeded as both Executive + Core; any other real
+// committee role (convenors, advisors, auditors, leads) is seeded as Core only;
+// plain "Member" (or blank) is on neither committee. Admins can freely toggle
+// each flag afterwards — there is no enforced link between them.
 const EXECUTIVE_DESIGNATIONS = new Set([
   "President",
   "Vice President",
@@ -54,13 +55,18 @@ const EXECUTIVE_DESIGNATIONS = new Set([
   "Treasurer",
   "Executive Member",
 ]);
-function committeeLevelForDesignation(
-  designation: string,
-): "regular" | "core" | "executive" {
+function committeeStatusForDesignation(designation: string): {
+  isExecutiveCommittee: boolean;
+  isCoreCommittee: boolean;
+} {
   const d = (designation ?? "").trim();
-  if (EXECUTIVE_DESIGNATIONS.has(d)) return "executive";
-  if (d === "" || d.toLowerCase() === "member") return "regular";
-  return "core";
+  if (EXECUTIVE_DESIGNATIONS.has(d)) {
+    return { isExecutiveCommittee: true, isCoreCommittee: true };
+  }
+  if (d === "" || d.toLowerCase() === "member") {
+    return { isExecutiveCommittee: false, isCoreCommittee: false };
+  }
+  return { isExecutiveCommittee: false, isCoreCommittee: true };
 }
 
 // ── 1. MEMBERS ────────────────────────────────────────────────────────────────
@@ -384,7 +390,7 @@ async function main() {
     allRows.push({
       fullName: m.fullName,
       designation: m.designation,
-      committeeLevel: committeeLevelForDesignation(m.designation),
+      ...committeeStatusForDesignation(m.designation),
       city: m.city,
       country: m.country,
       mobileNumber: nextMobile(),

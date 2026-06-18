@@ -1,23 +1,28 @@
 ---
-name: Committee roster is DB-driven
-description: Committee membership and badges derive from members.committeeLevel, not a hardcoded roster constant.
+name: Committee membership is DB-driven and fully independent
+description: Committee membership/badges derive from two independent boolean columns, not a hardcoded roster or a single enum.
 ---
 
-Committee membership is a single DB source of truth: `members.committeeLevel` is an
-independent enum column (`regular` | `core` | `executive`). Executive is the senior
-tier and also counts as committee. There is no hardcoded roster export anymore
-(the old `COMMITTEE_2026_27` constant was removed).
+Committee membership is the DB source of truth, expressed as **two fully independent
+boolean columns** on `members`: `isExecutiveCommittee` and `isCoreCommittee`. Plus the
+existing `designation` ("Assigned Role"). All three are independent — a member may be on
+Executive, Core, both, or neither, and have any role or none. There is NO nesting,
+subset, or hidden link between them, and no hardcoded roster constant.
 
-**Why:** previously the committee roster was a static frontend array, so /committee,
-/meetings, and /committee-performance could drift from each other and from the members
-table. The user required one source of truth and promote/demote actions.
+**Why:** the roster used to be a static frontend array, then a single enum
+(`committeeLevel`: regular/core/executive) where Executive implied Core. The user
+required these to be three independent attributes with no implicit coupling, so
+removing one membership must never change the other or the role.
 
 **How to apply:**
-- Any view that needs "who is on the committee" reads `committeeLevel` via the members
-  list, never a constant. Shared helpers live in `artifacts/dkmo-portal/src/lib/committee.ts`
-  (normalize/isCommitteeLevel/isExecutiveLevel, badge classes, designation→department map).
-- Promote/demote goes through `PATCH /members/:id/committee-level` (audit log action
-  `member_committee_level_updated`); the UI uses the generated `useUpdateMemberCommitteeLevel` hook.
-- Department grouping on /committee is derived from a designation→department map, not stored.
-- Badges: Executive = gold, Core = silver; designation badge is one consistent color per role.
+- "Who is on Executive?" = `isExecutiveCommittee === true`; "on Core?" = `isCoreCommittee === true`.
+  Never treat Executive as a subset of Core. A combined "any committee" view must be an
+  explicit OR, used only where intentional.
+- Shared helpers live in `artifacts/dkmo-portal/src/lib/committee.ts` (badge classes,
+  designation→department map, initials). No normalize/isCommitteeLevel/isExecutiveLevel.
+- Badges render independently in order ROLE | EXECUTIVE COMMITTEE (gold) | CORE COMMITTEE (silver).
+- Toggling goes through `PATCH /members/:id/committee-status` with a partial body
+  ({ isExecutiveCommittee? , isCoreCommittee? }); only provided flags change. Audit action
+  `member_committee_status_updated`; UI uses generated `useUpdateMemberCommitteeStatus`.
+- Department grouping on /committee is derived from designation→department map, not stored.
 - Felicitation section on /committee stays intentionally static (not committee membership).

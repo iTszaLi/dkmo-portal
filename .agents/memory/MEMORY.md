@@ -5,4 +5,4 @@
 - [DKMO payments & recruitment model](dkmo-payments-model.md) — no monthly dues; FRF contributions are payments rows (SAR 50/claim) not a separate table; recruitment leaderboard keys on member UUID, seed must two-pass link refMemberId.
 - [Member reference / group FRF responsibility](member-reference-responsibility.md) — members.refMemberId is TEXT holding the referrer's UUID; group = refMemberId===X.id; FRF responsibility = count × SAR 50.
 - [Documents per-entity views](documents-per-entity-views.md) — /api/documents is paginated; per-member views must filter server-side by linkedEntityType+linkedEntityId, never client-filter page 1.
-- [Committee roster is DB-driven](committee-db-driven.md) — committee membership = members.committeeLevel (regular/core/executive), no hardcoded roster; /committee, /meetings, /committee-performance all read it.
+- [Committee membership is DB-driven & independent](committee-db-driven.md) — role (designation) + two independent booleans isExecutiveCommittee/isCoreCommittee; no nesting/subset; toggle via PATCH /members/:id/committee-status.

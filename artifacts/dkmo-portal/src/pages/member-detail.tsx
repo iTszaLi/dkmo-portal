@@ -361,8 +361,9 @@ export default function MemberDetail() {
                   ID: {member.membershipId}
                 </p>
                 <MemberBadges
-                  committeeLevel={(member as any).committeeLevel}
                   designation={member.designation}
+                  isExecutiveCommittee={(member as any).isExecutiveCommittee}
+                  isCoreCommittee={(member as any).isCoreCommittee}
                   size="md"
                   className="mt-2 justify-center"
                 />

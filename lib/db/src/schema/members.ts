@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, numeric } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp, numeric, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -13,7 +13,8 @@ export const membersTable = pgTable("members", {
   city: text("city").notNull().default(""),
   country: text("country").notNull().default(""),
   designation: text("designation").notNull().default(""),
-  committeeLevel: text("committee_level").notNull().default("regular"),
+  isExecutiveCommittee: boolean("is_executive_committee").notNull().default(false),
+  isCoreCommittee: boolean("is_core_committee").notNull().default(false),
   membershipFee: numeric("membership_fee", { precision: 12, scale: 2 })
     .notNull()
     .default("100"),

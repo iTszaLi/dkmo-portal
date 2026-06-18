@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { formatSAR, cn } from "@/lib/utils";
-import { initialsOf, isCommitteeLevel } from "@/lib/committee";
+import { initialsOf } from "@/lib/committee";
 import { Trophy, UserPlus, Coins, HeartHandshake, Landmark, Activity } from "lucide-react";
 
 export default function CommitteePerformance() {
@@ -15,7 +15,11 @@ export default function CommitteePerformance() {
   // Live committee roster derived from the single DB source of truth.
   const roster = useMemo(
     () =>
-      (allMembers ?? []).filter((m) => isCommitteeLevel((m as any).committeeLevel)),
+      (allMembers ?? []).filter(
+        (m) =>
+          (m as any).isExecutiveCommittee === true ||
+          (m as any).isCoreCommittee === true,
+      ),
     [allMembers],
   );
 

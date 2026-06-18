@@ -18,8 +18,8 @@ import type {
 
 import type {
   AttendanceUpdate,
-  CommitteeLevelInput,
   CommitteePerformance,
+  CommitteeStatusInput,
   CurrentUser,
   DashboardAlert,
   DashboardCashFlow,
@@ -776,43 +776,43 @@ export const useUpdateMemberFeeStatus = <
 };
 
 /**
- * @summary Update a member's committee level (Regular / Core / Executive)
+ * @summary Update a member's committee membership. Executive Committee and Core Committee are fully independent; only the provided flags are changed.
  */
-export const getUpdateMemberCommitteeLevelUrl = (id: string) => {
-  return `/api/members/${id}/committee-level`;
+export const getUpdateMemberCommitteeStatusUrl = (id: string) => {
+  return `/api/members/${id}/committee-status`;
 };
 
-export const updateMemberCommitteeLevel = async (
+export const updateMemberCommitteeStatus = async (
   id: string,
-  committeeLevelInput: CommitteeLevelInput,
+  committeeStatusInput: CommitteeStatusInput,
   options?: RequestInit,
 ): Promise<Member> => {
-  return customFetch<Member>(getUpdateMemberCommitteeLevelUrl(id), {
+  return customFetch<Member>(getUpdateMemberCommitteeStatusUrl(id), {
     ...options,
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(committeeLevelInput),
+    body: JSON.stringify(committeeStatusInput),
   });
 };
 
-export const getUpdateMemberCommitteeLevelMutationOptions = <
+export const getUpdateMemberCommitteeStatusMutationOptions = <
   TError = ErrorType<unknown>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof updateMemberCommitteeLevel>>,
+    Awaited<ReturnType<typeof updateMemberCommitteeStatus>>,
     TError,
-    { id: string; data: BodyType<CommitteeLevelInput> },
+    { id: string; data: BodyType<CommitteeStatusInput> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
-  Awaited<ReturnType<typeof updateMemberCommitteeLevel>>,
+  Awaited<ReturnType<typeof updateMemberCommitteeStatus>>,
   TError,
-  { id: string; data: BodyType<CommitteeLevelInput> },
+  { id: string; data: BodyType<CommitteeStatusInput> },
   TContext
 > => {
-  const mutationKey = ["updateMemberCommitteeLevel"];
+  const mutationKey = ["updateMemberCommitteeStatus"];
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation &&
       "mutationKey" in options.mutation &&
@@ -822,45 +822,45 @@ export const getUpdateMemberCommitteeLevelMutationOptions = <
     : { mutation: { mutationKey }, request: undefined };
 
   const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof updateMemberCommitteeLevel>>,
-    { id: string; data: BodyType<CommitteeLevelInput> }
+    Awaited<ReturnType<typeof updateMemberCommitteeStatus>>,
+    { id: string; data: BodyType<CommitteeStatusInput> }
   > = (props) => {
     const { id, data } = props ?? {};
 
-    return updateMemberCommitteeLevel(id, data, requestOptions);
+    return updateMemberCommitteeStatus(id, data, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
 };
 
-export type UpdateMemberCommitteeLevelMutationResult = NonNullable<
-  Awaited<ReturnType<typeof updateMemberCommitteeLevel>>
+export type UpdateMemberCommitteeStatusMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateMemberCommitteeStatus>>
 >;
-export type UpdateMemberCommitteeLevelMutationBody =
-  BodyType<CommitteeLevelInput>;
-export type UpdateMemberCommitteeLevelMutationError = ErrorType<unknown>;
+export type UpdateMemberCommitteeStatusMutationBody =
+  BodyType<CommitteeStatusInput>;
+export type UpdateMemberCommitteeStatusMutationError = ErrorType<unknown>;
 
 /**
- * @summary Update a member's committee level (Regular / Core / Executive)
+ * @summary Update a member's committee membership. Executive Committee and Core Committee are fully independent; only the provided flags are changed.
  */
-export const useUpdateMemberCommitteeLevel = <
+export const useUpdateMemberCommitteeStatus = <
   TError = ErrorType<unknown>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof updateMemberCommitteeLevel>>,
+    Awaited<ReturnType<typeof updateMemberCommitteeStatus>>,
     TError,
-    { id: string; data: BodyType<CommitteeLevelInput> },
+    { id: string; data: BodyType<CommitteeStatusInput> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
-  Awaited<ReturnType<typeof updateMemberCommitteeLevel>>,
+  Awaited<ReturnType<typeof updateMemberCommitteeStatus>>,
   TError,
-  { id: string; data: BodyType<CommitteeLevelInput> },
+  { id: string; data: BodyType<CommitteeStatusInput> },
   TContext
 > => {
-  return useMutation(getUpdateMemberCommitteeLevelMutationOptions(options));
+  return useMutation(getUpdateMemberCommitteeStatusMutationOptions(options));
 };
 
 /**

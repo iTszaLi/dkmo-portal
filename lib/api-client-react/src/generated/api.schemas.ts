@@ -155,15 +155,6 @@ export interface SponsorList {
   total: number;
 }
 
-export type MemberCommitteeLevel =
-  (typeof MemberCommitteeLevel)[keyof typeof MemberCommitteeLevel];
-
-export const MemberCommitteeLevel = {
-  regular: "regular",
-  core: "core",
-  executive: "executive",
-} as const;
-
 export type MemberFeeStatus =
   (typeof MemberFeeStatus)[keyof typeof MemberFeeStatus];
 
@@ -193,7 +184,8 @@ export interface Member {
   city: string;
   country: string;
   designation: string;
-  committeeLevel: MemberCommitteeLevel;
+  isExecutiveCommittee: boolean;
+  isCoreCommittee: boolean;
   membershipFee: number;
   feeStatus: MemberFeeStatus;
   /** @nullable */
@@ -205,15 +197,6 @@ export interface Member {
   createdAt: string;
   updatedAt: string;
 }
-
-export type MemberDetailCommitteeLevel =
-  (typeof MemberDetailCommitteeLevel)[keyof typeof MemberDetailCommitteeLevel];
-
-export const MemberDetailCommitteeLevel = {
-  regular: "regular",
-  core: "core",
-  executive: "executive",
-} as const;
 
 export type MemberDetailFeeStatus =
   (typeof MemberDetailFeeStatus)[keyof typeof MemberDetailFeeStatus];
@@ -244,7 +227,8 @@ export interface MemberDetail {
   city: string;
   country: string;
   designation: string;
-  committeeLevel: MemberDetailCommitteeLevel;
+  isExecutiveCommittee: boolean;
+  isCoreCommittee: boolean;
   membershipFee: number;
   feeStatus: MemberDetailFeeStatus;
   /** @nullable */
@@ -256,15 +240,6 @@ export interface MemberDetail {
   createdAt: string;
   updatedAt: string;
 }
-
-export type MemberInputCommitteeLevel =
-  (typeof MemberInputCommitteeLevel)[keyof typeof MemberInputCommitteeLevel];
-
-export const MemberInputCommitteeLevel = {
-  regular: "regular",
-  core: "core",
-  executive: "executive",
-} as const;
 
 export type MemberInputFeeStatus =
   (typeof MemberInputFeeStatus)[keyof typeof MemberInputFeeStatus];
@@ -297,7 +272,8 @@ export interface MemberInput {
   city?: string;
   country?: string;
   designation?: string;
-  committeeLevel?: MemberInputCommitteeLevel;
+  isExecutiveCommittee?: boolean;
+  isCoreCommittee?: boolean;
   membershipFee?: number;
   feeStatus?: MemberInputFeeStatus;
   frfStatus?: MemberInputFrfStatus;
@@ -318,17 +294,12 @@ export interface FeeStatusInput {
   feeStatus: FeeStatusInputFeeStatus;
 }
 
-export type CommitteeLevelInputCommitteeLevel =
-  (typeof CommitteeLevelInputCommitteeLevel)[keyof typeof CommitteeLevelInputCommitteeLevel];
-
-export const CommitteeLevelInputCommitteeLevel = {
-  regular: "regular",
-  core: "core",
-  executive: "executive",
-} as const;
-
-export interface CommitteeLevelInput {
-  committeeLevel: CommitteeLevelInputCommitteeLevel;
+/**
+ * Partial update of a member's committee membership. Executive Committee and Core Committee are independent; supply only the flag you want to change. Omitting a flag leaves it untouched.
+ */
+export interface CommitteeStatusInput {
+  isExecutiveCommittee?: boolean;
+  isCoreCommittee?: boolean;
 }
 
 export type MemberReferralItemFeeStatus =

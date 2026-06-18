@@ -10,8 +10,8 @@ import {
   ListMembersQueryParams,
   UpdateMemberFeeStatusParams,
   UpdateMemberFeeStatusBody,
-  UpdateMemberCommitteeLevelParams,
-  UpdateMemberCommitteeLevelBody,
+  UpdateMemberCommitteeStatusParams,
+  UpdateMemberCommitteeStatusBody,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthedRequest } from "../middlewares/requireAuth";
 import { memberToApi } from "../lib/serializers";
@@ -154,7 +154,8 @@ router.post("/members", async (req, res): Promise<void> => {
         city: parsed.data.city ?? "",
         country: parsed.data.country ?? "",
         designation: parsed.data.designation ?? "",
-        committeeLevel: parsed.data.committeeLevel ?? "regular",
+        isExecutiveCommittee: parsed.data.isExecutiveCommittee ?? false,
+        isCoreCommittee: parsed.data.isCoreCommittee ?? false,
         membershipFee: String(parsed.data.membershipFee ?? 100),
         feeStatus,
         feePaidAt: feeStatus === "paid" ? new Date() : null,
@@ -255,7 +256,10 @@ router.patch("/members/:id", async (req, res): Promise<void> => {
         city: parsed.data.city ?? "",
         country: parsed.data.country ?? "",
         designation: parsed.data.designation ?? "",
-        committeeLevel: parsed.data.committeeLevel ?? existing.committeeLevel,
+        isExecutiveCommittee:
+          parsed.data.isExecutiveCommittee ?? existing.isExecutiveCommittee,
+        isCoreCommittee:
+          parsed.data.isCoreCommittee ?? existing.isCoreCommittee,
         membershipFee: String(parsed.data.membershipFee ?? existing.membershipFee),
         refMemberName: parsed.data.refMemberName ?? "",
         refMemberId: parsed.data.refMemberId ?? "",
@@ -314,32 +318,54 @@ router.patch("/members/:id/fee-status", async (req, res): Promise<void> => {
   res.json(memberToApi(updated));
 });
 
-router.patch("/members/:id/committee-level", async (req, res): Promise<void> => {
-  const params = UpdateMemberCommitteeLevelParams.safeParse(req.params);
+router.patch("/members/:id/committee-status", async (req, res): Promise<void> => {
+  const params = UpdateMemberCommitteeStatusParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
     return;
   }
-  const parsed = UpdateMemberCommitteeLevelBody.safeParse(req.body);
+  const parsed = UpdateMemberCommitteeStatusBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
 
-  const committeeLevel = parsed.data.committeeLevel;
+  // Executive Committee and Core Committee are fully independent. Only mutate
+  // the flag(s) explicitly provided so changing one never affects the other.
+  const patch: Partial<{
+    isExecutiveCommittee: boolean;
+    isCoreCommittee: boolean;
+  }> = {};
+  if (parsed.data.isExecutiveCommittee !== undefined) {
+    patch.isExecutiveCommittee = parsed.data.isExecutiveCommittee;
+  }
+  if (parsed.data.isCoreCommittee !== undefined) {
+    patch.isCoreCommittee = parsed.data.isCoreCommittee;
+  }
+  if (Object.keys(patch).length === 0) {
+    res.status(400).json({ error: "No committee status fields provided" });
+    return;
+  }
+
   const [updated] = await db
     .update(membersTable)
-    .set({ committeeLevel })
+    .set(patch)
     .where(eq(membersTable.id, params.data.id))
     .returning();
   if (!updated) {
     res.status(404).json({ error: "Member not found" });
     return;
   }
-  logAudit(req, "member_committee_level_updated", "members", {
+  const changes = Object.entries(patch)
+    .map(([k, v]) => {
+      const label = k === "isExecutiveCommittee" ? "Executive Committee" : "Core Committee";
+      return `${label}: ${v ? "yes" : "no"}`;
+    })
+    .join(", ");
+  logAudit(req, "member_committee_status_updated", "members", {
     entityId: updated.id,
     entityName: updated.fullName,
-    details: `Committee level: ${committeeLevel}`,
+    details: changes,
   });
   res.json(memberToApi(updated));
 });

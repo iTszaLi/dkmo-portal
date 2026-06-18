@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
-import { useListMembers, useCreateMember, useUpdateMember, useDeleteMember, useUpdateMemberFeeStatus, useUpdateMemberCommitteeLevel, getListMembersQueryKey } from "@workspace/api-client-react";
-import { MemberInput, type FeeStatusInputFeeStatus, type CommitteeLevelInputCommitteeLevel } from "@workspace/api-client-react";
+import { useListMembers, useCreateMember, useUpdateMember, useDeleteMember, useUpdateMemberFeeStatus, useUpdateMemberCommitteeStatus, getListMembersQueryKey } from "@workspace/api-client-react";
+import { MemberInput, type FeeStatusInputFeeStatus, type CommitteeStatusInput } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,6 @@ import { MemberForm } from "@/components/MemberForm";
 import { MemberBadges } from "@/components/MemberBadges";
 import { Search, Plus, UserCircle, MapPin, Phone, MoreHorizontal, Edit, Trash, Users, CheckCircle2, Clock, XCircle, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
 import { formatSAR, feeStatusLabel, feeStatusBadgeClass } from "@/lib/utils";
-import { normalizeCommitteeLevel } from "@/lib/committee";
 import { useToast } from "@/hooks/use-toast";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -37,7 +36,7 @@ export default function Members() {
   const updateMember = useUpdateMember();
   const deleteMember = useDeleteMember();
   const updateFeeStatus = useUpdateMemberFeeStatus();
-  const updateCommitteeLevel = useUpdateMemberCommitteeLevel();
+  const updateCommitteeStatus = useUpdateMemberCommitteeStatus();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [, navigate] = useLocation();
@@ -117,18 +116,18 @@ export default function Members() {
     });
   };
 
-  const handleCommitteeLevel = (
+  const handleCommitteeStatus = (
     id: string,
-    committeeLevel: CommitteeLevelInputCommitteeLevel,
+    data: CommitteeStatusInput,
     message: string,
   ) => {
-    updateCommitteeLevel.mutate({ id, data: { committeeLevel } }, {
+    updateCommitteeStatus.mutate({ id, data }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListMembersQueryKey() });
         toast({ title: message, variant: "default" });
       },
       onError: (err: any) => {
-        toast({ title: "Failed to update committee level", description: err.message, variant: "destructive" });
+        toast({ title: "Failed to update committee status", description: err.message, variant: "destructive" });
       }
     });
   };
@@ -215,8 +214,9 @@ export default function Members() {
                           <div className="text-xs text-emerald-500/80 dark:text-slate-500">App: {(member as any).applicationNumber}</div>
                         ) : null}
                         <MemberBadges
-                          committeeLevel={(member as any).committeeLevel}
                           designation={(member as any).designation}
+                          isExecutiveCommittee={(member as any).isExecutiveCommittee}
+                          isCoreCommittee={(member as any).isCoreCommittee}
                           className="mt-1"
                         />
                       </div>
@@ -289,27 +289,26 @@ export default function Members() {
                           <Edit className="mr-2 h-4 w-4" /> Edit
                         </DropdownMenuItem>
                         {(() => {
-                          const level = normalizeCommitteeLevel((member as any).committeeLevel);
+                          const isExec = (member as any).isExecutiveCommittee === true;
+                          const isCore = (member as any).isCoreCommittee === true;
                           return (
                             <>
-                              {(level === "regular" || level === "core") && (
-                                <DropdownMenuItem onClick={() => handleCommitteeLevel(member.id, "executive", `${member.fullName} promoted to Executive`)} className="text-yellow-700 dark:text-yellow-400 dark:focus:bg-slate-800">
-                                  <ArrowUpCircle className="mr-2 h-4 w-4" /> Promote to Executive
+                              {isExec ? (
+                                <DropdownMenuItem onClick={() => handleCommitteeStatus(member.id, { isExecutiveCommittee: false }, `${member.fullName} removed from Executive Committee`)} className="text-amber-700 dark:text-amber-400 dark:focus:bg-slate-800">
+                                  <ArrowDownCircle className="mr-2 h-4 w-4" /> Remove from Executive Committee
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem onClick={() => handleCommitteeStatus(member.id, { isExecutiveCommittee: true }, `${member.fullName} added to Executive Committee`)} className="text-yellow-700 dark:text-yellow-400 dark:focus:bg-slate-800">
+                                  <ArrowUpCircle className="mr-2 h-4 w-4" /> Add to Executive Committee
                                 </DropdownMenuItem>
                               )}
-                              {level === "regular" && (
-                                <DropdownMenuItem onClick={() => handleCommitteeLevel(member.id, "core", `${member.fullName} promoted to Core Committee`)} className="text-slate-700 dark:text-slate-300 dark:focus:bg-slate-800">
-                                  <ArrowUpCircle className="mr-2 h-4 w-4" /> Promote to Core Committee
-                                </DropdownMenuItem>
-                              )}
-                              {level === "executive" && (
-                                <DropdownMenuItem onClick={() => handleCommitteeLevel(member.id, "core", `${member.fullName} removed from Executive`)} className="text-amber-700 dark:text-amber-400 dark:focus:bg-slate-800">
-                                  <ArrowDownCircle className="mr-2 h-4 w-4" /> Remove from Executive
-                                </DropdownMenuItem>
-                              )}
-                              {(level === "core" || level === "executive") && (
-                                <DropdownMenuItem onClick={() => handleCommitteeLevel(member.id, "regular", `${member.fullName} removed from Core Committee`)} className="dark:text-slate-300 dark:focus:bg-slate-800">
+                              {isCore ? (
+                                <DropdownMenuItem onClick={() => handleCommitteeStatus(member.id, { isCoreCommittee: false }, `${member.fullName} removed from Core Committee`)} className="dark:text-slate-300 dark:focus:bg-slate-800">
                                   <ArrowDownCircle className="mr-2 h-4 w-4" /> Remove from Core Committee
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem onClick={() => handleCommitteeStatus(member.id, { isCoreCommittee: true }, `${member.fullName} added to Core Committee`)} className="text-slate-700 dark:text-slate-300 dark:focus:bg-slate-800">
+                                  <ArrowUpCircle className="mr-2 h-4 w-4" /> Add to Core Committee
                                 </DropdownMenuItem>
                               )}
                             </>

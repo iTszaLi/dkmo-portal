@@ -11,8 +11,6 @@ import {
   departmentForDesignation,
   departmentIconFor,
   initialsOf,
-  isCommitteeLevel,
-  normalizeCommitteeLevel,
 } from "@/lib/committee";
 import { Crown, Users, Briefcase, Award, Search } from "lucide-react";
 
@@ -21,7 +19,8 @@ interface CommitteeView {
   name: string;
   role: string;
   department: string;
-  level: "core" | "executive";
+  isExecutiveCommittee: boolean;
+  isCoreCommittee: boolean;
 }
 
 const FELICITATED = [
@@ -65,8 +64,10 @@ export default function Committee() {
   const { data: allMembers, isLoading } = useListMembers();
 
   const committee = useMemo<CommitteeView[]>(() => {
-    const rows = (allMembers ?? []).filter((m) =>
-      isCommitteeLevel((m as any).committeeLevel),
+    const rows = (allMembers ?? []).filter(
+      (m) =>
+        (m as any).isExecutiveCommittee === true ||
+        (m as any).isCoreCommittee === true,
     );
     return rows.map((m) => {
       const role = (m as any).designation || "Committee Member";
@@ -75,9 +76,8 @@ export default function Committee() {
         name: m.fullName,
         role,
         department: departmentForDesignation(role),
-        level: normalizeCommitteeLevel((m as any).committeeLevel) as
-          | "core"
-          | "executive",
+        isExecutiveCommittee: (m as any).isExecutiveCommittee === true,
+        isCoreCommittee: (m as any).isCoreCommittee === true,
       };
     });
   }, [allMembers]);
@@ -105,8 +105,8 @@ export default function Committee() {
     return matchesSearch && matchesDept;
   });
 
-  const executive = filtered.filter((m) => m.level === "executive");
-  const core = filtered.filter((m) => m.level === "core");
+  const executive = filtered.filter((m) => m.isExecutiveCommittee);
+  const core = filtered.filter((m) => m.isCoreCommittee);
 
   return (
     <div className="space-y-8">
@@ -191,7 +191,7 @@ export default function Committee() {
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {executive.map((m) => (
-                  <MemberCard key={m.id} member={m} />
+                  <MemberCard key={m.id} member={m} level="executive" />
                 ))}
               </div>
             )}
@@ -209,7 +209,7 @@ export default function Committee() {
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {core.map((m) => (
-                  <MemberCard key={m.id} member={m} />
+                  <MemberCard key={m.id} member={m} level="core" />
                 ))}
               </div>
             )}
@@ -253,13 +253,19 @@ export default function Committee() {
   );
 }
 
-function MemberCard({ member }: { member: CommitteeView }) {
+function MemberCard({
+  member,
+  level,
+}: {
+  member: CommitteeView;
+  level: "core" | "executive";
+}) {
   const Icon = departmentIconFor(member.department);
-  const levelBadge = COMMITTEE_LEVEL_BADGE[member.level];
+  const levelBadge = COMMITTEE_LEVEL_BADGE[level];
   return (
     <div className={cn(
       "rounded-xl border p-4 transition-shadow hover:shadow-md dark:hover:shadow-black/20",
-      LEVEL_STYLE[member.level],
+      LEVEL_STYLE[level],
     )}>
       <div className="flex items-start gap-3">
         <div className="rounded-full bg-white dark:bg-slate-800 border border-green-100 dark:border-slate-700 flex items-center justify-center shrink-0 font-bold text-green-800 dark:text-green-300 h-11 w-11 text-sm">

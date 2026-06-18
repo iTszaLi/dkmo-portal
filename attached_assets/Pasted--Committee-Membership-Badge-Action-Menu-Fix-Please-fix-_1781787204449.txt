@@ -1,0 +1,245 @@
+ Committee Membership Badge & Action Menu Fix
+
+
+
+Please fix the Committee Membership system to prevent duplicate roles and provide proper role management.
+
+
+
+### 1. Add "Remove from Executive Committee" Option
+
+
+
+Currently there is an option to **Add to Executive Committee** but no way to remove a member.
+
+
+
+Add:
+
+
+
+* Remove from Executive Committee
+
+* Remove from Core Committee
+
+
+
+These options should appear automatically when the member already belongs to those committees.
+
+
+
+Example:
+
+
+
+If a member is already in Executive Committee:
+
+
+
+* Show: **Remove from Executive Committee**
+
+* Hide: **Add to Executive Committee**
+
+
+
+If a member is already in Core Committee:
+
+
+
+* Show: **Remove from Core Committee**
+
+* Hide: **Add to Core Committee**
+
+
+
+---
+
+
+
+### 2. Prevent Duplicate Executive Badges
+
+
+
+Currently members are showing:
+
+
+
+* EXECUTIVE MEMBER
+
+* EXECUTIVE COMMITTEE
+
+
+
+at the same time, which is confusing and duplicates the role.
+
+
+
+Example from screenshot:
+
+
+
+* Executive Member
+
+* Executive Committee
+
+* Core Committee
+
+
+
+This creates redundant labels.
+
+
+
+Please standardize badges:
+
+
+
+* Regular Member → MEMBER
+
+* Executive Committee Member → EXECUTIVE COMMITTEE
+
+* Core Committee Member → CORE COMMITTEE
+
+* President → PRESIDENT
+
+
+
+Do not display duplicate or overlapping committee badges.
+
+
+
+A member should never see multiple badges representing the same committee level.
+
+
+
+---
+
+
+
+### 3. Committee Status Must Be Dynamic
+
+
+
+When a member is added or removed from a committee:
+
+
+
+* Badges must update immediately.
+
+* Action menu must update immediately.
+
+* Dashboard counts must update automatically.
+
+* Reports must update automatically.
+
+
+
+No page refresh should be required.
+
+
+
+---
+
+
+
+### 4. Role Logic
+
+
+
+A member may belong to:
+
+
+
+* Member only
+
+* Executive Committee only
+
+* Core Committee only
+
+* Executive + Core Committee
+
+* President + Executive Committee
+
+* President + Core Committee
+
+
+
+However:
+
+
+
+* No duplicate committee badges.
+
+* No duplicate database records.
+
+* No duplicate role assignments.
+
+* No repeated labels in the UI.
+
+
+
+---
+
+
+
+### 5. Action Menu Improvements
+
+
+
+Update the Actions menu to show only relevant actions.
+
+
+
+Example:
+
+
+
+**Regular Member**
+
+
+
+* Add to Executive Committee
+
+* Add to Core Committee
+
+
+
+**Executive Committee Member**
+
+
+
+* Remove from Executive Committee
+
+* Add to Core Committee
+
+
+
+**Core Committee Member**
+
+
+
+* Remove from Core Committee
+
+* Add to Executive Committee
+
+
+
+**Executive + Core Committee Member**
+
+
+
+* Remove from Executive Committee
+
+* Remove from Core Committee
+
+
+
+Never show both Add and Remove for the same committee simultaneously.
+
+
+
+---
+
+
+
+Please clean up all existing duplicate committee assignments and ensure the database enforces unique committee memberships going forward.

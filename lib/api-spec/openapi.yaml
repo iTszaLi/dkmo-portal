@@ -166,11 +166,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/Member"
 
-  /members/{id}/committee-level:
+  /members/{id}/committee-status:
     patch:
-      operationId: updateMemberCommitteeLevel
+      operationId: updateMemberCommitteeStatus
       tags: [members]
-      summary: Update a member's committee level (Regular / Core / Executive)
+      summary: >-
+        Update a member's committee membership. Executive Committee and Core
+        Committee are fully independent; only the provided flags are changed.
       parameters:
         - in: path
           name: id
@@ -182,7 +184,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CommitteeLevelInput"
+              $ref: "#/components/schemas/CommitteeStatusInput"
       responses:
         "200":
           description: Updated
@@ -1753,9 +1755,10 @@ components:
           type: string
         designation:
           type: string
-        committeeLevel:
-          type: string
-          enum: [regular, core, executive]
+        isExecutiveCommittee:
+          type: boolean
+        isCoreCommittee:
+          type: boolean
         membershipFee:
           type: number
         feeStatus:
@@ -1790,7 +1793,8 @@ components:
         - city
         - country
         - designation
-        - committeeLevel
+        - isExecutiveCommittee
+        - isCoreCommittee
         - membershipFee
         - feeStatus
         - feePaidAt
@@ -1824,9 +1828,10 @@ components:
           type: string
         designation:
           type: string
-        committeeLevel:
-          type: string
-          enum: [regular, core, executive]
+        isExecutiveCommittee:
+          type: boolean
+        isCoreCommittee:
+          type: boolean
         membershipFee:
           type: number
         feeStatus:
@@ -1861,7 +1866,8 @@ components:
         - city
         - country
         - designation
-        - committeeLevel
+        - isExecutiveCommittee
+        - isCoreCommittee
         - membershipFee
         - feeStatus
         - feePaidAt
@@ -1898,9 +1904,10 @@ components:
           type: string
         designation:
           type: string
-        committeeLevel:
-          type: string
-          enum: [regular, core, executive]
+        isExecutiveCommittee:
+          type: boolean
+        isCoreCommittee:
+          type: boolean
         membershipFee:
           type: number
         feeStatus:
@@ -1926,14 +1933,17 @@ components:
       required:
         - feeStatus
 
-    CommitteeLevelInput:
+    CommitteeStatusInput:
       type: object
+      description: >-
+        Partial update of a member's committee membership. Executive Committee
+        and Core Committee are independent; supply only the flag you want to
+        change. Omitting a flag leaves it untouched.
       properties:
-        committeeLevel:
-          type: string
-          enum: [regular, core, executive]
-      required:
-        - committeeLevel
+        isExecutiveCommittee:
+          type: boolean
+        isCoreCommittee:
+          type: boolean
 
     MemberReferralItem:
       type: object
