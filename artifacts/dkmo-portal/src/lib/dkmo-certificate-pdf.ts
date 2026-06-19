@@ -13,6 +13,12 @@ export interface DkmoCertificateData {
   approvedAt?: string | null;
   /** Fallback date if approval timestamp is missing (e.g. legacy records). */
   createdAt?: string | null;
+  /** Unique certificate serial, e.g. CERT-DKMO-2026-000010. */
+  certificateNumber?: string | null;
+  /** Permanent approval audit reference id. */
+  approvalReferenceId?: string | null;
+  /** Display name of the admin who approved the application. */
+  approvedByName?: string | null;
 }
 
 export interface CertificateOptions {
@@ -48,7 +54,11 @@ function fmtDate(iso: string | null | undefined): string {
  * accents. The art is drawn fully opaque here; transparency is applied when the
  * stamp is placed into the PDF via the graphics state.
  */
-function makeApprovalStampDataUrl(): string {
+function makeApprovalStampDataUrl(stamp: {
+  certificateNumber: string;
+  membershipNumber: string;
+  approvalDate: string;
+}): string {
   const S = 600;
   const canvas = document.createElement("canvas");
   canvas.width = S;
@@ -123,29 +133,54 @@ function makeApprovalStampDataUrl(): string {
   // Center checkmark circle
   ctx.fillStyle = green;
   ctx.beginPath();
-  ctx.arc(cx, cy - 58, 42, 0, Math.PI * 2);
+  ctx.arc(cx, cy - 118, 34, 0, Math.PI * 2);
   ctx.fill();
   ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 9;
+  ctx.lineWidth = 8;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   ctx.beginPath();
-  ctx.moveTo(cx - 20, cy - 58);
-  ctx.lineTo(cx - 6, cy - 44);
-  ctx.lineTo(cx + 22, cy - 76);
+  ctx.moveTo(cx - 16, cy - 118);
+  ctx.lineTo(cx - 5, cy - 107);
+  ctx.lineTo(cx + 18, cy - 132);
   ctx.stroke();
 
-  // Center text block
+  // Center heading
   ctx.fillStyle = green;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.font = "bold 52px Helvetica, Arial, sans-serif";
-  ctx.fillText("APPROVED", cx, cy + 14);
-  ctx.font = "bold 40px Helvetica, Arial, sans-serif";
-  ctx.fillText("BY DKMO", cx, cy + 58);
-  ctx.fillStyle = gold;
-  ctx.font = "bold 22px Helvetica, Arial, sans-serif";
-  ctx.fillText("VERIFIED MEMBERSHIP", cx, cy + 100);
+  ctx.font = "bold 46px Helvetica, Arial, sans-serif";
+  ctx.fillText("APPROVED BY DKMO", cx, cy - 64);
+
+  // Divider line under the heading
+  ctx.strokeStyle = gold;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(cx - 130, cy - 38);
+  ctx.lineTo(cx + 130, cy - 38);
+  ctx.stroke();
+
+  // Dynamic data — makes every stamp unique to its certificate.
+  const fitFont = (text: string, maxWidth: number, startPx: number): number => {
+    let px = startPx;
+    ctx.font = `bold ${px}px Helvetica, Arial, sans-serif`;
+    while (px > 12 && ctx.measureText(text).width > maxWidth) {
+      px -= 1;
+      ctx.font = `bold ${px}px Helvetica, Arial, sans-serif`;
+    }
+    return px;
+  };
+  const dataLine = (label: string, value: string, y: number) => {
+    ctx.fillStyle = gold;
+    ctx.font = "bold 18px Helvetica, Arial, sans-serif";
+    ctx.fillText(label, cx, y);
+    ctx.fillStyle = green;
+    fitFont(value, 300, 24);
+    ctx.fillText(value, cx, y + 25);
+  };
+  dataLine("CERTIFICATE No.", stamp.certificateNumber || "—", cy - 6);
+  dataLine("MEMBERSHIP No.", stamp.membershipNumber || "—", cy + 52);
+  dataLine("APPROVED ON", stamp.approvalDate || "—", cy + 110);
 
   return canvas.toDataURL("image/png");
 }
@@ -306,19 +341,38 @@ export async function generateMembershipCertificatePdf(
 
   y = Math.max(photoY + photoH, dy + 10) + 10;
 
-  // Approval date band
+  // Approval / certificate audit band
   doc.setDrawColor(...gold);
   doc.setLineWidth(0.4);
   doc.line(mL + 4, y, mR - 4, y);
   y += 6;
+
+  const auditHalf = (mR - 4 - (mL + 4)) / 2;
+  const auditCol2 = mL + 4 + auditHalf;
+  function auditField(label: string, value: string, ax: number, ay: number) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...grey);
+    doc.text(label.toUpperCase(), ax, ay);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9.5);
+    doc.setTextColor(...black);
+    doc.text(value || "—", ax, ay + 4.5);
+  }
+  // Certificate serial number is the headline of the audit block.
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
+  doc.setFontSize(7.5);
   doc.setTextColor(...grey);
-  doc.text("Date of Approval:", mL + 4, y);
+  doc.text("CERTIFICATE NUMBER", mL + 4, y);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(...black);
-  doc.text(fmtDate(approvalDate), mL + 38, y);
-  y += 14;
+  doc.setFontSize(11);
+  doc.setTextColor(...darkGreen);
+  doc.text(data.certificateNumber || "—", mL + 4, y + 5);
+  auditField("Date of Approval", fmtDate(approvalDate), auditCol2, y);
+  y += 11;
+  auditField("Approved By", data.approvedByName || "DKMO Administrator", mL + 4, y);
+  auditField("Approval Reference", data.approvalReferenceId || "—", auditCol2, y);
+  y += 13;
 
   // ── QR code + verification note (left) and stamp (right) ─────────────────
   const blockY = y;
@@ -340,7 +394,11 @@ export async function generateMembershipCertificatePdf(
   }
 
   // Stamp (right side, overlapping toward the lower area for an authentic look)
-  const stampUrl = makeApprovalStampDataUrl();
+  const stampUrl = makeApprovalStampDataUrl({
+    certificateNumber: data.certificateNumber || "",
+    membershipNumber: data.dkmoNumber,
+    approvalDate: fmtDate(approvalDate),
+  });
   if (stampUrl) {
     const gs = (doc as unknown as { GState?: new (o: { opacity: number }) => unknown }).GState;
     const setGState = (doc as unknown as { setGState?: (s: unknown) => void }).setGState;
@@ -369,23 +427,89 @@ export async function generateMembershipCertificatePdf(
   doc.text("President — DKMO", mL + 8, sy);
   doc.text("General Secretary — DKMO", mR - 8, sy, { align: "right" });
 
+  // ── Digital signature note ───────────────────────────────────────────────
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(...darkGreen);
+  doc.text("This document is digitally signed by DKMO.", PW / 2, PH - 24, {
+    align: "center",
+  });
+
   // ── Footer ───────────────────────────────────────────────────────────────
   doc.setFont("helvetica", "italic");
   doc.setFontSize(7);
   doc.setTextColor(...grey);
   doc.text(
-    "This certificate is computer-generated from the approved DKMO membership record and is valid when verified via the QR code above.",
+    "This certificate is computer-generated from the approved DKMO membership record and is valid when verified via the QR code above. Any modification invalidates the digital signature.",
     PW / 2,
     PH - 16,
     { align: "center", maxWidth: cW },
   );
 
   const safeName = data.fullName.replace(/\s+/g, "-");
-  if (output === "print") {
-    doc.autoPrint();
-    const blobUrl = doc.output("bloburl");
-    window.open(blobUrl as unknown as string, "_blank");
-  } else {
-    doc.save(`DKMO-Membership-Certificate-${data.dkmoNumber}-${safeName}.pdf`);
+  const fileName = `DKMO-Membership-Certificate-${data.dkmoNumber}-${safeName}.pdf`;
+
+  // Apply the cryptographic digital signature server-side. The server signs the
+  // exact bytes we send, so the downloaded/printed file carries a PAdES
+  // signature that breaks if the document is altered. Signing is mandatory: the
+  // document carries a visible "digitally signed by DKMO" note, so we must never
+  // emit an unsigned file. If signing fails we surface an error to the caller.
+  const pdfArrayBuffer = doc.output("arraybuffer") as ArrayBuffer;
+  const signed = await signCertificatePdfBytes(pdfArrayBuffer, data.dkmoNumber);
+  if (!signed) {
+    throw new Error("The certificate could not be digitally signed. Please try again in a moment.");
   }
+
+  const blob = new Blob([signed], { type: "application/pdf" });
+  const blobUrl = URL.createObjectURL(blob);
+  if (output === "print") {
+    const win = window.open(blobUrl, "_blank");
+    if (win) win.addEventListener("load", () => win.print());
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+  } else {
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 10_000);
+  }
+}
+
+// Sends the generated PDF to the server for cryptographic signing and returns
+// the signed bytes, or null if signing is not possible.
+async function signCertificatePdfBytes(
+  pdf: ArrayBuffer,
+  dkmoNumber: string,
+): Promise<ArrayBuffer | null> {
+  const base64 = arrayBufferToBase64(pdf);
+  const resp = await fetch(`${basePath}/api/dkmo/memberships/certificate/sign`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ dkmoNumber, pdf: base64 }),
+  });
+  if (!resp.ok) return null;
+  const body = (await resp.json()) as { pdf?: string };
+  if (!body.pdf) return null;
+  return base64ToArrayBuffer(body.pdf);
+}
+
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  return btoa(binary);
+}
+
+function base64ToArrayBuffer(base64: string): ArrayBuffer {
+  const binary = atob(base64);
+  const len = binary.length;
+  const buffer = new ArrayBuffer(len);
+  const bytes = new Uint8Array(buffer);
+  for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
+  return buffer;
 }

@@ -1,9 +1,12 @@
+import crypto from "node:crypto";
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { dkmoMembershipsTable, dkmoMembershipDependentsTable, membersTable } from "@workspace/db/schema";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, and, isNull, desc, sql } from "drizzle-orm";
 import z from "zod";
 import { requireAuth, requireRole, type AuthedRequest } from "../middlewares/requireAuth";
+import { getUserById } from "../lib/users";
+import { signCertificatePdf } from "../lib/cert-signing";
 
 const router = Router();
 
@@ -53,6 +56,68 @@ async function nextDkmoNumber(): Promise<string> {
   return (result.rows[0] as any).num as string;
 }
 
+// Allocates the next global certificate serial in the form
+// CERT-DKMO-<year>-<6-digit running number>, e.g. CERT-DKMO-2026-000010.
+async function nextCertificateNumber(): Promise<string> {
+  const result = await db.execute(sql`
+    SELECT COALESCE(MAX(CAST(SPLIT_PART(certificate_number, '-', 4) AS INTEGER)), 0) + 1 AS seq
+    FROM dkmo_memberships
+    WHERE certificate_number IS NOT NULL
+  `);
+  const seq = Number((result.rows[0] as { seq: number | string }).seq) || 1;
+  const year = new Date().getFullYear();
+  return `CERT-DKMO-${year}-${String(seq).padStart(6, "0")}`;
+}
+
+// Ensures an approved membership has a permanent certificate serial number and
+// approval audit trail (reference id, approving admin's name, issue timestamp).
+// Idempotent: returns the row unchanged once a certificate number exists. Used
+// both at approval time and as a lazy backfill for already-approved records.
+type MembershipRow = typeof dkmoMembershipsTable.$inferSelect;
+async function ensureCertificateData(row: MembershipRow): Promise<MembershipRow> {
+  if (row.certificateNumber) return row;
+
+  const approvedByName =
+    row.approvedByName ||
+    getUserById(row.approvedBy)?.displayName ||
+    "DKMO Administrator";
+  const approvalReferenceId =
+    row.approvalReferenceId ||
+    `APR-DKMO-${crypto.randomUUID().replace(/-/g, "").slice(0, 10).toUpperCase()}`;
+  const issuedAt = new Date();
+
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const certificateNumber = await nextCertificateNumber();
+    try {
+      // Atomic + idempotent: only allocate when no serial exists yet, so two
+      // concurrent calls can never overwrite an already-issued certificate.
+      const [updated] = await db
+        .update(dkmoMembershipsTable)
+        .set({
+          certificateNumber,
+          certificateIssuedAt: issuedAt,
+          approvalReferenceId,
+          approvedByName,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(dkmoMembershipsTable.id, row.id), isNull(dkmoMembershipsTable.certificateNumber)))
+        .returning();
+      if (updated) return updated;
+      // No row updated → a concurrent call already issued the serial; re-read it.
+      const [current] = await db
+        .select()
+        .from(dkmoMembershipsTable)
+        .where(eq(dkmoMembershipsTable.id, row.id));
+      return current ?? row;
+    } catch (err) {
+      // The chosen serial collided with another membership's; recompute & retry.
+      if (isUniqueViolation(err)) continue;
+      throw err;
+    }
+  }
+  throw new Error("Could not allocate a certificate number");
+}
+
 function membershipToApi(r: typeof dkmoMembershipsTable.$inferSelect) {
   return {
     id: r.id,
@@ -97,6 +162,10 @@ function membershipToApi(r: typeof dkmoMembershipsTable.$inferSelect) {
     rejectedAt: r.rejectedAt?.toISOString() ?? null,
     remarks: r.remarks,
     membershipDate: r.membershipDate,
+    certificateNumber: r.certificateNumber,
+    certificateIssuedAt: r.certificateIssuedAt?.toISOString() ?? null,
+    approvalReferenceId: r.approvalReferenceId,
+    approvedByName: r.approvedByName,
     createdAt: r.createdAt.toISOString(),
     updatedAt: r.updatedAt.toISOString(),
   };
@@ -289,6 +358,10 @@ function membershipToCertificate(r: typeof dkmoMembershipsTable.$inferSelect) {
     status: r.status,
     approvedAt: r.approvedAt?.toISOString() ?? null,
     membershipDate: r.membershipDate,
+    certificateNumber: r.certificateNumber,
+    certificateIssuedAt: r.certificateIssuedAt?.toISOString() ?? null,
+    approvalReferenceId: r.approvalReferenceId,
+    approvedByName: r.approvedByName,
     createdAt: r.createdAt.toISOString(),
   };
 }
@@ -322,7 +395,72 @@ router.get("/dkmo/memberships/certificate", async (req, res): Promise<void> => {
     res.status(403).json({ error: "The official membership document is available only after your application is approved by DKMO." });
     return;
   }
-  res.json(membershipToCertificate(match));
+  // Backfill the certificate serial + audit trail for records approved before
+  // this feature existed, so every approved member has a permanent serial.
+  const withCert = await ensureCertificateData(match);
+  res.json(membershipToCertificate(withCert));
+});
+
+// ── Public: cryptographically sign a generated certificate PDF (gated) ───────
+// The client builds the certificate PDF and posts its bytes here. The server
+// applies a PAdES digital signature using the DKMO signing key, so any later
+// modification of the document invalidates the signature. Only available for
+// approved records, proven by exact dkmoNumber or full registered mobile.
+const SignCertificateInput = z.object({
+  dkmoNumber: z.string().trim().optional(),
+  mobile: z.string().trim().optional(),
+  pdf: z.string().min(1),
+});
+
+router.post("/dkmo/memberships/certificate/sign", async (req, res): Promise<void> => {
+  const parsed = SignCertificateInput.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: "Invalid request" }); return; }
+  const { dkmoNumber: dkmoNumberRaw = "", mobile: mobileRaw = "", pdf } = parsed.data;
+  if (!dkmoNumberRaw && !mobileRaw) {
+    res.status(400).json({ error: "Provide dkmoNumber or mobile" });
+    return;
+  }
+
+  const rows = await db.select().from(dkmoMembershipsTable).orderBy(desc(dkmoMembershipsTable.createdAt));
+  let match: typeof rows[number] | undefined;
+  if (dkmoNumberRaw) {
+    const q = dkmoNumberRaw.toLowerCase();
+    match = rows.find((r) => r.dkmoNumber.toLowerCase() === q);
+  } else {
+    const q = onlyDigits(mobileRaw);
+    if (q.length < 10) { res.status(400).json({ error: "Enter your full registered mobile number" }); return; }
+    match = rows.find((r) => onlyDigits(r.mobileSaudi) === q || onlyDigits(r.mobileIndia) === q);
+  }
+
+  if (!match) { res.status(404).json({ error: "No application found" }); return; }
+  if (!isApprovedStatus(match.status)) {
+    res.status(403).json({ error: "The official membership document is available only after your application is approved by DKMO." });
+    return;
+  }
+
+  const withCert = await ensureCertificateData(match);
+  let pdfBuffer: Buffer;
+  try {
+    pdfBuffer = Buffer.from(pdf, "base64");
+  } catch {
+    res.status(400).json({ error: "Invalid PDF payload" });
+    return;
+  }
+  if (pdfBuffer.length === 0 || pdfBuffer.length > 6 * 1024 * 1024) {
+    res.status(400).json({ error: "Invalid PDF payload" });
+    return;
+  }
+
+  try {
+    const signed = await signCertificatePdf(pdfBuffer, {
+      certificateNumber: withCert.certificateNumber ?? "",
+      membershipNumber: withCert.dkmoNumber,
+    });
+    res.json({ pdf: signed.toString("base64") });
+  } catch (err) {
+    req.log.error({ err }, "Failed to digitally sign certificate PDF");
+    res.status(500).json({ error: "Could not sign the certificate" });
+  }
 });
 
 // ── Public: QR verification (approval-gated, minimal) ────────────────────────
@@ -342,12 +480,15 @@ router.get("/dkmo/memberships/verify", async (req, res): Promise<void> => {
     res.json({ found: false });
     return;
   }
+  const withCert = await ensureCertificateData(match);
   res.json({
     found: true,
-    fullName: match.fullName,
-    membershipNumber: match.dkmoNumber,
+    fullName: withCert.fullName,
+    membershipNumber: withCert.dkmoNumber,
+    certificateNumber: withCert.certificateNumber,
     status: "active",
-    approvedAt: match.approvedAt?.toISOString() ?? null,
+    approvedAt: withCert.approvedAt?.toISOString() ?? null,
+    digitallySigned: true,
   });
 });
 
@@ -570,7 +711,13 @@ router.patch("/dkmo/memberships/:id", async (req, res): Promise<void> => {
 
   let statusExtras: Record<string, unknown> = {};
   if (fields.status === "under_review") statusExtras = { reviewedBy: actor, reviewedAt: now };
-  if (fields.status === "approved") statusExtras = { approvedBy: actor, approvedAt: now };
+  if (fields.status === "approved") {
+    statusExtras = {
+      approvedBy: actor,
+      approvedAt: now,
+      approvedByName: getUserById(actor)?.displayName || "DKMO Administrator",
+    };
+  }
   if (fields.status === "rejected") statusExtras = { rejectedBy: actor, rejectedAt: now };
 
   let updated: typeof dkmoMembershipsTable.$inferSelect | undefined;
@@ -664,6 +811,16 @@ router.patch("/dkmo/memberships/:id", async (req, res): Promise<void> => {
     } catch (err) {
       // A member with this membershipId may already exist; log and continue.
       req.log.warn({ err }, "Failed to auto-create member on approval");
+    }
+  }
+
+  // On approval, allocate the permanent certificate serial + approval audit
+  // trail so the certificate, its serial and the stamp become available.
+  if (fields.status === "approved" && updated && !updated.certificateNumber) {
+    try {
+      updated = await ensureCertificateData(updated);
+    } catch (err) {
+      req.log.error({ err }, "Failed to allocate certificate data on approval");
     }
   }
 

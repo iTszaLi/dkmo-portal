@@ -11,8 +11,10 @@ interface VerifyResult {
   found: boolean;
   fullName?: string;
   membershipNumber?: string;
+  certificateNumber?: string | null;
   status?: string;
   approvedAt?: string | null;
+  digitallySigned?: boolean;
 }
 
 function formatDate(iso: string | null | undefined) {
@@ -91,6 +93,12 @@ export default function DkmoVerifyPage() {
                   <span className="text-slate-500 dark:text-slate-400">Membership Number</span>
                   <span className="font-mono font-semibold text-green-800 dark:text-green-300">{result?.membershipNumber}</span>
                 </div>
+                {result?.certificateNumber ? (
+                  <div className="flex justify-between gap-3">
+                    <span className="text-slate-500 dark:text-slate-400">Certificate Number</span>
+                    <span className="font-mono font-semibold text-green-800 dark:text-green-300 text-right">{result.certificateNumber}</span>
+                  </div>
+                ) : null}
                 <div className="flex justify-between">
                   <span className="text-slate-500 dark:text-slate-400">Status</span>
                   <span className="font-semibold text-green-700 dark:text-green-400 uppercase">Active</span>
@@ -100,6 +108,13 @@ export default function DkmoVerifyPage() {
                   <span className="text-slate-700 dark:text-slate-300">{formatDate(result?.approvedAt)}</span>
                 </div>
               </div>
+
+              {result?.digitallySigned ? (
+                <div className="flex items-center justify-center gap-1.5 text-xs font-medium text-green-700 dark:text-green-400">
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  Official certificate is digitally signed by DKMO
+                </div>
+              ) : null}
 
               <p className="text-center text-xs text-slate-400 dark:text-slate-500">
                 This membership is officially recognised by DKMO.

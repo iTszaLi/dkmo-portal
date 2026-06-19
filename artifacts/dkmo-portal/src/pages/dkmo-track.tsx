@@ -107,6 +107,9 @@ export default function DkmoTrackPage() {
           photoUrl: data.photoUrl,
           approvedAt: data.approvedAt,
           createdAt: data.createdAt,
+          certificateNumber: data.certificateNumber,
+          approvalReferenceId: data.approvalReferenceId,
+          approvedByName: data.approvedByName,
         },
         { output },
       );

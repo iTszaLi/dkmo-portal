@@ -179,6 +179,15 @@ importers:
       '@google-cloud/storage':
         specifier: ^7.21.0
         version: 7.21.0
+      '@signpdf/placeholder-plain':
+        specifier: 3.3.0
+        version: 3.3.0
+      '@signpdf/signer-p12':
+        specifier: 3.3.0
+        version: 3.3.0(node-forge@1.4.0)
+      '@signpdf/signpdf':
+        specifier: 3.3.0
+        version: 3.3.0
       '@workspace/api-zod':
         specifier: workspace:*
         version: link:../../lib/api-zod
@@ -212,6 +221,9 @@ importers:
       http-proxy-middleware:
         specifier: ^3.0.5
         version: 3.0.5
+      node-forge:
+        specifier: 1.4.0
+        version: 1.4.0
       pg:
         specifier: ^8.20.0
         version: 8.20.0
@@ -246,6 +258,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 25.3.5
+      '@types/node-forge':
+        specifier: ^1.3.14
+        version: 1.3.14
       '@types/pg':
         specifier: ^8.18.0
         version: 8.18.0
@@ -1682,6 +1697,30 @@ packages:
   '@shikijs/vscode-textmate@10.0.2':
     resolution: {integrity: sha512-83yeghZ2xxin3Nj8z1NMd/NCuca+gsYXswywDy5bHvwlWL8tpTQmzGeUuHd9FC3E/SBEMvzJRwWEOz5gGes9Qg==}
 
+  '@signpdf/placeholder-pdfkit010@3.3.0':
+    resolution: {integrity: sha512-tfXvynZDT68VoQg80cSdN5TET3ZzLMQCNHQpc3RJCi67YnhRromVhyCwMyi2tCdApGo2rkI46x6e9kCPvNsaBA==}
+    engines: {node: '>=12', yarn: '>=1.22.18'}
+    peerDependencies:
+      pdfkit: ~0.10.0
+
+  '@signpdf/placeholder-plain@3.3.0':
+    resolution: {integrity: sha512-n7jt1Dzo3wocI64Pb8YhB+gvHAeaxweR7oHj5Xn3CyUVsP8LmXEWwJOUdWmtTrDfAupEiQtcro/EeskLiNy1vA==}
+    engines: {node: '>=12'}
+
+  '@signpdf/signer-p12@3.3.0':
+    resolution: {integrity: sha512-MLynYKgUBu29ojIueIDV34sIOFDFpP0s1gQORxCc0zhs1jfy0juqU2xQpjUayMbhzB4L0zS9dPwgHtok1f89Cg==}
+    engines: {node: '>=12', yarn: '>=1.22.18'}
+    peerDependencies:
+      node-forge: ^1.3.3
+
+  '@signpdf/signpdf@3.3.0':
+    resolution: {integrity: sha512-/vy3dPTsTbLHdsKRarPQw8++UqN8GXxjEVnl4ZRl+o/zMWFqVb861RM5bxoRMGGMuPSvb1Rgt2lmVobEc0YUpw==}
+    engines: {node: '>=12'}
+
+  '@signpdf/utils@3.3.0':
+    resolution: {integrity: sha512-ArOP0MIhCfdChh1oZkog81TPeSY2e5TvHQmXJ682T4+SKb6Z609uAZhqMQZ9xm+YenEf/eNMSE5KVwU+EudXug==}
+    engines: {node: '>=12', yarn: '>=1.22.18'}
+
   '@sindresorhus/merge-streams@4.0.0':
     resolution: {integrity: sha512-tlqY9xq5ukxTUZBmoOp+m61cqwQD5pHJtFY3Mn8CA8ps6yghLH/Hw8UPdqg4OLmFW3IFlcXnQNmo/dh8HzXYIQ==}
     engines: {node: '>=18'}
@@ -1824,6 +1863,9 @@ packages:
 
   '@types/http-proxy@1.17.17':
     resolution: {integrity: sha512-ED6LB+Z1AVylNTu7hdzuBqOgMnvG/ld6wGCG8wFnAzKX5uyW2K3WD52v0gnLCTK/VLpXtKckgWuyScYK6cSPaw==}
+
+  '@types/node-forge@1.3.14':
+    resolution: {integrity: sha512-mhVF2BnD4BO+jtOp7z1CdzaK4mbuK0LLQYAvdOLqHTavxFNq4zA1EmYkpnFjP8HOUzedfQkRnp0E2ulSAYSzAw==}
 
   '@types/node@14.18.63':
     resolution: {integrity: sha512-fAtCfv4jJg+ExtXhvCkCqUKZ+4ok/JQk01qDKhL5BDDoS3AxKXhV5/MAVUZyQnSEd2GT92fkgZl0pz0Q0AzcIQ==}
@@ -3246,6 +3288,10 @@ packages:
   node-fetch@3.3.2:
     resolution: {integrity: sha512-dRB78srN/l6gqWulah9SrxeYnxeddIG30+GOqK/9OlLVyLg3HPnr6SqOWTWOXKRwC2eGYCkZ59NNuSgvSrpgOA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+
+  node-forge@1.4.0:
+    resolution: {integrity: sha512-LarFH0+6VfriEhqMMcLX2F7SwSXeWwnEAJEsYm5QKWchiVYVvJyV9v7UDvUv+w5HO23ZpQTXDv/GxdDdMyOuoQ==}
+    engines: {node: '>= 6.13.0'}
 
   node-releases@2.0.36:
     resolution: {integrity: sha512-TdC8FSgHz8Mwtw9g5L4gR/Sh9XhSP/0DEkQxfEFXOpiul5IiHgHan2VhYYb6agDSfp4KuvltmGApc8HMgUrIkA==}
@@ -5282,6 +5328,28 @@ snapshots:
 
   '@shikijs/vscode-textmate@10.0.2': {}
 
+  '@signpdf/placeholder-pdfkit010@3.3.0':
+    dependencies:
+      '@signpdf/utils': 3.3.0
+
+  '@signpdf/placeholder-plain@3.3.0':
+    dependencies:
+      '@signpdf/placeholder-pdfkit010': 3.3.0
+      '@signpdf/utils': 3.3.0
+    transitivePeerDependencies:
+      - pdfkit
+
+  '@signpdf/signer-p12@3.3.0(node-forge@1.4.0)':
+    dependencies:
+      '@signpdf/utils': 3.3.0
+      node-forge: 1.4.0
+
+  '@signpdf/signpdf@3.3.0':
+    dependencies:
+      '@signpdf/utils': 3.3.0
+
+  '@signpdf/utils@3.3.0': {}
+
   '@sindresorhus/merge-streams@4.0.0': {}
 
   '@tabby_ai/hijri-converter@1.0.5': {}
@@ -5430,6 +5498,10 @@ snapshots:
   '@types/http-errors@2.0.5': {}
 
   '@types/http-proxy@1.17.17':
+    dependencies:
+      '@types/node': 25.3.5
+
+  '@types/node-forge@1.3.14':
     dependencies:
       '@types/node': 25.3.5
 
@@ -6819,6 +6891,8 @@ snapshots:
       data-uri-to-buffer: 4.0.1
       fetch-blob: 3.2.0
       formdata-polyfill: 4.0.10
+
+  node-forge@1.4.0: {}
 
   node-releases@2.0.36: {}
 

@@ -379,6 +379,31 @@ async function main() {
       ADD COLUMN IF NOT EXISTS transfer_method TEXT NOT NULL DEFAULT 'bank_transfer';
   `);
 
+  // Certificate serial number + approval audit trail for DKMO memberships.
+  await pool.query(`
+    ALTER TABLE dkmo_memberships
+      ADD COLUMN IF NOT EXISTS certificate_number TEXT,
+      ADD COLUMN IF NOT EXISTS certificate_issued_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS approval_reference_id TEXT NOT NULL DEFAULT '',
+      ADD COLUMN IF NOT EXISTS approved_by_name TEXT NOT NULL DEFAULT '';
+  `);
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS dkmo_memberships_certificate_number_unique
+      ON dkmo_memberships (certificate_number)
+      WHERE certificate_number IS NOT NULL;
+  `);
+
+  // Document-signing key material (self-signed RSA + X.509), one row per purpose.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS app_signing_keys (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      purpose TEXT NOT NULL UNIQUE,
+      private_key_pem TEXT NOT NULL,
+      cert_pem TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+
   // Replace the single committee_level enum with two fully independent boolean
   // flags. Add the columns, backfill from the legacy column (executive members
   // were also part of the core committee), then drop the legacy column.

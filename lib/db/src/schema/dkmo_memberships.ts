@@ -49,6 +49,11 @@ export const dkmoMembershipsTable = pgTable("dkmo_memberships", {
   rejectedAt: timestamp("rejected_at", { withTimezone: true }),
   remarks: text("remarks").notNull().default(""),
   membershipDate: date("membership_date"),
+  // Certificate & approval audit trail (populated on approval, permanent)
+  certificateNumber: text("certificate_number").unique(),
+  certificateIssuedAt: timestamp("certificate_issued_at", { withTimezone: true }),
+  approvalReferenceId: text("approval_reference_id").notNull().default(""),
+  approvedByName: text("approved_by_name").notNull().default(""),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
