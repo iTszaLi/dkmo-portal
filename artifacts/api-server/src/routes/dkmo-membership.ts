@@ -207,6 +207,83 @@ router.get("/dkmo/memberships/track", async (req, res): Promise<void> => {
   res.json(filtered.map(membershipToPublicTrack));
 });
 
+// ── Public: official certificate data (approval-gated) ───────────────────────
+// Returns the data needed to build the official membership certificate, but ONLY
+// when the application has been approved by an admin. This is the security gate:
+// the certificate is unreachable before approval, and the payload is sourced
+// directly from the database record. Identity is proven by exact dkmoNumber or a
+// full registered mobile number (same matching rules as /track).
+function membershipToCertificate(r: typeof dkmoMembershipsTable.$inferSelect) {
+  return {
+    dkmoNumber: r.dkmoNumber,
+    fullName: r.fullName,
+    mobile: r.mobileSaudi || r.mobileIndia || "",
+    photoUrl: r.photoUrl,
+    status: r.status,
+    approvedAt: r.approvedAt?.toISOString() ?? null,
+    membershipDate: r.membershipDate,
+    createdAt: r.createdAt.toISOString(),
+  };
+}
+
+const isApprovedStatus = (s: string) => s === "approved" || s === "completed";
+
+router.get("/dkmo/memberships/certificate", async (req, res): Promise<void> => {
+  const dkmoNumberRaw = typeof req.query.dkmoNumber === "string" ? req.query.dkmoNumber.trim() : "";
+  const mobileRaw = typeof req.query.mobile === "string" ? req.query.mobile.trim() : "";
+  if (!dkmoNumberRaw && !mobileRaw) {
+    res.status(400).json({ error: "Provide dkmoNumber or mobile" });
+    return;
+  }
+  const rows = await db.select().from(dkmoMembershipsTable).orderBy(desc(dkmoMembershipsTable.createdAt));
+
+  let match: typeof rows[number] | undefined;
+  if (dkmoNumberRaw) {
+    const q = dkmoNumberRaw.toLowerCase();
+    match = rows.find((r) => r.dkmoNumber.toLowerCase() === q);
+  } else {
+    const q = onlyDigits(mobileRaw);
+    if (q.length < 10) {
+      res.status(400).json({ error: "Enter your full registered mobile number" });
+      return;
+    }
+    match = rows.find((r) => onlyDigits(r.mobileSaudi) === q || onlyDigits(r.mobileIndia) === q);
+  }
+
+  if (!match) { res.status(404).json({ error: "No application found" }); return; }
+  if (!isApprovedStatus(match.status)) {
+    res.status(403).json({ error: "The official membership document is available only after your application is approved by DKMO." });
+    return;
+  }
+  res.json(membershipToCertificate(match));
+});
+
+// ── Public: QR verification (approval-gated, minimal) ────────────────────────
+// Target of the QR code printed on the certificate. Returns a minimal, non-PII
+// verification record; reports an active membership only for approved records.
+router.get("/dkmo/memberships/verify", async (req, res): Promise<void> => {
+  const dkmoNumberRaw = typeof req.query.dkmoNumber === "string" ? req.query.dkmoNumber.trim() : "";
+  if (!dkmoNumberRaw) {
+    res.status(400).json({ error: "Provide dkmoNumber" });
+    return;
+  }
+  const q = dkmoNumberRaw.toLowerCase();
+  const rows = await db.select().from(dkmoMembershipsTable);
+  const match = rows.find((r) => r.dkmoNumber.toLowerCase() === q);
+
+  if (!match || !isApprovedStatus(match.status)) {
+    res.json({ found: false });
+    return;
+  }
+  res.json({
+    found: true,
+    fullName: match.fullName,
+    membershipNumber: match.dkmoNumber,
+    status: "active",
+    approvedAt: match.approvedAt?.toISOString() ?? null,
+  });
+});
+
 // ── Public: member lookup list for reference member dropdown ─────────────────
 router.get("/dkmo/members-list", async (_req, res): Promise<void> => {
   const rows = await db

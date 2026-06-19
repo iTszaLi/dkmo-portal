@@ -31,6 +31,7 @@ import WelfareService from "@/pages/welfare-service";
 import DkmoApply from "@/pages/dkmo-apply";
 import DkmoTrack from "@/pages/dkmo-track";
 import DkmoTerms from "@/pages/dkmo-terms";
+import DkmoVerify from "@/pages/dkmo-verify";
 import DkmoMemberships from "@/pages/dkmo-memberships";
 import Loans from "@/pages/loans";
 import Receipts from "@/pages/receipts";
@@ -114,6 +115,7 @@ function AppRoutes() {
       <Route path="/dkmo-apply" component={DkmoApply} />
       <Route path="/dkmo-track" component={DkmoTrack} />
       <Route path="/dkmo-terms" component={DkmoTerms} />
+      <Route path="/dkmo-verify" component={DkmoVerify} />
       {/* Backwards-compat: redirect old Clerk paths to /login */}
       <Route path="/sign-in/:rest*" component={() => <Redirect to="/login" />} />
       <Route path="/sign-up/:rest*" component={() => <Redirect to="/login" />} />

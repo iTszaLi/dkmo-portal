@@ -2,12 +2,15 @@ import { useState, type FormEvent } from "react";
 import { useLocation } from "wouter";
 import {
   CheckCircle, XCircle, Clock, Search, Loader2, ArrowLeft, RefreshCw, MessageCircle,
+  Download, Printer, ShieldCheck, PartyPopper,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { generateMembershipCertificatePdf } from "@/lib/dkmo-certificate-pdf";
+import { useToast } from "@/hooks/use-toast";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -77,11 +80,46 @@ function formatDate(iso: string) {
 
 export default function DkmoTrackPage() {
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
   const [query, setQuery] = useState("");
   const [queryType, setQueryType] = useState<"dkmoNumber" | "mobile">("dkmoNumber");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<TrackResult[] | null>(null);
+  const [certBusy, setCertBusy] = useState<string | null>(null);
+
+  async function handleCertificate(dkmoNumber: string, output: "save" | "print") {
+    setCertBusy(`${dkmoNumber}:${output}`);
+    try {
+      const res = await fetch(
+        `${basePath}/api/dkmo/memberships/certificate?dkmoNumber=${encodeURIComponent(dkmoNumber)}`,
+      );
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error((body as { error?: string }).error || "Certificate is not available yet.");
+      }
+      const data = await res.json();
+      await generateMembershipCertificatePdf(
+        {
+          dkmoNumber: data.dkmoNumber,
+          fullName: data.fullName,
+          mobile: data.mobile,
+          photoUrl: data.photoUrl,
+          approvedAt: data.approvedAt,
+          createdAt: data.createdAt,
+        },
+        { output },
+      );
+    } catch (err) {
+      toast({
+        title: "Unable to generate certificate",
+        description: err instanceof Error ? err.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setCertBusy(null);
+    }
+  }
 
   async function handleSearch(e?: FormEvent) {
     e?.preventDefault();
@@ -214,6 +252,49 @@ export default function DkmoTrackPage() {
                   </div>
                   <p className="text-sm text-slate-600 dark:text-slate-400 max-w-sm">{cfg.description}</p>
                 </div>
+
+                {/* Approved: official membership document (gated — only shown once approved) */}
+                {(r.status === "approved" || r.status === "completed") && (
+                  <div className="rounded-2xl border-2 border-green-300 dark:border-green-800/60 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/20 p-5 animate-in fade-in zoom-in-95 duration-500">
+                    <div className="flex items-center gap-2 text-green-800 dark:text-green-300 font-bold">
+                      <PartyPopper className="h-5 w-5" />
+                      Membership Approved by DKMO
+                    </div>
+                    <p className="mt-1 text-sm text-green-700/80 dark:text-green-300/70">
+                      Your official membership document is now ready. Download or print your certificate below.
+                    </p>
+                    <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <Button
+                        size="sm"
+                        disabled={certBusy !== null}
+                        onClick={() => void handleCertificate(r.dkmoNumber, "save")}
+                        className="bg-green-800 hover:bg-green-900 dark:bg-green-700 dark:hover:bg-green-600 text-white gap-1.5"
+                      >
+                        {certBusy === `${r.dkmoNumber}:save` ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                        Download PDF
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={certBusy !== null}
+                        onClick={() => void handleCertificate(r.dkmoNumber, "print")}
+                        className="border-green-400 dark:border-green-800 text-green-800 dark:text-green-300 gap-1.5"
+                      >
+                        {certBusy === `${r.dkmoNumber}:print` ? <Loader2 className="h-4 w-4 animate-spin" /> : <Printer className="h-4 w-4" />}
+                        Print PDF
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setLocation(`${basePath}/dkmo-verify?n=${encodeURIComponent(r.dkmoNumber)}`)}
+                        className="border-green-400 dark:border-green-800 text-green-800 dark:text-green-300 gap-1.5"
+                      >
+                        <ShieldCheck className="h-4 w-4" />
+                        View Profile
+                      </Button>
+                    </div>
+                  </div>
+                )}
 
                 <hr className="border-current opacity-10" />
 

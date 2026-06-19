@@ -15,6 +15,8 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { generateDkmoPdf, generateFrfApplicationPdf } from "@/lib/dkmo-pdf";
+import { generateMembershipCertificatePdf } from "@/lib/dkmo-certificate-pdf";
+import { Award } from "lucide-react";
 
 const bp = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -174,6 +176,17 @@ export default function DkmoMemberships() {
 
   function handleDownloadFrfPdf(m: DkmoMembership) {
     void generateFrfApplicationPdf(pdfFormData(m), [], m.dkmoNumber, fmtDate(m.createdAt));
+  }
+
+  function handleDownloadCertificate(m: DkmoMembership) {
+    void generateMembershipCertificatePdf({
+      dkmoNumber: m.dkmoNumber,
+      fullName: m.fullName,
+      mobile: m.mobileSaudi || m.mobileIndia,
+      photoUrl: null,
+      approvedAt: m.approvedAt,
+      createdAt: m.createdAt,
+    });
   }
 
   return (
@@ -424,6 +437,12 @@ export default function DkmoMemberships() {
                   className="border-green-300 dark:border-green-800 text-green-800 dark:text-green-300 gap-1">
                   <FileText className="h-3.5 w-3.5" /> FRF Application Form
                 </Button>
+                {(selected.status === "approved" || selected.status === "completed") && (
+                  <Button variant="outline" onClick={() => handleDownloadCertificate(selected)}
+                    className="border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-400 gap-1">
+                    <Award className="h-3.5 w-3.5" /> Membership Certificate
+                  </Button>
+                )}
                 {selected.status !== "approved" && selected.status !== "completed" && (
                   <Button onClick={() => updateStatus(selected.id, "approved")} disabled={saving}
                     className="bg-green-700 hover:bg-green-800 text-white gap-1">
