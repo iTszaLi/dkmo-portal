@@ -63,7 +63,22 @@ export default function Members() {
     }
   }, [search, members, navigate]);
 
-  const handleCreate = (data: MemberInput) => {
+  // Soft duplicate check (admin exception): members can legitimately share a
+  // mobile in rare cases, so this only warns + asks for confirmation — it never
+  // hard-blocks like the public membership application does.
+  const [dupConfirm, setDupConfirm] = useState<{ data: MemberInput; existing: any; mode: "create" | "update" } | null>(null);
+
+  const findMobileDup = (mobile: string, excludeId?: string) => {
+    const d = (mobile || "").replace(/\D/g, "").replace(/^0+/, "");
+    if (d.length < 7 || !members) return null;
+    return members.find((m: any) => {
+      if (excludeId && m.id === excludeId) return false;
+      const md = (m.mobileNumber || "").replace(/\D/g, "").replace(/^0+/, "");
+      return md === d;
+    }) ?? null;
+  };
+
+  const doCreate = (data: MemberInput) => {
     createMember.mutate({ data }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListMembersQueryKey() });
@@ -76,9 +91,8 @@ export default function Members() {
     });
   };
 
-  const handleUpdate = (data: MemberInput) => {
-    if (!editingMember) return;
-    updateMember.mutate({ id: editingMember.id, data }, {
+  const doUpdate = (data: MemberInput, id: string) => {
+    updateMember.mutate({ id, data }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListMembersQueryKey() });
         setEditingMember(null);
@@ -88,6 +102,26 @@ export default function Members() {
         toast({ title: "Failed to update member", description: err.message, variant: "destructive" });
       }
     });
+  };
+
+  const handleCreate = (data: MemberInput) => {
+    const existing = findMobileDup(data.mobileNumber);
+    if (existing) { setDupConfirm({ data, existing, mode: "create" }); return; }
+    doCreate(data);
+  };
+
+  const handleUpdate = (data: MemberInput) => {
+    if (!editingMember) return;
+    const existing = findMobileDup(data.mobileNumber, editingMember.id);
+    if (existing) { setDupConfirm({ data, existing, mode: "update" }); return; }
+    doUpdate(data, editingMember.id);
+  };
+
+  const confirmDuplicateSave = () => {
+    if (!dupConfirm) return;
+    if (dupConfirm.mode === "create") doCreate(dupConfirm.data);
+    else if (editingMember) doUpdate(dupConfirm.data, editingMember.id);
+    setDupConfirm(null);
   };
 
   const handleDelete = () => {
@@ -369,6 +403,23 @@ export default function Members() {
           <AlertDialogFooter>
             <AlertDialogCancel className="dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700">Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!dupConfirm} onOpenChange={(open) => !open && setDupConfirm(null)}>
+        <AlertDialogContent className="dark:bg-slate-900 dark:border-slate-800">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="dark:text-slate-100">Possible duplicate member</AlertDialogTitle>
+            <AlertDialogDescription className="dark:text-slate-400">
+              A member with this mobile number already exists
+              {dupConfirm?.existing ? `: ${dupConfirm.existing.fullName} (${dupConfirm.existing.membershipId})` : ""}.
+              {" "}Do you still want to save this record?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDuplicateSave} className="bg-amber-600 hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-600">Save anyway</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -33,6 +33,7 @@ import DkmoTrack from "@/pages/dkmo-track";
 import DkmoTerms from "@/pages/dkmo-terms";
 import DkmoVerify from "@/pages/dkmo-verify";
 import DkmoMemberships from "@/pages/dkmo-memberships";
+import DkmoDuplicates from "@/pages/dkmo-duplicates";
 import Loans from "@/pages/loans";
 import Receipts from "@/pages/receipts";
 import PrintReceipts from "@/pages/print-receipts";
@@ -143,6 +144,7 @@ function AppRoutes() {
       <Route path="/services/:type" component={() => <AuthenticatedRoute component={WelfareService} />} />
       <Route path="/frf" component={() => <AuthenticatedRoute component={Frf} />} />
       <Route path="/dkmo-memberships" component={() => <AuthenticatedRoute component={DkmoMemberships} />} />
+      <Route path="/duplicates" component={() => <AuthenticatedRoute component={DkmoDuplicates} roles={["admin"]} />} />
       <Route path="/loans" component={() => <AuthenticatedRoute component={Loans} />} />
       <Route path="/receipts" component={() => <AuthenticatedRoute component={Receipts} />} />
       <Route path="/print-receipts" component={() => <AuthenticatedRoute component={PrintReceipts} />} />

@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, ilike, or, and, ne, desc, sql, type SQL } from "drizzle-orm";
+import { eq, ilike, or, desc, sql, type SQL } from "drizzle-orm";
 import { db, membersTable } from "@workspace/db";
 import {
   CreateMemberBody,
@@ -67,39 +67,6 @@ router.get("/members", async (req, res): Promise<void> => {
 });
 
 /**
- * Detects an existing member that collides on mobile number or Iqama number.
- * Returns a human-readable message when a duplicate is found, otherwise null.
- * `excludeId` skips the member currently being edited (for updates).
- */
-async function findMemberDuplicate(
-  mobileNumber: string,
-  iqamaNumber: string,
-  excludeId?: string,
-): Promise<string | null> {
-  const mobile = (mobileNumber ?? "").trim();
-  const iqama = (iqamaNumber ?? "").trim();
-  const conditions: SQL[] = [];
-  if (mobile) conditions.push(eq(membersTable.mobileNumber, mobile));
-  if (iqama) conditions.push(eq(membersTable.iqamaNumber, iqama));
-  if (conditions.length === 0) return null;
-
-  const whereClause = excludeId
-    ? and(ne(membersTable.id, excludeId), or(...conditions))
-    : or(...conditions);
-
-  const rows = await db.select().from(membersTable).where(whereClause);
-  for (const row of rows) {
-    if (mobile && row.mobileNumber.trim() === mobile) {
-      return `A member with mobile number ${mobile} already exists (${row.fullName}).`;
-    }
-    if (iqama && row.iqamaNumber.trim() === iqama) {
-      return `A member with Iqama number ${iqama} already exists (${row.fullName}).`;
-    }
-  }
-  return null;
-}
-
-/**
  * Generates the next sequential membership ID in the form DKMO-YYYY-XXXX.
  * The sequence resets per calendar year and pads to 4 digits.
  */
@@ -123,15 +90,6 @@ router.post("/members", async (req, res): Promise<void> => {
   const parsed = CreateMemberBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
-    return;
-  }
-
-  const duplicate = await findMemberDuplicate(
-    parsed.data.mobileNumber,
-    parsed.data.iqamaNumber ?? "",
-  );
-  if (duplicate) {
-    res.status(409).json({ error: duplicate });
     return;
   }
 
@@ -220,16 +178,6 @@ router.patch("/members/:id", async (req, res): Promise<void> => {
       .where(eq(membersTable.id, params.data.id));
     if (!existing) {
       res.status(404).json({ error: "Member not found" });
-      return;
-    }
-
-    const duplicate = await findMemberDuplicate(
-      parsed.data.mobileNumber,
-      parsed.data.iqamaNumber ?? "",
-      params.data.id,
-    );
-    if (duplicate) {
-      res.status(409).json({ error: duplicate });
       return;
     }
 

@@ -402,6 +402,21 @@ async function main() {
     END $$;
   `);
 
+  // Enforce uniqueness of DKMO membership accounts at the database level.
+  // Rejected applications are excluded so applicants may re-apply after a
+  // rejection; empty values are excluded so missing data does not collide.
+  // Email is compared case-insensitively.
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS dkmo_memberships_mobile_saudi_unique
+      ON dkmo_memberships (mobile_saudi)
+      WHERE status <> 'rejected' AND mobile_saudi <> '';
+  `);
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS dkmo_memberships_email_unique
+      ON dkmo_memberships (lower(email))
+      WHERE status <> 'rejected' AND email <> '';
+  `);
+
   console.log("✅  All tables created.");
   await pool.end();
 }

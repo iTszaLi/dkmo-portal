@@ -3,7 +3,7 @@ import { db } from "@workspace/db";
 import { dkmoMembershipsTable, dkmoMembershipDependentsTable, membersTable } from "@workspace/db/schema";
 import { eq, desc, sql } from "drizzle-orm";
 import z from "zod";
-import { requireAuth, type AuthedRequest } from "../middlewares/requireAuth";
+import { requireAuth, requireRole, type AuthedRequest } from "../middlewares/requireAuth";
 
 const router = Router();
 
@@ -110,46 +110,62 @@ router.post("/dkmo/memberships/apply", async (req, res): Promise<void> => {
     return;
   }
 
+  const dup = await findMembershipDuplicates({ mobileSaudi: parsed.data.mobileSaudi, email: parsed.data.email });
+  if (dup.mobile || dup.email) {
+    res.status(409).json(duplicateConflictBody(dup));
+    return;
+  }
+
   const dkmoNumber = await nextDkmoNumber();
   const { dependents, ...fields } = parsed.data;
 
-  const [created] = await db
-    .insert(dkmoMembershipsTable)
-    .values({
-      dkmoNumber,
-      memberId: null,
-      fullName: fields.fullName,
-      dateOfBirth: fields.dateOfBirth ?? null,
-      bloodGroup: fields.bloodGroup,
-      maritalStatus: fields.maritalStatus,
-      familyInSaudi: fields.familyInSaudi,
-      numDependents: fields.numDependents,
-      passportNumber: fields.passportNumber,
-      iqamaNumber: fields.iqamaNumber,
-      occupation: fields.occupation,
-      companyName: fields.companyName,
-      mobileSaudi: fields.mobileSaudi,
-      email: fields.email,
-      areaSaudi: fields.areaSaudi,
-      poBox: fields.poBox,
-      businessPhone: fields.businessPhone,
-      emergencyNameSaudi: fields.emergencyNameSaudi,
-      emergencyMobileSaudi: fields.emergencyMobileSaudi,
-      houseName: fields.houseName,
-      postalAddress: fields.postalAddress,
-      district: fields.district,
-      nearestJamaath: fields.nearestJamaath,
-      homePhone: fields.homePhone,
-      mobileIndia: fields.mobileIndia,
-      emergencyNameIndia: fields.emergencyNameIndia,
-      emergencyMobileIndia: fields.emergencyMobileIndia,
-      photoUrl: fields.photoUrl ?? null,
-      notes: fields.notes,
-      refMemberName: fields.refMemberName,
-      refMemberId: fields.refMemberId,
-      status: "submitted",
-    })
-    .returning();
+  let created: typeof dkmoMembershipsTable.$inferSelect | undefined;
+  try {
+    [created] = await db
+      .insert(dkmoMembershipsTable)
+      .values({
+        dkmoNumber,
+        memberId: null,
+        fullName: fields.fullName,
+        dateOfBirth: fields.dateOfBirth ?? null,
+        bloodGroup: fields.bloodGroup,
+        maritalStatus: fields.maritalStatus,
+        familyInSaudi: fields.familyInSaudi,
+        numDependents: fields.numDependents,
+        passportNumber: fields.passportNumber,
+        iqamaNumber: fields.iqamaNumber,
+        occupation: fields.occupation,
+        companyName: fields.companyName,
+        mobileSaudi: fields.mobileSaudi,
+        email: fields.email,
+        areaSaudi: fields.areaSaudi,
+        poBox: fields.poBox,
+        businessPhone: fields.businessPhone,
+        emergencyNameSaudi: fields.emergencyNameSaudi,
+        emergencyMobileSaudi: fields.emergencyMobileSaudi,
+        houseName: fields.houseName,
+        postalAddress: fields.postalAddress,
+        district: fields.district,
+        nearestJamaath: fields.nearestJamaath,
+        homePhone: fields.homePhone,
+        mobileIndia: fields.mobileIndia,
+        emergencyNameIndia: fields.emergencyNameIndia,
+        emergencyMobileIndia: fields.emergencyMobileIndia,
+        photoUrl: fields.photoUrl ?? null,
+        notes: fields.notes,
+        refMemberName: fields.refMemberName,
+        refMemberId: fields.refMemberId,
+        status: "submitted",
+      })
+      .returning();
+  } catch (err) {
+    if (isUniqueViolation(err)) {
+      const dupDb = await findMembershipDuplicates({ mobileSaudi: fields.mobileSaudi, email: fields.email });
+      res.status(409).json(duplicateConflictBody(dupDb.mobile || dupDb.email ? dupDb : { mobile: true, email: false, conflicts: [] }));
+      return;
+    }
+    throw err;
+  }
 
   if (dependents.length > 0) {
     await db.insert(dkmoMembershipDependentsTable).values(
@@ -179,6 +195,57 @@ function membershipToPublicTrack(r: typeof dkmoMembershipsTable.$inferSelect) {
 }
 
 const onlyDigits = (s: string) => s.replace(/\D/g, "");
+
+// ── Duplicate detection ──────────────────────────────────────────────────────
+// A DKMO membership account is uniquely identified by its mobile number and
+// email address. Uniqueness is enforced at the database level (partial unique
+// indexes) and here at the application level for instant, friendly feedback.
+// Rejected applications are excluded so a rejected applicant may re-apply. The
+// check intentionally ignores the sponsor / reference member, so an applicant
+// cannot bypass it by choosing a different sponsor.
+const DUPLICATE_MESSAGES = {
+  mobile: "This mobile number is already registered with DKMO. Please use a different mobile number or contact the administrator.",
+  email: "This email address is already registered with DKMO. Please use a different email address or contact the administrator.",
+  both: "Both this mobile number and email address are already registered with DKMO. Please use different details or contact the administrator.",
+} as const;
+
+type DuplicateConflict = { dkmoNumber: string; fullName: string; status: string; field: "mobile" | "email" };
+type DuplicateResult = { mobile: boolean; email: boolean; conflicts: DuplicateConflict[] };
+
+async function findMembershipDuplicates(
+  input: { mobileSaudi?: string; email?: string },
+  excludeId?: string,
+): Promise<DuplicateResult> {
+  const mobileDigits = onlyDigits(input.mobileSaudi ?? "");
+  const emailNorm = (input.email ?? "").trim().toLowerCase();
+  if (!mobileDigits && !emailNorm) return { mobile: false, email: false, conflicts: [] };
+
+  const rows = await db.select().from(dkmoMembershipsTable);
+  const conflicts: DuplicateConflict[] = [];
+  let mobile = false;
+  let email = false;
+  for (const r of rows) {
+    if (r.status === "rejected" || r.id === excludeId) continue;
+    if (mobileDigits && onlyDigits(r.mobileSaudi) === mobileDigits) {
+      mobile = true;
+      conflicts.push({ dkmoNumber: r.dkmoNumber, fullName: r.fullName, status: r.status, field: "mobile" });
+    }
+    if (emailNorm && r.email.trim().toLowerCase() === emailNorm) {
+      email = true;
+      conflicts.push({ dkmoNumber: r.dkmoNumber, fullName: r.fullName, status: r.status, field: "email" });
+    }
+  }
+  return { mobile, email, conflicts };
+}
+
+function duplicateConflictBody(d: DuplicateResult) {
+  const field = d.mobile && d.email ? "both" : d.mobile ? "mobile" : "email";
+  return { error: DUPLICATE_MESSAGES[field], code: "DUPLICATE" as const, field, conflicts: d.conflicts };
+}
+
+function isUniqueViolation(err: unknown): boolean {
+  return typeof err === "object" && err !== null && (err as { code?: string }).code === "23505";
+}
 
 router.get("/dkmo/memberships/track", async (req, res): Promise<void> => {
   const dkmoNumberRaw = typeof req.query.dkmoNumber === "string" ? req.query.dkmoNumber.trim() : "";
@@ -284,6 +351,18 @@ router.get("/dkmo/memberships/verify", async (req, res): Promise<void> => {
   });
 });
 
+// ── Public: duplicate pre-check for the application form ─────────────────────
+// Returns only booleans (no PII) so the form can warn the applicant instantly.
+router.get("/dkmo/memberships/check-duplicate", async (req, res): Promise<void> => {
+  const mobile = typeof req.query.mobile === "string" ? req.query.mobile : "";
+  const email = typeof req.query.email === "string" ? req.query.email : "";
+  // Avoid enumeration via partial inputs: only check a full mobile / a real email.
+  const mobileToCheck = onlyDigits(mobile).length >= 10 ? mobile : "";
+  const emailToCheck = email.includes("@") ? email : "";
+  const dup = await findMembershipDuplicates({ mobileSaudi: mobileToCheck, email: emailToCheck });
+  res.json({ mobileExists: dup.mobile, emailExists: dup.email });
+});
+
 // ── Public: member lookup list for reference member dropdown ─────────────────
 router.get("/dkmo/members-list", async (_req, res): Promise<void> => {
   const rows = await db
@@ -309,6 +388,37 @@ router.get("/dkmo/memberships/stats", async (_req, res): Promise<void> => {
     return m === currentMonth;
   }).length;
   res.json({ total, pending, approved, rejected, newThisMonth });
+});
+
+// ── Admin: duplicate detection dashboard data ────────────────────────────────
+// Groups membership records that share the same mobile number or email so an
+// admin can review and clean them up. Includes every status (even rejected) so
+// historical overlaps remain visible.
+router.get("/dkmo/memberships/duplicates", requireRole("admin"), async (_req, res): Promise<void> => {
+  const rows = await db.select().from(dkmoMembershipsTable).orderBy(desc(dkmoMembershipsTable.createdAt));
+  const toMini = (r: typeof rows[number]) => ({
+    id: r.id,
+    dkmoNumber: r.dkmoNumber,
+    fullName: r.fullName,
+    mobileSaudi: r.mobileSaudi,
+    mobileIndia: r.mobileIndia,
+    email: r.email,
+    status: r.status,
+    memberId: r.memberId,
+    createdAt: r.createdAt.toISOString(),
+  });
+  const byMobile = new Map<string, typeof rows>();
+  const byEmail = new Map<string, typeof rows>();
+  for (const r of rows) {
+    const m = onlyDigits(r.mobileSaudi);
+    if (m) { const list = byMobile.get(m) ?? []; list.push(r); byMobile.set(m, list); }
+    const e = r.email.trim().toLowerCase();
+    if (e) { const list = byEmail.get(e) ?? []; list.push(r); byEmail.set(e, list); }
+  }
+  const groups: Array<{ type: "mobile" | "email"; value: string; count: number; records: ReturnType<typeof toMini>[] }> = [];
+  for (const [value, rs] of byMobile) if (rs.length > 1) groups.push({ type: "mobile", value, count: rs.length, records: rs.map(toMini) });
+  for (const [value, rs] of byEmail) if (rs.length > 1) groups.push({ type: "email", value, count: rs.length, records: rs.map(toMini) });
+  res.json(groups);
 });
 
 router.get("/dkmo/memberships", async (req, res): Promise<void> => {
@@ -343,46 +453,61 @@ router.post("/dkmo/memberships", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
+  const dupAdmin = await findMembershipDuplicates({ mobileSaudi: parsed.data.mobileSaudi, email: parsed.data.email });
+  if (dupAdmin.mobile || dupAdmin.email) {
+    res.status(409).json(duplicateConflictBody(dupAdmin));
+    return;
+  }
   const dkmoNumber = await nextDkmoNumber();
   const { dependents, ...fields } = parsed.data;
 
-  const [created] = await db
-    .insert(dkmoMembershipsTable)
-    .values({
-      dkmoNumber,
-      memberId: null,
-      fullName: fields.fullName,
-      dateOfBirth: fields.dateOfBirth ?? null,
-      bloodGroup: fields.bloodGroup,
-      maritalStatus: fields.maritalStatus,
-      familyInSaudi: fields.familyInSaudi,
-      numDependents: fields.numDependents,
-      passportNumber: fields.passportNumber,
-      iqamaNumber: fields.iqamaNumber,
-      occupation: fields.occupation,
-      companyName: fields.companyName,
-      mobileSaudi: fields.mobileSaudi,
-      email: fields.email,
-      areaSaudi: fields.areaSaudi,
-      poBox: fields.poBox,
-      businessPhone: fields.businessPhone,
-      emergencyNameSaudi: fields.emergencyNameSaudi,
-      emergencyMobileSaudi: fields.emergencyMobileSaudi,
-      houseName: fields.houseName,
-      postalAddress: fields.postalAddress,
-      district: fields.district,
-      nearestJamaath: fields.nearestJamaath,
-      homePhone: fields.homePhone,
-      mobileIndia: fields.mobileIndia,
-      emergencyNameIndia: fields.emergencyNameIndia,
-      emergencyMobileIndia: fields.emergencyMobileIndia,
-      photoUrl: fields.photoUrl ?? null,
-      notes: fields.notes,
-      refMemberName: fields.refMemberName,
-      refMemberId: fields.refMemberId,
-      status: fields.status,
-    })
-    .returning();
+  let created: typeof dkmoMembershipsTable.$inferSelect | undefined;
+  try {
+    [created] = await db
+      .insert(dkmoMembershipsTable)
+      .values({
+        dkmoNumber,
+        memberId: null,
+        fullName: fields.fullName,
+        dateOfBirth: fields.dateOfBirth ?? null,
+        bloodGroup: fields.bloodGroup,
+        maritalStatus: fields.maritalStatus,
+        familyInSaudi: fields.familyInSaudi,
+        numDependents: fields.numDependents,
+        passportNumber: fields.passportNumber,
+        iqamaNumber: fields.iqamaNumber,
+        occupation: fields.occupation,
+        companyName: fields.companyName,
+        mobileSaudi: fields.mobileSaudi,
+        email: fields.email,
+        areaSaudi: fields.areaSaudi,
+        poBox: fields.poBox,
+        businessPhone: fields.businessPhone,
+        emergencyNameSaudi: fields.emergencyNameSaudi,
+        emergencyMobileSaudi: fields.emergencyMobileSaudi,
+        houseName: fields.houseName,
+        postalAddress: fields.postalAddress,
+        district: fields.district,
+        nearestJamaath: fields.nearestJamaath,
+        homePhone: fields.homePhone,
+        mobileIndia: fields.mobileIndia,
+        emergencyNameIndia: fields.emergencyNameIndia,
+        emergencyMobileIndia: fields.emergencyMobileIndia,
+        photoUrl: fields.photoUrl ?? null,
+        notes: fields.notes,
+        refMemberName: fields.refMemberName,
+        refMemberId: fields.refMemberId,
+        status: fields.status,
+      })
+      .returning();
+  } catch (err) {
+    if (isUniqueViolation(err)) {
+      const dupDb = await findMembershipDuplicates({ mobileSaudi: fields.mobileSaudi, email: fields.email });
+      res.status(409).json(duplicateConflictBody(dupDb.mobile || dupDb.email ? dupDb : { mobile: true, email: false, conflicts: [] }));
+      return;
+    }
+    throw err;
+  }
 
   if (dependents.length > 0) {
     await db.insert(dkmoMembershipDependentsTable).values(
@@ -415,6 +540,31 @@ router.patch("/dkmo/memberships/:id", async (req, res): Promise<void> => {
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
   const { dependents, ...fields } = parsed.data;
+
+  // Block both (a) editing contact details into a collision and (b) re-activating
+  // a previously rejected record whose mobile/email now collides with an active
+  // one — the latter would otherwise only be caught by the DB unique index.
+  const willChangeContact = fields.mobileSaudi !== undefined || fields.email !== undefined;
+  const willActivate = fields.status !== undefined && fields.status !== "rejected";
+  if (willChangeContact || willActivate) {
+    const [current] = await db.select().from(dkmoMembershipsTable).where(eq(dkmoMembershipsTable.id, id));
+    if (!current) { res.status(404).json({ error: "Not found" }); return; }
+    const effectiveStatus = fields.status ?? current.status;
+    if (effectiveStatus !== "rejected") {
+      const dup = await findMembershipDuplicates(
+        {
+          mobileSaudi: fields.mobileSaudi ?? current.mobileSaudi,
+          email: fields.email ?? current.email,
+        },
+        id,
+      );
+      if (dup.mobile || dup.email) {
+        res.status(409).json(duplicateConflictBody(dup));
+        return;
+      }
+    }
+  }
+
   const now = new Date();
   const actor = (req as AuthedRequest).userId ?? "";
 
@@ -423,7 +573,9 @@ router.patch("/dkmo/memberships/:id", async (req, res): Promise<void> => {
   if (fields.status === "approved") statusExtras = { approvedBy: actor, approvedAt: now };
   if (fields.status === "rejected") statusExtras = { rejectedBy: actor, rejectedAt: now };
 
-  const [updated] = await db
+  let updated: typeof dkmoMembershipsTable.$inferSelect | undefined;
+  try {
+    [updated] = await db
     .update(dkmoMembershipsTable)
     .set({
       ...(fields.fullName !== undefined && { fullName: fields.fullName }),
@@ -464,6 +616,22 @@ router.patch("/dkmo/memberships/:id", async (req, res): Promise<void> => {
     })
     .where(eq(dkmoMembershipsTable.id, id))
     .returning();
+  } catch (err) {
+    // Race backstop: a concurrent insert/update may trip the partial unique
+    // index even though the pre-check passed. Map it to the same friendly 409.
+    if (isUniqueViolation(err)) {
+      const dup = await findMembershipDuplicates(
+        { mobileSaudi: fields.mobileSaudi, email: fields.email },
+        id,
+      );
+      const body = dup.mobile || dup.email
+        ? duplicateConflictBody(dup)
+        : { error: DUPLICATE_MESSAGES.both, code: "DUPLICATE" as const, field: "both" as const, conflicts: [] };
+      res.status(409).json(body);
+      return;
+    }
+    throw err;
+  }
 
   if (!updated) { res.status(404).json({ error: "Not found" }); return; }
 

@@ -26,6 +26,7 @@ import {
   Sparkles,
   Activity,
   ClipboardCheck,
+  CopyCheck,
 } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -68,6 +69,7 @@ const navigation: NavItem[] = [
   { name: "Community Services", href: "/services",          icon: HandHelping },
   { name: "FRF Claims",        href: "/frf",               icon: HeartHandshake },
   { name: "DKMO Membership",  href: "/dkmo-memberships",  icon: BookUser },
+  { name: "Duplicate Detection", href: "/duplicates", icon: CopyCheck, roles: ["admin"] },
   { name: "Sponsors",          href: "/sponsors",          icon: Handshake },
   { name: "Events",            href: "/events",            icon: CalendarDays },
   { name: "Tasks",             href: "/tasks",             icon: ListChecks },

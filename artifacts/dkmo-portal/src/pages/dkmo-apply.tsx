@@ -341,6 +341,34 @@ export default function DkmoApplyPage() {
     } catch { /* ignore */ }
   }, [form, dependents, step]);
 
+  // Live duplicate detection — warns the applicant instantly if their mobile or
+  // email is already registered with DKMO (rejected applications are ignored).
+  const [mobileDuplicate, setMobileDuplicate] = useState(false);
+  const [emailDuplicate, setEmailDuplicate] = useState(false);
+  useEffect(() => {
+    const mobileOk = isValidSaudiMobile(form.mobileSaudi);
+    const emailOk = isValidEmail(form.email);
+    if (!mobileOk && !emailOk) {
+      setMobileDuplicate(false);
+      setEmailDuplicate(false);
+      return;
+    }
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      try {
+        const params = new URLSearchParams();
+        if (mobileOk) params.set("mobile", form.mobileSaudi);
+        if (emailOk) params.set("email", form.email);
+        const res = await fetch(`${basePath}/api/dkmo/memberships/check-duplicate?${params.toString()}`);
+        if (!res.ok || cancelled) return;
+        const data = await res.json() as { mobileExists?: boolean; emailExists?: boolean };
+        setMobileDuplicate(mobileOk ? Boolean(data.mobileExists) : false);
+        setEmailDuplicate(emailOk ? Boolean(data.emailExists) : false);
+      } catch { /* ignore network errors — server still enforces on submit */ }
+    }, 500);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [form.mobileSaudi, form.email]);
+
   const set = (field: keyof FormData, value: string) => setForm((f) => ({ ...f, [field]: value }));
   const addDependent = () => setDependents((d) => [...d, { fullName: "", relation: "", age: "" }]);
   const removeDependent = (i: number) => setDependents((d) => d.filter((_, idx) => idx !== i));
@@ -383,11 +411,15 @@ export default function DkmoApplyPage() {
         errs.mobileSaudi = "Saudi mobile number is required.";
       } else if (!isValidSaudiMobile(form.mobileSaudi)) {
         errs.mobileSaudi = "Enter a valid Saudi mobile number (minimum 10 digits).";
+      } else if (mobileDuplicate) {
+        errs.mobileSaudi = "This mobile number is already registered with DKMO. Please use a different mobile number or contact the administrator.";
       }
       if (!form.email.trim()) {
         errs.email = "Email address is required.";
       } else if (!isValidEmail(form.email)) {
         errs.email = "Enter a valid email address (e.g. name@gmail.com).";
+      } else if (emailDuplicate) {
+        errs.email = "This email address is already registered with DKMO. Please use a different email address or contact the administrator.";
       }
     }
     if (step === 2) {
