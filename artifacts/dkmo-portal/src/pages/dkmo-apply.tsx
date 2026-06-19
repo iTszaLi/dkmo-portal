@@ -18,6 +18,56 @@ import { generateDkmoPdf } from "@/lib/dkmo-pdf";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024; // 5MB original-file ceiling
+
+/**
+ * Resizes and compresses an image file to a small JPEG data URL so the
+ * submission payload stays well under the server's body limit. The longest edge
+ * is capped at 800px and quality reduced until the result is comfortably small.
+ */
+async function compressImage(file: File): Promise<string> {
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error("Could not read the selected file."));
+    reader.readAsDataURL(file);
+  });
+
+  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const el = new Image();
+    el.onload = () => resolve(el);
+    el.onerror = () => reject(new Error("That file does not appear to be a valid image."));
+    el.src = dataUrl;
+  });
+
+  const MAX_EDGE = 800;
+  let { width, height } = img;
+  if (width > MAX_EDGE || height > MAX_EDGE) {
+    if (width >= height) {
+      height = Math.round((height * MAX_EDGE) / width);
+      width = MAX_EDGE;
+    } else {
+      width = Math.round((width * MAX_EDGE) / height);
+      height = MAX_EDGE;
+    }
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Could not process the image.");
+  ctx.drawImage(img, 0, 0, width, height);
+
+  let quality = 0.8;
+  let out = canvas.toDataURL("image/jpeg", quality);
+  while (out.length > 600_000 && quality > 0.4) {
+    quality -= 0.1;
+    out = canvas.toDataURL("image/jpeg", quality);
+  }
+  return out;
+}
+
 const DKMO_BENEFITS = [
   { icon: Stethoscope, title: "Medical Aid", desc: "Assistance for hospital bills, surgeries and treatment.", color: "text-rose-600 dark:text-rose-400", tile: "bg-rose-100 dark:bg-rose-900/40" },
   { icon: HandHeart, title: "General Relief Fund", desc: "Support for families facing financial hardship.", color: "text-amber-600 dark:text-amber-400", tile: "bg-amber-100 dark:bg-amber-900/40" },
@@ -251,6 +301,8 @@ export default function DkmoApplyPage() {
     refMember: MemberEntry | null;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const [photoProcessing, setPhotoProcessing] = useState(false);
   const [appStatus, setAppStatus] = useState<AppStatus>("submitted");
   const [checkingStatus, setCheckingStatus] = useState(false);
   const [declineReason, setDeclineReason] = useState<string | null>(null);
@@ -359,12 +411,15 @@ export default function DkmoApplyPage() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (submitting) return; // guard against duplicate submissions
     if (!termsAccepted) { setError("You must confirm that all information is correct before submitting."); return; }
     setError(null);
     setSubmitting(true);
     try {
+      const { photoDataUrl, ...rest } = form;
       const payload = {
-        ...form,
+        ...rest,
+        photoUrl: photoDataUrl || null,
         refMemberName: refMember ? refMember.fullName : form.refMemberName,
         refMemberId: refMember ? refMember.membershipId : form.refMemberId,
         numDependents: dependents.length,
@@ -652,20 +707,38 @@ export default function DkmoApplyPage() {
                         : <span className="text-xs text-slate-400 text-center px-1">Photo</span>}
                     </div>
                     <div className="flex-1 space-y-2">
-                      <label className="inline-flex items-center gap-2 cursor-pointer rounded-lg border border-green-300 dark:border-green-800 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-medium text-green-800 dark:text-green-300 hover:bg-green-50 dark:hover:bg-slate-700 transition-colors">
-                        Choose Photo
-                        <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                      <label className={`inline-flex items-center gap-2 rounded-lg border border-green-300 dark:border-green-800 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-medium text-green-800 dark:text-green-300 transition-colors ${photoProcessing ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:bg-green-50 dark:hover:bg-slate-700"}`}>
+                        {photoProcessing ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Processing…</> : "Choose Photo"}
+                        <input type="file" accept="image/*" className="hidden" disabled={photoProcessing} onChange={async (e) => {
                           const file = e.target.files?.[0];
+                          e.target.value = "";
                           if (!file) return;
-                          const reader = new FileReader();
-                          reader.onloadend = () => set("photoDataUrl", reader.result as string);
-                          reader.readAsDataURL(file);
+                          setPhotoError(null);
+                          if (!file.type.startsWith("image/")) {
+                            setPhotoError("Please choose an image file (JPG or PNG).");
+                            return;
+                          }
+                          if (file.size > MAX_PHOTO_BYTES) {
+                            setPhotoError("Photo size exceeds the 5MB limit. Please choose a smaller image.");
+                            return;
+                          }
+                          setPhotoProcessing(true);
+                          try {
+                            const compressed = await compressImage(file);
+                            set("photoDataUrl", compressed);
+                          } catch (err) {
+                            setPhotoError(err instanceof Error ? err.message : "Could not process that image. Please try another.");
+                          } finally {
+                            setPhotoProcessing(false);
+                          }
                         }} />
                       </label>
                       {form.photoDataUrl && (
-                        <button type="button" onClick={() => set("photoDataUrl", "")} className="block text-xs text-red-500 hover:text-red-700">Remove photo</button>
+                        <button type="button" onClick={() => { set("photoDataUrl", ""); setPhotoError(null); }} className="block text-xs text-red-500 hover:text-red-700">Remove photo</button>
                       )}
-                      <p className="text-xs text-slate-400 dark:text-slate-500">JPG or PNG, max 2MB</p>
+                      {photoError
+                        ? <p className="text-xs text-red-500">{photoError}</p>
+                        : <p className="text-xs text-slate-400 dark:text-slate-500">JPG or PNG, max 5MB — photos are automatically resized.</p>}
                     </div>
                   </div>
                 </div>
@@ -889,7 +962,7 @@ export default function DkmoApplyPage() {
                 Next <ChevronRight className="h-4 w-4" />
               </Button>
             ) : (
-              <Button type="submit" disabled={submitting || !termsAccepted}
+              <Button type="submit" disabled={submitting || photoProcessing || !termsAccepted}
                 className="bg-green-800 hover:bg-green-900 dark:bg-green-700 dark:hover:bg-green-600 text-white gap-2">
                 {submitting ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</> : "Submit Application"}
               </Button>
