@@ -6,6 +6,7 @@ export function memberToApi(m: Member) {
     fullName: m.fullName,
     mobileNumber: m.mobileNumber,
     membershipId: m.membershipId,
+    photoUrl: m.photoUrl ?? null,
     applicationNumber: m.applicationNumber ?? "",
     iqamaNumber: m.iqamaNumber ?? "",
     jamaath: m.jamaath ?? "",

@@ -379,6 +379,21 @@ async function main() {
       ADD COLUMN IF NOT EXISTS transfer_method TEXT NOT NULL DEFAULT 'bank_transfer';
   `);
 
+  // Member passport photo (carried over from the membership application on
+  // approval). Backfill existing members from their linked DKMO membership.
+  await pool.query(`
+    ALTER TABLE members
+      ADD COLUMN IF NOT EXISTS photo_url TEXT;
+  `);
+  await pool.query(`
+    UPDATE members m
+      SET photo_url = dm.photo_url
+      FROM dkmo_memberships dm
+      WHERE dm.member_id = m.id
+        AND dm.photo_url IS NOT NULL
+        AND (m.photo_url IS NULL OR m.photo_url = '');
+  `);
+
   // Certificate serial number + approval audit trail for DKMO memberships.
   await pool.query(`
     ALTER TABLE dkmo_memberships

@@ -26,6 +26,7 @@ interface DkmoMembership {
   id: string;
   dkmoNumber: string;
   fullName: string;
+  photoUrl: string | null;
   mobileSaudi: string;
   mobileIndia: string;
   email: string;
@@ -167,6 +168,7 @@ export default function DkmoMemberships() {
       district: m.district, nearestJamaath: m.nearestJamaath,
       notes: m.notes,
       refMemberName: m.refMemberName, refMemberId: m.refMemberId,
+      photoDataUrl: m.photoUrl ?? null,
     };
   }
 
@@ -183,7 +185,7 @@ export default function DkmoMemberships() {
       dkmoNumber: m.dkmoNumber,
       fullName: m.fullName,
       mobile: m.mobileSaudi || m.mobileIndia,
-      photoUrl: null,
+      photoUrl: m.photoUrl ?? null,
       approvedAt: m.approvedAt,
       createdAt: m.createdAt,
     });

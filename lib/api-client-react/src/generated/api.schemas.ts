@@ -178,6 +178,8 @@ export interface Member {
   fullName: string;
   mobileNumber: string;
   membershipId: string;
+  /** @nullable */
+  photoUrl?: string | null;
   applicationNumber: string;
   iqamaNumber: string;
   jamaath: string;
@@ -221,6 +223,8 @@ export interface MemberDetail {
   fullName: string;
   mobileNumber: string;
   membershipId: string;
+  /** @nullable */
+  photoUrl?: string | null;
   applicationNumber: string;
   iqamaNumber: string;
   jamaath: string;

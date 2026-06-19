@@ -1743,6 +1743,8 @@ components:
           type: string
         membershipId:
           type: string
+        photoUrl:
+          type: ["string", "null"]
         applicationNumber:
           type: string
         iqamaNumber:
@@ -1816,6 +1818,8 @@ components:
           type: string
         membershipId:
           type: string
+        photoUrl:
+          type: ["string", "null"]
         applicationNumber:
           type: string
         iqamaNumber:

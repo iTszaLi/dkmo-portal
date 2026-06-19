@@ -792,6 +792,7 @@ router.patch("/dkmo/memberships/:id", async (req, res): Promise<void> => {
           fullName: updated.fullName,
           mobileNumber: updated.mobileSaudi || updated.mobileIndia || "",
           membershipId: updated.dkmoNumber,
+          photoUrl: updated.photoUrl ?? null,
           city: updated.areaSaudi || updated.district || "",
           country: "Saudi Arabia",
           designation: updated.occupation || "",
