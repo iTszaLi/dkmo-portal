@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
-import { generateDkmoPdf } from "@/lib/dkmo-pdf";
+import { generateDkmoPdf, generateFrfApplicationPdf } from "@/lib/dkmo-pdf";
 
 const bp = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -155,22 +155,25 @@ export default function DkmoMemberships() {
     setStatusChangeOpen(true);
   }
 
+  function pdfFormData(m: DkmoMembership) {
+    return {
+      fullName: m.fullName, dateOfBirth: m.dateOfBirth, passportNumber: m.passportNumber,
+      iqamaNumber: m.iqamaNumber, occupation: m.occupation, bloodGroup: m.bloodGroup,
+      maritalStatus: m.maritalStatus, familyInSaudi: m.familyInSaudi,
+      areaSaudi: m.areaSaudi, poBox: m.poBox, mobileSaudi: m.mobileSaudi, email: m.email,
+      houseName: m.houseName, postalAddress: m.postalAddress,
+      district: m.district, nearestJamaath: m.nearestJamaath,
+      notes: m.notes,
+      refMemberName: m.refMemberName, refMemberId: m.refMemberId,
+    };
+  }
+
   function handleDownloadPdf(m: DkmoMembership) {
-    void generateDkmoPdf(
-      {
-        fullName: m.fullName, dateOfBirth: m.dateOfBirth, passportNumber: m.passportNumber,
-        iqamaNumber: m.iqamaNumber, occupation: m.occupation, bloodGroup: m.bloodGroup,
-        maritalStatus: m.maritalStatus, familyInSaudi: m.familyInSaudi,
-        areaSaudi: m.areaSaudi, poBox: m.poBox, mobileSaudi: m.mobileSaudi, email: m.email,
-        houseName: m.houseName, postalAddress: m.postalAddress,
-        district: m.district, nearestJamaath: m.nearestJamaath,
-        notes: m.notes,
-        refMemberName: m.refMemberName, refMemberId: m.refMemberId,
-      },
-      [],
-      m.dkmoNumber,
-      fmtDate(m.createdAt),
-    );
+    void generateDkmoPdf(pdfFormData(m), [], m.dkmoNumber, fmtDate(m.createdAt));
+  }
+
+  function handleDownloadFrfPdf(m: DkmoMembership) {
+    void generateFrfApplicationPdf(pdfFormData(m), [], m.dkmoNumber, fmtDate(m.createdAt));
   }
 
   return (
@@ -314,9 +317,13 @@ export default function DkmoMemberships() {
                           className="rounded-lg p-1.5 hover:bg-green-100 dark:hover:bg-slate-700 text-green-700 dark:text-green-400 transition-colors">
                           <Eye className="h-4 w-4" />
                         </button>
-                        <button type="button" title="Download PDF" onClick={() => handleDownloadPdf(m)}
+                        <button type="button" title="Download Membership Form" onClick={() => handleDownloadPdf(m)}
                           className="rounded-lg p-1.5 hover:bg-green-100 dark:hover:bg-slate-700 text-green-700 dark:text-green-400 transition-colors">
                           <Download className="h-4 w-4" />
+                        </button>
+                        <button type="button" title="Download FRF Application Form" onClick={() => handleDownloadFrfPdf(m)}
+                          className="rounded-lg p-1.5 hover:bg-green-100 dark:hover:bg-slate-700 text-green-700 dark:text-green-400 transition-colors">
+                          <FileText className="h-4 w-4" />
                         </button>
                         {(m.status === "submitted" || m.status === "under_review") && (
                           <>
@@ -411,7 +418,11 @@ export default function DkmoMemberships() {
               <>
                 <Button variant="outline" onClick={() => handleDownloadPdf(selected)}
                   className="border-green-300 dark:border-green-800 text-green-800 dark:text-green-300 gap-1">
-                  <Download className="h-3.5 w-3.5" /> Download PDF
+                  <Download className="h-3.5 w-3.5" /> Membership Form
+                </Button>
+                <Button variant="outline" onClick={() => handleDownloadFrfPdf(selected)}
+                  className="border-green-300 dark:border-green-800 text-green-800 dark:text-green-300 gap-1">
+                  <FileText className="h-3.5 w-3.5" /> FRF Application Form
                 </Button>
                 {selected.status !== "approved" && selected.status !== "completed" && (
                   <Button onClick={() => updateStatus(selected.id, "approved")} disabled={saving}

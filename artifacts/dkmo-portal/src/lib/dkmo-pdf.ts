@@ -54,12 +54,25 @@ async function loadImageAsBase64(url: string): Promise<string | null> {
   }
 }
 
+export interface DkmoPdfOptions {
+  /** Centered sub-title under the org name. Default: "Membership Application Form". */
+  title?: string;
+  /** Top-right ID box label. Default: "DKMO ID No.". */
+  idLabel?: string;
+  /** Saved file name prefix. Default: "DKMO-Membership". */
+  filenamePrefix?: string;
+}
+
 export async function generateDkmoPdf(
   form: DkmoPdfData,
   dependents: DkmoPdfDependent[],
   dkmoNumber: string,
   submissionDate: string,
+  options?: DkmoPdfOptions,
 ): Promise<void> {
+  const title = options?.title ?? "Membership Application Form";
+  const idLabel = options?.idLabel ?? "DKMO ID No.";
+  const filenamePrefix = options?.filenamePrefix ?? "DKMO-Membership";
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const PW = 210;
   const mL = 12;
@@ -83,12 +96,12 @@ export async function generateDkmoPdf(
   doc.setTextColor(...black);
   doc.text("DAKSHINA KARNATAKA MUSLIM OKKOOTA", PW / 2, 13, { align: "center" });
   doc.setFontSize(10);
-  doc.text("Membership Application Form", PW / 2, 21, { align: "center" });
+  doc.text(title, PW / 2, 21, { align: "center" });
 
   doc.setFontSize(7);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...grey);
-  doc.text("DKMO ID No.", mR - 37, 8);
+  doc.text(idLabel, mR - 37, 8);
   doc.setDrawColor(...black);
   doc.setLineWidth(0.3);
   doc.rect(mR - 37, 9.5, 35, 6.5);
@@ -396,6 +409,27 @@ export async function generateDkmoPdf(
   doc.text("Signature of President / General Secretary-DKMO", mR, y, { align: "right" });
 
   doc.save(
-    `DKMO-Membership-${dkmoNumber}-${form.fullName.replace(/\s+/g, "-")}.pdf`,
+    `${filenamePrefix}-${dkmoNumber}-${form.fullName.replace(/\s+/g, "-")}.pdf`,
   );
+}
+
+/**
+ * Generates the DKMO Family Relief Fund (FRF) Application Form. It mirrors the
+ * Membership Application Form exactly — including the green Reference Member box
+ * (Important Note → Reference box → Applicant info → Contact details →
+ * Dependants) — so both DKMO forms stay visually consistent. The reference
+ * fields are populated from `form.refMemberName` / `form.refMemberId` when
+ * present and left blank otherwise.
+ */
+export async function generateFrfApplicationPdf(
+  form: DkmoPdfData,
+  dependents: DkmoPdfDependent[],
+  frfNumber: string,
+  submissionDate: string,
+): Promise<void> {
+  return generateDkmoPdf(form, dependents, frfNumber, submissionDate, {
+    title: "Family Relief Fund (FRF) Application Form",
+    idLabel: "FRF ID No.",
+    filenamePrefix: "DKMO-FRF-Application",
+  });
 }
