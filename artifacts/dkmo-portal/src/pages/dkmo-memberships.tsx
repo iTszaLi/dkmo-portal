@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { generateDkmoPdf, generateFrfApplicationPdf } from "@/lib/dkmo-pdf";
 import { generateMembershipCertificatePdf } from "@/lib/dkmo-certificate-pdf";
+import { celebrate } from "@/lib/confetti";
 import { Award } from "lucide-react";
 
 const bp = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -134,6 +135,7 @@ export default function DkmoMemberships() {
       });
       if (!res.ok) throw new Error("Failed to update");
       toast({ title: "Status updated", description: `Application marked as ${status}.` });
+      if (status === "approved") celebrate();
       setStatusChangeOpen(false);
       setDetailOpen(false);
       void fetchData();

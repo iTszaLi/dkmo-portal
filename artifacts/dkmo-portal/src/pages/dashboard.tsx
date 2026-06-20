@@ -1,5 +1,6 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "wouter";
+import { Reorder } from "framer-motion";
 import {
   useGetDashboardSummary,
   useGetDashboardFinancialSummary,
@@ -15,21 +16,47 @@ import {
   UserCheck,
   HeartHandshake,
   TrendingUp,
-  CalendarRange,
   CalendarClock,
   Clock,
   MapPin,
   HandCoins,
   Trophy,
   ArrowRight,
+  GripVertical,
+  LayoutGrid,
+  Check,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AnimatedNumber } from "@/components/dashboard/AnimatedNumber";
+import { DashboardClock } from "@/components/dashboard/DashboardClock";
+import { MemberOfTheMonth } from "@/components/dashboard/MemberOfTheMonth";
+import { celebrateMilestone } from "@/lib/confetti";
 
 const TRANSFER_METHOD_LABELS: Record<string, string> = {
   bank_transfer: "Bank Transfer",
   cash: "Cash",
   cheque: "Cheque",
 };
+
+type WidgetKey = "memberOfMonth" | "recruiters" | "events" | "sponsors";
+const DEFAULT_ORDER: WidgetKey[] = ["memberOfMonth", "recruiters", "events", "sponsors"];
+const ORDER_STORAGE_KEY = "dkmo.dashboard.widgetOrder";
+const MILESTONE_STORAGE_KEY = "dkmo.dashboard.recruitMilestone";
+
+function loadOrder(): WidgetKey[] {
+  try {
+    const raw = localStorage.getItem(ORDER_STORAGE_KEY);
+    if (!raw) return DEFAULT_ORDER;
+    const parsed = JSON.parse(raw) as WidgetKey[];
+    const valid = parsed.filter((k): k is WidgetKey => DEFAULT_ORDER.includes(k));
+    for (const k of DEFAULT_ORDER) if (!valid.includes(k)) valid.push(k);
+    return valid.length ? valid : DEFAULT_ORDER;
+  } catch {
+    return DEFAULT_ORDER;
+  }
+}
 
 function eventDayParts(iso: string) {
   const d = new Date(iso);
@@ -65,14 +92,32 @@ export default function Dashboard() {
   const currentMonth = getCurrentMonth();
 
   const today = new Date();
-  const fullDateLabel = today.toLocaleDateString("en-US", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
   const todayYear = today.getFullYear();
   const todayQuarter = Math.floor(today.getMonth() / 3) + 1;
+
+  const [order, setOrder] = useState<WidgetKey[]>(DEFAULT_ORDER);
+  const [customizing, setCustomizing] = useState(false);
+
+  useEffect(() => {
+    setOrder(loadOrder());
+  }, []);
+
+  const saveOrder = (next: WidgetKey[]) => {
+    setOrder(next);
+    try {
+      localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      /* ignore persistence failures */
+    }
+  };
+
+  const moveWidget = (index: number, dir: -1 | 1) => {
+    const target = index + dir;
+    if (target < 0 || target >= order.length) return;
+    const next = [...order];
+    [next[index], next[target]] = [next[target]!, next[index]!];
+    saveOrder(next);
+  };
 
   const { data: summary, isLoading: isLoadingSummary } = useGetDashboardSummary();
   const { data: financialSummary } = useGetDashboardFinancialSummary({ month: currentMonth });
@@ -100,9 +145,31 @@ export default function Dashboard() {
     }
     return Array.from(totals.values())
       .filter((t) => t.recruits > 0)
-      .sort((a, b) => b.recruits - a.recruits)
+      .sort((a, b) => b.recruits - a.recruits || a.name.localeCompare(b.name))
       .slice(0, 5);
   }, [members]);
+
+  const topRecruitCount = topRecruiters[0]?.recruits ?? 0;
+
+  // Celebrate when the leading recruiter crosses a new multiple-of-5 milestone.
+  useEffect(() => {
+    if (topRecruitCount < 5) return;
+    const milestone = Math.floor(topRecruitCount / 5) * 5;
+    let last = 0;
+    try {
+      last = Number(localStorage.getItem(MILESTONE_STORAGE_KEY) ?? "0") || 0;
+    } catch {
+      last = 0;
+    }
+    if (milestone > last) {
+      celebrateMilestone();
+      try {
+        localStorage.setItem(MILESTONE_STORAGE_KEY, String(milestone));
+      } catch {
+        /* ignore */
+      }
+    }
+  }, [topRecruitCount]);
 
   // Upcoming Events — real records, future-dated, sorted by nearest date.
   const { data: eventsData, isLoading: isLoadingEvents } = useListEvents({
@@ -153,94 +220,8 @@ export default function Dashboard() {
 
   const monthlyCollection = financialSummary?.members.collectedThisMonth ?? 0;
 
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-green-950 dark:text-green-100">Dashboard</h1>
-          <p className="text-sm text-green-800/70 dark:text-slate-400 mt-1">DKMO — Committed to the community</p>
-        </div>
-        <div
-          className="text-sm text-green-900 dark:text-green-300 bg-green-50 dark:bg-slate-800 border border-green-100 dark:border-slate-700 px-3.5 py-1.5 rounded-full font-medium inline-flex items-center gap-2"
-          data-testid="text-current-date"
-        >
-          <CalendarRange className="h-4 w-4 text-green-700 dark:text-green-400" />
-          <span>{fullDateLabel}</span>
-        </div>
-      </div>
-
-      {/* KPI Cards — only the metrics that matter */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Link href="/members" className="block group" data-testid="link-summary-members">
-          <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-green-300 dark:group-hover:border-green-700 group-active:scale-[0.98] cursor-pointer h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-green-900 dark:text-slate-300">Total Members</CardTitle>
-              <Users className="h-4 w-4 text-green-700 dark:text-green-400" />
-            </CardHeader>
-            <CardContent>
-              {isLoadingSummary ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <div className="text-2xl font-bold text-green-950 dark:text-white">{summary?.totalMembers || 0}</div>
-              )}
-              <p className="text-xs text-green-700/80 dark:text-slate-500 mt-1">Registered members</p>
-            </CardContent>
-          </Card>
-        </Link>
-
-        <Link href="/members" className="block group" data-testid="link-summary-active">
-          <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-green-300 dark:group-hover:border-green-700 group-active:scale-[0.98] cursor-pointer h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-green-900 dark:text-slate-300">Active Members</CardTitle>
-              <UserCheck className="h-4 w-4 text-green-700 dark:text-green-400" />
-            </CardHeader>
-            <CardContent>
-              {isLoadingSummary ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <div className="text-2xl font-bold text-green-950 dark:text-white">{summary?.paidMembersCount || 0}</div>
-              )}
-              <p className="text-xs text-green-700/80 dark:text-slate-500 mt-1">Membership fee paid</p>
-            </CardContent>
-          </Card>
-        </Link>
-
-        <Link href="/frf" className="block group" data-testid="link-summary-frf-claims">
-          <Card className="rounded-2xl border-orange-100 dark:border-orange-900/40 dark:bg-slate-900 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-orange-300 group-active:scale-[0.98] cursor-pointer h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-orange-900 dark:text-orange-300">Pending FRF Claims</CardTitle>
-              <HeartHandshake className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-            </CardHeader>
-            <CardContent>
-              {cashFlow == null ? (
-                <Skeleton className="h-8 w-16" />
-              ) : (
-                <div className="text-2xl font-bold text-orange-700 dark:text-orange-400">{cashFlow.pendingClaimsCount ?? 0}</div>
-              )}
-              <p className="text-xs text-orange-700/80 dark:text-orange-500/80 mt-1">Awaiting review</p>
-            </CardContent>
-          </Card>
-        </Link>
-
-        <Link href="/payments" className="block group" data-testid="link-summary-monthly">
-          <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-green-300 dark:group-hover:border-green-700 group-active:scale-[0.98] cursor-pointer h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-green-900 dark:text-slate-300">Monthly Collections</CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-700 dark:text-green-400" />
-            </CardHeader>
-            <CardContent>
-              {financialSummary == null ? (
-                <Skeleton className="h-8 w-28" />
-              ) : (
-                <div className="text-2xl font-bold text-green-950 dark:text-green-300">{formatSAR(monthlyCollection)}</div>
-              )}
-              <p className="text-xs text-green-700/80 dark:text-slate-500 mt-1">Collected this month</p>
-            </CardContent>
-          </Card>
-        </Link>
-      </div>
-
-      {/* Top 5 Recruiters — real referral records */}
+  function renderRecruiters() {
+    return (
       <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
           <div>
@@ -270,43 +251,54 @@ export default function Dashboard() {
             </p>
           ) : (
             <ol className="space-y-2">
-              {topRecruiters.map((r, i) => (
-                <li key={r.memberId}>
-                  <Link
-                    href={`/members/${r.memberId}`}
-                    className="flex items-center gap-3 rounded-xl border border-green-100 dark:border-slate-800 bg-green-50/40 dark:bg-slate-800/40 px-3 py-2.5 transition-colors hover:bg-green-50 dark:hover:bg-slate-800"
-                    data-testid={`recruiter-${i + 1}`}
-                  >
-                    <span
-                      className={
-                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold " +
-                        (i === 0
-                          ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400"
-                          : i === 1
-                            ? "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
-                            : i === 2
-                              ? "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400"
-                              : "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400")
-                      }
+              {topRecruiters.map((r, i) => {
+                const pct = topRecruitCount > 0 ? Math.round((r.recruits / topRecruitCount) * 100) : 0;
+                return (
+                  <li key={r.memberId}>
+                    <Link
+                      href={`/members/${r.memberId}`}
+                      className="flex items-center gap-3 rounded-xl border border-green-100 dark:border-slate-800 bg-green-50/40 dark:bg-slate-800/40 px-3 py-2.5 transition-colors hover:bg-green-50 dark:hover:bg-slate-800"
+                      data-testid={`recruiter-${i + 1}`}
                     >
-                      {i + 1}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-green-950 dark:text-green-100 truncate">{r.name}</p>
-                      <p className="text-xs text-green-700/70 dark:text-slate-500 truncate">{r.membershipId}</p>
-                    </div>
-                    <span className="text-sm font-bold text-green-800 dark:text-green-300 tabular-nums">
-                      {r.recruits} {r.recruits === 1 ? "recruit" : "recruits"}
-                    </span>
-                  </Link>
-                </li>
-              ))}
+                      <span
+                        className={
+                          "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold " +
+                          (i === 0
+                            ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400"
+                            : i === 1
+                              ? "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                              : i === 2
+                                ? "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400"
+                                : "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400")
+                        }
+                      >
+                        {i + 1}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-green-950 dark:text-green-100 truncate">{r.name}</p>
+                        <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-green-100/70 dark:bg-slate-700/70">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-green-500 to-emerald-600 transition-[width] duration-700 ease-out"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                      <span className="text-sm font-bold text-green-800 dark:text-green-300 tabular-nums shrink-0">
+                        {r.recruits} {r.recruits === 1 ? "recruit" : "recruits"}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
             </ol>
           )}
         </CardContent>
       </Card>
+    );
+  }
 
-      {/* Upcoming Events — real future-dated event records */}
+  function renderEvents() {
+    return (
       <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
           <div>
@@ -400,8 +392,11 @@ export default function Dashboard() {
           )}
         </CardContent>
       </Card>
+    );
+  }
 
-      {/* Top Sponsors & Collection Responsibility — real sponsor records */}
+  function renderSponsors() {
+    return (
       <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
           <div>
@@ -545,6 +540,184 @@ export default function Dashboard() {
           )}
         </CardContent>
       </Card>
+    );
+  }
+
+  const renderWidget = (key: WidgetKey) => {
+    switch (key) {
+      case "memberOfMonth":
+        return <MemberOfTheMonth members={members} isLoading={isLoadingMembers} />;
+      case "recruiters":
+        return renderRecruiters();
+      case "events":
+        return renderEvents();
+      case "sponsors":
+        return renderSponsors();
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-green-950 dark:text-green-100">Dashboard</h1>
+          <p className="text-sm text-green-800/70 dark:text-slate-400 mt-1">DKMO — Committed to the community</p>
+        </div>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+          <DashboardClock />
+          <button
+            type="button"
+            onClick={() => setCustomizing((v) => !v)}
+            data-testid="button-customize-dashboard"
+            className={
+              "inline-flex items-center justify-center gap-2 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors " +
+              (customizing
+                ? "border-green-300 bg-green-600 text-white hover:bg-green-700 dark:border-green-700"
+                : "border-green-100 bg-green-50 text-green-900 hover:bg-green-100 dark:border-slate-700 dark:bg-slate-800 dark:text-green-300 dark:hover:bg-slate-700")
+            }
+          >
+            {customizing ? <Check className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
+            {customizing ? "Done" : "Customize"}
+          </button>
+        </div>
+      </div>
+
+      {customizing && (
+        <p className="rounded-xl border border-dashed border-green-200 dark:border-slate-700 bg-green-50/50 dark:bg-slate-800/40 px-4 py-2.5 text-sm text-green-800 dark:text-slate-300">
+          Drag the widgets below using the handle to reorder your dashboard. Your layout is saved automatically.
+        </p>
+      )}
+
+      {/* KPI Cards — only the metrics that matter */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Link href="/members" className="block group" data-testid="link-summary-members">
+          <Card className="glass rounded-2xl border-green-100 dark:border-slate-800 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-green-300 dark:group-hover:border-green-700 group-active:scale-[0.98] cursor-pointer h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-green-900 dark:text-slate-300">Total Members</CardTitle>
+              <Users className="h-4 w-4 text-green-700 dark:text-green-400" />
+            </CardHeader>
+            <CardContent>
+              {isLoadingSummary ? (
+                <Skeleton className="h-8 w-20" />
+              ) : (
+                <AnimatedNumber
+                  value={summary?.totalMembers || 0}
+                  className="text-2xl font-bold text-green-950 dark:text-white"
+                />
+              )}
+              <p className="text-xs text-green-700/80 dark:text-slate-500 mt-1">Registered members</p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/members" className="block group" data-testid="link-summary-active">
+          <Card className="glass rounded-2xl border-green-100 dark:border-slate-800 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-green-300 dark:group-hover:border-green-700 group-active:scale-[0.98] cursor-pointer h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-green-900 dark:text-slate-300">Active Members</CardTitle>
+              <UserCheck className="h-4 w-4 text-green-700 dark:text-green-400" />
+            </CardHeader>
+            <CardContent>
+              {isLoadingSummary ? (
+                <Skeleton className="h-8 w-20" />
+              ) : (
+                <AnimatedNumber
+                  value={summary?.paidMembersCount || 0}
+                  className="text-2xl font-bold text-green-950 dark:text-white"
+                />
+              )}
+              <p className="text-xs text-green-700/80 dark:text-slate-500 mt-1">Membership fee paid</p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/frf" className="block group" data-testid="link-summary-frf-claims">
+          <Card className="glass rounded-2xl border-orange-100 dark:border-orange-900/40 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-orange-300 group-active:scale-[0.98] cursor-pointer h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-orange-900 dark:text-orange-300">Pending FRF Claims</CardTitle>
+              <HeartHandshake className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+            </CardHeader>
+            <CardContent>
+              {cashFlow == null ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <AnimatedNumber
+                  value={cashFlow.pendingClaimsCount ?? 0}
+                  className="text-2xl font-bold text-orange-700 dark:text-orange-400"
+                />
+              )}
+              <p className="text-xs text-orange-700/80 dark:text-orange-500/80 mt-1">Awaiting review</p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/payments" className="block group" data-testid="link-summary-monthly">
+          <Card className="glass rounded-2xl border-green-100 dark:border-slate-800 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-green-300 dark:group-hover:border-green-700 group-active:scale-[0.98] cursor-pointer h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-green-900 dark:text-slate-300">Monthly Collections</CardTitle>
+              <TrendingUp className="h-4 w-4 text-green-700 dark:text-green-400" />
+            </CardHeader>
+            <CardContent>
+              {financialSummary == null ? (
+                <Skeleton className="h-8 w-28" />
+              ) : (
+                <AnimatedNumber
+                  value={monthlyCollection}
+                  format={(n) => formatSAR(n)}
+                  className="text-2xl font-bold text-green-950 dark:text-green-300"
+                />
+              )}
+              <p className="text-xs text-green-700/80 dark:text-slate-500 mt-1">Collected this month</p>
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
+
+      {/* Reorderable widgets — personalize layout via drag-and-drop */}
+      <Reorder.Group axis="y" values={order} onReorder={saveOrder} className="space-y-6" as="div">
+        {order.map((key, index) => (
+          <Reorder.Item
+            key={key}
+            value={key}
+            as="div"
+            dragListener={customizing}
+            className={"relative" + (customizing ? " cursor-grab active:cursor-grabbing" : "")}
+          >
+            {customizing && (
+              <div className="absolute -top-2 left-3 z-10 flex items-center gap-1">
+                <span className="inline-flex items-center gap-1 rounded-full bg-green-600 px-2 py-0.5 text-[11px] font-medium text-white shadow-sm">
+                  <GripVertical className="h-3 w-3" />
+                  Drag to reorder
+                </span>
+                <button
+                  type="button"
+                  onClick={() => moveWidget(index, -1)}
+                  disabled={index === 0}
+                  aria-label={`Move ${key} widget up`}
+                  data-testid={`button-move-up-${key}`}
+                  className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-green-700 shadow-sm ring-1 ring-green-200 enabled:hover:bg-green-50 disabled:opacity-40 dark:bg-slate-800 dark:text-green-400 dark:ring-slate-700"
+                >
+                  <ChevronUp className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveWidget(index, 1)}
+                  disabled={index === order.length - 1}
+                  aria-label={`Move ${key} widget down`}
+                  data-testid={`button-move-down-${key}`}
+                  className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-green-700 shadow-sm ring-1 ring-green-200 enabled:hover:bg-green-50 disabled:opacity-40 dark:bg-slate-800 dark:text-green-400 dark:ring-slate-700"
+                >
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
+            <div className={customizing ? "ring-2 ring-green-300 dark:ring-green-700 rounded-2xl" : ""}>
+              {renderWidget(key)}
+            </div>
+          </Reorder.Item>
+        ))}
+      </Reorder.Group>
     </div>
   );
 }

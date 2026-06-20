@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { useListMembers, useCreateMember, useUpdateMember, useDeleteMember, useUpdateMemberFeeStatus, useUpdateMemberCommitteeStatus, getListMembersQueryKey } from "@workspace/api-client-react";
+import { celebrate } from "@/lib/confetti";
 import { MemberInput, type FeeStatusInputFeeStatus, type CommitteeStatusInput } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -84,6 +85,7 @@ export default function Members() {
         queryClient.invalidateQueries({ queryKey: getListMembersQueryKey() });
         setIsAddOpen(false);
         toast({ title: "Member created successfully", variant: "default" });
+        celebrate();
       },
       onError: (err: any) => {
         toast({ title: "Failed to create member", description: err.message, variant: "destructive" });

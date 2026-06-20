@@ -6,6 +6,7 @@
 - [Member reference / group FRF responsibility](member-reference-responsibility.md) — members.refMemberId is TEXT holding the referrer's UUID; group = refMemberId===X.id; FRF responsibility = count × SAR 50.
 - [Documents per-entity views](documents-per-entity-views.md) — /api/documents is paginated; per-member views must filter server-side by linkedEntityType+linkedEntityId, never client-filter page 1.
 - [Committee membership is DB-driven & independent](committee-db-driven.md) — role (designation) + two independent booleans isExecutiveCommittee/isCoreCommittee; no nesting/subset; toggle via PATCH /members/:id/committee-status.
+- [Dashboard widget personalization](dashboard-personalization.md) — Reorder widgets persisted to localStorage (sanitized on load); pair drag with keyboard Move buttons; confetti/anim respect reduced-motion; Member-of-Month from refMemberId.
 - [Certificate security](certificate-security.md) — approved-only cert serial allocated lazily & atomically (isNull guard); PDF signing is integrity-only (self-signed), verify page is authenticity; never emit unsigned.
 - [DKMO duplicate prevention](dkmo-duplicate-prevention.md) — memberships STRICT (DB+app, excludes rejected); members table SOFT client-only confirm (no server block); check-duplicate public+non-PII; /duplicates admin-only.
 - [Membership certificate approval gate](membership-certificate-gate.md) — official cert PDF gated SERVER-side via public /certificate (403 until approved) + minimal /verify; never rebuild from /track.

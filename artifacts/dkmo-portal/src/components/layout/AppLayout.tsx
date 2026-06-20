@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
+import { QuickActionsFab } from "@/components/QuickActionsFab";
 import {
   LayoutDashboard,
   Users,
@@ -286,6 +287,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
         <main className="flex-1 p-4 sm:px-6 sm:py-0">{children}</main>
       </div>
+      <QuickActionsFab />
     </div>
   );
 }
