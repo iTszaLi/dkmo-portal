@@ -12,6 +12,8 @@ import {
   UpdateMemberFeeStatusBody,
   UpdateMemberCommitteeStatusParams,
   UpdateMemberCommitteeStatusBody,
+  UpdateMemberPhotoParams,
+  UpdateMemberPhotoBody,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthedRequest } from "../middlewares/requireAuth";
 import { memberToApi } from "../lib/serializers";
@@ -318,6 +320,42 @@ router.patch("/members/:id/committee-status", async (req, res): Promise<void> =>
   res.json(memberToApi(updated));
 });
 
+router.patch("/members/:id/photo", async (req, res): Promise<void> => {
+  const params = UpdateMemberPhotoParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const parsed = UpdateMemberPhotoBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const photoUrl = parsed.data.photoUrl;
+  if (photoUrl !== null && !/^data:image\/(jpeg|jpg|png|webp);base64,/.test(photoUrl)) {
+    res.status(400).json({ error: "Photo must be a JPG, PNG, or WEBP image" });
+    return;
+  }
+
+  const [updated] = await db
+    .update(membersTable)
+    .set({ photoUrl })
+    .where(eq(membersTable.id, params.data.id))
+    .returning();
+  if (!updated) {
+    res.status(404).json({ error: "Member not found" });
+    return;
+  }
+  logAudit(req, "member_updated", "members", {
+    entityId: updated.id,
+    entityName: updated.fullName,
+    details: photoUrl ? "Profile photo updated" : "Profile photo removed",
+  });
+  res.json(memberToApi(updated));
+});
+
 router.get("/members/:id/referrals", async (req, res): Promise<void> => {
   const params = GetMemberParams.safeParse(req.params);
   if (!params.success) {
@@ -352,6 +390,7 @@ router.get("/members/:id/referrals", async (req, res): Promise<void> => {
       membershipId: m.membershipId,
       mobileNumber: m.mobileNumber,
       city: m.city,
+      photoUrl: m.photoUrl ?? null,
       feeStatus: m.feeStatus,
     })),
   });

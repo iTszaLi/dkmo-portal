@@ -306,6 +306,14 @@ export interface CommitteeStatusInput {
   isCoreCommittee?: boolean;
 }
 
+export interface MemberPhotoInput {
+  /**
+   * Data URL of the new square profile photo, or null to remove.
+   * @nullable
+   */
+  photoUrl: string | null;
+}
+
 export type MemberReferralItemFeeStatus =
   (typeof MemberReferralItemFeeStatus)[keyof typeof MemberReferralItemFeeStatus];
 
@@ -321,6 +329,8 @@ export interface MemberReferralItem {
   membershipId: string;
   mobileNumber: string;
   city: string;
+  /** @nullable */
+  photoUrl?: string | null;
   feeStatus: MemberReferralItemFeeStatus;
 }
 

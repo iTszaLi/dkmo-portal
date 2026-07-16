@@ -36,8 +36,10 @@ import {
   ArrowLeft, UserCircle, MapPin, Phone, CalendarDays, CheckCircle2, Clock, XCircle, Users,
   HeartHandshake, HandHelping, Coins, IdCard, FileText, Building2, ChevronDown, ChevronUp,
   Wallet, Pencil, Plus, Printer, Receipt, ArrowRight, Award, UserCheck,
-  FolderOpen, Upload, ExternalLink, Download,
+  FolderOpen, Upload, ExternalLink, Download, Camera,
 } from "lucide-react";
+import { MemberAvatar } from "@/components/MemberAvatar";
+import { MemberPhotoDialog } from "@/components/MemberPhotoDialog";
 
 const STANDARD_DOCS = ["Passport", "Iqama", "Photo", "Membership Form"] as const;
 
@@ -107,6 +109,7 @@ export default function MemberDetail() {
   const [referralsExpanded, setReferralsExpanded] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
+  const [photoOpen, setPhotoOpen] = useState(false);
 
   const { data: member, isLoading: isMemberLoading } = useGetMember(id || "", {
     query: { enabled: !!id, queryKey: getGetMemberQueryKey(id || "") },
@@ -253,6 +256,12 @@ export default function MemberDetail() {
   const printMembershipCard = () => {
     if (!member) return;
     const m = member as any;
+    // Only allow strict base64 image data URLs into the print HTML (prevents markup injection).
+    const safePhotoUrl =
+      typeof m.photoUrl === "string" &&
+      /^data:image\/(jpeg|jpg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(m.photoUrl)
+        ? m.photoUrl
+        : "";
     const rows: Array<[string, string]> = [
       ["Membership ID", member.membershipId],
       ["Mobile", member.mobileNumber],
@@ -285,7 +294,13 @@ export default function MemberDetail() {
     </style></head><body>
       <div class="card">
         <div class="head"><h1>DKMO</h1><p>Dakshina Karnataka Muslim Ookota — Membership Card</p></div>
-        <div class="body"><div class="name">${escapeHtml(member.fullName)}</div><table>${rowsHtml}</table></div>
+        <div class="body">
+          <div style="display:flex;align-items:center;gap:14px;padding:0 12px 12px;">
+            ${safePhotoUrl ? `<img src="${safePhotoUrl}" alt="Member photo" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid #059669;flex-shrink:0;" />` : ""}
+            <div class="name" style="padding:0;">${escapeHtml(member.fullName)}</div>
+          </div>
+          <table>${rowsHtml}</table>
+        </div>
         <div class="foot">This card certifies active membership of DKMO.</div>
       </div>
       <script>window.onload=function(){window.print();}</script>
@@ -352,17 +367,25 @@ export default function MemberDetail() {
         <Card className="md:col-span-1 rounded-2xl border-emerald-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm h-fit">
           <CardContent className="pt-6">
             <div className="flex flex-col items-center text-center space-y-3">
-              {member.photoUrl ? (
-                <img
-                  src={member.photoUrl}
-                  alt={`${member.fullName} passport photo`}
-                  className="h-20 w-20 rounded-full object-cover border border-emerald-200 dark:border-slate-700"
-                />
-              ) : (
-                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400">
-                  <UserCircle className="h-11 w-11" />
-                </div>
-              )}
+              <button
+                type="button"
+                onClick={() => setPhotoOpen(true)}
+                className="group relative rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                title="Change profile photo"
+              >
+                <MemberAvatar photoUrl={member.photoUrl} name={member.fullName} size="xl" />
+                <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Camera className="h-6 w-6 text-white" />
+                </span>
+              </button>
+              <MemberPhotoDialog
+                memberId={member.id}
+                memberName={member.fullName}
+                photoUrl={member.photoUrl}
+                open={photoOpen}
+                onOpenChange={setPhotoOpen}
+                onSaved={invalidateMember}
+              />
               <div>
                 <h2 className="text-xl font-bold text-emerald-950 dark:text-slate-100">{member.fullName}</h2>
                 <p className="text-sm font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 dark:text-emerald-400 inline-block px-2 py-1 rounded-md mt-1">
@@ -568,7 +591,8 @@ export default function MemberDetail() {
                             <div className="mt-3 space-y-2">
                               {referrals.members.map((rm) => (
                                 <Link key={rm.id} href={`/members/${rm.id}`} className="flex items-center justify-between gap-2 rounded-xl border border-emerald-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 hover:bg-emerald-50/40 dark:hover:bg-slate-800/50 transition-colors">
-                                  <div className="min-w-0">
+                                  <MemberAvatar photoUrl={(rm as any).photoUrl} name={rm.fullName} size="sm" />
+                                  <div className="min-w-0 flex-1">
                                     <p className="font-medium text-emerald-950 dark:text-slate-100 text-sm truncate">{rm.fullName}</p>
                                     <p className="text-xs text-emerald-600 dark:text-slate-500">ID: {rm.membershipId}{rm.city ? ` • ${rm.city}` : ""}</p>
                                   </div>

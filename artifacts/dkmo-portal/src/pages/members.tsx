@@ -13,6 +13,7 @@ import { MemberBadges } from "@/components/MemberBadges";
 import { Search, Plus, UserCircle, MapPin, Phone, MoreHorizontal, Edit, Trash, Users, CheckCircle2, Clock, XCircle, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
 import { formatSAR, feeStatusLabel, feeStatusBadgeClass } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { MemberAvatar } from "@/components/MemberAvatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -240,9 +241,7 @@ export default function Members() {
                 <TableRow key={member.id} className="hover:bg-emerald-50/30 dark:hover:bg-slate-800/50 cursor-pointer dark:border-slate-800 transition-colors">
                   <TableCell>
                     <Link href={`/members/${member.id}`} className="flex items-center gap-3 w-full">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 shrink-0">
-                        <UserCircle className="h-5 w-5" />
-                      </div>
+                      <MemberAvatar photoUrl={member.photoUrl} name={member.fullName} size="md" />
                       <div>
                         <div className="font-medium text-emerald-950 dark:text-slate-200">{member.fullName}</div>
                         <div className="text-xs text-emerald-600 dark:text-slate-500">ID: {member.membershipId}</div>

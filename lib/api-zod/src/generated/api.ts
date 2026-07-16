@@ -261,6 +261,45 @@ export const UpdateMemberCommitteeStatusResponse = zod.object({
 });
 
 /**
+ * @summary Update or remove a member's profile photo. Pass a data URL to set the photo, or null to remove it and fall back to the default avatar.
+ */
+export const UpdateMemberPhotoParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const UpdateMemberPhotoBody = zod.object({
+  photoUrl: zod
+    .string()
+    .nullable()
+    .describe("Data URL of the new square profile photo, or null to remove."),
+});
+
+export const UpdateMemberPhotoResponse = zod.object({
+  id: zod.string(),
+  fullName: zod.string(),
+  mobileNumber: zod.string(),
+  membershipId: zod.string(),
+  photoUrl: zod.string().nullish(),
+  applicationNumber: zod.string(),
+  iqamaNumber: zod.string(),
+  jamaath: zod.string(),
+  city: zod.string(),
+  country: zod.string(),
+  designation: zod.string(),
+  isExecutiveCommittee: zod.boolean(),
+  isCoreCommittee: zod.boolean(),
+  membershipFee: zod.number(),
+  feeStatus: zod.enum(["paid", "pending", "unpaid"]),
+  feePaidAt: zod.coerce.date().nullable(),
+  feeUpdatedBy: zod.string(),
+  frfStatus: zod.enum(["active", "suspended", "inactive"]),
+  refMemberName: zod.string(),
+  refMemberId: zod.string(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
  * @summary List members referred by this member and their FRF responsibility
  */
 export const GetMemberReferralsParams = zod.object({
@@ -278,6 +317,7 @@ export const GetMemberReferralsResponse = zod.object({
       membershipId: zod.string(),
       mobileNumber: zod.string(),
       city: zod.string(),
+      photoUrl: zod.string().nullish(),
       feeStatus: zod.enum(["paid", "pending", "unpaid"]),
     }),
   ),

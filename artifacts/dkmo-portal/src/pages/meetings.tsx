@@ -44,6 +44,7 @@ import {
 } from "lucide-react";
 import { formatDate, cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { MemberAvatar } from "@/components/MemberAvatar";
 import ExcelJS from "exceljs";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -85,6 +86,12 @@ export default function Meetings() {
 
   const { data: meetings, isLoading: meetingsLoading } = useListMeetings();
   const { data: members } = useListMembers();
+
+  const photoByMemberId = useMemo(() => {
+    const map: Record<string, string | null | undefined> = {};
+    for (const m of members ?? []) map[m.id] = m.photoUrl;
+    return map;
+  }, [members]);
 
   const [selectedId, setSelectedId] = useState<string>("");
 
@@ -516,9 +523,12 @@ export default function Meetings() {
                     className="rounded-xl border border-green-100 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-3"
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <p className="font-semibold text-green-950 dark:text-slate-100 leading-snug">
-                        {m.fullName}
-                      </p>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <MemberAvatar photoUrl={m.photoUrl} name={m.fullName} size="sm" />
+                        <p className="font-semibold text-green-950 dark:text-slate-100 leading-snug">
+                          {m.fullName}
+                        </p>
+                      </div>
                       {isExecutiveMember(m) ? (
                         <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-2 py-0.5 text-[10px] font-medium">
                           <Crown className="h-3 w-3" /> Exec
@@ -763,7 +773,12 @@ export default function Meetings() {
                               className="border-b border-green-50 dark:border-slate-800/60 hover:bg-green-50/40 dark:hover:bg-slate-800/40 transition-colors"
                             >
                               <td className="py-3 pr-3 font-medium text-green-900 dark:text-slate-200 whitespace-nowrap">{r.membershipId}</td>
-                              <td className="py-3 px-2 text-green-950 dark:text-slate-100">{r.fullName}</td>
+                              <td className="py-3 px-2 text-green-950 dark:text-slate-100">
+                                <span className="flex items-center gap-2">
+                                  <MemberAvatar photoUrl={photoByMemberId[r.memberId]} name={r.fullName} size="sm" />
+                                  {r.fullName}
+                                </span>
+                              </td>
                               <td className="py-3 px-2 text-green-700/80 dark:text-slate-400 whitespace-nowrap">{r.location || "—"}</td>
                               <td className="py-3 px-2 text-green-700/80 dark:text-slate-400 whitespace-nowrap">{r.mobileNumber}</td>
                               <td className="py-3 pl-2 text-right">

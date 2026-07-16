@@ -69,6 +69,7 @@ import type {
   MemberAssistanceHistory,
   MemberDetail,
   MemberInput,
+  MemberPhotoInput,
   MemberReferralSummary,
   MonthlyCollection,
   Payment,
@@ -861,6 +862,93 @@ export const useUpdateMemberCommitteeStatus = <
   TContext
 > => {
   return useMutation(getUpdateMemberCommitteeStatusMutationOptions(options));
+};
+
+/**
+ * @summary Update or remove a member's profile photo. Pass a data URL to set the photo, or null to remove it and fall back to the default avatar.
+ */
+export const getUpdateMemberPhotoUrl = (id: string) => {
+  return `/api/members/${id}/photo`;
+};
+
+export const updateMemberPhoto = async (
+  id: string,
+  memberPhotoInput: MemberPhotoInput,
+  options?: RequestInit,
+): Promise<Member> => {
+  return customFetch<Member>(getUpdateMemberPhotoUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(memberPhotoInput),
+  });
+};
+
+export const getUpdateMemberPhotoMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMemberPhoto>>,
+    TError,
+    { id: string; data: BodyType<MemberPhotoInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateMemberPhoto>>,
+  TError,
+  { id: string; data: BodyType<MemberPhotoInput> },
+  TContext
+> => {
+  const mutationKey = ["updateMemberPhoto"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateMemberPhoto>>,
+    { id: string; data: BodyType<MemberPhotoInput> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateMemberPhoto(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateMemberPhotoMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateMemberPhoto>>
+>;
+export type UpdateMemberPhotoMutationBody = BodyType<MemberPhotoInput>;
+export type UpdateMemberPhotoMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update or remove a member's profile photo. Pass a data URL to set the photo, or null to remove it and fall back to the default avatar.
+ */
+export const useUpdateMemberPhoto = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMemberPhoto>>,
+    TError,
+    { id: string; data: BodyType<MemberPhotoInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateMemberPhoto>>,
+  TError,
+  { id: string; data: BodyType<MemberPhotoInput> },
+  TContext
+> => {
+  return useMutation(getUpdateMemberPhotoMutationOptions(options));
 };
 
 /**

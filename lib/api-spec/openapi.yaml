@@ -193,6 +193,33 @@ paths:
               schema:
                 $ref: "#/components/schemas/Member"
 
+  /members/{id}/photo:
+    patch:
+      operationId: updateMemberPhoto
+      tags: [members]
+      summary: >-
+        Update or remove a member's profile photo. Pass a data URL to set the
+        photo, or null to remove it and fall back to the default avatar.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberPhotoInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+
   /members/{id}/referrals:
     get:
       operationId: getMemberReferrals
@@ -1949,6 +1976,15 @@ components:
         isCoreCommittee:
           type: boolean
 
+    MemberPhotoInput:
+      type: object
+      properties:
+        photoUrl:
+          type: ["string", "null"]
+          description: Data URL of the new square profile photo, or null to remove.
+      required:
+        - photoUrl
+
     MemberReferralItem:
       type: object
       properties:
@@ -1962,6 +1998,8 @@ components:
           type: string
         city:
           type: string
+        photoUrl:
+          type: ["string", "null"]
         feeStatus:
           type: string
           enum: [paid, pending, unpaid]
