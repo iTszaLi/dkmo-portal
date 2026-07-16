@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "wouter";
 import {
   useListFrfClaims,
   useCreateFrfClaim,
@@ -89,6 +90,7 @@ type FrfClaimInput = {
   claimType: ClaimType;
   amountRequested: number;
   amountApproved: number;
+  contributionAmount: number;
   status: ClaimStatus;
   beneficiaryName: string;
   beneficiaryRelation: string;
@@ -103,6 +105,7 @@ const EMPTY_FORM: FrfClaimInput = {
   claimType: "death_benefit",
   amountRequested: 0,
   amountApproved: 0,
+  contributionAmount: 50,
   status: "pending",
   beneficiaryName: "",
   beneficiaryRelation: "",
@@ -230,6 +233,7 @@ export default function Frf() {
       claimType: claim.claimType as ClaimType,
       amountRequested: claim.amountRequested,
       amountApproved: claim.amountApproved,
+      contributionAmount: (claim as any).contributionAmount ?? 50,
       status: claim.status as ClaimStatus,
       beneficiaryName: claim.beneficiaryName,
       beneficiaryRelation: claim.beneficiaryRelation,
@@ -384,8 +388,10 @@ export default function Frf() {
                   claims.map((claim) => (
                     <TableRow key={claim.id} className="hover:bg-green-50/30 dark:hover:bg-slate-800/50 dark:border-slate-800 transition-colors">
                       <TableCell>
-                        <div className="font-medium text-green-950 dark:text-slate-200">{claim.claimantName}</div>
-                        {claim.membershipId && <div className="text-xs text-green-600 dark:text-slate-500">ID: {claim.membershipId}</div>}
+                        <Link href={`/frf/${claim.id}`} className="block hover:underline">
+                          <div className="font-medium text-green-950 dark:text-slate-200">{claim.claimantName}</div>
+                          {claim.membershipId && <div className="text-xs text-green-600 dark:text-slate-500">ID: {claim.membershipId}</div>}
+                        </Link>
                       </TableCell>
                       <TableCell>
                         <span className="text-sm text-green-800 dark:text-slate-300">{CLAIM_TYPE_LABEL[claim.claimType as ClaimType] ?? claim.claimType}</span>
@@ -420,6 +426,11 @@ export default function Frf() {
                             <DropdownMenuSeparator className="dark:border-slate-700" />
                             <DropdownMenuItem onClick={() => setViewingClaim(claim)} className="gap-2 cursor-pointer dark:text-slate-300 dark:focus:bg-slate-800">
                               <Eye className="h-3.5 w-3.5 text-green-600" /> View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild className="gap-2 cursor-pointer dark:text-slate-300 dark:focus:bg-slate-800">
+                              <Link href={`/frf/${claim.id}`}>
+                                <Users className="h-3.5 w-3.5 text-green-600" /> Collection Details
+                              </Link>
                             </DropdownMenuItem>
                             {canEdit && (
                               <DropdownMenuItem onClick={() => openEdit(claim)} className="gap-2 cursor-pointer dark:text-slate-300 dark:focus:bg-slate-800">
@@ -646,6 +657,10 @@ export default function Frf() {
               <div className="space-y-1">
                 <label className="text-xs font-medium text-green-800 dark:text-slate-400">Amount Approved (SAR)</label>
                 <Input type="number" min={0} value={form.amountApproved} onChange={(e) => setForm((f) => ({ ...f, amountApproved: Number(e.target.value) }))} className="dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-green-800 dark:text-slate-400">Contribution per Member (SAR)</label>
+                <Input type="number" min={0} value={form.contributionAmount} onChange={(e) => setForm((f) => ({ ...f, contributionAmount: Number(e.target.value) }))} className="dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200" />
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-medium text-green-800 dark:text-slate-400">Status</label>

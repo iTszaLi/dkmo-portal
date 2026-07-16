@@ -9,6 +9,7 @@ import {
   eventsTable,
   welfareRequestsTable,
   loansTable,
+  frfContributionsTable,
 } from "@workspace/db";
 import {
   GetDashboardSummaryQueryParams,
@@ -19,6 +20,7 @@ import {
 } from "@workspace/api-zod";
 import { requireAuth } from "../middlewares/requireAuth";
 import { currentMonth, paymentToApi } from "../lib/serializers";
+import { deriveContributionStatus } from "../lib/frf-ledger";
 
 const router: IRouter = Router();
 
@@ -451,6 +453,58 @@ router.get("/dashboard/alerts", async (req, res): Promise<void> => {
     });
   }
 
+  // FRF contribution alerts derived from the contribution ledger.
+  const frfLedger = await db
+    .select({ contribution: frfContributionsTable, approvedDate: frfClaimsTable.approvedDate })
+    .from(frfContributionsTable)
+    .innerJoin(frfClaimsTable, eq(frfContributionsTable.claimId, frfClaimsTable.id));
+  const nowFrf = new Date();
+  let frfPendingCount = 0;
+  let frfOverdueCount = 0;
+  let frfOutstandingAmount = 0;
+  for (const { contribution: c, approvedDate } of frfLedger) {
+    const st = deriveContributionStatus(c, approvedDate, nowFrf);
+    if (st === "pending") { frfPendingCount++; frfOutstandingAmount += Number(c.amount); }
+    else if (st === "overdue") { frfOverdueCount++; frfOutstandingAmount += Number(c.amount); }
+  }
+  if (frfOverdueCount > 0) {
+    alerts.push({
+      id: "frf-overdue-contributions",
+      severity: "critical",
+      type: "frf_overdue",
+      title: "Overdue FRF contributions",
+      description: `${frfOverdueCount} FRF contribution${frfOverdueCount === 1 ? " is" : "s are"} overdue (30+ days since claim approval).`,
+      count: frfOverdueCount,
+      link: "/frf",
+    });
+  }
+  if (frfPendingCount > 0) {
+    alerts.push({
+      id: "frf-pending-contributions",
+      severity: "warning",
+      type: "frf_pending",
+      title: "Pending FRF contributions",
+      description: `${frfPendingCount} FRF contribution${frfPendingCount === 1 ? "" : "s"} pending, SAR ${frfOutstandingAmount.toLocaleString()} outstanding in total.`,
+      count: frfPendingCount,
+      link: "/frf",
+    });
+  }
+  const recentlyApprovedClaims = await db
+    .select()
+    .from(frfClaimsTable)
+    .where(and(eq(frfClaimsTable.status, "approved"), gte(frfClaimsTable.approvedDate, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))));
+  if (recentlyApprovedClaims.length > 0) {
+    alerts.push({
+      id: "frf-recently-approved",
+      severity: "info",
+      type: "frf_approved",
+      title: "Newly approved FRF claims",
+      description: `${recentlyApprovedClaims.length} FRF claim${recentlyApprovedClaims.length === 1 ? " was" : "s were"} approved in the last 7 days — contributions are being collected.`,
+      count: recentlyApprovedClaims.length,
+      link: "/frf",
+    });
+  }
+
   // Sort: critical first, then warning, then info
   const order = { critical: 0, warning: 1, info: 2 };
   alerts.sort((a, b) => order[a.severity] - order[b.severity]);
@@ -760,6 +814,72 @@ router.get("/dashboard/member-assistance/:memberId", async (req, res): Promise<v
   const totalReceived = items.reduce((s, i) => s + i.amountApproved, 0);
 
   res.json({ items, totalReceived, totalCount: items.length });
+});
+
+router.get("/dashboard/frf-overview", async (req, res): Promise<void> => {
+  try {
+    const [claims, ledger, membersAll] = await Promise.all([
+      db.select().from(frfClaimsTable),
+      db
+        .select({ contribution: frfContributionsTable, approvedDate: frfClaimsTable.approvedDate })
+        .from(frfContributionsTable)
+        .innerJoin(frfClaimsTable, eq(frfContributionsTable.claimId, frfClaimsTable.id)),
+      db.select().from(membersTable),
+    ]);
+
+    const approvedClaims = claims.filter(
+      (c) => c.status === "approved" || c.status === "disbursed",
+    ).length;
+
+    const now = new Date();
+    let expectedTotal = 0;
+    let collectedTotal = 0;
+    const outstandingByMember = new Map<string, { outstanding: number; pendingClaims: number }>();
+
+    for (const { contribution: c, approvedDate } of ledger) {
+      const status = deriveContributionStatus(c, approvedDate, now);
+      if (status === "cancelled") continue;
+      const amount = Number(c.amount);
+      expectedTotal += amount;
+      if (status === "paid") {
+        collectedTotal += amount;
+      } else {
+        const cur = outstandingByMember.get(c.memberId) ?? { outstanding: 0, pendingClaims: 0 };
+        cur.outstanding += amount;
+        cur.pendingClaims += 1;
+        outstandingByMember.set(c.memberId, cur);
+      }
+    }
+
+    const memberById = new Map(membersAll.map((m) => [m.id, m]));
+    const topOutstandingMembers = [...outstandingByMember.entries()]
+      .sort((a, b) => b[1].outstanding - a[1].outstanding)
+      .slice(0, 8)
+      .flatMap(([memberId, agg]) => {
+        const m = memberById.get(memberId);
+        if (!m) return [];
+        return [{
+          memberId,
+          fullName: m.fullName,
+          membershipId: m.membershipId,
+          photoUrl: m.photoUrl ?? null,
+          outstanding: agg.outstanding,
+          pendingClaims: agg.pendingClaims,
+        }];
+      });
+
+    res.json({
+      approvedClaims,
+      expectedTotal,
+      collectedTotal,
+      outstandingTotal: expectedTotal - collectedTotal,
+      collectionRate: expectedTotal > 0 ? Math.round((collectedTotal / expectedTotal) * 100) : 0,
+      topOutstandingMembers,
+    });
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Failed to get FRF overview" });
+  }
 });
 
 export default router;

@@ -213,6 +213,7 @@ export default function Members() {
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">Membership Fee</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Fee Status</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">FRF Status</TableHead>
+              <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">FRF Contributions</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -232,7 +233,7 @@ export default function Members() {
               ))
             ) : members?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center text-emerald-600 dark:text-slate-500">
+                <TableCell colSpan={9} className="h-24 text-center text-emerald-600 dark:text-slate-500">
                   No members found.
                 </TableCell>
               </TableRow>
@@ -303,6 +304,26 @@ export default function Members() {
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${cls}`}>
                           {s}
                         </span>
+                      );
+                    })()}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {(() => {
+                      const due = (member as any).frfDue ?? 0;
+                      const paid = (member as any).frfPaid ?? 0;
+                      const outstanding = (member as any).frfOutstanding ?? 0;
+                      if (due === 0) {
+                        return <span className="text-xs text-slate-400 dark:text-slate-600">—</span>;
+                      }
+                      return (
+                        <div className="text-xs leading-5">
+                          <div className="text-emerald-800 dark:text-emerald-300 font-medium">{formatSAR(paid)} / {formatSAR(due)}</div>
+                          {outstanding > 0 ? (
+                            <div className="text-red-600 dark:text-red-400 font-semibold">{formatSAR(outstanding)} due</div>
+                          ) : (
+                            <div className="text-emerald-600 dark:text-emerald-400">Fully paid</div>
+                          )}
+                        </div>
                       );
                     })()}
                   </TableCell>

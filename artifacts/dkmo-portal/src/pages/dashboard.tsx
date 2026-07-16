@@ -5,6 +5,7 @@ import {
   useGetDashboardSummary,
   useGetDashboardFinancialSummary,
   useGetDashboardCashFlow,
+  useGetFrfOverview,
   useListMembers,
   useListEvents,
   useListSponsors,
@@ -122,6 +123,7 @@ export default function Dashboard() {
   const { data: summary, isLoading: isLoadingSummary } = useGetDashboardSummary();
   const { data: financialSummary } = useGetDashboardFinancialSummary({ month: currentMonth });
   const { data: cashFlow } = useGetDashboardCashFlow({ year: todayYear, quarter: todayQuarter });
+  const { data: frfOverview } = useGetFrfOverview();
   const { data: members, isLoading: isLoadingMembers } = useListMembers();
 
   // Top 5 Recruiters — computed from real member referral records.
@@ -673,6 +675,57 @@ export default function Dashboard() {
           </Card>
         </Link>
       </div>
+
+      {/* FRF Collection Overview */}
+      {frfOverview && frfOverview.expectedTotal > 0 && (
+        <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <CardTitle className="text-base text-green-950 dark:text-green-100 flex items-center gap-2">
+                  <HeartHandshake className="h-4 w-4 text-green-700 dark:text-green-400" /> FRF Collection Overview
+                </CardTitle>
+                <CardDescription className="dark:text-slate-400">
+                  {frfOverview.approvedClaims} approved claim{frfOverview.approvedClaims === 1 ? "" : "s"} · collection rate {frfOverview.collectionRate}%
+                </CardDescription>
+              </div>
+              <Link href="/frf" className="text-sm text-green-700 dark:text-green-400 hover:underline inline-flex items-center gap-1">
+                View FRF <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { label: "Expected", value: formatSAR(frfOverview.expectedTotal), cls: "text-green-950 dark:text-white" },
+                { label: "Collected", value: formatSAR(frfOverview.collectedTotal), cls: "text-green-700 dark:text-green-300" },
+                { label: "Outstanding", value: formatSAR(frfOverview.outstandingTotal), cls: frfOverview.outstandingTotal > 0 ? "text-red-600 dark:text-red-400" : "text-green-700 dark:text-green-300" },
+              ].map((s) => (
+                <div key={s.label} className="rounded-xl border border-green-100 dark:border-slate-800 p-3 text-center">
+                  <p className="text-xs text-green-700/70 dark:text-slate-500">{s.label}</p>
+                  <p className={`text-lg font-bold ${s.cls}`}>{s.value}</p>
+                </div>
+              ))}
+            </div>
+            <div className="h-2 w-full rounded-full bg-green-100 dark:bg-slate-800 overflow-hidden">
+              <div className="h-full rounded-full bg-green-600 dark:bg-green-500 transition-all" style={{ width: `${Math.min(100, frfOverview.collectionRate)}%` }} />
+            </div>
+            {frfOverview.topOutstandingMembers.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-green-800 dark:text-green-300 uppercase tracking-wider mb-2">Top Outstanding</p>
+                <div className="space-y-1.5">
+                  {frfOverview.topOutstandingMembers.slice(0, 5).map((m) => (
+                    <Link key={m.memberId} href={`/members/${m.memberId}`} className="flex items-center justify-between rounded-lg px-2 py-1.5 hover:bg-green-50 dark:hover:bg-slate-800/60 transition-colors">
+                      <span className="text-sm text-green-950 dark:text-slate-200">{m.fullName} <span className="text-xs text-green-600 dark:text-slate-500">· {m.membershipId}</span></span>
+                      <span className="text-sm font-semibold text-red-600 dark:text-red-400">{formatSAR(m.outstanding)}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Reorderable widgets — personalize layout via drag-and-drop */}
       <Reorder.Group axis="y" values={order} onReorder={saveOrder} className="space-y-6" as="div">

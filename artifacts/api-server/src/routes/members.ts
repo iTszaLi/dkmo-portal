@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, ilike, or, desc, sql, type SQL } from "drizzle-orm";
-import { db, membersTable } from "@workspace/db";
+import { db, membersTable, frfClaimsTable, frfContributionsTable } from "@workspace/db";
 import {
   CreateMemberBody,
   UpdateMemberBody,
@@ -18,6 +18,11 @@ import {
 import { requireAuth, type AuthedRequest } from "../middlewares/requireAuth";
 import { memberToApi } from "../lib/serializers";
 import { logAudit } from "../lib/audit";
+import {
+  aggregateMemberFrf,
+  deriveContributionStatus,
+  frfEligibility,
+} from "../lib/frf-ledger";
 
 const router: IRouter = Router();
 
@@ -65,7 +70,20 @@ router.get("/members", async (req, res): Promise<void> => {
       .orderBy(desc(membersTable.createdAt));
   }
 
-  res.json(rows.map(memberToApi));
+  // Attach FRF ledger aggregates so the members list can show
+  // Due / Paid / Outstanding without extra requests.
+  const frfAgg = await aggregateMemberFrf(rows.map((r) => r.id));
+  res.json(
+    rows.map((m) => {
+      const agg = frfAgg.get(m.id);
+      return {
+        ...memberToApi(m),
+        frfDue: agg?.totalDue ?? 0,
+        frfPaid: agg?.totalPaid ?? 0,
+        frfOutstanding: agg?.totalOutstanding ?? 0,
+      };
+    }),
+  );
 });
 
 /**
@@ -394,6 +412,145 @@ router.get("/members/:id/referrals", async (req, res): Promise<void> => {
       feeStatus: m.feeStatus,
     })),
   });
+});
+
+router.get("/members/:id/frf-summary", async (req, res): Promise<void> => {
+  const params = GetMemberParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  try {
+    const [member] = await db
+      .select()
+      .from(membersTable)
+      .where(eq(membersTable.id, params.data.id));
+    if (!member) {
+      res.status(404).json({ error: "Member not found" });
+      return;
+    }
+
+    const now = new Date();
+
+    // Own contribution ledger with claim context.
+    const ledger = await db
+      .select({ contribution: frfContributionsTable, claim: frfClaimsTable })
+      .from(frfContributionsTable)
+      .innerJoin(frfClaimsTable, eq(frfContributionsTable.claimId, frfClaimsTable.id))
+      .where(eq(frfContributionsTable.memberId, params.data.id))
+      .orderBy(desc(frfContributionsTable.createdAt));
+
+    let totalClaims = 0;
+    let totalDue = 0;
+    let totalPaid = 0;
+    let totalOutstanding = 0;
+    let lastContributionAt: Date | null = null;
+
+    const history = ledger.map(({ contribution: c, claim }) => {
+      const status = deriveContributionStatus(c, claim.approvedDate, now);
+      const amount = Number(c.amount);
+      if (status !== "cancelled") {
+        totalClaims += 1;
+        totalDue += amount;
+        if (status === "paid") {
+          totalPaid += amount;
+          if (c.paidAt && (!lastContributionAt || c.paidAt > lastContributionAt)) {
+            lastContributionAt = c.paidAt;
+          }
+        } else {
+          totalOutstanding += amount;
+        }
+      }
+      return {
+        contributionId: c.id,
+        claimId: claim.id,
+        claimantName: claim.claimantName,
+        claimType: claim.claimType,
+        amount,
+        status,
+        approvedDate: claim.approvedDate?.toISOString() ?? null,
+        paidAt: c.paidAt?.toISOString() ?? null,
+      };
+    });
+
+    // Reference collection performance: members this member recruited.
+    const referred = await db
+      .select()
+      .from(membersTable)
+      .where(eq(membersTable.refMemberId, params.data.id))
+      .orderBy(desc(membersTable.createdAt));
+
+    const refAgg = await aggregateMemberFrf(referred.map((r) => r.id));
+
+    let fullyPaidCount = 0;
+    let pendingCount = 0;
+    let overdueCount = 0;
+    let refTotalDue = 0;
+    let refTotalPaid = 0;
+    let refTotalOutstanding = 0;
+
+    const referenceMembers = referred.map((rm) => {
+      const agg = refAgg.get(rm.id);
+      const due = agg?.totalDue ?? 0;
+      const paid = agg?.totalPaid ?? 0;
+      const outstanding = agg?.totalOutstanding ?? 0;
+      refTotalDue += due;
+      refTotalPaid += paid;
+      refTotalOutstanding += outstanding;
+      let collectionStatus: "paid" | "pending" | "overdue" | "none";
+      if (!agg || agg.totalClaims === 0) {
+        collectionStatus = "none";
+      } else if (outstanding === 0) {
+        collectionStatus = "paid";
+        fullyPaidCount++;
+      } else if (agg.overdueCount > 0) {
+        collectionStatus = "overdue";
+        overdueCount++;
+      } else {
+        collectionStatus = "pending";
+        pendingCount++;
+      }
+      return {
+        id: rm.id,
+        fullName: rm.fullName,
+        membershipId: rm.membershipId,
+        mobileNumber: rm.mobileNumber,
+        photoUrl: rm.photoUrl ?? null,
+        feeStatus: rm.feeStatus,
+        frfEligibility: frfEligibility(rm).status,
+        frfDue: due,
+        frfPaid: paid,
+        frfOutstanding: outstanding,
+        collectionStatus,
+        lastFrfPaymentAt: agg?.lastContributionAt?.toISOString() ?? null,
+      };
+    });
+
+    res.json({
+      eligibility: frfEligibility(member),
+      totalClaims,
+      totalDue,
+      totalPaid,
+      totalOutstanding,
+      lastContributionAt: lastContributionAt
+        ? (lastContributionAt as Date).toISOString()
+        : null,
+      history,
+      referenceCollection: {
+        totalReferences: referred.length,
+        fullyPaidCount,
+        pendingCount,
+        overdueCount,
+        collectionRate:
+          refTotalDue > 0 ? Math.round((refTotalPaid / refTotalDue) * 100) : 100,
+        totalOutstanding: refTotalOutstanding,
+        members: referenceMembers,
+      },
+    });
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Failed to get member FRF summary" });
+  }
 });
 
 router.delete("/members/:id", async (req, res): Promise<void> => {

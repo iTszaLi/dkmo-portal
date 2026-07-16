@@ -28,6 +28,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MemberForm } from "@/components/MemberForm";
+import { MemberFrfSection } from "@/components/MemberFrfSection";
 import { MemberBadges } from "@/components/MemberBadges";
 import { formatSAR, formatDate, feeStatusLabel, feeStatusBadgeClass } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -442,6 +443,7 @@ export default function MemberDetail() {
             <TabsList className="flex w-full flex-wrap h-auto bg-emerald-50/70 dark:bg-slate-800/70">
               <TabsTrigger value="membership">Membership</TabsTrigger>
               <TabsTrigger value="payments">Payments</TabsTrigger>
+              <TabsTrigger value="frf">FRF</TabsTrigger>
               <TabsTrigger value="referrals">Referrals</TabsTrigger>
               <TabsTrigger value="documents">Documents</TabsTrigger>
               <TabsTrigger value="history">History</TabsTrigger>
@@ -554,6 +556,11 @@ export default function MemberDetail() {
             </TabsContent>
 
             {/* REFERRALS */}
+            {/* FRF */}
+            <TabsContent value="frf" className="mt-4">
+              <MemberFrfSection memberId={id || ""} />
+            </TabsContent>
+
             <TabsContent value="referrals" className="mt-4">
               <Card className="rounded-2xl border-emerald-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
                 <CardHeader>

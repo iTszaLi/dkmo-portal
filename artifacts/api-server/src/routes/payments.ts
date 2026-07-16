@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, and, desc } from "drizzle-orm";
-import { db, membersTable, paymentsTable } from "@workspace/db";
+import { db, membersTable, paymentsTable, frfClaimsTable } from "@workspace/db";
 import {
   CreatePaymentBody,
   GetPaymentParams,
@@ -10,6 +10,7 @@ import {
 import { requireAuth } from "../middlewares/requireAuth";
 import { paymentToApi } from "../lib/serializers";
 import { logAudit } from "../lib/audit";
+import { markContributionPaid, revertContributionForPayment } from "../lib/frf-ledger";
 
 const router: IRouter = Router();
 
@@ -77,22 +78,73 @@ router.post("/payments", async (req, res): Promise<void> => {
     ? new Date(parsed.data.paidAt)
     : new Date();
 
-  const [created] = await db
-    .insert(paymentsTable)
-    .values({
-      memberId: parsed.data.memberId,
-      paymentType: parsed.data.paymentType ?? "membership_fee",
-      frfClaimId: parsed.data.frfClaimId ?? null,
-      amountDue: String(parsed.data.amountDue ?? parsed.data.amountPaid),
-      amountPaid: String(parsed.data.amountPaid),
-      status: parsed.data.status ?? "paid",
-      paymentMethod: parsed.data.paymentMethod,
-      receiptNumber: parsed.data.receiptNumber,
-      notes: parsed.data.notes ?? null,
-      dueDate: parsed.data.dueDate ? new Date(parsed.data.dueDate) : null,
-      paidAt,
-    })
-    .returning();
+  const paymentType = parsed.data.paymentType ?? "membership_fee";
+  const frfClaimId =
+    paymentType === "frf_contribution" ? (parsed.data.frfClaimId ?? null) : null;
+
+  // Server-side validation: an FRF contribution linked to a claim may only be
+  // recorded against a collectable (approved or disbursed) claim.
+  if (frfClaimId) {
+    const [claim] = await db
+      .select({ id: frfClaimsTable.id, status: frfClaimsTable.status })
+      .from(frfClaimsTable)
+      .where(eq(frfClaimsTable.id, frfClaimId));
+    if (!claim) {
+      res.status(404).json({ error: "FRF claim not found" });
+      return;
+    }
+    if (claim.status !== "approved" && claim.status !== "disbursed") {
+      res.status(400).json({
+        error: "FRF contributions can only be recorded for approved claims",
+      });
+      return;
+    }
+  }
+
+  let created: typeof paymentsTable.$inferSelect | undefined;
+  try {
+    // Payment insert and FRF ledger sync are atomic: either both are
+    // recorded or neither, so ledger status never drifts from payments.
+    created = await db.transaction(async (tx) => {
+      const [row] = await tx
+        .insert(paymentsTable)
+        .values({
+          memberId: parsed.data.memberId,
+          paymentType,
+          frfClaimId,
+          amountDue: String(parsed.data.amountDue ?? parsed.data.amountPaid),
+          amountPaid: String(parsed.data.amountPaid),
+          status: parsed.data.status ?? "paid",
+          paymentMethod: parsed.data.paymentMethod,
+          receiptNumber: parsed.data.receiptNumber,
+          notes: parsed.data.notes ?? null,
+          dueDate: parsed.data.dueDate ? new Date(parsed.data.dueDate) : null,
+          paidAt,
+        })
+        .returning();
+      if (!row) throw new Error("Failed to record payment");
+
+      // Strict separation — only FRF payments linked to a claim touch the
+      // contribution ledger; membership fees and other types never do.
+      if (row.paymentType === "frf_contribution" && row.frfClaimId) {
+        await markContributionPaid(
+          {
+            claimId: row.frfClaimId,
+            memberId: row.memberId,
+            paymentId: row.id,
+            amount: Number(row.amountPaid),
+            paidAt: row.paidAt,
+          },
+          tx,
+        );
+      }
+      return row;
+    });
+  } catch (err) {
+    req.log.error({ err }, "Failed to record payment");
+    res.status(500).json({ error: "Failed to record payment" });
+    return;
+  }
 
   if (!created) {
     res.status(500).json({ error: "Failed to record payment" });
@@ -151,7 +203,21 @@ router.delete("/payments/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Payment not found" });
     return;
   }
-  await db.delete(paymentsTable).where(eq(paymentsTable.id, params.data.id));
+  try {
+    // Deletion and FRF ledger revert are atomic so a removed FRF payment
+    // always makes the pending obligation reappear.
+    await db.transaction(async (tx) => {
+      await tx.delete(paymentsTable).where(eq(paymentsTable.id, params.data.id));
+      if (row.payment.paymentType === "frf_contribution") {
+        await revertContributionForPayment(row.payment.id, tx);
+      }
+    });
+  } catch (err) {
+    req.log.error({ err, paymentId: row.payment.id }, "Failed to delete payment");
+    res.status(500).json({ error: "Failed to delete payment" });
+    return;
+  }
+
   logAudit(req, "payment_deleted", "payments", {
     entityId: row.payment.id,
     entityName: row.member.fullName,

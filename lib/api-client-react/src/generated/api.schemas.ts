@@ -194,6 +194,9 @@ export interface Member {
   feePaidAt: string | null;
   feeUpdatedBy: string;
   frfStatus: MemberFrfStatus;
+  frfDue?: number;
+  frfPaid?: number;
+  frfOutstanding?: number;
   refMemberName: string;
   refMemberId: string;
   createdAt: string;
@@ -347,6 +350,9 @@ export type PaymentPaymentType =
 export const PaymentPaymentType = {
   membership_fee: "membership_fee",
   frf_contribution: "frf_contribution",
+  donation: "donation",
+  sponsorship: "sponsorship",
+  other: "other",
 } as const;
 
 export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus];
@@ -396,6 +402,9 @@ export type PaymentInputPaymentType =
 export const PaymentInputPaymentType = {
   membership_fee: "membership_fee",
   frf_contribution: "frf_contribution",
+  donation: "donation",
+  sponsorship: "sponsorship",
+  other: "other",
 } as const;
 
 export type PaymentInputStatus =
@@ -887,6 +896,7 @@ export interface FrfClaim {
   claimType: FrfClaimClaimType;
   amountRequested: number;
   amountApproved: number;
+  contributionAmount: number;
   status: FrfClaimStatus;
   /** @nullable */
   claimDate?: string | null;
@@ -933,6 +943,8 @@ export interface FrfClaimInput {
   amountRequested?: number;
   /** @minimum 0 */
   amountApproved?: number;
+  /** @minimum 0 */
+  contributionAmount?: number;
   status?: FrfClaimInputStatus;
   claimDate?: string;
   /** @nullable */
@@ -958,6 +970,163 @@ export interface FrfStats {
   totalDisbursed: number;
   totalRequested: number;
   byType: FrfStatsByTypeItem[];
+}
+
+export type FrfContributorStatus =
+  (typeof FrfContributorStatus)[keyof typeof FrfContributorStatus];
+
+export const FrfContributorStatus = {
+  paid: "paid",
+  pending: "pending",
+  overdue: "overdue",
+  cancelled: "cancelled",
+} as const;
+
+export interface FrfContributor {
+  contributionId: string;
+  memberId: string;
+  fullName: string;
+  membershipId: string;
+  mobileNumber: string;
+  /** @nullable */
+  photoUrl?: string | null;
+  refMemberName: string;
+  amount: number;
+  status: FrfContributorStatus;
+  /** @nullable */
+  paidAt?: string | null;
+  /** @nullable */
+  receiptNumber?: string | null;
+}
+
+export interface FrfClaimCollection {
+  claim: FrfClaim;
+  totalMembers: number;
+  expectedAmount: number;
+  collectedAmount: number;
+  outstandingAmount: number;
+  collectionRate: number;
+  paidCount: number;
+  pendingCount: number;
+  overdueCount: number;
+  cancelledCount: number;
+  contributors: FrfContributor[];
+}
+
+export type FrfEligibilityStatus =
+  (typeof FrfEligibilityStatus)[keyof typeof FrfEligibilityStatus];
+
+export const FrfEligibilityStatus = {
+  eligible: "eligible",
+  pending_activation: "pending_activation",
+  suspended: "suspended",
+  not_eligible: "not_eligible",
+} as const;
+
+export interface FrfEligibility {
+  status: FrfEligibilityStatus;
+  reason: string;
+}
+
+export type MemberFrfHistoryItemStatus =
+  (typeof MemberFrfHistoryItemStatus)[keyof typeof MemberFrfHistoryItemStatus];
+
+export const MemberFrfHistoryItemStatus = {
+  paid: "paid",
+  pending: "pending",
+  overdue: "overdue",
+  cancelled: "cancelled",
+} as const;
+
+export interface MemberFrfHistoryItem {
+  contributionId: string;
+  claimId: string;
+  claimantName: string;
+  claimType: string;
+  amount: number;
+  status: MemberFrfHistoryItemStatus;
+  /** @nullable */
+  approvedDate?: string | null;
+  /** @nullable */
+  paidAt?: string | null;
+}
+
+export type FrfReferenceMemberItemFrfEligibility =
+  (typeof FrfReferenceMemberItemFrfEligibility)[keyof typeof FrfReferenceMemberItemFrfEligibility];
+
+export const FrfReferenceMemberItemFrfEligibility = {
+  eligible: "eligible",
+  pending_activation: "pending_activation",
+  suspended: "suspended",
+  not_eligible: "not_eligible",
+} as const;
+
+export type FrfReferenceMemberItemCollectionStatus =
+  (typeof FrfReferenceMemberItemCollectionStatus)[keyof typeof FrfReferenceMemberItemCollectionStatus];
+
+export const FrfReferenceMemberItemCollectionStatus = {
+  paid: "paid",
+  pending: "pending",
+  overdue: "overdue",
+  none: "none",
+} as const;
+
+export interface FrfReferenceMemberItem {
+  id: string;
+  fullName: string;
+  membershipId: string;
+  mobileNumber: string;
+  /** @nullable */
+  photoUrl?: string | null;
+  feeStatus: string;
+  frfEligibility: FrfReferenceMemberItemFrfEligibility;
+  frfDue: number;
+  frfPaid: number;
+  frfOutstanding: number;
+  collectionStatus: FrfReferenceMemberItemCollectionStatus;
+  /** @nullable */
+  lastFrfPaymentAt?: string | null;
+}
+
+export type MemberFrfSummaryReferenceCollection = {
+  totalReferences: number;
+  fullyPaidCount: number;
+  pendingCount: number;
+  overdueCount: number;
+  collectionRate: number;
+  totalOutstanding: number;
+  members: FrfReferenceMemberItem[];
+};
+
+export interface MemberFrfSummary {
+  eligibility: FrfEligibility;
+  totalClaims: number;
+  totalDue: number;
+  totalPaid: number;
+  totalOutstanding: number;
+  /** @nullable */
+  lastContributionAt?: string | null;
+  history: MemberFrfHistoryItem[];
+  referenceCollection: MemberFrfSummaryReferenceCollection;
+}
+
+export type FrfOverviewTopOutstandingMembersItem = {
+  memberId: string;
+  fullName: string;
+  membershipId: string;
+  /** @nullable */
+  photoUrl?: string | null;
+  outstanding: number;
+  pendingClaims: number;
+};
+
+export interface FrfOverview {
+  approvedClaims: number;
+  expectedTotal: number;
+  collectedTotal: number;
+  outstandingTotal: number;
+  collectionRate: number;
+  topOutstandingMembers: FrfOverviewTopOutstandingMembersItem[];
 }
 
 export interface WelfareDocument {
@@ -1357,6 +1526,9 @@ export type ListPaymentsPaymentType =
 export const ListPaymentsPaymentType = {
   membership_fee: "membership_fee",
   frf_contribution: "frf_contribution",
+  donation: "donation",
+  sponsorship: "sponsorship",
+  other: "other",
 } as const;
 
 export type ListPaymentsStatus =

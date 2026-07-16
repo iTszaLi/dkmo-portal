@@ -21,11 +21,12 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { PaymentInput } from "@workspace/api-client-react";
 import { useEffect } from "react";
-import { useListMembers } from "@workspace/api-client-react";
+import { useListMembers, useListFrfClaims } from "@workspace/api-client-react";
 
 const formSchema = z.object({
   memberId: z.string().min(1, "Member is required"),
-  paymentType: z.enum(["membership_fee", "frf_contribution"]),
+  paymentType: z.enum(["membership_fee", "frf_contribution", "donation", "sponsorship", "other"]),
+  frfClaimId: z.string().optional(),
   amountDue: z.coerce.number().min(0),
   amountPaid: z.coerce.number().min(1, "Amount must be greater than 0"),
   status: z.enum(["paid", "pending", "overdue"]),
@@ -43,12 +44,14 @@ interface PaymentFormProps {
 
 export function PaymentForm({ defaultValues, fixedMemberId, onSubmit, isSubmitting }: PaymentFormProps) {
   const { data: members } = useListMembers();
+  const { data: approvedClaims } = useListFrfClaims({ status: "approved" });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       memberId: fixedMemberId || defaultValues?.memberId || "",
       paymentType: defaultValues?.paymentType || "membership_fee",
+      frfClaimId: defaultValues?.frfClaimId || "",
       amountDue: defaultValues?.amountDue ?? 0,
       amountPaid: defaultValues?.amountPaid || 0,
       status: defaultValues?.status || "paid",
@@ -63,6 +66,7 @@ export function PaymentForm({ defaultValues, fixedMemberId, onSubmit, isSubmitti
       form.reset({
         memberId: fixedMemberId || defaultValues.memberId || "",
         paymentType: defaultValues.paymentType || "membership_fee",
+        frfClaimId: defaultValues.frfClaimId || "",
         amountDue: defaultValues.amountDue ?? 0,
         amountPaid: defaultValues.amountPaid || 0,
         status: defaultValues.status || "paid",
@@ -121,8 +125,11 @@ export function PaymentForm({ defaultValues, fixedMemberId, onSubmit, isSubmitti
                       Membership Fee (one-time SAR 100)
                     </SelectItem>
                     <SelectItem value="frf_contribution">
-                      FRF Contribution (SAR 50 / claim)
+                      FRF Contribution (per approved claim)
                     </SelectItem>
+                    <SelectItem value="donation">Donation</SelectItem>
+                    <SelectItem value="sponsorship">Sponsorship</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -152,6 +159,46 @@ export function PaymentForm({ defaultValues, fixedMemberId, onSubmit, isSubmitti
             )}
           />
         </div>
+
+        {form.watch("paymentType") === "frf_contribution" && (
+          <FormField
+            control={form.control}
+            name="frfClaimId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>FRF Claim</FormLabel>
+                <Select
+                  onValueChange={(v) => {
+                    field.onChange(v);
+                    const claim = approvedClaims?.find((c) => c.id === v);
+                    if (claim) {
+                      form.setValue("amountDue", claim.contributionAmount);
+                      form.setValue("amountPaid", claim.contributionAmount);
+                    }
+                  }}
+                  value={field.value || ""}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select the approved claim this contribution is for" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {approvedClaims?.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.claimantName} — {c.claimType.replace(/_/g, " ")} (SAR {c.contributionAmount})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Linking the claim updates the member's FRF contribution ledger automatically.
+                </p>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         <div className="grid grid-cols-2 gap-4">
           <FormField

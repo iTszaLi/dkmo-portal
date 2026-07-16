@@ -442,6 +442,29 @@ async function main() {
     END $$;
   `);
 
+  // FRF Contribution Ledger: one row per (approved claim, active member).
+  await pool.query(`
+    ALTER TABLE frf_claims
+      ADD COLUMN IF NOT EXISTS contribution_amount NUMERIC(12,2) NOT NULL DEFAULT 50;
+
+    CREATE TABLE IF NOT EXISTS frf_contributions (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      claim_id UUID NOT NULL REFERENCES frf_claims(id) ON DELETE CASCADE,
+      member_id UUID NOT NULL REFERENCES members(id) ON DELETE CASCADE,
+      amount NUMERIC(12,2) NOT NULL DEFAULT 50,
+      status TEXT NOT NULL DEFAULT 'pending',
+      payment_id UUID,
+      paid_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS frf_contributions_claim_member_unique
+      ON frf_contributions (claim_id, member_id);
+    CREATE INDEX IF NOT EXISTS frf_contributions_member_idx
+      ON frf_contributions (member_id);
+  `);
+
   // Enforce uniqueness of DKMO membership accounts at the database level.
   // Rejected applications are excluded so applicants may re-apply after a
   // rejection; empty values are excluded so missing data does not collide.

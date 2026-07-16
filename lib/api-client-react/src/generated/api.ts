@@ -40,7 +40,9 @@ import type {
   FeeStatusInput,
   FinancialSummary,
   FrfClaim,
+  FrfClaimCollection,
   FrfClaimInput,
+  FrfOverview,
   FrfStats,
   GetDashboardCashFlowParams,
   GetDashboardFinancialSummaryParams,
@@ -68,6 +70,7 @@ import type {
   Member,
   MemberAssistanceHistory,
   MemberDetail,
+  MemberFrfSummary,
   MemberInput,
   MemberPhotoInput,
   MemberReferralSummary,
@@ -5169,6 +5172,256 @@ export const useDeleteFrfClaim = <
 > => {
   return useMutation(getDeleteFrfClaimMutationOptions(options));
 };
+
+/**
+ * @summary Collection statistics and contributors ledger for an FRF claim
+ */
+export const getGetFrfClaimCollectionUrl = (id: string) => {
+  return `/api/frf/claims/${id}/collection`;
+};
+
+export const getFrfClaimCollection = async (
+  id: string,
+  options?: RequestInit,
+): Promise<FrfClaimCollection> => {
+  return customFetch<FrfClaimCollection>(getGetFrfClaimCollectionUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetFrfClaimCollectionQueryKey = (id: string) => {
+  return [`/api/frf/claims/${id}/collection`] as const;
+};
+
+export const getGetFrfClaimCollectionQueryOptions = <
+  TData = Awaited<ReturnType<typeof getFrfClaimCollection>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getFrfClaimCollection>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetFrfClaimCollectionQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getFrfClaimCollection>>
+  > = ({ signal }) => getFrfClaimCollection(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getFrfClaimCollection>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetFrfClaimCollectionQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getFrfClaimCollection>>
+>;
+export type GetFrfClaimCollectionQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Collection statistics and contributors ledger for an FRF claim
+ */
+
+export function useGetFrfClaimCollection<
+  TData = Awaited<ReturnType<typeof getFrfClaimCollection>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getFrfClaimCollection>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetFrfClaimCollectionQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary FRF eligibility, contribution summary, history, and reference collection performance
+ */
+export const getGetMemberFrfSummaryUrl = (id: string) => {
+  return `/api/members/${id}/frf-summary`;
+};
+
+export const getMemberFrfSummary = async (
+  id: string,
+  options?: RequestInit,
+): Promise<MemberFrfSummary> => {
+  return customFetch<MemberFrfSummary>(getGetMemberFrfSummaryUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMemberFrfSummaryQueryKey = (id: string) => {
+  return [`/api/members/${id}/frf-summary`] as const;
+};
+
+export const getGetMemberFrfSummaryQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMemberFrfSummary>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMemberFrfSummary>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMemberFrfSummaryQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getMemberFrfSummary>>
+  > = ({ signal }) => getMemberFrfSummary(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMemberFrfSummary>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMemberFrfSummaryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMemberFrfSummary>>
+>;
+export type GetMemberFrfSummaryQueryError = ErrorType<unknown>;
+
+/**
+ * @summary FRF eligibility, contribution summary, history, and reference collection performance
+ */
+
+export function useGetMemberFrfSummary<
+  TData = Awaited<ReturnType<typeof getMemberFrfSummary>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMemberFrfSummary>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMemberFrfSummaryQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary FRF collection overview widget data
+ */
+export const getGetFrfOverviewUrl = () => {
+  return `/api/dashboard/frf-overview`;
+};
+
+export const getFrfOverview = async (
+  options?: RequestInit,
+): Promise<FrfOverview> => {
+  return customFetch<FrfOverview>(getGetFrfOverviewUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetFrfOverviewQueryKey = () => {
+  return [`/api/dashboard/frf-overview`] as const;
+};
+
+export const getGetFrfOverviewQueryOptions = <
+  TData = Awaited<ReturnType<typeof getFrfOverview>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getFrfOverview>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetFrfOverviewQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getFrfOverview>>> = ({
+    signal,
+  }) => getFrfOverview({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getFrfOverview>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetFrfOverviewQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getFrfOverview>>
+>;
+export type GetFrfOverviewQueryError = ErrorType<unknown>;
+
+/**
+ * @summary FRF collection overview widget data
+ */
+
+export function useGetFrfOverview<
+  TData = Awaited<ReturnType<typeof getFrfOverview>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getFrfOverview>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetFrfOverviewQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary List welfare/community-service requests

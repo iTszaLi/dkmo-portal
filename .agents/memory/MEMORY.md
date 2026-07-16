@@ -2,7 +2,7 @@
 - [Public track endpoint DTO](public-track-endpoint-dto.md) — public DKMO status lookup must return a minimal non-PII DTO and match identifiers exactly (no substring enumeration).
 - [Welfare/community services](welfare-services.md) — one table+route+generic component for 5 service types; request numbers via app-code retry-on-conflict (not a SQL fn like FRF); FRF/Loans linked not rebuilt.
 - [Applying DB schema changes](db-schema-apply.md) — `db push` can hang on interactive rename prompts; use additive DDL in scripts/src/migrate.ts (`run migrate`) for new tables/columns.
-- [DKMO payments & recruitment model](dkmo-payments-model.md) — no monthly dues; FRF contributions are payments rows (SAR 50/claim) not a separate table; recruitment leaderboard keys on member UUID, seed must two-pass link refMemberId.
+- [DKMO payments & recruitment model](dkmo-payments-model.md) — no monthly dues; FRF has a per-claim×member frf_contributions ledger synced atomically with payments rows; leaderboard keys on member UUID.
 - [Member reference / group FRF responsibility](member-reference-responsibility.md) — members.refMemberId is TEXT holding the referrer's UUID; group = refMemberId===X.id; FRF responsibility = count × SAR 50.
 - [Documents per-entity views](documents-per-entity-views.md) — /api/documents is paginated; per-member views must filter server-side by linkedEntityType+linkedEntityId, never client-filter page 1.
 - [Committee membership is DB-driven & independent](committee-db-driven.md) — role (designation) + two independent booleans isExecutiveCommittee/isCoreCommittee; no nesting/subset; toggle via PATCH /members/:id/committee-status.

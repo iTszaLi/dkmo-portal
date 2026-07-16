@@ -256,7 +256,7 @@ paths:
           description: "Filter by payment type"
           schema:
             type: string
-            enum: [membership_fee, frf_contribution]
+            enum: [membership_fee, frf_contribution, donation, sponsorship, other]
         - in: query
           name: status
           required: false
@@ -1192,6 +1192,55 @@ paths:
         "204":
           description: Deleted
 
+  /frf/claims/{id}/collection:
+    get:
+      operationId: getFrfClaimCollection
+      tags: [frf]
+      summary: Collection statistics and contributors ledger for an FRF claim
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Claim collection details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FrfClaimCollection"
+
+  /members/{id}/frf-summary:
+    get:
+      operationId: getMemberFrfSummary
+      tags: [members]
+      summary: FRF eligibility, contribution summary, history, and reference collection performance
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Member FRF summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberFrfSummary"
+
+  /dashboard/frf-overview:
+    get:
+      operationId: getFrfOverview
+      tags: [dashboard]
+      summary: FRF collection overview widget data
+      responses:
+        "200":
+          description: FRF overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FrfOverview"
+
   /welfare/requests:
     get:
       operationId: listWelfareRequests
@@ -1801,6 +1850,9 @@ components:
         frfStatus:
           type: string
           enum: [active, suspended, inactive]
+        frfDue: { type: number }
+        frfPaid: { type: number }
+        frfOutstanding: { type: number }
         refMemberName:
           type: string
         refMemberId:
@@ -2043,7 +2095,7 @@ components:
           type: string
         paymentType:
           type: string
-          enum: [membership_fee, frf_contribution]
+          enum: [membership_fee, frf_contribution, donation, sponsorship, other]
         frfClaimId:
           type: ["string", "null"]
         amountDue:
@@ -2090,7 +2142,7 @@ components:
           type: string
         paymentType:
           type: string
-          enum: [membership_fee, frf_contribution]
+          enum: [membership_fee, frf_contribution, donation, sponsorship, other]
         frfClaimId:
           type: ["string", "null"]
         amountDue:
@@ -2585,6 +2637,7 @@ components:
           enum: [death_benefit, emergency, air_ticket, other]
         amountRequested: { type: number }
         amountApproved: { type: number }
+        contributionAmount: { type: number }
         status:
           type: string
           enum: [pending, under_review, approved, rejected, disbursed]
@@ -2608,6 +2661,7 @@ components:
         - claimType
         - amountRequested
         - amountApproved
+        - contributionAmount
         - status
         - approvedBy
         - beneficiaryName
@@ -2629,6 +2683,7 @@ components:
           enum: [death_benefit, emergency, air_ticket, other]
         amountRequested: { type: number, minimum: 0 }
         amountApproved: { type: number, minimum: 0 }
+        contributionAmount: { type: number, minimum: 0 }
         status:
           type: string
           enum: [pending, under_review, approved, rejected, disbursed]
@@ -2664,6 +2719,155 @@ components:
               totalAmount: { type: number }
             required: [type, count, totalAmount]
       required: [total, pendingCount, approvedCount, rejectedCount, totalDisbursed, totalRequested, byType]
+
+    FrfContributor:
+      type: object
+      properties:
+        contributionId: { type: string }
+        memberId: { type: string }
+        fullName: { type: string }
+        membershipId: { type: string }
+        mobileNumber: { type: string }
+        photoUrl:
+          type: ["string", "null"]
+        refMemberName: { type: string }
+        amount: { type: number }
+        status:
+          type: string
+          enum: [paid, pending, overdue, cancelled]
+        paidAt:
+          type: ["string", "null"]
+          format: date-time
+        receiptNumber:
+          type: ["string", "null"]
+      required: [contributionId, memberId, fullName, membershipId, mobileNumber, refMemberName, amount, status]
+
+    FrfClaimCollection:
+      type: object
+      properties:
+        claim:
+          $ref: "#/components/schemas/FrfClaim"
+        totalMembers: { type: integer }
+        expectedAmount: { type: number }
+        collectedAmount: { type: number }
+        outstandingAmount: { type: number }
+        collectionRate: { type: number }
+        paidCount: { type: integer }
+        pendingCount: { type: integer }
+        overdueCount: { type: integer }
+        cancelledCount: { type: integer }
+        contributors:
+          type: array
+          items:
+            $ref: "#/components/schemas/FrfContributor"
+      required: [claim, totalMembers, expectedAmount, collectedAmount, outstandingAmount, collectionRate, paidCount, pendingCount, overdueCount, cancelledCount, contributors]
+
+    FrfEligibility:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [eligible, pending_activation, suspended, not_eligible]
+        reason: { type: string }
+      required: [status, reason]
+
+    MemberFrfHistoryItem:
+      type: object
+      properties:
+        contributionId: { type: string }
+        claimId: { type: string }
+        claimantName: { type: string }
+        claimType: { type: string }
+        amount: { type: number }
+        status:
+          type: string
+          enum: [paid, pending, overdue, cancelled]
+        approvedDate:
+          type: ["string", "null"]
+          format: date-time
+        paidAt:
+          type: ["string", "null"]
+          format: date-time
+      required: [contributionId, claimId, claimantName, claimType, amount, status]
+
+    FrfReferenceMemberItem:
+      type: object
+      properties:
+        id: { type: string }
+        fullName: { type: string }
+        membershipId: { type: string }
+        mobileNumber: { type: string }
+        photoUrl:
+          type: ["string", "null"]
+        feeStatus: { type: string }
+        frfEligibility:
+          type: string
+          enum: [eligible, pending_activation, suspended, not_eligible]
+        frfDue: { type: number }
+        frfPaid: { type: number }
+        frfOutstanding: { type: number }
+        collectionStatus:
+          type: string
+          enum: [paid, pending, overdue, none]
+        lastFrfPaymentAt:
+          type: ["string", "null"]
+          format: date-time
+      required: [id, fullName, membershipId, mobileNumber, feeStatus, frfEligibility, frfDue, frfPaid, frfOutstanding, collectionStatus]
+
+    MemberFrfSummary:
+      type: object
+      properties:
+        eligibility:
+          $ref: "#/components/schemas/FrfEligibility"
+        totalClaims: { type: integer }
+        totalDue: { type: number }
+        totalPaid: { type: number }
+        totalOutstanding: { type: number }
+        lastContributionAt:
+          type: ["string", "null"]
+          format: date-time
+        history:
+          type: array
+          items:
+            $ref: "#/components/schemas/MemberFrfHistoryItem"
+        referenceCollection:
+          type: object
+          properties:
+            totalReferences: { type: integer }
+            fullyPaidCount: { type: integer }
+            pendingCount: { type: integer }
+            overdueCount: { type: integer }
+            collectionRate: { type: number }
+            totalOutstanding: { type: number }
+            members:
+              type: array
+              items:
+                $ref: "#/components/schemas/FrfReferenceMemberItem"
+          required: [totalReferences, fullyPaidCount, pendingCount, overdueCount, collectionRate, totalOutstanding, members]
+      required: [eligibility, totalClaims, totalDue, totalPaid, totalOutstanding, history, referenceCollection]
+
+    FrfOverview:
+      type: object
+      properties:
+        approvedClaims: { type: integer }
+        expectedTotal: { type: number }
+        collectedTotal: { type: number }
+        outstandingTotal: { type: number }
+        collectionRate: { type: number }
+        topOutstandingMembers:
+          type: array
+          items:
+            type: object
+            properties:
+              memberId: { type: string }
+              fullName: { type: string }
+              membershipId: { type: string }
+              photoUrl:
+                type: ["string", "null"]
+              outstanding: { type: number }
+              pendingClaims: { type: integer }
+            required: [memberId, fullName, membershipId, outstanding, pendingClaims]
+      required: [approvedClaims, expectedTotal, collectedTotal, outstandingTotal, collectionRate, topOutstandingMembers]
 
     WelfareDocument:
       type: object
