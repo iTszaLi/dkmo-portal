@@ -1,0 +1,103 @@
+Perform a complete production readiness audit of my entire application before deployment.
+
+Your objective is to ensure that the application is production-ready, secure, stable, fast, and fully functional.
+
+Please complete all of the following:
+
+## 1. Functionality Audit
+- Test every page, route, component, and API endpoint.
+- Check all buttons, forms, links, navigation, uploads, downloads, search, filters, and user interactions.
+- Verify there are no broken features.
+- Ensure all animations and UI elements work correctly.
+- Confirm the application starts successfully without runtime errors.
+
+## 2. Deployment Readiness
+- Verify the build completes successfully.
+- Confirm the application listens on the correct PORT provided by the hosting environment.
+- Ensure all production environment variables are correctly configured.
+- Verify there are no missing dependencies.
+- Check startup commands and deployment configuration.
+- Ensure production deployment succeeds without crashes.
+
+## 3. Security Audit
+Perform a thorough security review including:
+- Detect exposed API keys or secrets.
+- Ensure sensitive environment variables are never exposed to the frontend.
+- Check authentication and authorization.
+- Verify protected routes cannot be accessed without permission.
+- Look for SQL Injection vulnerabilities.
+- Look for XSS vulnerabilities.
+- Look for CSRF vulnerabilities.
+- Look for command injection risks.
+- Validate all user input.
+- Prevent path traversal.
+- Ensure secure file upload validation.
+- Ensure proper HTTP security headers.
+- Prevent information leakage through error messages.
+- Check session and token security.
+- Remove unnecessary debug information and console logs.
+
+## 4. Performance Audit
+- Identify slow pages and bottlenecks.
+- Optimize database queries.
+- Remove unnecessary renders.
+- Optimize images and assets.
+- Reduce bundle size where possible.
+- Enable caching where appropriate.
+- Check lazy loading.
+- Improve loading speed.
+
+## 5. Database Audit
+- Verify database connectivity.
+- Check schema consistency.
+- Ensure migrations are complete.
+- Detect missing indexes.
+- Verify error handling.
+- Ensure queries are optimized.
+
+## 6. Code Quality
+- Detect dead code.
+- Remove unused imports.
+- Remove unused files.
+- Detect duplicated logic.
+- Improve maintainability without changing functionality.
+
+## 7. Error Handling
+- Ensure every API has proper error handling.
+- Ensure users receive friendly error messages.
+- Verify the application never crashes due to unexpected input.
+
+## 8. Production Best Practices
+- Disable development mode.
+- Remove debug logs.
+- Ensure HTTPS compatibility.
+- Verify environment separation.
+- Check security headers.
+- Ensure proper CORS configuration.
+- Confirm robots.txt and sitemap are configured if applicable.
+
+## 9. SEO (if applicable)
+- Verify page titles.
+- Meta descriptions.
+- Open Graph tags.
+- Canonical URLs.
+- Structured data where appropriate.
+
+## 10. Final Verification
+After completing all checks:
+- Automatically fix every issue that can be safely fixed.
+- Do NOT change the design or user experience unless required for functionality or security.
+- Do NOT introduce breaking changes.
+- Run the application again after all fixes.
+- Confirm that the application builds successfully.
+- Confirm it starts successfully.
+- Confirm it is ready for production deployment.
+
+Finally, provide a report containing:
+1. Issues found
+2. Issues fixed
+3. Remaining warnings (if any)
+4. Security assessment
+5. Performance assessment
+6. Production readiness score out of 100
+7. Final confirmation stating whether the application is safe and ready to publish.

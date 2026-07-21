@@ -707,7 +707,7 @@ router.patch("/dkmo/memberships/:id", async (req, res): Promise<void> => {
   }
 
   const now = new Date();
-  const actor = (req as AuthedRequest).userId ?? "";
+  const actor = (req as unknown as AuthedRequest).userId ?? "";
 
   let statusExtras: Record<string, unknown> = {};
   if (fields.status === "under_review") statusExtras = { reviewedBy: actor, reviewedAt: now };

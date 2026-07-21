@@ -156,7 +156,7 @@ router.post("/documents", async (req, res): Promise<void> => {
       res.status(400).json({ error: "Invalid input", details: parsed.error.flatten() });
       return;
     }
-    const userId = (req as AuthedRequest).userId ?? "";
+    const userId = (req as unknown as AuthedRequest).userId ?? "";
     const [row] = await db
       .insert(documentsTable)
       .values({ ...parsed.data, uploadedBy: userId })
@@ -219,7 +219,7 @@ router.post("/documents/:id/versions", async (req, res): Promise<void> => {
       res.status(400).json({ error: "Invalid input", details: parsed.error.flatten() });
       return;
     }
-    const userId = (req as AuthedRequest).userId ?? "";
+    const userId = (req as unknown as AuthedRequest).userId ?? "";
 
     const [doc] = await db
       .select()

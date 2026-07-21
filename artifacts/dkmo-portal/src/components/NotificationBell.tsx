@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { useGetDashboardAlerts } from "@workspace/api-client-react";
+import { useGetDashboardAlerts, getGetDashboardAlertsQueryKey } from "@workspace/api-client-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,7 +41,7 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
 
   const { data: alerts = [], refetch } = useGetDashboardAlerts({
-    query: { refetchInterval: 60_000 },
+    query: { refetchInterval: 60_000, queryKey: getGetDashboardAlertsQueryKey() },
   });
 
   const criticalCount = alerts.filter((a) => a.severity === "critical").length;

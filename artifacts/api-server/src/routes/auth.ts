@@ -4,7 +4,34 @@ import { logAudit } from "../lib/audit";
 
 const router: IRouter = Router();
 
+// Simple per-IP login throttle to slow brute-force attempts. In-memory is
+// acceptable: autoscale instances are short-lived and bcrypt already makes
+// each attempt expensive.
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const LOGIN_MAX_ATTEMPTS = 20;
+const loginAttempts = new Map<string, { count: number; windowStart: number }>();
+
+function isLoginThrottled(ip: string): boolean {
+  const now = Date.now();
+  const entry = loginAttempts.get(ip);
+  if (!entry || now - entry.windowStart > LOGIN_WINDOW_MS) {
+    loginAttempts.set(ip, { count: 1, windowStart: now });
+    if (loginAttempts.size > 10_000) {
+      for (const [k, v] of loginAttempts) {
+        if (now - v.windowStart > LOGIN_WINDOW_MS) loginAttempts.delete(k);
+      }
+    }
+    return false;
+  }
+  entry.count += 1;
+  return entry.count > LOGIN_MAX_ATTEMPTS;
+}
+
 router.post("/auth/login", async (req, res): Promise<void> => {
+  if (isLoginThrottled(req.ip ?? "unknown")) {
+    res.status(429).json({ error: "Too many login attempts. Please try again in a few minutes." });
+    return;
+  }
   const body = (req.body ?? {}) as { username?: unknown; password?: unknown };
   const username = typeof body.username === "string" ? body.username : "";
   const password = typeof body.password === "string" ? body.password : "";

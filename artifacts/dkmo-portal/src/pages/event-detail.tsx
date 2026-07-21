@@ -7,6 +7,7 @@ import {
   useDeleteEvent,
   getGetEventQueryKey,
   useListTasks,
+  getListTasksQueryKey,
   useListEventSponsors,
   useCreateEventSponsor,
   useDeleteEventSponsor,
@@ -405,7 +406,7 @@ function ExpensesTab({ eventId, canEdit }: { eventId: string; canEdit: boolean }
 // ═══════════════════════════════════════════════════════════════════
 function TicketGrid({ bookletId, eventId, canEdit }: { bookletId: string; eventId: string; canEdit: boolean }) {
   const { toast } = useToast();
-  const { data: tickets = [], refetch } = useListBookletTickets({ eventId, bookletId });
+  const { data: tickets = [], refetch } = useListBookletTickets(eventId, bookletId);
   const updateMut = useUpdateEventTicket({ mutation: { onSuccess: () => refetch(), onError: (e) => toast({ title: "Error", description: String(e), variant: "destructive" }) } });
   const [editTicket, setEditTicket] = useState<typeof tickets[number] | null>(null);
   const [buyerForm, setBuyerForm] = useState({ soldBy: "", buyerName: "", buyerPhone: "", saleDate: "" });
@@ -558,7 +559,7 @@ function TicketsTab({ eventId, canEdit }: { eventId: string; canEdit: boolean })
                     </button>
                     <div className="flex items-center gap-2">
                       {canEdit && (
-                        <Select value={b.status} onValueChange={(v) => updateMut.mutate({ eventId, id: b.id, data: { status: v as typeof BOOKLET_STATUSES[number] } })}>
+                        <Select value={b.status} onValueChange={(v) => updateMut.mutate({ eventId, id: b.id, data: { bookletNumber: b.bookletNumber, ticketRangeStart: b.ticketRangeStart, ticketRangeEnd: b.ticketRangeEnd, status: v as typeof BOOKLET_STATUSES[number] } })}>
                           <SelectTrigger className={cn("h-7 text-xs border-0 font-medium px-2", statusColor[b.status] ?? "")}>
                             <SelectValue />
                           </SelectTrigger>
@@ -742,7 +743,7 @@ export default function EventDetail() {
 
   const { data: tasksData } = useListTasks(
     { eventId: id ?? "", pageSize: 50 },
-    { query: { enabled: !!id && !isNew } },
+    { query: { enabled: !!id && !isNew, queryKey: getListTasksQueryKey({ eventId: id ?? "", pageSize: 50 }) } },
   );
 
   const { data: reportSponsors = [] } = useListEventSponsors(id ?? "");

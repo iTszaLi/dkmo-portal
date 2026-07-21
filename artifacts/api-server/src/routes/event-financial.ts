@@ -16,7 +16,7 @@ const router: IRouter = Router();
 router.use("/events", requireAuth);
 
 // ── Param validation helper ─────────────────────────────────────────
-const uuidParam = (v: string) => z.string().uuid().safeParse(v);
+const uuidParam = (v: unknown) => z.string().uuid().safeParse(v);
 
 // ── Converters ──────────────────────────────────────────────────────
 function sponsorToApi(r: typeof eventSponsorsTable.$inferSelect) {

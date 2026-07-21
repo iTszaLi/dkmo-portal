@@ -694,12 +694,13 @@ function StatCard({
   highlight?: "blue" | "red" | "green" | "orange";
   wide?: boolean;
 }) {
-  const textColor = {
+  const colorMap: Record<string, string> = {
     blue: "text-blue-600 dark:text-blue-400",
     red: "text-red-600 dark:text-red-400",
     green: "text-green-600 dark:text-green-400",
     orange: "text-orange-600 dark:text-orange-400",
-  }[highlight ?? ""] ?? "text-slate-800 dark:text-slate-100";
+  };
+  const textColor = (highlight && colorMap[highlight]) || "text-slate-800 dark:text-slate-100";
 
   return (
     <div className={`rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 ${wide ? "col-span-2 sm:col-span-1" : ""}`}>
