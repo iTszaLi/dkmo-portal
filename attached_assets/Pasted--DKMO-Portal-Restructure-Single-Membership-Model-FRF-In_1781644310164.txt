@@ -1,0 +1,372 @@
+# DKMO Portal Restructure – Single Membership Model + FRF Integration
+
+After further review of the DKMO and FRF workflows, we have finalized the membership structure.
+
+The system should be simplified into a **single membership model**.
+
+---
+
+# 1. Remove Separate FRF Membership System
+
+FRF Membership should no longer exist as a separate membership application.
+
+Reason:
+
+When a person becomes a DKMO member, they automatically become eligible for the FRF scheme.
+
+Therefore remove:
+
+* Separate FRF Membership Application
+* Separate FRF Membership Database
+* Duplicate Member Records
+* Duplicate Approval Workflows
+
+Maintain only ONE membership database.
+
+---
+
+# 2. Single DKMO Membership System
+
+When a member applies:
+
+1. Submit Membership Application
+2. Application Approved
+3. Pay One-Time Registration Fee (100 SAR)
+4. Become Active DKMO Member
+5. Automatically Become FRF Eligible
+
+No second application required.
+
+---
+
+# 3. Membership Fee Structure
+
+Every member pays:
+
+### Registration Fee
+
+100 SAR (One-Time Only)
+
+Statuses:
+
+* Paid
+* Pending
+* Unpaid
+
+Store:
+
+* Amount
+* Payment Date
+* Status
+* Updated By
+
+Remove all references to:
+
+* Monthly Dues
+* Monthly Fees
+* Recurring Membership Charges
+
+These do not exist in DKMO.
+
+---
+
+# 4. FRF Contribution Structure
+
+FRF contributions are only collected when a death claim is approved.
+
+Example:
+
+Approved Claim:
+Mohammed Ali
+
+Contribution Required:
+50 SAR per active member
+
+The system should automatically create:
+
+### FRF Contribution Cycle
+
+Cycle Number
+Claim Name
+Contribution Amount
+Expected Collection
+Collection Status
+
+---
+
+# 5. Automatic Contribution Assignment
+
+When a cycle is created:
+
+Assign the 50 SAR contribution to all active members automatically.
+
+Example:
+
+850 Members
+
+Contribution:
+50 SAR
+
+Expected Collection:
+42,500 SAR
+
+---
+
+# 6. Referral System (Core Feature)
+
+Every member must be linked to a Reference Member.
+
+Application Form Field:
+
+### Who Referred You?
+
+Searchable Member Selection
+
+Store:
+
+* Reference Member Name
+* Reference Member ID
+* Referral Date
+
+This relationship should remain permanently attached to the member profile.
+
+---
+
+# 7. Referral Collection Responsibility
+
+The person who referred a member becomes responsible for following up with them regarding:
+
+### Membership Fee
+
+100 SAR Registration Fee
+
+### FRF Contributions
+
+50 SAR contribution cycles
+
+This should create accountability and improve collection rates.
+
+---
+
+# 8. Members Under My Referral
+
+Create a dedicated section:
+
+### Members Under My Referral
+
+Show:
+
+* Member Name
+* Member ID
+* Mobile Number
+* Join Date
+* Membership Fee Status
+* Latest FRF Contribution Status
+
+---
+
+# 9. Follow-Up Dashboard
+
+For every Reference Member display:
+
+### Follow-Up Required
+
+Members who have:
+
+* Unpaid Membership Fee
+* Pending Membership Fee
+* Unpaid FRF Contribution
+* Pending FRF Contribution
+
+Example:
+
+Ahmed
+Membership Fee:
+Unpaid
+
+Action:
+Follow Up
+
+---
+
+Saleem
+FRF Contribution:
+Pending
+
+Action:
+Follow Up
+
+---
+
+# 10. Committee Collection Dashboard
+
+Create a powerful committee collection dashboard.
+
+Columns:
+
+* Committee Member
+* Total Referrals
+* Membership Fees Collected
+* Membership Fees Pending
+* FRF Contributions Collected
+* FRF Contributions Pending
+* Collection Percentage
+
+This dashboard should help management identify the most active and effective committee members.
+
+---
+
+# 11. Advanced Member Search Engine (Very Important)
+
+The current search functionality is too basic.
+
+Build a powerful global member search system.
+
+The search bar should instantly search across:
+
+### Member Information
+
+* Member Name
+* Member ID
+* Mobile Number (Saudi)
+* Mobile Number (India)
+* Passport Number
+* Iqama Number
+* Email Address
+
+### Referral Information
+
+* Reference Member Name
+* Reference Member ID
+
+### Payment Information
+
+* Membership Fee Status
+* FRF Contribution Status
+
+### Claim Information
+
+* FRF Claim Records
+
+---
+
+# 12. Smart Search Results
+
+Searching any of the following:
+
+* Name
+* Phone Number
+* Membership ID
+* Passport Number
+* Iqama Number
+
+Should immediately return:
+
+### Member Profile Summary
+
+* Member Name
+* Membership ID
+* Mobile Number
+* Reference Member
+* Membership Status
+* Membership Fee Status
+* FRF Status
+
+---
+
+# 13. Deep Search Capabilities
+
+Examples:
+
+Search:
+"9665xxxxxxx"
+
+Result:
+Exact member record.
+
+---
+
+Search:
+"DKMO-1025"
+
+Result:
+Member profile.
+
+---
+
+Search:
+"Fazlurrahman"
+
+Result:
+
+* Member record
+* Referred members
+* Referral statistics
+* Collection statistics
+
+---
+
+Search:
+"Pending"
+
+Result:
+
+All members with pending payments.
+
+---
+
+Search:
+"Unpaid FRF"
+
+Result:
+
+All members who have not paid the latest FRF contribution.
+
+---
+
+# 14. Search Performance
+
+Requirements:
+
+* Instant search
+* Auto suggestions
+* Fuzzy matching
+* Partial name matching
+* Mobile number matching
+* Membership ID matching
+* Referral matching
+* Real-time filtering
+
+The search system should feel like a professional CRM where admins can locate any member within seconds.
+
+---
+
+# 15. Dashboard Widgets
+
+Replace old widgets with:
+
+### Membership
+
+* Total Members
+* Active Members
+* Pending Applications
+* Membership Fees Collected
+* Membership Fees Outstanding
+
+### FRF
+
+* Active Contribution Cycle
+* Members Paid
+* Members Pending
+* Members Unpaid
+* Amount Collected
+* Amount Outstanding
+
+### Referrals
+
+* Total Referrals
+* Top Referrer
+* Members Requiring Follow-Up
+* Collection Performance
+
+The goal is a single unified DKMO Membership System where membership, referrals, fee collection, FRF contribution tracking, and follow-up management all work together from one member database.

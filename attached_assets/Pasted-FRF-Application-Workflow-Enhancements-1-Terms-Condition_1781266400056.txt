@@ -1,0 +1,150 @@
+FRF Application Workflow Enhancements
+1. Terms & Conditions Page
+
+Using the attached FRF Terms & Conditions document, create a dedicated "FRF Terms & Conditions" page inside the portal.
+
+Requirements:
+
+User must be able to open and read the full Terms & Conditions before submitting the application.
+Add a checkbox:
+"I have read and agree to the FRF Terms & Conditions."
+Application cannot be submitted unless this checkbox is checked.
+Provide a View Terms & Conditions button/link from the FRF Application page.
+2. FRF Application PDF Generation
+
+After an applicant successfully submits the FRF Application Form:
+
+Automatically generate a professional PDF matching the original FRF application form layout.
+Populate all fields with the applicant's submitted data.
+Include:
+Applicant information
+Saudi contact details
+India contact details
+Dependents information
+Uploaded passport-size photo
+FRF ID
+Submission date
+Store the PDF inside the portal.
+Applicant should be able to:
+View PDF
+Download PDF
+Print PDF
+
+Add buttons:
+
+View Application PDF
+Download Application PDF
+Print Application
+3. FRF Application Confirmation Page
+
+After submission show:
+
+Application Submitted Successfully
+
+Display:
+
+Applicant Name
+FRF ID
+Submission Date
+Status: Pending Approval / Approved
+
+Buttons:
+
+View Application PDF
+Download Application PDF
+View Terms & Conditions
+4. Receipt Module PDF
+
+Using the attached DKMO Receipt format, create a Receipt module.
+
+Requirements:
+
+Admin can enter:
+Date
+Receipt Number
+Jamath Name
+Name
+DKMO ID
+Mobile Number
+WhatsApp Number
+Payment Type
+Life Membership
+FRF Case
+Voluntary Yearly Contribution
+Donation
+Loan Recovery
+Others
+Amount (SR)
+
+System should:
+
+Generate receipt exactly in the provided receipt format.
+Create downloadable PDF.
+Allow:
+View Receipt
+Download Receipt
+Print Receipt
+
+All generated receipts should be stored inside the portal.
+
+5. Admin FRF Data Export
+
+Inside Admin Panel add:
+
+FRF Applications Management
+
+Admin should be able to:
+
+View all FRF applications.
+Search applications.
+Filter applications.
+View complete applicant profile.
+View generated application PDF.
+Approve / Reject application.
+Edit applicant information if required.
+
+Export options:
+
+Export all applications to Excel (.xlsx)
+Export all applications to CSV
+Export selected applications
+Export by date range
+Export by status (Approved / Pending / Rejected)
+
+Downloaded file should include:
+
+FRF ID
+Applicant Name
+DOB
+Passport No.
+Iqama No.
+Occupation
+Employer
+Marital Status
+Dependents Count
+Blood Group
+Saudi Contact Details
+India Contact Details
+Emergency Contacts
+Application Date
+Status
+6. Document Storage
+
+Create a Documents section where:
+
+Every generated FRF Application PDF is stored.
+Every generated Receipt PDF is stored.
+Admin can:
+View
+Download
+Reprint
+Delete (with confirmation)
+Search by Applicant Name, FRF ID, Receipt Number
+7. Applicant Portal Access
+
+Applicants should be able to:
+
+Log in and see their submitted FRF application.
+Download their FRF Application PDF anytime.
+Download their receipts anytime.
+View Terms & Conditions page anytime.

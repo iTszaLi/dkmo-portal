@@ -1,0 +1,186 @@
+Build a complete FRF Membership Drive, Recruitment Leaderboard, Momento Award System, Application Timeline Tracking, Reporting, Notification, and PDF Generation module integrated into the existing DKMO/FRF platform.
+
+OBJECTIVE
+Create a referral-driven FRF Membership growth system that rewards members for recruiting new members, tracks referrals, maintains application and claim timelines, generates PDFs, provides leaderboards, award management, reports, and automated notifications.
+
+====================================================
+1. FRF MEMBERSHIP REFERRAL SYSTEM
+====================================================
+
+Enhance FRF Membership Applications to include:
+
+Referral Information:
+- Referred By Member Name
+- Referrer DKMO ID
+- Referral Date
+
+Referral Tracking Fields:
+- Total Referrals
+- Approved Referrals
+- Pending Referrals
+- Rejected Referrals
+- Current Referral Points
+
+Business Logic:
+- When a new FRF application is approved:
+  - Automatically increment Approved Referrals for the referring member.
+  - Increase referral points.
+- When application is pending:
+  - Count as Pending Referral.
+- When application is rejected:
+  - Count as Rejected Referral.
+
+Points System:
+- 1 Approved FRF Membership = 1 Point
+- System must allow future configurable point rules.
+
+====================================================
+2. FRF AMBASSADOR LEADERBOARD
+====================================================
+
+Create a new module:
+
+FRF Ambassadors
+
+Leaderboard Fields:
+- Rank
+- Member Name
+- DKMO ID
+- Area / Region
+- Total Referrals
+- Approved Referrals
+- Pending Referrals
+- Rejected Referrals
+- Conversion Rate %
+- Current Points
+
+Formula:
+Conversion Rate =
+(Approved Referrals / Total Referrals) × 100
+
+Leaderboard must auto-update whenever referral status changes.
+
+Leaderboard Filters:
+- Monthly
+- Quarterly
+- Yearly
+- All Time
+
+Sorting Priority:
+1. Approved Referrals
+2. Points
+3. Conversion Rate
+
+====================================================
+3. TOP RECRUITERS SECTION
+====================================================
+
+Create Top Recruiters Dashboard.
+
+Display:
+
+🏆 First Place
+🥈 Second Place
+🥉 Third Place
+
+Based on:
+- Approved FRF Membership Referrals
+
+Support:
+- Monthly Ranking
+- Quarterly Ranking
+- Yearly Ranking
+- All-Time Ranking
+
+====================================================
+4. MOMENTO AWARD SYSTEM
+====================================================
+
+Create FRF Ambassador Awards Module.
+
+Award Status:
+- Eligible for Momento
+- Awarded
+- Pending Review
+
+Automatically identify:
+- Top 1 Recruiter
+- Top 2 Recruiter
+- Top 3 Recruiter
+
+Award Dashboard should display:
+- Current Rankings
+- Previous Winners
+- Award History
+- Annual Winners
+- Award Year
+- Referral Count
+- Ranking Position
+
+Generate:
+- Award Certificate PDF
+- Momento Recommendation List PDF
+- Recognition Report PDF
+
+Award History Table:
+- Year
+- Winner Name
+- DKMO ID
+- Referral Count
+- Rank
+- Award Type
+- Award Status
+
+====================================================
+5. MEMBER PROFILE INTEGRATION
+====================================================
+
+Add Referral Performance section inside Member Profile.
+
+Display:
+- Total Referrals Made
+- Approved Referrals
+- Pending Referrals
+- Rejected Referrals
+- Referral Ranking
+- Current Points
+- Awards Won
+- Award History
+
+====================================================
+6. DASHBOARD WIDGETS
+====================================================
+
+Create Dashboard Card:
+
+FRF Membership Drive Leaders
+
+Display:
+
+🥇 Top Referrer
+🥈 Second Place
+🥉 Third Place
+
+Additional Widgets:
+
+Top 10 Referrers
+
+Monthly Rankings
+
+Yearly Rankings
+
+All-Time Rankings
+
+Top FRF Recruiters This Month
+
+Example:
+1. Member A – 15 Referrals
+2. Member B – 12 Referrals
+3. Member C – 9 Referrals
+
+Top FRF Recruiters This Year
+
+Example:
+1. Member X – 74 Referrals
+2. Member Y – 61 Referrals
+3. Member Z – 55 Referrals

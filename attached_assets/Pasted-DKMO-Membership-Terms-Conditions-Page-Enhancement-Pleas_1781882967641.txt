@@ -1,0 +1,69 @@
+DKMO Membership Terms & Conditions Page Enhancement
+
+Please improve the Membership Terms & Conditions page by adding a dual-language layout (English + Kannada).
+
+Requirements
+
+1. Side-by-Side Translation Layout
+
+Keep the existing English Terms & Conditions on the left side.
+Add the corresponding Kannada translation on the right side.
+Each clause must appear on the same row so users can easily compare both languages.
+Desktop: Two-column layout (English | Kannada).
+Mobile: Stack vertically (English first, Kannada below).
+
+Example:
+
+English	Kannada
+Membership is open to all Muslims from Dakshina Karnataka...	ದಕ್ಷಿಣ ಕನ್ನಡದ ಎಲ್ಲಾ ಮುಸ್ಲಿಮರಿಗೆ ಸದಸ್ಯತ್ವ ಲಭ್ಯ...
+
+2. Language Toggle
+Add a language switcher at the top:
+
+English Only
+Kannada Only
+English + Kannada (Default)
+
+Users should be able to switch instantly without page reload.
+
+3. Better Readability
+
+Increase font size slightly.
+Improve spacing between clauses.
+Add alternating light background sections for easier reading.
+Highlight important rules such as:
+Membership Fee (SR 100)
+FRF Contribution (SR 50 per incident)
+Membership Eligibility
+Benefit Conditions
+
+4. Declaration Section
+Display declaration in both languages:
+
+English
+
+I have read and understood the above terms and conditions and agree to abide by them.
+
+Kannada
+
+ಮೇಲಿನ ನಿಯಮಗಳು ಮತ್ತು ಷರತ್ತುಗಳನ್ನು ನಾನು ಓದಿ ಅರ್ಥಮಾಡಿಕೊಂಡಿದ್ದೇನೆ ಹಾಗೂ ಅವುಗಳನ್ನು ಪಾಲಿಸಲು ಒಪ್ಪುತ್ತೇನೆ.
+
+5. Acceptance Checkbox
+Before allowing users to proceed:
+
+☐ I agree to the Membership Terms & Conditions
+
+☐ ನಾನು ಸದಸ್ಯತ್ವದ ನಿಯಮಗಳು ಮತ್ತು ಷರತ್ತುಗಳಿಗೆ ಒಪ್ಪುತ್ತೇನೆ
+
+The Apply button should remain disabled until checked.
+
+6. Professional Appearance
+
+Use DKMO green theme consistently.
+Add smooth fade-in animations.
+Make the page look like an official organization/legal document rather than plain text.
+Add icons beside major sections.
+Improve responsiveness for mobile, tablet, and desktop.
+
+7. Do Not Change Existing Rules
+Only add Kannada translations and improve presentation/UI. Do not modify the actual membership rules, fees, FRF conditions, or existing logic.

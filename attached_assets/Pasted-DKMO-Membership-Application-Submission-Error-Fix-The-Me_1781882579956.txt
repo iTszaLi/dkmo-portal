@@ -1,0 +1,99 @@
+DKMO Membership Application – Submission Error Fix
+
+The Membership Application form is currently failing during submission.
+
+Errors Observed
+
+Error 1
+
+Request failed (413)
+
+Error 2
+
+[plugin:runtime-error-plugin]
+(unknown runtime error)
+
+This occurs when clicking Submit Application after completing the membership form.
+
+Required Fixes
+1. Fix HTTP 413 Error
+
+A 413 error usually means the request payload is too large.
+
+Please:
+
+Check all file uploads (passport photo, documents, attachments).
+Compress uploaded images automatically before submission.
+Limit image size to a reasonable value (e.g. 1MB–2MB).
+Validate file size before upload.
+
+Show a proper message such as:
+
+Photo size exceeds maximum limit. Please upload a smaller image.
+
+instead of showing:
+
+Request failed (413)
+Ensure form data is sent correctly using multipart/form-data if required.
+Verify backend upload limits and increase them if necessary.
+2. Fix Runtime Error
+
+Current error:
+
+[plugin:runtime-error-plugin]
+(unknown runtime error)
+
+Please:
+
+Check browser console errors.
+Check API response handling.
+Add proper try/catch blocks around form submission.
+Prevent application crashes when submission fails.
+Show user-friendly error messages instead of runtime overlays.
+
+Example:
+
+Application submission failed.
+Please try again or contact DKMO support.
+3. Improve Error Logging
+
+Add detailed logs for:
+
+Form validation errors
+API submission errors
+File upload errors
+Database insertion errors
+Network failures
+
+This will help identify the exact cause instead of showing generic runtime errors.
+
+4. Mobile Submission Testing
+
+Test the complete application flow on:
+
+iPhone Safari
+Android Chrome
+Desktop Chrome
+
+Verify:
+
+Form saves correctly
+Photo uploads correctly
+Application record is created
+Member ID is generated
+Confirmation screen appears
+No runtime overlays appear
+5. Submission Reliability
+
+Before creating a member record:
+
+Validate all required fields.
+Validate uploaded files.
+Validate Terms & Conditions acceptance.
+Prevent duplicate submissions if user clicks Submit multiple times.
+Show loading spinner while processing.
+
+Example:
+
+Submitting Application...
+Please wait.

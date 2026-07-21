@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "U_5NEwdbrAQYqUS8N6kiB"
+uri = "file://artifacts/dkmo-portal/public/logo.png"
+type = "image"
+title = "DKMO Logo green and white"

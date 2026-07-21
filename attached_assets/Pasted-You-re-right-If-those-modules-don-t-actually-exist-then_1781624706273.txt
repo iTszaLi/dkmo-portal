@@ -1,0 +1,229 @@
+You're right. If those modules don't actually exist, then don't tell Replit Agent to remove things that aren't there. Instead, focus on the **FRF Membership** and **FRF Claims** modules shown in your screenshots.
+
+Use this:
+
+---
+
+### FRF Referral & Ambassador System Restructure
+
+After reviewing the current FRF Membership and FRF Claims modules, I would like to restructure the referral and recognition system to ensure there is a single source of truth for recruiter performance and award eligibility.
+
+## Core Requirement
+
+All referral rankings, recruiter recognition, ambassador performance tracking, and Momento Award eligibility must be based **only on Approved FRF Membership referrals**.
+
+Under no circumstances should FRF Claims data influence recruiter rankings or award eligibility.
+
+### Rankings MUST use:
+
+* Approved FRF Membership referrals
+* Approved FRF Membership applications
+* Referral points generated from approved memberships
+* Membership recruitment performance
+
+### Rankings MUST NOT use:
+
+* FRF Claims submitted
+* FRF Claims approved
+* FRF Claim amounts
+* Claimant activity
+* Claim processing statistics
+* Any claim-related metrics
+
+Example:
+
+✅ Member recruits 25 people who become Approved FRF Members → Counts toward rankings and award eligibility.
+
+❌ Member submits, processes, or benefits from 100 FRF Claims → Does NOT affect rankings or awards.
+
+---
+
+## FRF Membership Module Enhancements
+
+Add a complete Referral Tracking System within FRF Membership.
+
+### Referral Information
+
+Each FRF Membership application should support:
+
+* Referrer Member Name
+* Referrer DKMO ID
+* Referrer FRF Number
+* Referral Code
+* Referral Date
+
+### Approval Logic
+
+When a referred FRF Membership application is approved:
+
+Automatically:
+
+* Increase referral count for the referring member
+* Recalculate ambassador rankings
+* Recalculate referral points
+* Update award eligibility
+* Update dashboard leaderboard
+
+When a membership is rejected or cancelled:
+
+Automatically:
+
+* Remove referral credit
+* Recalculate rankings
+* Recalculate points
+* Update dashboard widgets
+
+---
+
+## FRF Ambassador / Recruiter Leaderboard
+
+Create a dedicated FRF Ambassadors leaderboard driven entirely by FRF Membership referral data.
+
+The leaderboard should include:
+
+### Rankings
+
+* Top 3 Recruiters
+* Top 5 Recruiters
+* Top 10 Recruiters
+* Monthly Rankings
+* Quarterly Rankings
+* Yearly Rankings
+* All-Time Rankings
+
+### Recognition & Awards
+
+Within the leaderboard add an **Award Status** field:
+
+* Eligible for Momento
+* Awarded
+* Pending Review
+
+The Top 3 recruiters should automatically become the current Momento Award eligible members.
+
+---
+
+## Dynamic Automatic Ranking Engine
+
+The leaderboard must be fully automatic.
+
+Automatically recalculate rankings whenever:
+
+* A new FRF Membership application is submitted
+* A referred membership is approved
+* A referred membership is rejected
+* Membership status changes
+* Referral points change
+* Referral statistics change
+
+No manual ranking maintenance should be required.
+
+Example:
+
+Today:
+
+🥇 Member A – 25 Approved Referrals
+
+🥈 Member B – 22 Approved Referrals
+
+🥉 Member C – 20 Approved Referrals
+
+Later:
+
+Member D reaches 28 Approved Referrals.
+
+Leaderboard automatically becomes:
+
+🥇 Member D – 28
+
+🥈 Member A – 25
+
+🥉 Member B – 22
+
+---
+
+## Historical Recognition Records
+
+Add:
+
+* Previous Winners
+* Annual Winners
+* Award History
+* Recognition History
+
+Historical records must remain preserved even when rankings change later.
+
+---
+
+## PDF Generation
+
+Generate directly from the Ambassador leaderboard:
+
+* Award Certificate PDF
+* Momento Recommendation List PDF
+* Recognition Report PDF
+
+---
+
+## Dashboard Enhancement
+
+Remove the existing **Cash Flow Overview** widget completely.
+
+Replace that section with a new primary dashboard widget:
+
+### 🏆 FRF Ambassadors Leaderboard
+
+Display:
+
+🥇 Rank #1
+
+* Member Name
+* DKMO ID
+* Approved FRF Membership Referrals
+* Current Points
+
+🥈 Rank #2
+
+* Member Name
+* DKMO ID
+* Approved FRF Membership Referrals
+* Current Points
+
+🥉 Rank #3
+
+* Member Name
+* DKMO ID
+* Approved FRF Membership Referrals
+* Current Points
+
+Additional Features:
+
+* Ranking movement indicators (▲ ▼ —)
+* Current ranking period selector (Monthly / Quarterly / Yearly / All-Time)
+* View Full Leaderboard button
+* Responsive mobile layout
+* Live updates from referral data
+
+---
+
+## FRF Claims Module Cleanup
+
+The FRF Claims module should remain focused exclusively on claim management.
+
+Keep claim-related fields such as:
+
+* Claimant
+* Beneficiary
+* Claim Type
+* Claim Amount
+* Claim Status
+
+However, remove any referral, recruiter, ambassador, award, ranking, or membership recruitment logic from the FRF Claims module.
+
+All referral tracking must exist only under:
+
+**FRF Membership → Referral Tracking → FRF Ambassador Leaderboard**
+
+### Final Objective
+
+Create a single, automated FRF referral recognition system where recruiter rankings, ambassador status, Momento Award eligibility, award history, reports, and dashboard leaderboards are generated entirely from **Approved FRF Membership referrals**, while FRF Claims remain completely separate and have no impact on rankings or awards.

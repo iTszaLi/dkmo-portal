@@ -1,0 +1,156 @@
+The FRF Application Form PDF/Print layout is also not matching the original DKMO FRF form. Please use the original FRF form image as the master reference and make the generated form nearly identical to the original printed form.
+
+REQUIRED CHANGES:
+
+1. DKMO LOGO (HIGH PRIORITY)
+- The official DKMO logo must appear at the top-left corner exactly like the original form.
+- Remove any missing logo issue.
+- Ensure the logo appears in:
+  • Form Preview
+  • Print View
+  • Downloaded PDF
+- Logo must always load before PDF generation.
+
+2. HEADER SECTION
+Match the original layout exactly:
+- Logo on the left.
+- "DAKSHINA KARNATAKA MUSLIM OKKOOTA" heading.
+- "Family Relief Fund (FRF) Application Form" directly below the heading.
+- Proper spacing and alignment as per the original form.
+- Do not use a large green banner header.
+
+3. FRF ID SECTION
+- Move FRF ID No. to the top-right position exactly like the original form.
+- Display the generated FRF ID inside a bordered box.
+- Include submission date below if required.
+
+4. IMPORTANT NOTE
+Display exactly:
+
+Important Note:
+In Case of any changes in your Contact Information, You have to inform to the General Secretary of DKMO Immediately.
+
+- Use red text.
+- Match original positioning and formatting.
+
+5. APPLICANT PHOTO
+- Add a passport-size photo box on the right side exactly like the original form.
+- Label:
+  "Affix Passport Size Photo"
+- When applicant uploads a photo, display it inside this box.
+- The uploaded photo must also appear in the PDF version.
+
+6. PERSONAL INFORMATION SECTION
+Match the original form fields and alignment:
+
+- Full Name of Applicant
+- Date of Birth
+- Passport No.
+- Occupation / Job Title
+- Iqama No.
+- Company / Employer Name
+- Marital Status (Single / Married)
+- Number of Dependents
+- Is the family living in Saudi (Yes / No)
+- Blood Group
+
+Use the same two-column structure as the original form.
+
+7. CONTACT DETAILS SECTION
+Replace the current design with bordered table-style boxes exactly like the original.
+
+LEFT BOX:
+Contact Details in Saudi Arabia
+- Area / Location
+- P.O. Box No. & Pin Code
+- Business Tel. No.
+- Mobile No.
+- Email ID
+- Emergency Contact Name & Mobile Number
+
+RIGHT BOX:
+Contact Details in India
+- Name of Home / House
+- Postal Details
+- District Name and Nearest Jama'ath
+- Home Tel. No.
+- Mobile No.
+- Emergency Contact Name & Mobile Number
+
+Use table borders similar to the original printed form.
+
+8. DEPENDANTS SECTION
+The current dependants section does not match the original.
+
+Create a full-width bordered table with columns:
+
+Name | Age | Relationship
+
+Provide rows similar to the original printed form.
+
+Display all dependants entered by the applicant.
+
+9. ADDITIONAL DETAILS SECTION
+Add:
+
+Any Other Details, If Any
+(If you are not willing to avail contribution, please mention so herein)
+
+This section is currently missing.
+
+10. SIGNATURE SECTION
+At the bottom of the form add:
+
+Applicant's Signature & Date
+
+Signature of President / General Secretary - OKMO
+
+Position them exactly like the original form.
+
+11. PDF DOWNLOAD
+Add a "Download FRF Application PDF" button.
+
+The PDF must contain:
+- DKMO Logo
+- Applicant Photo
+- FRF ID
+- Submission Date
+- All Personal Information
+- All Contact Information
+- Dependants Details
+- Additional Notes
+- Signatures Section
+- Complete Form Formatting
+
+Nothing should be missing from the PDF.
+
+12. ADMIN FEATURES
+Admins should be able to:
+- View complete FRF application.
+- Open applicant profile.
+- Print application.
+- Download application as PDF.
+- View uploaded applicant photo.
+- Search applications by FRF ID, Name, Mobile Number or DKMO ID.
+
+13. PRINT QUALITY
+- Single page where possible.
+- Clean A4 layout.
+- No clipped content.
+- No missing images.
+- PDF output must match on-screen preview.
+- Print View and Downloaded PDF should be identical.
+
+14. FINAL REQUIREMENT
+Compare the generated FRF Application Form against the original uploaded FRF form image and make it at least 95% visually identical in:
+- Logo placement
+- Header design
+- FRF ID section
+- Important Note section
+- Applicant photo box
+- Contact detail tables
+- Dependants table
+- Signature section
+- Overall spacing and layout
+
+Do not redesign the form. Replicate the original DKMO FRF Application Form as closely as possible while keeping all fields dynamic and functional.

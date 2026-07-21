@@ -1,0 +1,217 @@
+Build a complete production-ready “DKMO Sponsors Management System” (admin dashboard web app) for managing sponsorships, payments, events, staff responsibilities, and reporting for an events organization in Riyadh.
+
+This system must function like a lightweight CRM (Salesforce-style) but simplified for internal DKMO executive use.
+
+────────────────────────────
+1. AUTHENTICATION SYSTEM
+────────────────────────────
+
+Create a secure login system (NO Google login).
+
+Users (hardcoded or database seeded):
+
+- admin1 / dkmo@2026 → Role: Admin
+- finance1 / dkmo@2026 → Role: Finance Team
+- finance2 / dkmo@2026 → Role: Finance Team
+- event / dkmo@2026 → Role: Event Manager
+- user1 / dkmo@2026 → Role: Viewer
+
+After login, redirect users based on role.
+
+────────────────────────────
+2. ROLE-BASED ACCESS CONTROL (RBAC)
+────────────────────────────
+
+Implement strict role permissions:
+
+✔ Admin
+- Full system access
+- Add/edit/delete sponsors, payments, events, users
+- Assign staff to sponsors
+- Access all reports and settings
+
+✔ Finance Team
+- View all sponsors
+- Can add/edit payments only
+- Cannot delete sponsors or users
+- Cannot modify roles or system settings
+
+✔ Event Manager
+- View sponsors and events only
+- Can assign sponsors to events
+- Cannot edit payments or delete data
+
+✔ Viewer
+- Read-only access to everything
+
+IMPORTANT:
+- Restrict editing and deleting actions to Admin only
+- Protect all routes using authentication middleware
+- Block unauthorized URL access
+- Hide UI buttons based on role
+
+────────────────────────────
+3. SIDEBAR NAVIGATION
+────────────────────────────
+
+Add sidebar sections:
+
+- Dashboard
+- Sponsors Management
+- Payments
+- Events
+- Tasks / Follow-ups
+- Reports
+- Settings (Admin only)
+
+────────────────────────────
+4. DASHBOARD OVERVIEW
+────────────────────────────
+
+Show summary cards:
+
+- Total Sponsors
+- Total Sponsorship Value
+- Total Paid Amount
+- Total Pending Amount
+- Top Sponsor
+- Monthly Collection Overview
+
+Add charts:
+- Monthly sponsorship collection trend
+- Paid vs Pending comparison
+- Top sponsors ranking
+- Event-wise sponsorship breakdown
+
+────────────────────────────
+5. SPONSORS MANAGEMENT SYSTEM (CORE CRM)
+────────────────────────────
+
+Create a full sponsors table with:
+
+- Sponsor Name
+- Company Name
+- Contact Person
+- Phone / Email
+- Sponsorship Tier (Gold / Silver / Platinum / Main Sponsor)
+- Total Agreed Amount
+- Paid Amount
+- Pending Amount
+- Payment Status (Paid / Partial / Pending)
+- Assigned DKMO Staff Member (responsible person)
+- Linked Event Name
+- Due Date
+- Notes
+- Actions (View / Edit / Delete)
+
+Add:
+- Global search (name, company, phone)
+- Filters (Paid / Pending / Partial / High Value / This Month)
+
+────────────────────────────
+6. TOP SPONSORS SECTION
+────────────────────────────
+
+- Show top 5 sponsors by total contribution
+- Include company logo placeholder
+- Show amount and status badge
+
+────────────────────────────
+7. PAYMENT TRACKING SYSTEM
+────────────────────────────
+
+- Track payments per sponsor
+- Payment history log (timestamped)
+- Who recorded payment
+- Progress bar (% paid vs total)
+- Payment status auto-update
+
+────────────────────────────
+8. EVENT LINKING SYSTEM
+────────────────────────────
+
+Each sponsor must be linked to an event:
+
+- Event Name
+- Event Date
+- Event Budget
+- Assigned sponsors list
+
+Allow filtering sponsors by event.
+
+────────────────────────────
+9. FOLLOW-UP TASK SYSTEM
+────────────────────────────
+
+Each sponsor has tasks:
+
+- Task title
+- Assigned staff member
+- Status (Pending / In Progress / Completed)
+- Due date
+- Reminder system
+
+────────────────────────────
+10. SMART ALERT SYSTEM
+────────────────────────────
+
+Show alerts for:
+- Overdue payments
+- High-value unpaid sponsors
+- No activity in 7 / 14 / 30 days
+- Upcoming due payments
+
+────────────────────────────
+11. REPORTING & EXPORTS
+────────────────────────────
+
+- Export sponsors to CSV / Excel
+- Generate monthly PDF reports
+- Filtered exports (event, status, sponsor type)
+
+────────────────────────────
+12. AUDIT LOG SYSTEM
+────────────────────────────
+
+Track all actions:
+- Who logged in
+- Who edited payments
+- Who added/deleted sponsors
+- Timestamp of every action
+
+────────────────────────────
+13. UI / DESIGN REQUIREMENTS
+────────────────────────────
+
+- Modern premium admin dashboard UI
+- Dark mode support
+- Smooth hover animations
+- Responsive (mobile + desktop)
+- DKMO branding colors and logo integration
+- Role badge shown in top navigation
+
+────────────────────────────
+14. SECURITY REQUIREMENTS
+────────────────────────────
+
+- Session or JWT authentication
+- Protected routes (no direct URL access)
+- Auto logout on session expiry
+- Strict role enforcement backend + frontend
+- Prevent privilege escalation
+
+────────────────────────────
+FINAL GOAL
+────────────────────────────
+
+Build a secure, scalable, and production-ready DKMO Sponsorship CRM system that allows executives to:
+
+- Manage sponsors
+- Track payments
+- Assign responsibilities
+- Link events
+- Monitor financial progress
+- Generate reports
+- Maintain full accountability
+
+This should feel like a real-world enterprise sponsorship management platform.

@@ -1,0 +1,117 @@
+Dashboard Enhancement Request
+
+Please add the following two widgets to the Dashboard while maintaining the current DKMO dark theme, layout consistency, responsiveness, and performance.
+
+---
+
+1. Upcoming Events Widget
+
+---
+
+Placement:
+
+* Position directly below the Top 5 Recruiters section.
+
+Features:
+
+* Automatically display upcoming events from the Events module.
+* Sort events by nearest upcoming date.
+* Show:
+
+  * Event Name
+  * Event Date
+  * Event Time
+  * Event Location
+  * Event Status (Upcoming / Today)
+  * Countdown (Today, Starts Tomorrow, Starts in X Days)
+
+Functionality:
+
+* Entire widget must be clickable.
+* Clicking an event opens the full Event Details page.
+* Include a "View All Events" button linking to the Events module.
+* Support opening individual event records directly.
+
+Visual Indicators:
+
+* Highlight events occurring within the next 7 days.
+* Show "No Upcoming Events Scheduled" if no future events exist.
+
+Data Source:
+
+* Pull data only from the existing Events module.
+* No hardcoded or demo data.
+* Automatically refresh when events are created, edited, or deleted.
+
+Responsive Design:
+
+* Fully responsive for desktop, tablet, and mobile.
+
+---
+
+2. Top Sponsors & Collection Responsibility Widget
+
+---
+
+Placement:
+
+* Directly below the Upcoming Events widget.
+
+Purpose:
+
+* Provide visibility into sponsorship commitments and accountability for collections.
+
+Show:
+
+* Sponsor Name
+* Sponsorship Amount
+* Amount Collected
+  transfer method: bank transfer/cash/cheque
+* Outstanding Balance
+* Collection Status
+  (Collected / Partial / Pending)
+* Assigned Committee Member Responsible for Collection
+
+Example:
+
+Bank transfer
+SAR 10,000
+Collected: SAR 8,000
+Balance: SAR 2,000
+Assigned To: Fazlurrahman Kolkar
+Status: Partial
+
+Features:
+
+* Sort sponsors by highest sponsorship amount.
+* Display top 5 sponsors by default.
+* Include "View All Sponsors" button.
+* Clicking a sponsor opens the sponsor profile.
+* Clicking the assigned committee member opens their member profile.
+
+Dashboard Summary:
+At the top of the widget display:
+
+* Total Sponsorship Committed
+* Total Sponsorship Collected
+* Outstanding Sponsorship Amount
+
+Data Source:
+
+* Pull directly from the Sponsors module.
+* Use actual sponsor and collection records.
+* No demo or placeholder values.
+
+Responsive Design:
+
+* Fully responsive across all screen sizes.
+
+---
+
+## Important
+
+Both widgets must use real DKMO data and update automatically.
+
+Do not create static cards or placeholder content.
+
+Maintain the existing premium executive dashboard appearance and ensure all elements are fully clickable and actionable.

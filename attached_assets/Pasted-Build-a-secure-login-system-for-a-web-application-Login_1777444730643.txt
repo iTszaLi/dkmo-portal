@@ -1,0 +1,56 @@
+Build a secure login system for a web application.
+
+🔐 Login Requirements:
+Remove “Continue with Google” or any social login options completely.
+Only allow login using username and password.
+Create a fixed list of 5 executive users only (no signup/registration page).
+Only these 5 users can access the system; all other login attempts must be rejected.
+After successful login, redirect users to a dashboard page.
+Show proper error messages for invalid username or password.
+🛡️ Security & Production Requirements:
+Make it production-ready with clean, scalable code.
+Implement JWT or session-based authentication.
+Protect all dashboard routes so only authenticated users can access them.
+Ensure tokens/sessions expire securely after inactivity or logout.
+Store passwords securely using hashing (bcrypt or equivalent).
+👥 Users (5 executives only):
+admin1 / dkmo@2026
+executive1 / dkmo@2026
+executive2 / dkmo@2026
+manager1 / dkmo@2026
+manager2 / dkmo@2026
+🎯 UI / Branding Fix:
+In the browser tab (favicon area), replace the red default icon with the DKMO logo.
+The DKMO logo must appear as the website favicon (tab icon), bookmarks icon, and anywhere the site icon is shown.
+Remove any placeholder or colored default icon completely.
+⚙️ Tech Stack:
+
+(Use: React / Node.js / Express / MongoDB or any modern stack) and also Build a modern, production-ready web UI with a login dashboard interface. Focus on clean, premium interaction design for navigation tabs.
+
+Requirements:
+Add a navigation bar with tabs (Dashboard, Users, Settings, etc.)
+Each tab must have modern interactive UI effects:
+✨ Hover Effects:
+Slight lift on hover (translateY -2px)
+Slight zoom-in effect (scale 1.03)
+Smooth shadow elevation (soft blur shadow)
+Background color enhancement on hover
+Smooth transition (0.2s ease-in-out)
+⚡ Active/Click Effects:
+Slight press-down effect (scale 0.98)
+Instant visual feedback when clicked
+🎨 UI Style:
+Clean SaaS-style design
+Use modern spacing and rounded corners (8–12px radius)
+Subtle shadows (not heavy)
+Professional dashboard look
+🧠 Animation Rules:
+Use CSS transitions for smooth interactions
+Avoid harsh or instant changes
+Keep animations fast but elegant
+💡 Bonus:
+Add optional underline slide animation for active tab
+Make UI feel like a premium admin dashboard (similar to Notion / Stripe style)
+🔐 Context:
+
+This is part of a secure login + executive dashboard system. UI should feel premium, trustworthy, and production-level.

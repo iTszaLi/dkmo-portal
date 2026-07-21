@@ -1,0 +1,2083 @@
+Replit AI Prompt – FRF Contribution & Collection System Redesign
+
+
+
+
+
+
+
+Please redesign the FRF Claims Module to create a proper FRF Contribution Management System that is scalable, accurate, and fully integrated with Members, References, and Payments.
+
+
+
+
+
+
+
+Core Rule
+
+
+
+
+
+
+
+Do NOT use a simple FRF Paid/Pending status.
+
+
+
+
+
+
+
+Instead, create an FRF Contribution Ledger that tracks every member's contribution against every approved FRF claim.
+
+
+
+
+
+
+
+1. FRF Contribution Ledger
+
+
+
+
+
+
+
+When an FRF claim is Approved, automatically generate FRF contribution records for all Active Members.
+
+
+
+
+
+
+
+Example:
+
+
+
+
+
+
+
+Claim ID	Claim Type	Member	Contribution
+
+
+
+FRF-001	Death Benefit	Ahmed	SAR 50
+
+
+
+FRF-001	Death Benefit	Rashid	SAR 50
+
+
+
+FRF-001	Death Benefit	Sameer	SAR 50
+
+
+
+
+
+
+
+Important:
+
+
+
+
+
+
+
+Generate contributions only after claim approval.
+
+
+
+Do not generate contributions for rejected claims.
+
+
+
+Contribution amount should be configurable (default SAR 50).
+
+
+
+Keep historical records permanently.
+
+
+
+2. Members Module Enhancement
+
+
+
+
+
+
+
+Add a new column:
+
+
+
+
+
+
+
+FRF Summary
+
+
+
+
+
+
+
+Display:
+
+
+
+
+
+
+
+Total FRF Due
+
+
+
+Total FRF Paid
+
+
+
+Total Outstanding
+
+
+
+
+
+
+
+Example:
+
+
+
+
+
+
+
+Due: SAR 500
+
+
+
+Paid: SAR 450
+
+
+
+Outstanding: SAR 50
+
+
+
+
+
+
+
+This should be calculated automatically from the FRF ledger.
+
+
+
+
+
+
+
+3. Member Profile Enhancement
+
+
+
+
+
+
+
+Add a new section:
+
+
+
+
+
+
+
+FRF Contribution Summary
+
+
+
+
+
+
+
+Show:
+
+
+
+
+
+
+
+Total Claims Contributed To
+
+
+
+Total FRF Due
+
+
+
+Total FRF Paid
+
+
+
+Total Outstanding
+
+
+
+Last Contribution Date
+
+
+
+FRF Contribution History
+
+
+
+
+
+
+
+Display a complete history:
+
+
+
+
+
+
+
+Claim ID	Type	Amount	Status	Date
+
+
+
+FRF-001	Death Benefit	50	Paid	Date
+
+
+
+FRF-002	Emergency Assistance	50	Pending	Date
+
+
+
+
+
+
+
+Statuses:
+
+
+
+
+
+
+
+Paid
+
+
+
+Pending
+
+
+
+Overdue
+
+
+
+4. Reference Member Collection Dashboard
+
+
+
+
+
+
+
+Inside every member profile, add:
+
+
+
+
+
+
+
+Reference Collection Performance
+
+
+
+
+
+
+
+Show:
+
+
+
+
+
+
+
+Total Reference Members
+
+
+
+Fully Paid References
+
+
+
+Pending References
+
+
+
+Overdue References
+
+
+
+Collection Percentage
+
+
+
+Members With Outstanding FRF Contributions
+
+
+
+
+
+
+
+Show:
+
+
+
+
+
+
+
+Member	DKMO ID	Mobile	Outstanding Amount
+
+
+
+
+
+
+
+Allow filtering:
+
+
+
+
+
+
+
+All
+
+
+
+Paid
+
+
+
+Pending
+
+
+
+Overdue
+
+
+
+
+
+
+
+This will help committee members follow up with their recruited members.
+
+
+
+
+
+
+
+5. FRF Claim Detail Page
+
+
+
+
+
+
+
+When opening any FRF claim, show:
+
+
+
+
+
+
+
+Collection Statistics
+
+
+
+Total Active Members
+
+
+
+Expected Collection
+
+
+
+Amount Collected
+
+
+
+Amount Outstanding
+
+
+
+Collection Percentage
+
+
+
+
+
+
+
+Add a visual progress bar.
+
+
+
+
+
+
+
+Example:
+
+
+
+
+
+
+
+Expected Collection: SAR 15,000
+
+
+
+
+
+
+
+Collected: SAR 12,500
+
+
+
+
+
+
+
+Outstanding: SAR 2,500
+
+
+
+
+
+
+
+Collection Rate: 83%
+
+
+
+
+
+
+
+Contributors Table
+
+
+
+
+
+
+
+Display:
+
+
+
+
+
+
+
+Member	DKMO ID	Reference Member	Status	Paid Date
+
+
+
+
+
+
+
+Filters:
+
+
+
+
+
+
+
+Paid
+
+
+
+Pending
+
+
+
+Overdue
+
+
+
+6. Payments Module Integration
+
+
+
+
+
+
+
+Add FRF as a payment category.
+
+
+
+
+
+
+
+Payment Types:
+
+
+
+
+
+
+
+Membership Fee
+
+
+
+FRF Contribution
+
+
+
+Donation
+
+
+
+Sponsorship
+
+
+
+Other
+
+
+
+
+
+
+
+When an FRF payment is recorded:
+
+
+
+
+
+
+
+Automatically update the FRF ledger.
+
+
+
+Update Member Profile.
+
+
+
+Update Claim Collection Statistics.
+
+
+
+Update Reference Collection Statistics.
+
+
+
+
+
+
+
+No manual updates.
+
+
+
+
+
+
+
+7. Dashboard Widgets
+
+
+
+
+
+
+
+Add FRF widgets:
+
+
+
+
+
+
+
+FRF Collection Overview
+
+
+
+
+
+
+
+Show:
+
+
+
+
+
+
+
+Total Approved Claims
+
+
+
+Total Expected Contributions
+
+
+
+Total Collected
+
+
+
+Total Outstanding
+
+
+
+Recent Outstanding Members
+
+
+
+
+
+
+
+Display top members with pending FRF contributions.
+
+
+
+
+
+
+
+8. Notifications
+
+
+
+
+
+
+
+Generate alerts for:
+
+
+
+
+
+
+
+New approved FRF claim
+
+
+
+New FRF contribution due
+
+
+
+Overdue FRF contribution
+
+
+
+Contribution paid successfully
+
+
+
+9. Data Integrity Rules
+
+
+
+Membership Fee and FRF Contributions must remain completely independent.
+
+
+
+FRF data must never overwrite Membership Fee data.
+
+
+
+All calculations must be automatic.
+
+
+
+All historical contribution records must be preserved.
+
+
+
+Use real member relationships and reference-member relationships.
+
+
+
+No duplicate contribution records.
+
+
+
+No sample/demo data.
+
+
+
+10. Membership Fee and FRF Contributions Must Never Be Mixed
+
+
+
+
+
+
+
+This is a critical requirement.
+
+
+
+
+
+
+
+The Membership Fee and FRF Contributions are two completely separate financial systems and must never be merged, combined, or calculated together.
+
+
+
+
+
+
+
+Membership Fee Rules
+
+
+
+One-time registration fee.
+
+
+
+Fixed amount: SAR 100.
+
+
+
+Paid only once when becoming a member.
+
+
+
+Status:
+
+
+
+Paid
+
+
+
+Pending
+
+
+
+Unpaid
+
+
+
+Has no relationship to FRF claims.
+
+
+
+
+
+
+
+Example:
+
+
+
+
+
+
+
+Member joins DKMO → Pays SAR 100 Membership Fee → Membership becomes active.
+
+
+
+
+
+
+
+FRF Contribution Rules
+
+
+
+
+
+
+
+FRF is not a membership fee.
+
+
+
+
+
+
+
+FRF contributions are created only when there is an approved FRF case such as:
+
+
+
+
+
+
+
+Death Benefit
+
+
+
+Emergency Assistance
+
+
+
+Air Ticket Support
+
+
+
+Other approved FRF assistance
+
+
+
+
+
+
+
+For every approved FRF claim:
+
+
+
+
+
+
+
+Every active member receives a contribution obligation.
+
+
+
+Default contribution amount = SAR 50 per claim.
+
+
+
+This amount should be configurable by admin.
+
+
+
+Contributions are tracked separately for each claim.
+
+
+
+
+
+
+
+Example:
+
+
+
+
+
+
+
+Claim FRF-001 Approved
+
+
+
+
+
+
+
+100 Active Members
+
+
+
+
+
+
+
+Expected Collection:
+
+
+
+
+
+
+
+100 × SAR 50 = SAR 5,000
+
+
+
+
+
+
+
+Each member receives a separate FRF contribution record for FRF-001.
+
+
+
+
+
+
+
+Later another claim is approved:
+
+
+
+
+
+
+
+FRF-002 Approved
+
+
+
+
+
+
+
+Again each active member receives a new SAR 50 obligation.
+
+
+
+
+
+
+
+Therefore a member may have:
+
+
+
+
+
+
+
+Claim	Amount	Status
+
+
+
+FRF-001	SAR 50	Paid
+
+
+
+FRF-002	SAR 50	Pending
+
+
+
+FRF-003	SAR 50	Paid
+
+
+
+
+
+
+
+The system must support this structure.
+
+
+
+
+
+
+
+Financial Separation
+
+
+
+
+
+
+
+Never combine:
+
+
+
+
+
+
+
+Membership Fee Due
+
+
+
+Membership Fee Paid
+
+
+
+FRF Contributions Due
+
+
+
+FRF Contributions Paid
+
+
+
+
+
+
+
+They must have separate:
+
+
+
+
+
+
+
+Tables
+
+
+
+Calculations
+
+
+
+Reports
+
+
+
+Statistics
+
+
+
+Dashboard widgets
+
+
+
+Receipts
+
+
+
+Payment records
+
+
+
+Payment Module Requirements
+
+
+
+
+
+
+
+Every payment must contain a category:
+
+
+
+
+
+
+
+Membership Fee
+
+
+
+FRF Contribution
+
+
+
+Donation
+
+
+
+Sponsorship
+
+
+
+Other
+
+
+
+
+
+
+
+When recording a payment:
+
+
+
+
+
+
+
+Membership Fee payment
+
+
+
+→ Only updates Membership Fee records.
+
+
+
+
+
+
+
+FRF Contribution payment
+
+
+
+→ Only updates the corresponding FRF claim contribution record.
+
+
+
+
+
+
+
+No cross-updating.
+
+
+
+
+
+
+
+Member Profile Layout
+
+
+
+
+
+
+
+Display separately:
+
+
+
+
+
+
+
+Membership Information
+
+
+
+Membership Fee: SAR 100
+
+
+
+Status: Paid / Pending / Unpaid
+
+
+
+Payment Date
+
+
+
+FRF Contribution Summary
+
+
+
+Total FRF Claims Assigned
+
+
+
+Total FRF Due
+
+
+
+Total FRF Paid
+
+
+
+Total FRF Outstanding
+
+
+
+
+
+
+
+Do not merge these sections.
+
+
+
+
+
+
+
+Important
+
+
+
+
+
+
+
+Do not create a confusing financial structure.
+
+
+
+
+
+
+
+A member can be:
+
+
+
+
+
+
+
+Membership Fee = Paid ✅
+
+
+
+FRF Claim #1 = Paid ✅
+
+
+
+FRF Claim #2 = Pending ⏳
+
+
+
+FRF Claim #3 = Unpaid ❌
+
+
+
+
+
+
+
+The system must track these independently and accurately.
+
+
+
+11. FRF Eligibility Rules
+
+
+
+
+
+
+
+This is a mandatory business rule.
+
+
+
+
+
+
+
+A person is NOT eligible for the FRF Scheme immediately after submitting an application.
+
+
+
+
+
+
+
+A person becomes eligible for FRF benefits and FRF contribution obligations only after:
+
+
+
+
+
+
+
+Membership application is approved.
+
+
+
+SAR 100 Membership Fee is fully paid.
+
+
+
+Member status becomes Active.
+
+
+
+
+
+
+
+Only then should the member be enrolled in the FRF Scheme.
+
+
+
+
+
+
+
+FRF Enrollment Logic
+
+
+
+Applicant Stage
+
+
+
+
+
+
+
+Applicant has submitted a membership application.
+
+
+
+
+
+
+
+Status:
+
+
+
+
+
+
+
+Not a Member
+
+
+
+Not FRF Eligible
+
+
+
+Cannot receive FRF benefits
+
+
+
+Cannot be charged FRF contributions
+
+
+
+Approved But Membership Fee Not Paid
+
+
+
+
+
+
+
+Application approved but SAR 100 not paid.
+
+
+
+
+
+
+
+Status:
+
+
+
+
+
+
+
+Membership Pending Activation
+
+
+
+Not FRF Eligible
+
+
+
+Cannot receive FRF benefits
+
+
+
+Cannot be charged FRF contributions
+
+
+
+Active Member
+
+
+
+
+
+
+
+SAR 100 Membership Fee paid successfully.
+
+
+
+
+
+
+
+Status:
+
+
+
+
+
+
+
+Active Member
+
+
+
+FRF Eligible
+
+
+
+Can receive FRF benefits (subject to rules)
+
+
+
+Can be assigned FRF contributions
+
+
+
+
+
+
+
+At this moment the system should automatically enroll the member into the FRF Scheme.
+
+
+
+
+
+
+
+FRF Claim Collection Rules
+
+
+
+
+
+
+
+When an FRF claim is approved:
+
+
+
+
+
+
+
+Generate SAR 50 contribution records only for:
+
+
+
+
+
+
+
+✅ Active Members
+
+
+
+
+
+
+
+Do NOT generate FRF obligations for:
+
+
+
+
+
+
+
+❌ Applicants
+
+
+
+
+
+
+
+❌ Rejected Applicants
+
+
+
+
+
+
+
+❌ Members with unpaid SAR 100 membership fee
+
+
+
+
+
+
+
+❌ Inactive Members
+
+
+
+
+
+
+
+❌ Suspended Members
+
+
+
+
+
+
+
+❌ Archived Members
+
+
+
+
+
+
+
+FRF Benefit Eligibility
+
+
+
+
+
+
+
+A person can only become an FRF claimant or beneficiary if they were already an FRF-eligible active member.
+
+
+
+
+
+
+
+Example:
+
+
+
+
+
+
+
+Ahmed applies today.
+
+
+
+
+
+
+
+Application approved today.
+
+
+
+
+
+
+
+Membership Fee SAR 100 not paid.
+
+
+
+
+
+
+
+After one week a Death Benefit claim occurs.
+
+
+
+
+
+
+
+Result:
+
+
+
+
+
+
+
+❌ Ahmed is not eligible because he never became an active FRF member.
+
+
+
+
+
+
+
+Example:
+
+
+
+
+
+
+
+Ahmed pays SAR 100.
+
+
+
+
+
+
+
+Status becomes Active.
+
+
+
+
+
+
+
+System enrolls him into FRF Scheme.
+
+
+
+
+
+
+
+Later an FRF event occurs.
+
+
+
+
+
+
+
+Result:
+
+
+
+
+
+
+
+✅ Ahmed is eligible according to FRF rules.
+
+
+
+
+
+
+
+Member Profile
+
+
+
+
+
+
+
+Add a dedicated field:
+
+
+
+
+
+
+
+FRF Eligibility Status
+
+
+
+
+
+
+
+Possible values:
+
+
+
+
+
+
+
+Eligible
+
+
+
+Not Eligible
+
+
+
+Pending Activation
+
+
+
+Suspended
+
+
+
+
+
+
+
+Show the reason when not eligible.
+
+
+
+
+
+
+
+Examples:
+
+
+
+
+
+
+
+Membership Fee Not Paid
+
+
+
+Membership Not Approved
+
+
+
+Member Inactive
+
+
+
+Member Suspended
+
+
+
+Important Business Logic
+
+
+
+
+
+
+
+The sequence must always be:
+
+
+
+
+
+
+
+Application Submitted
+
+
+
+↓
+
+
+
+Application Approved
+
+
+
+↓
+
+
+
+SAR 100 Membership Fee Paid
+
+
+
+↓
+
+
+
+Member Becomes Active
+
+
+
+↓
+
+
+
+Member Automatically Enrolled in FRF Scheme
+
+
+
+↓
+
+
+
+Eligible for FRF Benefits and FRF Contributions
+
+
+
+
+
+
+
+No member should ever receive FRF benefits or FRF payment obligations before completing the SAR 100 membership payment and becoming an active member. This rule must be enforced throughout the entire portal.
+
+12. Automatic FRF Updates, Audit Trail & Reference Tracking
+
+
+
+This is a critical requirement. The FRF system must always stay synchronized with Members, Payments, References, and Claims. There should never be a need to manually update FRF records.
+
+
+
+Automatic Updates
+
+
+
+Whenever any of the following actions occur:
+
+
+
+A new FRF claim is approved.
+
+An FRF contribution payment is received.
+
+A payment is edited or corrected.
+
+A payment is cancelled or refunded.
+
+A member becomes Active.
+
+A member becomes Inactive.
+
+A member is suspended.
+
+A new member joins.
+
+A member leaves the organization.
+
+
+
+The system must automatically recalculate and update:
+
+
+
+FRF Contribution Ledger
+
+Member FRF Summary
+
+FRF Claim Collection Statistics
+
+Reference Member Statistics
+
+Dashboard Widgets
+
+Outstanding Amounts
+
+Collection Percentage
+
+
+
+No manual refresh or recalculation should ever be required.
+
+
+
+13. Complete Payment History
+
+
+
+For every FRF claim, maintain a permanent payment ledger.
+
+
+
+Example:
+
+
+
+Member	DKMO ID	Reference	Amount	Status	Paid Date	Receipt
+
+
+
+Statuses:
+
+
+
+Paid
+
+Pending
+
+Overdue
+
+Cancelled (if applicable)
+
+
+
+Never delete historical records. Preserve a full audit trail.
+
+
+
+14. Outstanding Contributions
+
+
+
+For every FRF claim, provide a complete list of:
+
+
+
+Members who have paid.
+
+Members who are pending.
+
+Members who have not paid.
+
+Members who became inactive after the claim (if applicable).
+
+
+
+Include search, filters, sorting, and Excel/PDF export.
+
+
+
+15. Reference Member Integration
+
+
+
+The Reference Member relationship must remain fully linked and accurate throughout the system.
+
+
+
+When opening a member's profile, show:
+
+
+
+Reference Members
+
+
+
+For each recruited member, display:
+
+
+
+Member Name
+
+DKMO ID
+
+Membership Fee Status
+
+FRF Eligibility
+
+Total FRF Due
+
+Total FRF Paid
+
+Outstanding FRF Balance
+
+Last FRF Payment Date
+
+
+
+Example:
+
+
+
+Member	Membership	FRF Due	Paid	Outstanding
+
+Ahmed	Paid	SAR 150	SAR 150	SAR 0
+
+Rashid	Paid	SAR 200	SAR 150	SAR 50
+
+Sameer	Pending	SAR 0	SAR 0	SAR 0
+
+
+
+If a person has not yet paid the SAR 100 Membership Fee, they should not have any FRF contribution records because they are not yet enrolled in the FRF Scheme.
+
+
+
+16. Reference Performance Dashboard
+
+
+
+Each reference member should have a summary such as:
+
+
+
+Total Referred Members
+
+Active Members
+
+FRF Eligible Members
+
+Members with Outstanding FRF
+
+Total Outstanding Amount
+
+Collection Rate (%)
+
+
+
+This allows committee members to quickly identify which referred members need follow-up.
+
+
+
+17. Data Integrity
+
+
+
+The relationship between:
+
+
+
+Member
+
+Reference Member
+
+Membership Fee
+
+FRF Eligibility
+
+FRF Claims
+
+FRF Contributions
+
+Payments
+
+
+
+must always remain synchronized.
+
+
+
+There should never be situations where:
+
+
+
+A payment is marked as paid but the claim still shows pending.
+
+A member profile shows paid but the FRF ledger shows unpaid.
+
+The reference dashboard displays incorrect outstanding balances.
+
+Dashboard totals differ from member records.
+
+Duplicate contribution records are created.
+
+A referred member is linked to the wrong reference member.
+
+
+
+All modules must read from the same source of truth so that updates made in one module are instantly reflected everywhere else in the portal.
+
+
+
+Priority: Data accuracy is more important than UI. Every payment, contribution, and reference relationship must remain consistent, traceable, and automatically synchronized across the entire DKMO Portal.

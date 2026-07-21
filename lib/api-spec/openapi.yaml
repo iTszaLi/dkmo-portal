@@ -1,0 +1,3326 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: DKMO Management Portal API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+  - name: members
+  - name: payments
+  - name: dashboard
+  - name: sponsors
+  - name: events
+  - name: tasks
+  - name: frf
+  - name: welfare
+  - name: receipts
+  - name: storage
+  - name: audit
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /me:
+    get:
+      operationId: getCurrentUser
+      tags: [health]
+      summary: Get authenticated user info
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentUser"
+
+  /members:
+    get:
+      operationId: listMembers
+      tags: [members]
+      summary: List members with optional search
+      parameters:
+        - in: query
+          name: search
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Member list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Member"
+    post:
+      operationId: createMember
+      tags: [members]
+      summary: Create a member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+
+  /members/{id}:
+    get:
+      operationId: getMember
+      tags: [members]
+      summary: Get a member by id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberDetail"
+    patch:
+      operationId: updateMember
+      tags: [members]
+      summary: Update a member
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+    delete:
+      operationId: deleteMember
+      tags: [members]
+      summary: Delete a member
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /members/{id}/fee-status:
+    patch:
+      operationId: updateMemberFeeStatus
+      tags: [members]
+      summary: Update a member's membership fee status (with audit)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeeStatusInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+
+  /members/{id}/committee-status:
+    patch:
+      operationId: updateMemberCommitteeStatus
+      tags: [members]
+      summary: >-
+        Update a member's committee membership. Executive Committee and Core
+        Committee are fully independent; only the provided flags are changed.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommitteeStatusInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+
+  /members/{id}/photo:
+    patch:
+      operationId: updateMemberPhoto
+      tags: [members]
+      summary: >-
+        Update or remove a member's profile photo. Pass a data URL to set the
+        photo, or null to remove it and fall back to the default avatar.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberPhotoInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+
+  /members/{id}/referrals:
+    get:
+      operationId: getMemberReferrals
+      tags: [members]
+      summary: List members referred by this member and their FRF responsibility
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Reference/group responsibility summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberReferralSummary"
+
+  /payments:
+    get:
+      operationId: listPayments
+      tags: [payments]
+      summary: List payments
+      parameters:
+        - in: query
+          name: memberId
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: paymentType
+          required: false
+          description: "Filter by payment type"
+          schema:
+            type: string
+            enum: [membership_fee, frf_contribution, donation, sponsorship, other]
+        - in: query
+          name: status
+          required: false
+          description: "Filter by status"
+          schema:
+            type: string
+            enum: [paid, pending, overdue]
+        - in: query
+          name: paymentMethod
+          required: false
+          description: "Filter by payment method"
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Payment list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Payment"
+    post:
+      operationId: createPayment
+      tags: [payments]
+      summary: Record a payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+
+  /payments/{id}:
+    get:
+      operationId: getPayment
+      tags: [payments]
+      summary: Get a payment by id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Payment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+    delete:
+      operationId: deletePayment
+      tags: [payments]
+      summary: Delete a payment
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Dashboard summary cards
+      parameters:
+        - in: query
+          name: month
+          required: false
+          description: "Format: YYYY-MM, defaults to current month"
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/pending:
+    get:
+      operationId: getPendingMembers
+      tags: [dashboard]
+      summary: Members with unpaid or partial payments for the given month
+      parameters:
+        - in: query
+          name: month
+          required: false
+          description: "Format: YYYY-MM, defaults to current month"
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Pending list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PendingMember"
+
+  /dashboard/recent-payments:
+    get:
+      operationId: getRecentPayments
+      tags: [dashboard]
+      summary: Recent payments feed
+      parameters:
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Recent payments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RecentPayment"
+
+  /dashboard/monthly-collection:
+    get:
+      operationId: getMonthlyCollection
+      tags: [dashboard]
+      summary: Monthly collection totals over the past N months
+      parameters:
+        - in: query
+          name: months
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Monthly buckets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MonthlyCollection"
+
+  /dashboard/payment-method-breakdown:
+    get:
+      operationId: getPaymentMethodBreakdown
+      tags: [dashboard]
+      summary: Payment method totals
+      parameters:
+        - in: query
+          name: paymentType
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Method breakdown
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PaymentMethodBucket"
+
+  /events:
+    get:
+      operationId: listEvents
+      tags: [events]
+      summary: List events
+      parameters:
+        - in: query
+          name: search
+          required: false
+          schema: { type: string }
+        - in: query
+          name: status
+          required: false
+          schema:
+            type: string
+            enum: [upcoming, ongoing, completed, cancelled]
+        - in: query
+          name: sort
+          required: false
+          schema:
+            type: string
+            enum: [recent, name, dateAsc, dateDesc]
+        - in: query
+          name: page
+          required: false
+          schema: { type: integer, minimum: 1 }
+        - in: query
+          name: pageSize
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 200 }
+      responses:
+        "200":
+          description: Event list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventList"
+    post:
+      operationId: createEvent
+      tags: [events]
+      summary: Create an event (Admin or Event Manager)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+
+  /events/{id}:
+    get:
+      operationId: getEvent
+      tags: [events]
+      summary: Get an event
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+    put:
+      operationId: updateEvent
+      tags: [events]
+      summary: Update an event
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+    delete:
+      operationId: deleteEvent
+      tags: [events]
+      summary: Delete an event
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Deleted
+
+  /events/{eventId}/sponsors:
+    get:
+      operationId: listEventSponsors
+      tags: [events]
+      summary: List sponsors for an event
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Sponsor list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/EventSponsor" }
+    post:
+      operationId: createEventSponsor
+      tags: [events]
+      summary: Add a sponsor to an event
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EventSponsorInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EventSponsor" }
+
+  /events/{eventId}/sponsors/{id}:
+    delete:
+      operationId: deleteEventSponsor
+      tags: [events]
+      summary: Remove a sponsor from an event
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string, format: uuid }
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Deleted
+
+  /events/{eventId}/expenses:
+    get:
+      operationId: listEventExpenses
+      tags: [events]
+      summary: List expenses for an event
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Expense list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/EventExpense" }
+    post:
+      operationId: createEventExpense
+      tags: [events]
+      summary: Add an expense to an event
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EventExpenseInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EventExpense" }
+
+  /events/{eventId}/expenses/{id}:
+    delete:
+      operationId: deleteEventExpense
+      tags: [events]
+      summary: Remove an expense from an event
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string, format: uuid }
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Deleted
+
+  /events/{eventId}/booklets:
+    get:
+      operationId: listEventBooklets
+      tags: [events]
+      summary: List ticket booklets for an event
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Booklet list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/EventTicketBooklet" }
+    post:
+      operationId: createEventBooklet
+      tags: [events]
+      summary: Create a ticket booklet for an event
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EventBookletInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EventTicketBooklet" }
+
+  /events/{eventId}/booklets/{id}:
+    put:
+      operationId: updateEventBooklet
+      tags: [events]
+      summary: Update a ticket booklet
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string, format: uuid }
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EventBookletInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EventTicketBooklet" }
+    delete:
+      operationId: deleteEventBooklet
+      tags: [events]
+      summary: Delete a ticket booklet
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string, format: uuid }
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Deleted
+
+  /events/{eventId}/booklets/{bookletId}/tickets:
+    get:
+      operationId: listBookletTickets
+      tags: [events]
+      summary: List tickets in a booklet
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string, format: uuid }
+        - in: path
+          name: bookletId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Ticket list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/EventTicket" }
+
+  /events/{eventId}/booklets/{bookletId}/tickets/{ticketId}:
+    patch:
+      operationId: updateEventTicket
+      tags: [events]
+      summary: Update a ticket (mark sold/unsold, set buyer info)
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string, format: uuid }
+        - in: path
+          name: bookletId
+          required: true
+          schema: { type: string, format: uuid }
+        - in: path
+          name: ticketId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EventTicketUpdate" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EventTicket" }
+
+  /events/{eventId}/financial-summary:
+    get:
+      operationId: getEventFinancialSummary
+      tags: [events]
+      summary: Get financial summary for an event
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Financial summary
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EventFinancialSummary" }
+
+  /tasks:
+    get:
+      operationId: listTasks
+      tags: [tasks]
+      summary: List tasks
+      parameters:
+        - in: query
+          name: status
+          required: false
+          schema:
+            type: string
+            enum: [pending, in_progress, completed, cancelled]
+        - in: query
+          name: priority
+          required: false
+          schema:
+            type: string
+            enum: [low, medium, high, urgent]
+        - in: query
+          name: assignedTo
+          required: false
+          schema: { type: string }
+        - in: query
+          name: sponsorId
+          required: false
+          schema: { type: string, format: uuid }
+        - in: query
+          name: eventId
+          required: false
+          schema: { type: string, format: uuid }
+        - in: query
+          name: sort
+          required: false
+          schema:
+            type: string
+            enum: [recent, dueAsc, dueDesc, priority]
+        - in: query
+          name: page
+          required: false
+          schema: { type: integer, minimum: 1 }
+        - in: query
+          name: pageSize
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 200 }
+      responses:
+        "200":
+          description: Task list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskList"
+    post:
+      operationId: createTask
+      tags: [tasks]
+      summary: Create a task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+  /tasks/{id}:
+    get:
+      operationId: getTask
+      tags: [tasks]
+      summary: Get a task
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+    put:
+      operationId: updateTask
+      tags: [tasks]
+      summary: Update a task
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+    delete:
+      operationId: deleteTask
+      tags: [tasks]
+      summary: Delete a task
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Deleted
+
+  /dashboard/sponsor-pipeline:
+    get:
+      operationId: getDashboardSponsorPipeline
+      tags: [dashboard]
+      summary: Sponsor pipeline summary for dashboard
+      responses:
+        "200":
+          description: Sponsor pipeline
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SponsorPipeline"
+
+  /dashboard/financial-summary:
+    get:
+      operationId: getDashboardFinancialSummary
+      tags: [dashboard]
+      summary: Separate member vs sponsor financial summary
+      parameters:
+        - in: query
+          name: month
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: Financial summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FinancialSummary"
+
+  /dashboard/alerts:
+    get:
+      operationId: getDashboardAlerts
+      tags: [dashboard]
+      summary: Real-time alerts for missing data, pending payments, and issues
+      responses:
+        "200":
+          description: Alerts list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DashboardAlert"
+
+  /sponsors:
+    get:
+      operationId: listSponsors
+      tags: [sponsors]
+      summary: List sponsors
+      parameters:
+        - in: query
+          name: search
+          required: false
+          schema: { type: string }
+        - in: query
+          name: tier
+          required: false
+          schema:
+            type: string
+            enum: [platinum, gold, silver, bronze]
+        - in: query
+          name: status
+          required: false
+          schema:
+            type: string
+            enum: [pending, partial, paid, overdue]
+        - in: query
+          name: sort
+          required: false
+          schema:
+            type: string
+            enum: [recent, name, totalDesc, totalAsc, pendingDesc]
+        - in: query
+          name: page
+          required: false
+          schema: { type: integer, minimum: 1 }
+        - in: query
+          name: pageSize
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 200 }
+      responses:
+        "200":
+          description: Sponsor list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SponsorList"
+    post:
+      operationId: createSponsor
+      tags: [sponsors]
+      summary: Create a sponsor (Admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SponsorInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sponsor"
+
+  /sponsors/{id}:
+    get:
+      operationId: getSponsor
+      tags: [sponsors]
+      summary: Get a sponsor
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Sponsor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sponsor"
+    put:
+      operationId: updateSponsor
+      tags: [sponsors]
+      summary: Update a sponsor (Admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SponsorInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sponsor"
+    delete:
+      operationId: deleteSponsor
+      tags: [sponsors]
+      summary: Delete a sponsor (Admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Deleted
+
+  /frf/claims:
+    get:
+      operationId: listFrfClaims
+      tags: [frf]
+      summary: List FRF claims
+      parameters:
+        - in: query
+          name: status
+          required: false
+          schema: { type: string }
+        - in: query
+          name: claimType
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: FRF claims list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FrfClaim"
+    post:
+      operationId: createFrfClaim
+      tags: [frf]
+      summary: Create FRF claim
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FrfClaimInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FrfClaim"
+
+  /frf/stats:
+    get:
+      operationId: getFrfStats
+      tags: [frf]
+      summary: Get FRF statistics
+      responses:
+        "200":
+          description: FRF stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FrfStats"
+
+  /frf/claims/{id}:
+    get:
+      operationId: getFrfClaim
+      tags: [frf]
+      summary: Get a FRF claim
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: FRF claim
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FrfClaim"
+    put:
+      operationId: updateFrfClaim
+      tags: [frf]
+      summary: Update a FRF claim
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FrfClaimInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FrfClaim"
+    delete:
+      operationId: deleteFrfClaim
+      tags: [frf]
+      summary: Delete a FRF claim
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Deleted
+
+  /frf/claims/{id}/collection:
+    get:
+      operationId: getFrfClaimCollection
+      tags: [frf]
+      summary: Collection statistics and contributors ledger for an FRF claim
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Claim collection details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FrfClaimCollection"
+
+  /members/{id}/frf-summary:
+    get:
+      operationId: getMemberFrfSummary
+      tags: [members]
+      summary: FRF eligibility, contribution summary, history, and reference collection performance
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Member FRF summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberFrfSummary"
+
+  /dashboard/frf-overview:
+    get:
+      operationId: getFrfOverview
+      tags: [dashboard]
+      summary: FRF collection overview widget data
+      responses:
+        "200":
+          description: FRF overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FrfOverview"
+
+  /welfare/requests:
+    get:
+      operationId: listWelfareRequests
+      tags: [welfare]
+      summary: List welfare/community-service requests
+      parameters:
+        - in: query
+          name: serviceType
+          required: false
+          schema: { type: string }
+        - in: query
+          name: status
+          required: false
+          schema: { type: string }
+        - in: query
+          name: search
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: Welfare requests list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WelfareRequest"
+    post:
+      operationId: createWelfareRequest
+      tags: [welfare]
+      summary: Create a welfare request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WelfareRequestInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WelfareRequest"
+
+  /welfare/stats:
+    get:
+      operationId: getWelfareStats
+      tags: [welfare]
+      summary: Get welfare statistics
+      parameters:
+        - in: query
+          name: serviceType
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: Welfare stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WelfareStats"
+
+  /welfare/requests/{id}:
+    get:
+      operationId: getWelfareRequest
+      tags: [welfare]
+      summary: Get a welfare request
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Welfare request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WelfareRequest"
+    put:
+      operationId: updateWelfareRequest
+      tags: [welfare]
+      summary: Update a welfare request
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WelfareRequestUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WelfareRequest"
+    delete:
+      operationId: deleteWelfareRequest
+      tags: [welfare]
+      summary: Delete a welfare request
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Deleted
+
+  /dashboard/cash-flow:
+    get:
+      operationId: getDashboardCashFlow
+      tags: [dashboard]
+      summary: Get cash flow summary and upcoming events
+      parameters:
+        - in: query
+          name: year
+          required: false
+          schema: { type: integer }
+        - in: query
+          name: quarter
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 4 }
+      responses:
+        "200":
+          description: Cash flow data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardCashFlow"
+
+  /dashboard/impact:
+    get:
+      operationId: getDashboardImpact
+      tags: [dashboard]
+      summary: Get organization-wide impact metrics
+      responses:
+        "200":
+          description: Impact metrics aggregated across all modules
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardImpact"
+
+  /dashboard/committee-performance:
+    get:
+      operationId: getCommitteePerformance
+      tags: [dashboard]
+      summary: Get per-committee-member activity metrics
+      responses:
+        "200":
+          description: Activity metrics grouped by committee member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommitteePerformance"
+
+  /dashboard/member-assistance/{memberId}:
+    get:
+      operationId: getMemberAssistanceHistory
+      tags: [dashboard]
+      summary: Get all assistance received by a member across modules
+      parameters:
+        - in: path
+          name: memberId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Unified assistance history for the member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberAssistanceHistory"
+
+  /receipts:
+    get:
+      operationId: listReceiptRecords
+      tags: [receipts]
+      summary: List saved receipt records
+      parameters:
+        - in: query
+          name: search
+          required: false
+          schema: { type: string }
+        - in: query
+          name: page
+          required: false
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: pageSize
+          required: false
+          schema: { type: integer, default: 25 }
+      responses:
+        "200":
+          description: Paginated list of receipts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ReceiptRecord"
+                  total: { type: integer }
+                required: [items, total]
+    post:
+      operationId: createReceiptRecord
+      tags: [receipts]
+      summary: Save a generated receipt record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReceiptRecordInput"
+      responses:
+        "201":
+          description: Created receipt record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReceiptRecord"
+
+  /receipts/{id}:
+    delete:
+      operationId: deleteReceiptRecord
+      tags: [receipts]
+      summary: Delete a saved receipt record
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
+
+  /storage/uploads/request-url:
+    post:
+      operationId: requestUploadUrl
+      tags: [storage]
+      summary: Request a presigned URL for file upload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestUploadUrlBody"
+      responses:
+        "200":
+          description: Presigned upload URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequestUploadUrlResponse"
+
+  /storage/objects/{objectPath}:
+    get:
+      operationId: getStorageObject
+      tags: [storage]
+      summary: Serve an uploaded object
+      parameters:
+        - in: path
+          name: objectPath
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Object content
+          content:
+            "*/*":
+              schema:
+                type: string
+                format: binary
+
+  /audit-logs:
+    get:
+      operationId: listAuditLogs
+      tags: [audit]
+      summary: List audit logs with filters
+      parameters:
+        - name: module
+          in: query
+          schema: { type: string }
+        - name: action
+          in: query
+          schema: { type: string }
+        - name: userId
+          in: query
+          schema: { type: string }
+        - name: search
+          in: query
+          schema: { type: string }
+        - name: from
+          in: query
+          schema: { type: string }
+        - name: to
+          in: query
+          schema: { type: string }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: pageSize
+          in: query
+          schema: { type: integer, default: 50 }
+      responses:
+        "200":
+          description: Paginated audit logs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AuditLog"
+                  total:
+                    type: integer
+                required: [items, total]
+
+  /meetings:
+    get:
+      operationId: listMeetings
+      tags: [meetings]
+      summary: List all meetings with attendance summary
+      responses:
+        "200":
+          description: Meetings ordered by date (most recent first)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Meeting"
+    post:
+      operationId: createMeeting
+      tags: [meetings]
+      summary: Create a meeting session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeetingInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetingDetail"
+
+  /meetings/{id}:
+    get:
+      operationId: getMeeting
+      tags: [meetings]
+      summary: Get a meeting with its full attendance register
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Meeting detail with attendance rows
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetingDetail"
+    patch:
+      operationId: updateMeeting
+      tags: [meetings]
+      summary: Update meeting information
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeetingInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetingDetail"
+    delete:
+      operationId: deleteMeeting
+      tags: [meetings]
+      summary: Delete a meeting and its attendance records
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Deleted
+
+  /meetings/{id}/attendance:
+    put:
+      operationId: setMeetingAttendance
+      tags: [meetings]
+      summary: Set attendance status for members in a meeting
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AttendanceUpdate"
+      responses:
+        "200":
+          description: Updated meeting detail with attendance rows
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetingDetail"
+
+components:
+  schemas:
+    AuditLog:
+      type: object
+      properties:
+        id: { type: string }
+        userId: { type: string }
+        userName: { type: string }
+        action: { type: string }
+        module: { type: string }
+        entityId: { type: ["string", "null"] }
+        entityName: { type: ["string", "null"] }
+        details: { type: ["string", "null"] }
+        ipAddress: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+      required: [id, userId, userName, action, module, createdAt]
+
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    CurrentUser:
+      type: object
+      properties:
+        userId:
+          type: string
+        username:
+          type: string
+        displayName:
+          type: string
+        role:
+          type: string
+          enum: [admin, finance, event, viewer]
+        email:
+          type: ["string", "null"]
+        firstName:
+          type: ["string", "null"]
+        lastName:
+          type: ["string", "null"]
+      required: [userId, username, displayName, role]
+
+    Sponsor:
+      type: object
+      properties:
+        id: { type: string }
+        sponsorName: { type: string }
+        company: { type: string }
+        contactPerson: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        tier:
+          type: string
+          enum: [platinum, gold, silver, bronze]
+        totalAmount: { type: number }
+        paidAmount: { type: number }
+        pendingAmount: { type: number }
+        status:
+          type: string
+          enum: [pending, partial, paid, overdue]
+        transferMethod:
+          type: string
+          enum: [bank_transfer, cash, cheque]
+        assignedStaff: { type: string }
+        linkedEvent: { type: string }
+        dueDate:
+          type: ["string", "null"]
+          format: date-time
+        notes: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required:
+        - id
+        - sponsorName
+        - company
+        - contactPerson
+        - phone
+        - email
+        - tier
+        - totalAmount
+        - paidAmount
+        - pendingAmount
+        - status
+        - transferMethod
+        - assignedStaff
+        - linkedEvent
+        - notes
+        - createdAt
+        - updatedAt
+
+    SponsorInput:
+      type: object
+      properties:
+        sponsorName: { type: string, minLength: 1 }
+        company: { type: string }
+        contactPerson: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        tier:
+          type: string
+          enum: [platinum, gold, silver, bronze]
+        totalAmount: { type: number, minimum: 0 }
+        paidAmount: { type: number, minimum: 0 }
+        status:
+          type: string
+          enum: [pending, partial, paid, overdue]
+        transferMethod:
+          type: string
+          enum: [bank_transfer, cash, cheque]
+        assignedStaff: { type: string }
+        linkedEvent: { type: string }
+        dueDate:
+          type: ["string", "null"]
+          format: date-time
+        notes: { type: string }
+      required: [sponsorName]
+
+    SponsorList:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/Sponsor" }
+        page: { type: integer }
+        pageSize: { type: integer }
+        total: { type: integer }
+      required: [items, page, pageSize, total]
+
+    Member:
+      type: object
+      properties:
+        id:
+          type: string
+        fullName:
+          type: string
+        mobileNumber:
+          type: string
+        membershipId:
+          type: string
+        photoUrl:
+          type: ["string", "null"]
+        applicationNumber:
+          type: string
+        iqamaNumber:
+          type: string
+        jamaath:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        designation:
+          type: string
+        isExecutiveCommittee:
+          type: boolean
+        isCoreCommittee:
+          type: boolean
+        membershipFee:
+          type: number
+        feeStatus:
+          type: string
+          enum: [paid, pending, unpaid]
+        feePaidAt:
+          type: ["string", "null"]
+          format: date-time
+        feeUpdatedBy:
+          type: string
+        frfStatus:
+          type: string
+          enum: [active, suspended, inactive]
+        frfDue: { type: number }
+        frfPaid: { type: number }
+        frfOutstanding: { type: number }
+        refMemberName:
+          type: string
+        refMemberId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - fullName
+        - mobileNumber
+        - membershipId
+        - applicationNumber
+        - iqamaNumber
+        - jamaath
+        - city
+        - country
+        - designation
+        - isExecutiveCommittee
+        - isCoreCommittee
+        - membershipFee
+        - feeStatus
+        - feePaidAt
+        - feeUpdatedBy
+        - frfStatus
+        - refMemberName
+        - refMemberId
+        - createdAt
+        - updatedAt
+
+    MemberDetail:
+      type: object
+      properties:
+        id:
+          type: string
+        fullName:
+          type: string
+        mobileNumber:
+          type: string
+        membershipId:
+          type: string
+        photoUrl:
+          type: ["string", "null"]
+        applicationNumber:
+          type: string
+        iqamaNumber:
+          type: string
+        jamaath:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        designation:
+          type: string
+        isExecutiveCommittee:
+          type: boolean
+        isCoreCommittee:
+          type: boolean
+        membershipFee:
+          type: number
+        feeStatus:
+          type: string
+          enum: [paid, pending, unpaid]
+        feePaidAt:
+          type: ["string", "null"]
+          format: date-time
+        feeUpdatedBy:
+          type: string
+        frfStatus:
+          type: string
+          enum: [active, suspended, inactive]
+        refMemberName:
+          type: string
+        refMemberId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - fullName
+        - mobileNumber
+        - membershipId
+        - applicationNumber
+        - iqamaNumber
+        - jamaath
+        - city
+        - country
+        - designation
+        - isExecutiveCommittee
+        - isCoreCommittee
+        - membershipFee
+        - feeStatus
+        - feePaidAt
+        - feeUpdatedBy
+        - frfStatus
+        - refMemberName
+        - refMemberId
+        - createdAt
+        - updatedAt
+
+    MemberInput:
+      type: object
+      properties:
+        fullName:
+          type: string
+          minLength: 1
+        mobileNumber:
+          type: string
+          minLength: 1
+        membershipId:
+          type: string
+          description: >-
+            Optional. When omitted or blank the server auto-generates the next
+            membership number in the format DKMO-YYYY-XXXX.
+        applicationNumber:
+          type: string
+        iqamaNumber:
+          type: string
+        jamaath:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        designation:
+          type: string
+        isExecutiveCommittee:
+          type: boolean
+        isCoreCommittee:
+          type: boolean
+        membershipFee:
+          type: number
+        feeStatus:
+          type: string
+          enum: [paid, pending, unpaid]
+        frfStatus:
+          type: string
+          enum: [active, suspended, inactive]
+        refMemberName:
+          type: string
+        refMemberId:
+          type: string
+      required:
+        - fullName
+        - mobileNumber
+
+    FeeStatusInput:
+      type: object
+      properties:
+        feeStatus:
+          type: string
+          enum: [paid, pending, unpaid]
+      required:
+        - feeStatus
+
+    CommitteeStatusInput:
+      type: object
+      description: >-
+        Partial update of a member's committee membership. Executive Committee
+        and Core Committee are independent; supply only the flag you want to
+        change. Omitting a flag leaves it untouched.
+      properties:
+        isExecutiveCommittee:
+          type: boolean
+        isCoreCommittee:
+          type: boolean
+
+    MemberPhotoInput:
+      type: object
+      properties:
+        photoUrl:
+          type: ["string", "null"]
+          description: Data URL of the new square profile photo, or null to remove.
+      required:
+        - photoUrl
+
+    MemberReferralItem:
+      type: object
+      properties:
+        id:
+          type: string
+        fullName:
+          type: string
+        membershipId:
+          type: string
+        mobileNumber:
+          type: string
+        city:
+          type: string
+        photoUrl:
+          type: ["string", "null"]
+        feeStatus:
+          type: string
+          enum: [paid, pending, unpaid]
+      required:
+        - id
+        - fullName
+        - membershipId
+        - mobileNumber
+        - city
+        - feeStatus
+
+    MemberReferralSummary:
+      type: object
+      properties:
+        referenceMemberName:
+          type: string
+        totalCount:
+          type: integer
+        frfResponsibilityAmount:
+          type: number
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/MemberReferralItem"
+      required:
+        - referenceMemberName
+        - totalCount
+        - frfResponsibilityAmount
+        - members
+
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+        memberId:
+          type: string
+        memberName:
+          type: string
+        membershipId:
+          type: string
+        paymentType:
+          type: string
+          enum: [membership_fee, frf_contribution, donation, sponsorship, other]
+        frfClaimId:
+          type: ["string", "null"]
+        amountDue:
+          type: number
+        amountPaid:
+          type: number
+        status:
+          type: string
+          enum: [paid, pending, overdue]
+        paymentMethod:
+          type: string
+          enum: [cash, upi, bank_transfer, card, cheque, other]
+        receiptNumber:
+          type: string
+        notes:
+          type: ["string", "null"]
+        dueDate:
+          type: ["string", "null"]
+          format: date-time
+        paidAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - memberId
+        - memberName
+        - membershipId
+        - paymentType
+        - amountDue
+        - amountPaid
+        - status
+        - paymentMethod
+        - receiptNumber
+        - paidAt
+        - createdAt
+
+    PaymentInput:
+      type: object
+      properties:
+        memberId:
+          type: string
+        paymentType:
+          type: string
+          enum: [membership_fee, frf_contribution, donation, sponsorship, other]
+        frfClaimId:
+          type: ["string", "null"]
+        amountDue:
+          type: number
+        amountPaid:
+          type: number
+        status:
+          type: string
+          enum: [paid, pending, overdue]
+        paymentMethod:
+          type: string
+          enum: [cash, upi, bank_transfer, card, cheque, other]
+        receiptNumber:
+          type: string
+          minLength: 1
+        notes:
+          type: ["string", "null"]
+        dueDate:
+          type: ["string", "null"]
+          format: date-time
+        paidAt:
+          type: ["string", "null"]
+          format: date-time
+      required:
+        - memberId
+        - amountPaid
+        - paymentMethod
+        - receiptNumber
+
+    DashboardSummary:
+      type: object
+      properties:
+        totalMembers:
+          type: integer
+        paidMembersCount:
+          type: integer
+        pendingMembersCount:
+          type: integer
+        unpaidMembersCount:
+          type: integer
+        totalFeesCollected:
+          type: number
+        outstandingFees:
+          type: number
+        membershipFeeTotal:
+          type: number
+      required:
+        - totalMembers
+        - paidMembersCount
+        - pendingMembersCount
+        - unpaidMembersCount
+        - totalFeesCollected
+        - outstandingFees
+        - membershipFeeTotal
+
+    PendingMember:
+      type: object
+      properties:
+        memberId:
+          type: string
+        fullName:
+          type: string
+        mobileNumber:
+          type: string
+        membershipId:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        membershipFee:
+          type: number
+        feeStatus:
+          type: string
+          enum: [pending, unpaid]
+        refMemberName:
+          type: string
+        refMemberId:
+          type: string
+      required:
+        - memberId
+        - fullName
+        - mobileNumber
+        - membershipId
+        - city
+        - country
+        - membershipFee
+        - feeStatus
+        - refMemberName
+        - refMemberId
+
+    RecentPayment:
+      type: object
+      properties:
+        id:
+          type: string
+        memberId:
+          type: string
+        memberName:
+          type: string
+        membershipId:
+          type: string
+        paymentType:
+          type: string
+        amountPaid:
+          type: number
+        paymentMethod:
+          type: string
+        receiptNumber:
+          type: string
+        paidAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - memberId
+        - memberName
+        - membershipId
+        - paymentType
+        - amountPaid
+        - paymentMethod
+        - receiptNumber
+        - paidAt
+
+    MonthlyCollection:
+      type: object
+      properties:
+        month:
+          type: string
+        total:
+          type: number
+        paymentCount:
+          type: integer
+      required: [month, total, paymentCount]
+
+    PaymentMethodBucket:
+      type: object
+      properties:
+        method:
+          type: string
+        total:
+          type: number
+        count:
+          type: integer
+      required: [method, total, count]
+
+    SponsorPipelineTierBucket:
+      type: object
+      properties:
+        tier: { type: string }
+        count: { type: integer }
+        pledged: { type: number }
+        collected: { type: number }
+        pending: { type: number }
+      required: [tier, count, pledged, collected, pending]
+
+    SponsorPipeline:
+      type: object
+      properties:
+        totalSponsors: { type: integer }
+        totalPledged: { type: number }
+        totalCollected: { type: number }
+        totalPending: { type: number }
+        overdueCount: { type: integer }
+        upcomingDueCount: { type: integer }
+        tierBreakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/SponsorPipelineTierBucket"
+      required:
+        - totalSponsors
+        - totalPledged
+        - totalCollected
+        - totalPending
+        - overdueCount
+        - upcomingDueCount
+        - tierBreakdown
+
+    Event:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        eventDate:
+          type: ["string", "null"]
+          format: date-time
+        location: { type: string }
+        budget: { type: number }
+        description: { type: string }
+        status:
+          type: string
+          enum: [upcoming, ongoing, completed, cancelled]
+        taskCount: { type: integer }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required:
+        - id
+        - name
+        - location
+        - budget
+        - description
+        - status
+        - createdAt
+        - updatedAt
+
+    EventInput:
+      type: object
+      properties:
+        name: { type: string, minLength: 1 }
+        eventDate:
+          type: ["string", "null"]
+          format: date-time
+        location: { type: string }
+        budget: { type: number, minimum: 0 }
+        description: { type: string }
+        status:
+          type: string
+          enum: [upcoming, ongoing, completed, cancelled]
+      required: [name]
+
+    EventList:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/Event" }
+        page: { type: integer }
+        pageSize: { type: integer }
+        total: { type: integer }
+      required: [items, page, pageSize, total]
+
+    EventSponsor:
+      type: object
+      properties:
+        id: { type: string }
+        eventId: { type: string }
+        sponsorName: { type: string }
+        contactPerson: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        amount: { type: number }
+        sponsorshipType: { type: string, enum: [cash, in-kind] }
+        sponsorshipDate: { type: string }
+        notes: { type: string }
+        createdAt: { type: string, format: date-time }
+      required: [id, eventId, sponsorName, amount, sponsorshipType, createdAt]
+
+    EventSponsorInput:
+      type: object
+      properties:
+        sponsorName: { type: string, minLength: 1 }
+        contactPerson: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        amount: { type: number, minimum: 0 }
+        sponsorshipType: { type: string, enum: [cash, in-kind] }
+        sponsorshipDate: { type: string }
+        notes: { type: string }
+      required: [sponsorName]
+
+    EventExpense:
+      type: object
+      properties:
+        id: { type: string }
+        eventId: { type: string }
+        category: { type: string }
+        description: { type: string }
+        vendor: { type: string }
+        amount: { type: number }
+        expenseDate: { type: string }
+        notes: { type: string }
+        createdAt: { type: string, format: date-time }
+      required: [id, eventId, category, amount, createdAt]
+
+    EventExpenseInput:
+      type: object
+      properties:
+        category: { type: string, minLength: 1 }
+        description: { type: string }
+        vendor: { type: string }
+        amount: { type: number, minimum: 0 }
+        expenseDate: { type: string }
+        notes: { type: string }
+      required: [category]
+
+    EventTicketBooklet:
+      type: object
+      properties:
+        id: { type: string }
+        eventId: { type: string }
+        bookletNumber: { type: string }
+        ticketRangeStart: { type: integer }
+        ticketRangeEnd: { type: integer }
+        assignedTo: { type: string }
+        assignedDate: { type: string }
+        status: { type: string, enum: [available, assigned, sold, completed] }
+        createdAt: { type: string, format: date-time }
+      required: [id, eventId, bookletNumber, ticketRangeStart, ticketRangeEnd, status, createdAt]
+
+    EventBookletInput:
+      type: object
+      properties:
+        bookletNumber: { type: string, minLength: 1 }
+        ticketRangeStart: { type: integer, minimum: 1 }
+        ticketRangeEnd: { type: integer, minimum: 1 }
+        assignedTo: { type: string }
+        assignedDate: { type: string }
+        status: { type: string, enum: [available, assigned, sold, completed] }
+        ticketAmount: { type: number, minimum: 0 }
+      required: [bookletNumber, ticketRangeStart, ticketRangeEnd]
+
+    EventTicket:
+      type: object
+      properties:
+        id: { type: string }
+        bookletId: { type: string }
+        eventId: { type: string }
+        ticketNumber: { type: integer }
+        isSold: { type: boolean }
+        soldBy: { type: string }
+        buyerName: { type: string }
+        buyerPhone: { type: string }
+        saleDate: { type: string }
+        amount: { type: number }
+        createdAt: { type: string, format: date-time }
+      required: [id, bookletId, eventId, ticketNumber, isSold, amount, createdAt]
+
+    EventTicketUpdate:
+      type: object
+      properties:
+        isSold: { type: boolean }
+        soldBy: { type: string }
+        buyerName: { type: string }
+        buyerPhone: { type: string }
+        saleDate: { type: string }
+        amount: { type: number, minimum: 0 }
+
+    EventFinancialSummary:
+      type: object
+      properties:
+        sponsors:
+          type: object
+          properties:
+            total: { type: number }
+            count: { type: integer }
+          required: [total, count]
+        expenses:
+          type: object
+          properties:
+            total: { type: number }
+            count: { type: integer }
+          required: [total, count]
+        tickets:
+          type: object
+          properties:
+            total: { type: integer }
+            sold: { type: integer }
+            unsold: { type: integer }
+            revenue: { type: number }
+          required: [total, sold, unsold, revenue]
+        summary:
+          type: object
+          properties:
+            totalIncome: { type: number }
+            totalExpenses: { type: number }
+            netBalance: { type: number }
+          required: [totalIncome, totalExpenses, netBalance]
+      required: [sponsors, expenses, tickets, summary]
+
+    FinancialSummary:
+      type: object
+      properties:
+        month: { type: string }
+        members:
+          type: object
+          properties:
+            collectedAllTime: { type: number }
+            collectedThisMonth: { type: number }
+            expectedThisMonth: { type: number }
+            pendingThisMonth: { type: number }
+            totalMembers: { type: integer }
+          required: [collectedAllTime, collectedThisMonth, expectedThisMonth, pendingThisMonth, totalMembers]
+        sponsors:
+          type: object
+          properties:
+            collectedAllTime: { type: number }
+            pledgedAllTime: { type: number }
+            pendingAllTime: { type: number }
+            totalSponsors: { type: integer }
+            pendingCount: { type: integer }
+          required: [collectedAllTime, pledgedAllTime, pendingAllTime, totalSponsors, pendingCount]
+        combined:
+          type: object
+          properties:
+            collectedAllTime: { type: number }
+            collectedThisMonth: { type: number }
+          required: [collectedAllTime, collectedThisMonth]
+      required: [month, members, sponsors, combined]
+
+    DashboardAlert:
+      type: object
+      properties:
+        id: { type: string }
+        severity:
+          type: string
+          enum: [critical, warning, info]
+        type: { type: string }
+        title: { type: string }
+        description: { type: string }
+        count: { type: integer }
+        link: { type: string }
+      required: [id, severity, type, title, description, count, link]
+
+    Task:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string }
+        assignedTo: { type: string }
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        status:
+          type: string
+          enum: [pending, in_progress, completed, cancelled]
+        dueDate:
+          type: ["string", "null"]
+          format: date-time
+        sponsorId:
+          type: ["string", "null"]
+        sponsorName:
+          type: ["string", "null"]
+        eventId:
+          type: ["string", "null"]
+        eventName:
+          type: ["string", "null"]
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required:
+        - id
+        - title
+        - description
+        - assignedTo
+        - priority
+        - status
+        - createdAt
+        - updatedAt
+
+    TaskInput:
+      type: object
+      properties:
+        title: { type: string, minLength: 1 }
+        description: { type: string }
+        assignedTo: { type: string }
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        status:
+          type: string
+          enum: [pending, in_progress, completed, cancelled]
+        dueDate:
+          type: ["string", "null"]
+          format: date-time
+        sponsorId:
+          type: ["string", "null"]
+        eventId:
+          type: ["string", "null"]
+      required: [title]
+
+    TaskList:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/Task" }
+        page: { type: integer }
+        pageSize: { type: integer }
+        total: { type: integer }
+      required: [items, page, pageSize, total]
+
+    FrfClaim:
+      type: object
+      properties:
+        id: { type: string }
+        memberId:
+          type: ["string", "null"]
+        claimantName: { type: string }
+        membershipId: { type: string }
+        claimType:
+          type: string
+          enum: [death_benefit, emergency, air_ticket, other]
+        amountRequested: { type: number }
+        amountApproved: { type: number }
+        contributionAmount: { type: number }
+        status:
+          type: string
+          enum: [pending, under_review, approved, rejected, disbursed]
+        claimDate:
+          type: ["string", "null"]
+          format: date-time
+        approvedDate:
+          type: ["string", "null"]
+          format: date-time
+        approvedBy: { type: string }
+        beneficiaryName: { type: string }
+        beneficiaryRelation: { type: string }
+        description: { type: string }
+        notes: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required:
+        - id
+        - claimantName
+        - membershipId
+        - claimType
+        - amountRequested
+        - amountApproved
+        - contributionAmount
+        - status
+        - approvedBy
+        - beneficiaryName
+        - beneficiaryRelation
+        - description
+        - notes
+        - createdAt
+        - updatedAt
+
+    FrfClaimInput:
+      type: object
+      properties:
+        claimantName: { type: string, minLength: 1 }
+        membershipId: { type: string }
+        memberId:
+          type: ["string", "null"]
+        claimType:
+          type: string
+          enum: [death_benefit, emergency, air_ticket, other]
+        amountRequested: { type: number, minimum: 0 }
+        amountApproved: { type: number, minimum: 0 }
+        contributionAmount: { type: number, minimum: 0 }
+        status:
+          type: string
+          enum: [pending, under_review, approved, rejected, disbursed]
+        claimDate:
+          type: string
+          format: date-time
+        approvedDate:
+          type: ["string", "null"]
+          format: date-time
+        approvedBy: { type: string }
+        beneficiaryName: { type: string }
+        beneficiaryRelation: { type: string }
+        description: { type: string }
+        notes: { type: string }
+      required: [claimantName]
+
+    FrfStats:
+      type: object
+      properties:
+        total: { type: integer }
+        pendingCount: { type: integer }
+        approvedCount: { type: integer }
+        rejectedCount: { type: integer }
+        totalDisbursed: { type: number }
+        totalRequested: { type: number }
+        byType:
+          type: array
+          items:
+            type: object
+            properties:
+              type: { type: string }
+              count: { type: integer }
+              totalAmount: { type: number }
+            required: [type, count, totalAmount]
+      required: [total, pendingCount, approvedCount, rejectedCount, totalDisbursed, totalRequested, byType]
+
+    FrfContributor:
+      type: object
+      properties:
+        contributionId: { type: string }
+        memberId: { type: string }
+        fullName: { type: string }
+        membershipId: { type: string }
+        mobileNumber: { type: string }
+        photoUrl:
+          type: ["string", "null"]
+        refMemberName: { type: string }
+        amount: { type: number }
+        status:
+          type: string
+          enum: [paid, pending, overdue, cancelled]
+        paidAt:
+          type: ["string", "null"]
+          format: date-time
+        receiptNumber:
+          type: ["string", "null"]
+      required: [contributionId, memberId, fullName, membershipId, mobileNumber, refMemberName, amount, status]
+
+    FrfClaimCollection:
+      type: object
+      properties:
+        claim:
+          $ref: "#/components/schemas/FrfClaim"
+        totalMembers: { type: integer }
+        expectedAmount: { type: number }
+        collectedAmount: { type: number }
+        outstandingAmount: { type: number }
+        collectionRate: { type: number }
+        paidCount: { type: integer }
+        pendingCount: { type: integer }
+        overdueCount: { type: integer }
+        cancelledCount: { type: integer }
+        contributors:
+          type: array
+          items:
+            $ref: "#/components/schemas/FrfContributor"
+      required: [claim, totalMembers, expectedAmount, collectedAmount, outstandingAmount, collectionRate, paidCount, pendingCount, overdueCount, cancelledCount, contributors]
+
+    FrfEligibility:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [eligible, pending_activation, suspended, not_eligible]
+        reason: { type: string }
+      required: [status, reason]
+
+    MemberFrfHistoryItem:
+      type: object
+      properties:
+        contributionId: { type: string }
+        claimId: { type: string }
+        claimantName: { type: string }
+        claimType: { type: string }
+        amount: { type: number }
+        status:
+          type: string
+          enum: [paid, pending, overdue, cancelled]
+        approvedDate:
+          type: ["string", "null"]
+          format: date-time
+        paidAt:
+          type: ["string", "null"]
+          format: date-time
+      required: [contributionId, claimId, claimantName, claimType, amount, status]
+
+    FrfReferenceMemberItem:
+      type: object
+      properties:
+        id: { type: string }
+        fullName: { type: string }
+        membershipId: { type: string }
+        mobileNumber: { type: string }
+        photoUrl:
+          type: ["string", "null"]
+        feeStatus: { type: string }
+        frfEligibility:
+          type: string
+          enum: [eligible, pending_activation, suspended, not_eligible]
+        frfDue: { type: number }
+        frfPaid: { type: number }
+        frfOutstanding: { type: number }
+        collectionStatus:
+          type: string
+          enum: [paid, pending, overdue, none]
+        lastFrfPaymentAt:
+          type: ["string", "null"]
+          format: date-time
+      required: [id, fullName, membershipId, mobileNumber, feeStatus, frfEligibility, frfDue, frfPaid, frfOutstanding, collectionStatus]
+
+    MemberFrfSummary:
+      type: object
+      properties:
+        eligibility:
+          $ref: "#/components/schemas/FrfEligibility"
+        totalClaims: { type: integer }
+        totalDue: { type: number }
+        totalPaid: { type: number }
+        totalOutstanding: { type: number }
+        lastContributionAt:
+          type: ["string", "null"]
+          format: date-time
+        history:
+          type: array
+          items:
+            $ref: "#/components/schemas/MemberFrfHistoryItem"
+        referenceCollection:
+          type: object
+          properties:
+            totalReferences: { type: integer }
+            fullyPaidCount: { type: integer }
+            pendingCount: { type: integer }
+            overdueCount: { type: integer }
+            collectionRate: { type: number }
+            totalOutstanding: { type: number }
+            members:
+              type: array
+              items:
+                $ref: "#/components/schemas/FrfReferenceMemberItem"
+          required: [totalReferences, fullyPaidCount, pendingCount, overdueCount, collectionRate, totalOutstanding, members]
+      required: [eligibility, totalClaims, totalDue, totalPaid, totalOutstanding, history, referenceCollection]
+
+    FrfOverview:
+      type: object
+      properties:
+        approvedClaims: { type: integer }
+        expectedTotal: { type: number }
+        collectedTotal: { type: number }
+        outstandingTotal: { type: number }
+        collectionRate: { type: number }
+        topOutstandingMembers:
+          type: array
+          items:
+            type: object
+            properties:
+              memberId: { type: string }
+              fullName: { type: string }
+              membershipId: { type: string }
+              photoUrl:
+                type: ["string", "null"]
+              outstanding: { type: number }
+              pendingClaims: { type: integer }
+            required: [memberId, fullName, membershipId, outstanding, pendingClaims]
+      required: [approvedClaims, expectedTotal, collectedTotal, outstandingTotal, collectionRate, topOutstandingMembers]
+
+    WelfareDocument:
+      type: object
+      properties:
+        name: { type: string }
+        url: { type: string }
+        uploadedAt: { type: string }
+      required: [name, url]
+
+    WelfareRequest:
+      type: object
+      properties:
+        id: { type: string }
+        requestNumber: { type: string }
+        serviceType:
+          type: string
+          enum: [medical_aid, general_relief, emergency_response, air_ticket, india_rep]
+        memberId:
+          type: ["string", "null"]
+        applicantName: { type: string }
+        membershipId: { type: string }
+        contactNumber: { type: string }
+        status:
+          type: string
+          enum: [submitted, under_review, approved, rejected, completed]
+        amountRequested: { type: number }
+        amountApproved: { type: number }
+        description: { type: string }
+        details:
+          type: object
+          additionalProperties: true
+        supportingDocuments:
+          type: array
+          items:
+            $ref: "#/components/schemas/WelfareDocument"
+        assignedTo: { type: string }
+        approvalNotes: { type: string }
+        submittedAt:
+          type: ["string", "null"]
+          format: date-time
+        underReviewAt:
+          type: ["string", "null"]
+          format: date-time
+        underReviewBy: { type: string }
+        approvedAt:
+          type: ["string", "null"]
+          format: date-time
+        approvedBy: { type: string }
+        rejectedAt:
+          type: ["string", "null"]
+          format: date-time
+        rejectedBy: { type: string }
+        completedAt:
+          type: ["string", "null"]
+          format: date-time
+        completedBy: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required:
+        - id
+        - requestNumber
+        - serviceType
+        - applicantName
+        - membershipId
+        - contactNumber
+        - status
+        - amountRequested
+        - amountApproved
+        - description
+        - details
+        - supportingDocuments
+        - assignedTo
+        - approvalNotes
+        - underReviewBy
+        - approvedBy
+        - rejectedBy
+        - completedBy
+        - createdAt
+        - updatedAt
+
+    WelfareRequestInput:
+      type: object
+      properties:
+        serviceType:
+          type: string
+          enum: [medical_aid, general_relief, emergency_response, air_ticket, india_rep]
+        memberId:
+          type: ["string", "null"]
+        applicantName: { type: string, minLength: 1 }
+        membershipId: { type: string }
+        contactNumber: { type: string }
+        status:
+          type: string
+          enum: [submitted, under_review, approved, rejected, completed]
+        amountRequested: { type: number, minimum: 0 }
+        amountApproved: { type: number, minimum: 0 }
+        description: { type: string }
+        details:
+          type: object
+          additionalProperties: true
+        supportingDocuments:
+          type: array
+          items:
+            $ref: "#/components/schemas/WelfareDocument"
+        assignedTo: { type: string }
+        approvalNotes: { type: string }
+      required: [serviceType, applicantName]
+
+    WelfareRequestUpdate:
+      type: object
+      description: Partial update / status transition for a welfare request. All fields optional.
+      properties:
+        serviceType:
+          type: string
+          enum: [medical_aid, general_relief, emergency_response, air_ticket, india_rep]
+        memberId:
+          type: ["string", "null"]
+        applicantName: { type: string, minLength: 1 }
+        membershipId: { type: string }
+        contactNumber: { type: string }
+        status:
+          type: string
+          enum: [submitted, under_review, approved, rejected, completed]
+        amountRequested: { type: number, minimum: 0 }
+        amountApproved: { type: number, minimum: 0 }
+        description: { type: string }
+        details:
+          type: object
+          additionalProperties: true
+        supportingDocuments:
+          type: array
+          items:
+            $ref: "#/components/schemas/WelfareDocument"
+        assignedTo: { type: string }
+        approvalNotes: { type: string }
+
+    WelfareStats:
+      type: object
+      properties:
+        total: { type: integer }
+        submittedCount: { type: integer }
+        underReviewCount: { type: integer }
+        approvedCount: { type: integer }
+        rejectedCount: { type: integer }
+        completedCount: { type: integer }
+        totalRequested: { type: number }
+        totalApproved: { type: number }
+        byType:
+          type: array
+          items:
+            type: object
+            properties:
+              type: { type: string }
+              count: { type: integer }
+              totalApproved: { type: number }
+            required: [type, count, totalApproved]
+      required:
+        - total
+        - submittedCount
+        - underReviewCount
+        - approvedCount
+        - rejectedCount
+        - completedCount
+        - totalRequested
+        - totalApproved
+        - byType
+
+    RequestUploadUrlBody:
+      type: object
+      properties:
+        name: { type: string }
+        size: { type: number }
+        contentType: { type: string }
+      required: [name, size, contentType]
+
+    RequestUploadUrlResponse:
+      type: object
+      properties:
+        uploadURL: { type: string }
+        objectPath: { type: string }
+        metadata:
+          type: object
+          properties:
+            name: { type: string }
+            size: { type: number }
+            contentType: { type: string }
+          required: [name, size, contentType]
+      required: [uploadURL, objectPath, metadata]
+
+    ReceiptRecord:
+      type: object
+      properties:
+        id: { type: string }
+        receiptNumber: { type: string }
+        receiptDate: { type: string }
+        memberName: { type: string }
+        dkmoId: { type: string }
+        jamathName: { type: string }
+        mobileNumber: { type: string }
+        whatsappNumber: { type: string }
+        amount: { type: number }
+        paymentTypes: { type: string, description: "JSON string of selected payment types" }
+        createdBy: { type: string }
+        createdAt: { type: string, format: date-time }
+      required: [id, receiptNumber, receiptDate, memberName, amount, createdAt]
+
+    ReceiptRecordInput:
+      type: object
+      properties:
+        receiptNumber: { type: string }
+        receiptDate: { type: string }
+        memberName: { type: string }
+        dkmoId: { type: string }
+        jamathName: { type: string }
+        mobileNumber: { type: string }
+        whatsappNumber: { type: string }
+        amount: { type: number, minimum: 0 }
+        paymentTypes: { type: string }
+      required: [receiptNumber, receiptDate, memberName, amount]
+
+    DashboardCashFlow:
+      type: object
+      properties:
+        totalCollected: { type: number }
+        totalDisbursed: { type: number }
+        balance: { type: number }
+        netBalance: { type: number }
+        pendingClaimsCount: { type: integer }
+        eventsThisQuarter: { type: integer }
+        selectedYear: { type: integer }
+        selectedQuarter: { type: integer }
+        upcomingEvents:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              title: { type: string }
+              startDate: { type: string }
+              location: { type: string }
+            required: [id, title, startDate]
+      required: [totalCollected, totalDisbursed, balance, netBalance, pendingClaimsCount, eventsThisQuarter, selectedYear, selectedQuarter, upcomingEvents]
+
+    DashboardImpact:
+      type: object
+      properties:
+        totalMembers: { type: integer }
+        frfBeneficiaries: { type: integer }
+        medicalAidCases: { type: integer }
+        loanBeneficiaries: { type: integer }
+        airTicketBeneficiaries: { type: integer }
+        emergencyReliefCases: { type: integer }
+        generalReliefCases: { type: integer }
+        totalWelfareRequests: { type: integer }
+        totalAssistanceDistributed: { type: number }
+        assistanceByCategory:
+          type: array
+          items:
+            type: object
+            properties:
+              category: { type: string }
+              count: { type: integer }
+              amount: { type: number }
+            required: [category, count, amount]
+        welfareByType:
+          type: array
+          items:
+            type: object
+            properties:
+              type: { type: string }
+              count: { type: integer }
+            required: [type, count]
+      required:
+        - totalMembers
+        - frfBeneficiaries
+        - medicalAidCases
+        - loanBeneficiaries
+        - airTicketBeneficiaries
+        - emergencyReliefCases
+        - generalReliefCases
+        - totalWelfareRequests
+        - totalAssistanceDistributed
+        - assistanceByCategory
+        - welfareByType
+
+    CommitteePerformanceEntry:
+      type: object
+      properties:
+        name: { type: string }
+        membersRecruited: { type: integer }
+        feesCollected: { type: number }
+        frfCount: { type: integer }
+        frfAmount: { type: number }
+        welfareHandled: { type: integer }
+        loansProcessed: { type: integer }
+        medicalAidProcessed: { type: integer }
+        emergencyResolved: { type: integer }
+        frfReferred: { type: integer }
+        totalContributionScore: { type: integer }
+        totalActions: { type: integer }
+      required:
+        - name
+        - membersRecruited
+        - feesCollected
+        - frfCount
+        - frfAmount
+        - welfareHandled
+        - loansProcessed
+        - medicalAidProcessed
+        - emergencyResolved
+        - frfReferred
+        - totalContributionScore
+        - totalActions
+
+    CommitteePerformance:
+      type: object
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/CommitteePerformanceEntry"
+      required: [entries]
+
+    MemberAssistanceItem:
+      type: object
+      properties:
+        id: { type: string }
+        category: { type: string }
+        referenceNumber: { type: string }
+        date: { type: string, nullable: true }
+        amountRequested: { type: number }
+        amountApproved: { type: number }
+        status: { type: string }
+        description: { type: string }
+      required: [id, category, referenceNumber, date, amountRequested, amountApproved, status, description]
+
+    MemberAssistanceHistory:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/MemberAssistanceItem"
+        totalReceived: { type: number }
+        totalCount: { type: integer }
+      required: [items, totalReceived, totalCount]
+
+    Meeting:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        meetingDate: { type: string }
+        location: { type: string }
+        notes: { type: string }
+        totalCount: { type: integer }
+        presentCount: { type: integer }
+        absentCount: { type: integer }
+        attendancePercentage: { type: number }
+        createdAt: { type: string }
+      required:
+        - id
+        - title
+        - meetingDate
+        - location
+        - notes
+        - totalCount
+        - presentCount
+        - absentCount
+        - attendancePercentage
+        - createdAt
+
+    MeetingInput:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+        meetingDate:
+          type: string
+          minLength: 1
+        location: { type: string }
+        notes: { type: string }
+      required:
+        - title
+        - meetingDate
+
+    AttendanceRow:
+      type: object
+      properties:
+        memberId: { type: string, format: uuid }
+        membershipId: { type: string }
+        fullName: { type: string }
+        location: { type: string }
+        mobileNumber: { type: string }
+        status:
+          type: string
+          enum: [present, absent]
+      required:
+        - memberId
+        - membershipId
+        - fullName
+        - location
+        - mobileNumber
+        - status
+
+    MeetingDetail:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        meetingDate: { type: string }
+        location: { type: string }
+        notes: { type: string }
+        totalCount: { type: integer }
+        presentCount: { type: integer }
+        absentCount: { type: integer }
+        attendancePercentage: { type: number }
+        createdAt: { type: string }
+        attendance:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttendanceRow"
+      required:
+        - id
+        - title
+        - meetingDate
+        - location
+        - notes
+        - totalCount
+        - presentCount
+        - absentCount
+        - attendancePercentage
+        - createdAt
+        - attendance
+
+    AttendanceRecordInput:
+      type: object
+      properties:
+        memberId: { type: string, format: uuid }
+        status:
+          type: string
+          enum: [present, absent]
+      required:
+        - memberId
+        - status
+
+    AttendanceUpdate:
+      type: object
+      properties:
+        records:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttendanceRecordInput"
+      required:
+        - records

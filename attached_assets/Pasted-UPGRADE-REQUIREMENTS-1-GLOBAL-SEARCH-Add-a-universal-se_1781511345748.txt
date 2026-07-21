@@ -1,0 +1,256 @@
+UPGRADE REQUIREMENTS:
+
+1. GLOBAL SEARCH
+Add a universal search bar in the header.
+Allow searching across:
+- Members
+- Claims
+- Loans
+- Receipts
+- Payments
+- Sponsors
+- FRF Applications
+- Documents
+
+Provide fast search with autocomplete.
+
+--------------------------------------------------
+
+2. AUDIT TRAIL SYSTEM
+Create a complete activity log.
+
+Track:
+- Login
+- Logout
+- Member Creation
+- Member Edit
+- Member Delete
+- Payment Creation
+- Claim Approval
+- Claim Rejection
+- Loan Approval
+- Loan Closure
+- Document Upload
+- Settings Changes
+
+Store:
+- User
+- Action
+- Module
+- Date
+- Time
+- IP Address (optional)
+
+Add filters and export options.
+
+--------------------------------------------------
+
+3. ROLE-BASED ACCESS CONTROL
+Strengthen permissions.
+
+Suggested Roles:
+- Super Admin
+- Admin
+- Secretary
+- Treasurer
+- Claims Reviewer
+- Event Manager
+- Viewer
+
+Allow granular permissions:
+Create
+View
+Edit
+Delete
+Approve
+Export
+
+--------------------------------------------------
+
+4. MEMBER PROFILE PAGE
+Create a consolidated member profile view.
+
+Display:
+- Personal Information
+- Contact Information
+- Membership Status
+- Contributions History
+- Claims History
+- Loan History
+- Documents
+- Events Participation
+- Notifications
+
+Use tabs for organization.
+
+--------------------------------------------------
+
+5. DASHBOARD IMPROVEMENTS
+
+Keep current dashboard structure.
+
+Add:
+- Collection Trend
+- Membership Growth Trend
+- Claims Trend
+- Loan Recovery Trend
+
+Show:
+- Monthly Change %
+- Yearly Change %
+
+Add quick actions:
++ Add Member
++ Add Contribution
++ Create Event
++ Create Claim
+
+--------------------------------------------------
+
+6. REPORTING IMPROVEMENTS
+
+Every report should support:
+- PDF Export
+- Excel Export
+- CSV Export
+- Print
+
+Add date range filters.
+
+Add charts where relevant.
+
+--------------------------------------------------
+
+7. TABLE IMPROVEMENTS
+
+Across all modules:
+
+Add:
+- Column Sorting
+- Advanced Filtering
+- Saved Filters
+- Bulk Actions
+- Pagination
+- Search
+
+Improve responsiveness.
+
+--------------------------------------------------
+
+8. DOCUMENT MANAGEMENT
+
+Enhance document module.
+
+Add:
+- Categories
+- Tags
+- Preview
+- Download
+- Version Tracking
+- Upload History
+
+--------------------------------------------------
+
+9. RECEIPT SYSTEM IMPROVEMENTS
+
+Keep current receipt generator.
+
+Add:
+- QR Verification
+- Receipt Verification Page
+- Auto Receipt Number Generation
+- Duplicate Detection
+
+--------------------------------------------------
+
+10. LOAN MANAGEMENT IMPROVEMENTS
+
+Add:
+- Repayment Schedule
+- Overdue Tracking
+- Loan Aging Analysis
+- Recovery Percentage
+- EMI Tracking
+
+--------------------------------------------------
+
+11. CLAIMS MANAGEMENT IMPROVEMENTS
+
+Add workflow timeline:
+
+Submitted
+Under Review
+Approved
+Disbursed
+
+Display timestamps.
+
+Allow document attachments.
+
+--------------------------------------------------
+
+12. APPLICATION PORTAL IMPROVEMENTS
+
+Add:
+- Progress Percentage
+- Save Draft
+- Better Validation
+- Application Timeline
+- Status History
+
+Validation Rules:
+- No future DOB
+- Passport validation
+- Mobile validation
+- Required fields validation
+
+--------------------------------------------------
+
+13. SECURITY IMPROVEMENTS
+
+Implement:
+- Strong Password Rules
+- Session Timeout
+- Login Attempt Limiting
+- CSRF Protection
+- XSS Protection
+- Secure File Upload Validation
+
+--------------------------------------------------
+
+14. BACKUP MANAGEMENT
+
+Create backup center.
+
+Show:
+- Last Backup
+- Backup Status
+- Restore Point History
+
+Support:
+- Manual Backup
+- Scheduled Backup
+
+--------------------------------------------------
+
+15. UI/UX POLISH
+
+Improve:
+- Empty States
+- Loading States
+- Success Messages
+- Error Messages
+
+Maintain existing design language.
+
+Do NOT redesign the portal.
+
+Keep:
+- Existing branding
+- Existing colors
+- Existing navigation
+
+Focus only on professional refinement and production readiness.
+
+GOAL:
+Transform the current DKMO Karnataka Portal from a 9.3/10 system into a production-grade 10/10 organization management platform while preserving all existing workflows and modules.

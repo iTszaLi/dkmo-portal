@@ -1,0 +1,200 @@
+Update the DKMO Portal with the latest official DKMO 2026–27 committee structure, FRF information, organization details, and realistic community data.
+
+IMPORTANT:
+Dark mode is already fixed.
+Do NOT change the dark theme again.
+Focus ONLY on updating and improving the organizational/community data, committee structure, FRF module, and member realism.
+
+==================================================
+🏛️ DKMO ORGANIZATION CONTEXT
+==================================================
+
+The portal represents:
+Dakshina Karnataka Muslim Okkoota (DKMO), Riyadh.
+
+DKMO has been actively involved in:
+- Community welfare
+- Family Relief Fund (FRF)
+- Charity initiatives
+- Emergency assistance
+- Sponsorship support
+- AGBM meetings
+- Elections
+- Employment schemes
+- Community events
+
+The portal should now reflect realistic DKMO organizational structure and data.
+
+==================================================
+❤️ UPDATE FRF (FAMILY RELIEF FUND) MODULE
+==================================================
+
+Update the FRF module with realistic information:
+
+- DKMO has been running the FRF scheme for 18 years.
+- Under FRF, Rs 3 lakh has been provided to families of deceased members back home.
+- DKMO also arranged air tickets for ailing NRIs unable to afford expenses.
+
+Add features:
+- FRF beneficiaries
+- Emergency assistance records
+- Air ticket support records
+- Claim approval tracking
+- FRF contribution tracking
+- Nominee details
+- Pending/approved/rejected requests
+
+Add realistic sample FRF records.
+
+==================================================
+👥 UPDATE MEMBER DATA
+==================================================
+
+Replace generic/random member data with realistic DKMO-style community member data.
+
+Members should:
+- Be from South Karnataka regions
+- Include realistic names
+- Include occupations
+- Include GCC cities/countries
+- Include membership IDs
+- Include contribution history
+
+Use realistic South Karnataka Muslim community names and locations.
+
+==================================================
+🏛️ UPDATE COMMITTEE MODULE
+==================================================
+
+Add the official DKMO 2026–27 committee members.
+
+Create a committee management page showing:
+- Name
+- Role
+- Status
+- Department
+- Contact
+- Profile card
+
+==================================================
+📋 OFFICIAL DKMO 2026–27 COMMITTEE
+==================================================
+
+1. Fazlurrahman Kolkar - President
+2. Asif Kannur - Vice President
+3. Irshad Bajpe - General Secretary
+4. Abdul Rahiman Sulaiman - Treasurer
+5. Sameen Khan Ummer - Joint Secretary
+6. Abdul Azeez Bajpe - Overseas Convenor
+7. Salman Noor - Advisor
+8. G K Shaikh - Advisor
+9. Haneef B K - Advisor
+10. Ghani Ahmed Mulki - Loan Convenor
+11. Shamsuddin Addoor - Loan Convenor (Recovery)
+12. Yousuf Addoor - Auditor
+13. Irfan Shaikh - Verification Team Leader
+14. Ashraf Kozhikan - Event Organizer
+15. Shareef Thokur - Event Organizer
+16. Hameed Nazeer - Event Organizer
+17. Nazeer Hassan - Event Organizer
+18. Sadiq Ahmed Udupi - Employment Scheme
+19. Akhil Ganjimutt - Employment Scheme
+20. Ashraf Sheikh Koteshwar - FRF Convenor
+21. Mohammed Haris Byndoor - FRF Convenor
+22. Haneef N S - Executive Member
+23. Zia Ganjimutt - Executive Member
+24. Razik Bajpe - Executive Member
+25. Yousuf Kalanjibail - Executive Member
+26. Shaul Hameed - Executive Member
+27. Nayaz Ahmed - Executive Member
+28. Abdul Majeed Vittal - Executive Member
+29. Rafee Hameed Uchchila - Executive Member
+
+==================================================
+📅 AGBM & EVENTS MODULE
+==================================================
+
+Add realistic AGBM details:
+- Annual General Body Meeting
+- Ramada Hotel, Batha, Riyadh
+- Attendance of 150+ members
+- Quran recitation section
+- Welcome speech
+- Annual report section
+- Charity speech
+- Election process
+- Vote of thanks
+
+Create:
+- Event history
+- Event cards
+- AGBM reports
+- Event timeline
+- Attendance tracker
+
+==================================================
+🏆 FELICITATION MODULE
+==================================================
+
+Add a recognition/felicitation section.
+
+Include honored members:
+- Ghani Ahmed
+- Ashraf Khozi
+- Shamsuddin Addoor
+
+Show:
+- Award reason
+- Contribution
+- Recognition year
+
+==================================================
+📊 DASHBOARD IMPROVEMENTS
+==================================================
+
+Update dashboard analytics with:
+- FRF fund statistics
+- Community welfare statistics
+- Active committee count
+- Event statistics
+- Member contribution trends
+- Employment scheme statistics
+- Welfare assistance metrics
+
+==================================================
+🔔 NOTIFICATIONS
+==================================================
+
+Generate realistic notifications such as:
+- New committee formed
+- FRF claim approved
+- Upcoming AGBM
+- Pending member contribution
+- Event announcement
+- Welfare support request
+
+==================================================
+🌱 SEED REALISTIC DATA
+==================================================
+
+Generate realistic DKMO-related sample data for:
+- Members
+- Events
+- FRF claims
+- Contributions
+- Sponsors
+- Committee records
+- Notifications
+
+Avoid fake/random western dummy data.
+
+==================================================
+⚠️ IMPORTANT
+==================================================
+
+- Keep the current dark mode intact
+- Maintain professional enterprise UI
+- Ensure all new modules match existing design
+- Use realistic South Karnataka + GCC community context
+- Keep all analytics dynamic and database-driven
+- Do not break existing dashboard functionality

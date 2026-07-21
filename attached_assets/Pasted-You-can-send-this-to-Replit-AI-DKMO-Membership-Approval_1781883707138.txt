@@ -1,0 +1,137 @@
+You can send this to Replit AI:
+
+---
+
+### DKMO Membership Approval Certificate & PDF Security Upgrade
+
+Please enhance the **Application Status Page** and Membership Approval workflow.
+
+#### 1. Approved Applications Only
+
+When an application is approved by an Admin inside the DKMO Portal:
+
+* Change status from **Pending Approval** to **Approved by DKMO**.
+* Show a green success card with approval date.
+* Only after approval, display:
+
+  * **Download PDF**
+  * **Print PDF**
+
+Buttons.
+
+Applicants must not be able to download or print the official membership document before approval.
+
+---
+
+#### 2. Official DKMO Approval Stamp
+
+Create a professional circular approval stamp automatically added to the generated PDF.
+
+Stamp Text:
+
+**APPROVED BY DKMO**
+
+Outer Ring:
+
+* DAKSHINA KANNADA MUSLIM ORGANIZATION
+* KINGDOM OF SAUDI ARABIA
+
+Center:
+
+* ✓ APPROVED
+* DKMO Official
+
+Design Requirements:
+
+* Circular stamp design
+* Green and gold color combination
+* Professional government/organization style
+* High resolution
+* Slight transparency (not too dark)
+* Automatically placed on approved PDFs
+
+---
+
+#### 3. PDF Watermark Protection
+
+Add a large transparent DKMO logo watermark in the center of every approved PDF.
+
+Requirements:
+
+* Use official DKMO logo
+* Large size
+* Opacity around 8–12%
+* Visible but not distracting
+* Appears behind all content
+* Helps prevent duplication and unofficial recreation
+
+Like professional certificates issued by organizations and government bodies.
+
+---
+
+#### 4. Approved Membership PDF Layout
+
+The generated PDF should contain:
+
+* DKMO Logo at top
+* Member Photo
+* Member Name
+* DKMO Membership Number
+* Application Number
+* Mobile Number
+* Membership Status
+* Approval Date
+* QR Verification Code
+* Official DKMO Approval Stamp
+* DKMO Watermark Background
+
+---
+
+#### 5. QR Verification System
+
+Add a QR code to every approved PDF.
+
+When scanned:
+
+* Opens the member verification page.
+* Shows:
+
+  * Member Name
+  * Membership Number
+  * Status = Active
+  * Approval Date
+
+This makes the PDF instantly verifiable and difficult to fake.
+
+---
+
+#### 6. Application Status Page UI
+
+After approval show:
+
+✅ Membership Approved
+
+And display:
+
+* Download Official PDF
+* Print Official PDF
+* View Member Profile
+
+Buttons.
+
+Use smooth animations and success indicators so applicants clearly know their membership has been approved.
+
+---
+
+#### 7. Security Measures
+
+Prevent unauthorized duplication by:
+
+* Watermarking every PDF
+* Adding unique QR verification
+* Including Membership ID
+* Including Approval Date
+* Generating PDF directly from database records
+* Preventing edits after approval unless done by Admin
+
+The final result should look like a professional membership certificate issued by an official organization, with strong authenticity and verification features.

@@ -1,0 +1,968 @@
+UPGRADE REQUIREMENTS
+IMPORTANT:
+Do NOT redesign the portal.
+Maintain:
+•	Existing branding
+•	Existing colors
+•	Existing layout
+•	Existing navigation
+•	Existing workflows
+Goal:
+Transform the DKMO Karnataka Portal from a 9.3/10 system into a production-grade 10/10 organization management platform while preserving all existing functionality.
+________________________________________
+1.	GLOBAL SEARCH
+Add a universal search bar in the header.
+Allow searching across:
+•	Members
+•	Claims
+•	Loans
+•	Receipts
+•	Payments
+•	Sponsors
+•	FRF Applications
+•	Documents
+•	Events
+Provide:
+•	Fast search
+•	Autocomplete
+•	Recent searches
+•	Search suggestions
+________________________________________
+2.	AUDIT TRAIL SYSTEM
+Create a complete activity log.
+Track:
+•	Login
+•	Logout
+•	Member Creation
+•	Member Edit
+•	Member Delete
+•	Payment Creation
+•	Claim Approval
+•	Claim Rejection
+•	Loan Approval
+•	Loan Closure
+•	Document Upload
+•	Settings Changes
+Store:
+•	User
+•	Action
+•	Module
+•	Date
+•	Time
+•	IP Address (optional)
+Features:
+•	Filtering
+•	Search
+•	Export to PDF
+•	Export to Excel
+•	Export to CSV
+________________________________________
+3.	ROLE-BASED ACCESS CONTROL
+Strengthen permissions.
+Roles:
+•	Super Admin
+•	Admin
+•	Secretary
+•	Treasurer
+•	Claims Reviewer
+•	Event Manager
+•	Viewer
+Permissions:
+•	Create
+•	View
+•	Edit
+•	Delete
+•	Approve
+•	Export
+Allow module-level and action-level permissions.
+________________________________________
+4.	MEMBER PROFILE PAGE
+Create a consolidated member profile page.
+Display:
+•	Personal Information
+•	Contact Information
+•	Membership Status
+•	Contributions History
+•	Claims History
+•	Loan History
+•	Documents
+•	Event Participation
+•	Notifications
+•	Referral Statistics
+Use tabs for organization.
+________________________________________
+5.	DASHBOARD IMPROVEMENTS
+Keep current dashboard structure.
+Add:
+•	Collection Trend
+•	Membership Growth Trend
+•	Claims Trend
+•	Loan Recovery Trend
+Show:
+•	Monthly Change %
+•	Yearly Change %
+Quick Actions:
+•	Add Member
+•	Add Contribution
+•	Create Event
+•	Create Claim
+________________________________________
+6.	REPORTING IMPROVEMENTS
+Every report should support:
+•	PDF Export
+•	Excel Export
+•	CSV Export
+•	Print
+Add:
+•	Date Range Filters
+•	Charts
+•	Summary Cards
+•	Comparative Reports
+________________________________________
+7.	TABLE IMPROVEMENTS
+Across all modules:
+Add:
+•	Column Sorting
+•	Advanced Filtering
+•	Saved Filters
+•	Bulk Actions
+•	Pagination
+•	Search
+•	Column Visibility Toggle
+Improve responsiveness.
+________________________________________
+8.	DOCUMENT MANAGEMENT
+Enhance document module.
+Add:
+•	Categories
+•	Tags
+•	Preview
+•	Download
+•	Version Tracking
+•	Upload History
+•	File Size Display
+•	Uploaded By
+•	Upload Date
+•	Expiry Date
+•	Status
+________________________________________
+8A. DOCUMENTS VS RECEIPTS RESTRUCTURE
+Current issue:
+The "Documents" module and "Print Receipts" module contain overlapping receipt records, causing confusion and duplicate functionality.
+Required restructuring:
+PRINT RECEIPTS MODULE
+Purpose:
+Receipt Retrieval Center
+Functions:
+•	Search Receipts
+•	Preview Receipts
+•	Print Receipts
+•	Download PDF Receipts
+•	Reprint Historical Receipts
+Search Filters:
+•	Receipt Number
+•	Member Name
+•	DKMO ID
+•	Date Range
+•	Payment Type
+Features:
+•	Print
+•	PDF Download
+•	QR Verification
+•	Receipt Verification
+This module must ONLY manage receipts.
+DOCUMENT MANAGEMENT MODULE
+Convert Documents into a true Document Management System.
+Do NOT store receipt records here.
+Store:
+Member Documents
+•	Passport Copies
+•	Iqama Copies
+•	Profile Photos
+•	Membership Forms
+FRF Documents
+•	FRF Applications
+•	Approval Letters
+•	Claim Attachments
+•	Supporting Evidence
+Loan Documents
+•	Loan Agreements
+•	Guarantor Forms
+•	Repayment Documents
+Committee Documents
+•	Meeting Minutes
+•	Resolutions
+•	Circulars
+General Documents
+•	Policies
+•	Reports
+•	Announcements
+•	Administrative Files
+Features:
+•	Categories
+•	Tags
+•	Preview
+•	Download
+•	Version History
+•	Upload History
+•	File Size
+•	Uploaded By
+•	Upload Date
+•	Expiry Date
+•	Document Status
+________________________________________
+9.	RECEIPT SYSTEM IMPROVEMENTS
+Keep current receipt generator.
+Add:
+•	QR Verification
+•	Receipt Verification Page
+•	Auto Receipt Number Generation
+•	Duplicate Detection
+•	Receipt Preview Before Print
+•	Member Receipt History
+________________________________________
+10.	LOAN MANAGEMENT IMPROVEMENTS
+Add:
+•	Repayment Schedule
+•	EMI Tracking
+•	Overdue Tracking
+•	Loan Aging Analysis
+•	Recovery Percentage
+•	Payment Timeline
+Dashboard:
+•	Active Loans
+•	Overdue Loans
+•	Recovery Performance
+________________________________________
+11.	CLAIMS MANAGEMENT IMPROVEMENTS
+Add workflow timeline:
+•	Submitted
+•	Under Review
+•	Approved
+•	Disbursed
+Display:
+•	Timestamp
+•	Action User
+•	Status History
+Allow:
+•	Multiple Attachments
+•	Supporting Documents
+•	Internal Notes
+________________________________________
+12.	APPLICATION PORTAL IMPROVEMENTS
+Add:
+•	Progress Percentage
+•	Save Draft
+•	Better Validation
+•	Application Timeline
+•	Status History
+•	Submission Tracking
+Validation Rules:
+•	No Future DOB
+•	Passport Validation
+•	Mobile Validation
+•	Required Fields Validation
+•	Duplicate Application Detection
+________________________________________
+13.	SECURITY IMPROVEMENTS
+Implement:
+•	Strong Password Rules
+•	Session Timeout
+•	Login Attempt Limiting
+•	CSRF Protection
+•	XSS Protection
+•	Secure File Upload Validation
+•	Role Security Enforcement
+•	Audit Security Monitoring
+________________________________________
+14.	BACKUP MANAGEMENT
+Create Backup Center.
+Display:
+•	Last Backup
+•	Backup Status
+•	Restore Point History
+Support:
+•	Manual Backup
+•	Scheduled Backup
+•	Backup Download
+•	Restore Operations
+________________________________________
+15.	UI/UX POLISH
+Improve:
+•	Empty States
+•	Loading States
+•	Success Messages
+•	Error Messages
+•	Validation Messages
+•	Responsive Layouts
+Maintain current design language.
+No redesign.
+________________________________________
+16.	FRF MEMBERSHIP DRIVE RANKING & MOMENTO AWARD SYSTEM
+Purpose:
+Encourage members to bring more people into the FRF Membership Scheme.
+Referral Tracking:
+Every FRF application should support:
+•	Referred By Member
+•	Referrer DKMO ID
+•	Referral Date
+Track:
+•	Total Referrals
+•	Approved Referrals
+•	Pending Referrals
+•	Rejected Referrals
+Create FRF Ambassador Leaderboard.
+Leaderboard Rankings:
+Show:
+•	Rank
+•	Member Name
+•	DKMO ID
+•	Total Referrals
+•	Approved Referrals
+•	Current Points
+Points System:
+Example:
+•	1 Approved FRF Member = 1 Point
+Dashboard Widget:
+Display:
+•	Top 10 Referrers
+•	Monthly Rankings
+•	Yearly Rankings
+•	All-Time Rankings
+Recognition System:
+Automatically identify:
+•	Top 1 Referrer
+•	Top 2 Referrer
+•	Top 3 Referrer
+Award Status:
+•	Eligible for Momento
+•	Awarded
+•	Pending Review
+Award Module:
+Create FRF Ambassador Awards page.
+Display:
+•	Current Rankings
+•	Previous Winners
+•	Award History
+•	Annual Winners
+Reports:
+Generate:
+•	Monthly Referral Report
+•	Annual Referral Report
+•	Top Referrer Report
+Member Profile Integration:
+Display:
+•	Referrals Made
+•	Approved Referrals
+•	Referral Ranking
+•	Awards Won
+Notifications:
+Notify members when:
+•	Referral Approved
+•	Ranking Improved
+•	Entered Top 10
+•	Entered Top 3
+•	Selected for Momento Award
+Dashboard Card:
+FRF Membership Drive Leaders
+Display:
+🥇 Top Referrer
+🥈 Second Place
+🥉 Third Place
+B. Application & Claim Timeline
+For every FRF Membership Application and FRF Claim, maintain a timeline.
+Example:
+Application Submitted
+15 Jun 2026 – 10:00 AM
+Moved to Under Review
+16 Jun 2026 – 11:20 AM
+Approved
+17 Jun 2026 – 03:45 PM
+Store:
+•	User who performed action 
+•	Date 
+•	Time 
+•	Notes (optional) 
+Show timeline inside the application detail page.
+________________________________________
+C. PDF Generation
+Allow PDF generation for:
+FRF Membership
+•	Individual Application PDF 
+•	Approval Letter PDF 
+•	Rejection Letter PDF 
+FRF Claims
+•	Claim Application PDF 
+•	Approval PDF 
+•	Rejection PDF 
+•	Disbursement PDF 
+PDF should include:
+•	DKMO Branding 
+•	FRF Number / Claim Number 
+•	Member Details 
+•	Status 
+•	Dates 
+•	Authorized Signature Area 
+•	QR Verification Code 
+________________________________________
+D. Clickable Statistics Cards
+Current dashboard cards are only visual.
+Make ALL statistic cards clickable and interactive.
+FRF Membership Cards
+•	Total 
+•	Pending Review 
+•	Approved 
+•	New This Month 
+When clicked:
+Filter the table automatically.
+Examples:
+Click "Approved"
+→ Show only approved applications.
+Click "Pending Review"
+→ Show only pending/under-review applications.
+Click "New This Month"
+→ Show applications created this month.
+Click "Total"
+→ Show all applications.
+________________________________________
+FRF Claims Cards
+Make clickable:
+•	Total Claims 
+•	Pending 
+•	Approved 
+•	Total Disbursed 
+•	Death Benefit 
+•	Emergency Assistance 
+•	Air Ticket Support 
+•	Other 
+Examples:
+Click "Death Benefit"
+→ Show only Death Benefit claims.
+Click "Emergency Assistance"
+→ Show only Emergency Assistance claims.
+Click "Approved"
+→ Show only approved claims.
+Click "Pending"
+→ Show only pending and under-review claims.
+Click "Total Disbursed"
+→ Show only disbursed claims.
+Cards should behave like dashboard filters.
+Selected card should highlight visually.
+________________________________________
+E. Advanced FRF Filters
+For FRF Membership:
+Add filters:
+•	Status 
+•	Area 
+•	Occupation 
+•	Blood Group 
+•	Application Date Range 
+•	Approval Date Range 
+For FRF Claims:
+Add filters:
+•	Claim Type 
+•	Status 
+•	Amount Range 
+•	Date Range 
+•	Beneficiary 
+•	Disbursement Status 
+Allow combining multiple filters.
+________________________________________
+18. FRF RECRUITMENT LEADERBOARD & MOMENTO AWARD SYSTEM
+Create a referral-based FRF Membership Drive system.
+Purpose:
+Track members who bring new people into the FRF scheme.
+Referral Tracking
+Every FRF Application should support:
+Referred By:
+•	Member Name 
+•	Member ID 
+When a new FRF application is approved:
+Increment referral count of the referring member.
+________________________________________
+FRF Ambassador Leaderboard
+Create new module:
+FRF Ambassadors
+Display:
+•	Rank 
+•	Member Name 
+•	Member ID 
+•	Area 
+•	Total Referrals 
+•	Approved Referrals 
+•	Rejected Referrals 
+•	Conversion Rate % 
+Leaderboard should auto-update.
+________________________________________
+Top Recruiters
+Show:
+🏆 1st Place
+🥈 2nd Place
+🥉 3rd Place
+Based on:
+•	Approved FRF memberships generated 
+Allow filtering by:
+•	Monthly 
+•	Quarterly 
+•	Yearly 
+•	All Time 
+________________________________________
+Momento Award System
+Create Award Dashboard.
+Automatically identify:
+•	Top 3 Recruiters 
+Generate:
+•	Award Certificate PDF 
+•	Momento Recommendation List 
+•	Recognition Report 
+Display:
+•	Award Winner 
+•	Referral Count 
+•	Rank 
+•	Award Year 
+________________________________________
+Dashboard Widgets
+Add:
+Top FRF Recruiters
+This Month:
+1.	Member A – 15 Referrals 
+2.	Member B – 12 Referrals 
+3.	Member C – 9 Referrals 
+This Year:
+1.	Member X – 74 Referrals 
+2.	Member Y – 61 Referrals 
+3.	Member Z – 55 Referrals 
+________________________________________
+Reporting
+Create reports:
+•	Referral Performance Report 
+•	FRF Recruitment Report 
+•	Top Recruiters Report 
+•	Award Eligibility Report 
+Support:
+•	PDF 
+•	Excel 
+•	CSV 
+•	Print 
+________________________________________
+Goal
+Transform FRF Membership and FRF Claims into a complete workflow-driven system with approval tracking, PDF generation, interactive dashboards, referral tracking, recruiter rankings, and automated Momento Award management while preserving the existing DKMO design and workflows.
+
+This feature should motivate members to actively promote and grow the FRF Membership Scheme.
+CLICKABLE KPI CARDS & SMART FILTERING
+Current dashboard statistic cards are only visual.
+Make ALL statistic cards clickable and interactive across the portal.
+FRF Membership Module
+Make these cards clickable:
+•	Total 
+•	Pending 
+•	Approved 
+•	New This Month 
+Behavior:
+When a card is clicked:
+•	Filter the table automatically 
+•	Highlight active card 
+•	Update search/filter state 
+•	Show only matching applications 
+Examples:
+Total
+→ Show all FRF applications
+Pending
+→ Show only applications with Pending status
+Under Review
+→ Show only applications currently under review
+Approved
+→ Show only approved applications
+Rejected
+→ Show only rejected applications
+New This Month
+→ Show applications created during current month
+Add count badges that update automatically.
+________________________________________
+FRF Claims Module
+Make these cards clickable:
+•	Total Claims 
+•	Pending 
+•	Approved 
+•	Total Disbursed 
+Behavior:
+Total Claims
+→ Show all claims
+Pending
+→ Show pending claims
+Under Review
+→ Show claims currently being reviewed
+Approved
+→ Show approved claims
+Rejected
+→ Show rejected claims
+Total Disbursed
+→ Show only claims that have been approved and disbursed
+________________________________________
+Also make these claim type cards clickable:
+•	Death Benefit 
+•	Emergency Assistance 
+•	Air Ticket Support 
+•	Education 
+•	Medical 
+•	Marriage 
+•	Other 
+Clicking a card should instantly filter the claims table.
+________________________________________
+Committee Module
+Current committee category cards should be clickable:
+•	Executive 
+•	Finance 
+•	Overseas 
+•	Advisory 
+•	Operations 
+•	Events 
+•	Welfare 
+•	FRF 
+Behavior:
+Clicking a category:
+•	Filters committee members list 
+•	Displays only members from that category 
+•	Updates counts automatically 
+•	Highlights selected category 
+Add:
+•	"All Committee Members" card 
+•	Total committee count 
+•	Search committee member 
+•	Export filtered committee list 
+________________________________________
+Visual Behavior
+For ALL clickable dashboard cards:
+Add:
+•	Hover effect 
+•	Active state 
+•	Selected state 
+•	Smooth transition 
+•	Pointer cursor 
+Active card should visually stand out.
+________________________________________
+18. FRF APPLICATION STATUS WORKFLOW
+Current FRF Membership records need proper workflow management.
+Add Action button for every application.
+Actions:
+•	View 
+•	Edit 
+•	Approve 
+•	Reject 
+•	Print 
+•	Download PDF 
+Status Logic:
+Pending
+Application submitted but never opened/reviewed.
+Under Review
+Application opened by admin and currently being reviewed.
+Approved
+Application approved and accepted.
+Rejected
+Application rejected.
+Store:
+•	Status 
+•	Status Changed By 
+•	Status Changed Date 
+•	Remarks/Notes 
+Display status history timeline.
+Example:
+Submitted
+↓
+Under Review
+↓
+Approved
+or
+Submitted
+↓
+Under Review
+↓
+Rejected
+________________________________________
+19. FRF CLAIMS STATUS WORKFLOW
+Add Action menu for every claim.
+Actions:
+•	View 
+•	Edit 
+•	Under Review 
+•	Approve 
+•	Reject 
+•	Mark Disbursed 
+•	Print Claim Form 
+•	Download PDF 
+Status Flow:
+Pending
+↓
+Under Review
+↓
+Approved
+↓
+Disbursed
+OR
+Pending
+↓
+Under Review
+↓
+Rejected
+Show:
+•	Timeline 
+•	Review Date 
+•	Approval Date 
+•	Disbursement Date 
+•	Approved By 
+•	Rejected By 
+•	Remarks 
+________________________________________
+20. FRF APPLICATION & CLAIM PDF GENERATION
+Add PDF generation for both modules.
+FRF Membership PDF
+Printable application form including:
+•	Applicant Details 
+•	Saudi Contact 
+•	India Contact 
+•	Nominees 
+•	Dependents 
+•	Status 
+•	Approval Information 
+•	FRF Number 
+Buttons:
+•	Print 
+•	Download PDF 
+________________________________________
+FRF Claims PDF
+Printable claim document including:
+•	Claim Number 
+•	Applicant 
+•	Beneficiary 
+•	Claim Type 
+•	Amount Requested 
+•	Amount Approved 
+•	Status 
+•	Review Notes 
+•	Approval Notes 
+•	Disbursement Information 
+Buttons:
+•	Print 
+•	Download PDF 
+________________________________________
+21. FRF MEMBERSHIP REFERRAL & MOMENTO AWARD SYSTEM
+Create a Referral Recognition System to encourage FRF membership growth.
+Referral Tracking
+When a new FRF application is created:
+Add:
+•	Referred By Member (optional) 
+•	Referrer DKMO ID 
+•	Referrer Name 
+Track who brought each FRF member into the scheme.
+________________________________________
+FRF Membership Drive Leaderboard
+Create a leaderboard page showing:
+•	Member Name 
+•	DKMO ID 
+•	Total Referrals 
+•	Approved Referrals 
+•	Current Rank 
+Ranking:
+#1 Top Referrer
+#2 Second Place
+#3 Third Place
+________________________________________
+Momento Awards System
+Automatically calculate yearly referral rankings.
+Create awards:
+🥇 Gold Momento
+→ Highest approved referrals
+🥈 Silver Momento
+→ Second highest
+🥉 Bronze Momento
+→ Third highest
+Show:
+•	Current Leaderboard 
+•	Previous Winners 
+•	Year-wise Winners 
+•	Referral Statistics 
+________________________________________
+Dashboard Widget
+Add:
+"Top FRF Membership Promoters"
+Show:
+Top 10 members who brought the most FRF members.
+Display:
+•	Rank 
+•	Name 
+•	Referral Count 
+________________________________________
+Reports
+Add Referral Reports:
+•	Monthly Referral Report 
+•	Yearly Referral Report 
+•	Top Referrers Report 
+•	Award Winners Report 
+22.	MEMBER LIFECYCLE & STATUS MANAGEMENT
+Create a complete member lifecycle system.
+Member Status Types:
+• Active
+• Inactive
+• Suspended
+• Deceased
+• Resigned
+• Transferred
+• Pending Approval
+Features:
+• Status change history
+• Reason for status change
+• Effective date
+• Automated notifications
+Special Handling:
+Deceased Members:
+• Automatically link to FRF claim workflow
+• Display FRF eligibility
+• Generate deceased member report
+Inactive Members:
+• Show overdue contributions
+• Reactivation workflow
+Reports:
+• Active Members
+• Inactive Members
+• Deceased Members
+• Membership Growth
+• Membership Attrition
+________________________________________
+23.	CONTRIBUTION MANAGEMENT ENHANCEMENTS
+Improve contribution tracking.
+Add:
+Contribution Types:
+• Monthly Contribution
+• FRF Contribution
+• Donation
+• Special Contribution
+• Event Contribution
+Features:
+• Contribution history per member
+• Outstanding dues tracking
+• Missed payment tracking
+• Payment reminders
+• Contribution trends
+• Auto-generated receipts
+Dashboard:
+• Current Month Collections
+• Outstanding Contributions
+• Collection Performance
+________________________________________
+24.	NOTIFICATION CENTER ENHANCEMENTS
+The notification center already exists.
+Upgrade it into a complete communication hub.
+Notification Types:
+• New Member Registered
+• FRF Application Submitted
+• FRF Application Approved
+• FRF Application Rejected
+• Claim Submitted
+• Claim Approved
+• Claim Rejected
+• Loan Approved
+• Loan Overdue
+• Event Created
+• Committee Announcement
+• Award Eligibility
+Features:
+• Read / Unread
+• Mark All Read
+• Priority Levels
+• Notification History
+• Action Links
+• User-specific Notifications
+________________________________________
+25.	EVENT MANAGEMENT ENHANCEMENTS
+Improve Events module.
+Add:
+Event Types:
+• General Meeting
+• Committee Meeting
+• Welfare Program
+• Fundraising
+• Community Gathering
+Features:
+• RSVP Tracking
+• Attendance Tracking
+• Event Documents
+• Event Photos
+• Event Reports
+• Participant List
+• Export Attendance
+Reports:
+• Event Participation
+• Attendance Trends
+• Event History
+________________________________________
+26.	DATA IMPORT & EXPORT CENTER
+Create centralized import/export management.
+Imports:
+• Members
+• Contributions
+• Loans
+• Claims
+• FRF Applications
+Support:
+• Excel
+• CSV
+Features:
+• Import Preview
+• Validation
+• Duplicate Detection
+• Error Reporting
+Exports:
+• PDF
+• Excel
+• CSV
+________________________________________
+27.	SYSTEM HEALTH & ADMINISTRATION DASHBOARD
+Create a system administration dashboard.
+Display:
+• Total Users
+• Active Users
+• Database Size
+• Storage Usage
+• Documents Count
+• Receipts Count
+• Claims Count
+• Loans Count
+• FRF Applications Count
+Monitoring:
+• Failed Logins
+• System Errors
+• Backup Status
+• Audit Log Summary
+________________________________________
+28.	ADVANCED MEMBER RELATIONSHIPS
+Create relationship mapping.
+Support:
+• Family Members
+• Spouse
+• Children
+• Parents
+• Nominees
+• Dependents
+Allow:
+• View family tree
+• View linked FRF members
+• View related claims
+This improves FRF claim processing and nominee verification.
+30.	FINAL PRODUCTION READINESS CHECKLIST
+Before completion ensure:
+• No duplicate records
+• Responsive on mobile
+• Responsive on tablet
+• Responsive on desktop
+• Loading performance optimized
+• Database indexing optimized
+• Search optimized
+• Export functions tested
+• PDF generation tested
+• Notification system tested
+• Role permissions tested
+• Backup and restore tested
+• Audit logs verified
+• Security checks completed
+GOAL:
+Deliver a fully production-ready DKMO Karnataka Portal suitable for real-world organizational operations, FRF administration, claims processing, member management, committee management, financial tracking, document management, reporting, auditing, referral campaigns, and award management while preserving the existing DKMO design, branding, navigation, workflows, and user experience.

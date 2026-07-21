@@ -1,0 +1,414 @@
+# DKMO Portal Production Data Seeding & System Population (Updated Structure)
+
+Use the following as the official DKMO Committee data for 2026–2027 and seed it into the system instead of generic demo users.
+
+## Official DKMO Committee (2026–2027)
+
+1. Fazlurrahman Kolkar – President
+2. Asif Kannur – Vice President
+3. Irshad Bajpe – General Secretary
+4. Abdul Rahiman Sulaiman – Treasurer
+5. Sameen Khan Ummer – Joint Secretary
+6. Abdul Azeez Bajpe – Overseas Convenor
+7. Salman Noor – Advisor
+8. G.K. Shaikh – Advisor
+9. Haneef B.K. – Advisor
+10. Ghani Ahmed Mulki – Loan Convenor
+11. Shamsuddin Addoor – Loan Convenor (Recovery)
+12. Yousuf Addoor – Auditor
+13. Irfan Shaikh – Verification Team Leader
+14. Ashraf Kozhikan – Event Organizer
+15. Shareef Thokur – Event Organizer
+16. Hameed Nazeer – Event Organizer
+17. Nazeer Hassan – Event Organizer
+18. Sadiq Ahmed Udupi – Employment Scheme
+19. Akhil Ganjimutt – Employment Scheme
+20. Ashraf Sheikh Koteshwar – FRF Convenor
+21. Mohammed Haris Byndoor – FRF Convenor
+22. Haneef N.S. – Executive Member
+23. Zia Ganjimutt – Executive Member
+24. Razik Bajpe – Executive Member
+25. Yousuf Kalanjibail – Executive Member
+26. Shaul Hameed – Executive Member
+27. Nayaz Ahmed – Executive Member
+28. Abdul Majeed Vittal – Executive Member
+29. Rafee Hameed Uchchila – Executive Member
+
+---
+
+# IMPORTANT STRUCTURE CHANGE
+
+There is NO separate FRF Membership module anymore.
+
+The system now operates as:
+
+### DKMO Membership
+
+Every approved DKMO member automatically becomes eligible for:
+
+* Family Relief Fund (FRF)
+* Medical Aid
+* General Relief Fund
+* Loan Scheme
+* Emergency Response Support
+* Job Bureau
+* Air Ticket Assistance
+* India Representative Support
+
+Membership and FRF eligibility are now unified.
+
+---
+
+# Membership Rules
+
+### Membership Fee
+
+One-time joining fee:
+
+SAR 100
+
+Status:
+
+* Paid
+* Pending
+* Unpaid
+
+Remove Monthly Dues entirely.
+
+Monthly dues do not exist.
+
+---
+
+# FRF Contribution Structure
+
+When an approved FRF claim occurs:
+
+Every active member becomes liable for:
+
+SAR 50 Contribution
+
+Track:
+
+* Contribution Due Date
+* Contribution Paid Date
+* Contribution Status
+* Outstanding Amount
+
+Statuses:
+
+* Paid
+* Pending
+* Overdue
+
+---
+
+# Referral & Recruitment System
+
+KEEP referral tracking.
+
+Do NOT remove referral functionality.
+
+Each member must contain:
+
+* Referred By
+* Recruiter
+* Committee Member Reference
+
+When a member joins:
+
+They must select:
+
+### "Who referred you to DKMO?"
+
+The referral list should use official committee members and approved members.
+
+---
+
+# Recruitment Leaderboard
+
+Replace Ambassador terminology.
+
+Create:
+
+### Membership Recruitment Leaderboard
+
+Track:
+
+* Members Referred
+* Approved Members
+* Pending Members
+* Membership Fees Generated
+* FRF Collection Follow-Ups
+* Referral Conversion Rate
+
+Display:
+
+* Top 3 Recruiters Dashboard Widget
+* Top 10 Recruiters Report
+* Monthly Rankings
+* Yearly Rankings
+
+---
+
+# Committee Performance Tracking
+
+Every committee member profile should display:
+
+* Members Recruited
+* Membership Fees Generated
+* Pending Membership Fees
+* FRF Collections Due
+* FRF Collections Received
+* Welfare Cases Handled
+* Claims Processed
+* Events Managed
+
+---
+
+# Members Module
+
+Replace Monthly Dues column with:
+
+### Membership Fee (SAR 100)
+
+Display:
+
+* Paid
+* Pending
+* Unpaid
+
+Add:
+
+### Referral
+
+Display referring member.
+
+Add:
+
+### FRF Status
+
+* Active
+* Suspended
+* Inactive
+
+---
+
+# Advanced Search System
+
+Implement global deep search.
+
+Search by:
+
+* Member Name
+* DKMO Membership ID
+* Mobile Number (Saudi)
+* Mobile Number (India)
+* Iqama Number
+* Passport Number
+* Email Address
+* Referral Member
+* Committee Member
+* Claim Number
+* Loan Number
+
+Search should return:
+
+* Member Profile
+* Referral Information
+* Claims
+* Contributions
+* Payments
+* Welfare Requests
+
+from a single search interface.
+
+---
+
+# Populate Modules
+
+Populate ALL modules with realistic production-quality data.
+
+Minimum requirements:
+
+* Every table = minimum 10 records
+* Major modules = 25–100+ records
+* No empty dashboards
+* No empty charts
+* No empty reports
+* No empty timelines
+* No empty widgets
+
+---
+
+# Modules To Populate
+
+* Dashboard
+* Members
+* DKMO Membership
+* Executive Committee
+* FRF Claims
+* FRF Contributions
+* Recruitment Tracking
+* Recruitment Leaderboard
+* Awards
+* Notifications
+* Reports
+* Application Timelines
+* Claim Timelines
+* Medical Aid
+* Loan Applications
+* Loan Recovery
+* Employment Scheme
+* Job Bureau
+* Air Ticket Assistance
+* India Representative Support
+* Events
+* Verification Team
+* Audit Logs
+* Activity Logs
+* Areas
+* Committees
+* User Management
+* Settings History
+* Documents
+* PDF History
+* Approval History
+* Welfare Requests
+
+---
+
+# DKMO Welfare Modules
+
+Populate realistic records for:
+
+### Medical Aid
+
+Hospital support cases.
+
+### General Relief Fund
+
+Emergency financial assistance.
+
+### Loan Scheme
+
+Interest-free member loans.
+
+### Air Ticket Assistance
+
+Stranded member travel support.
+
+### Employment Scheme
+
+Jobs and placements.
+
+### India Representative Support
+
+Government and welfare assistance.
+
+### Emergency Response
+
+Urgent support cases.
+
+---
+
+# Dashboard Requirements
+
+Populate:
+
+* Statistics Cards
+* Charts
+* Graphs
+* Top Recruiters
+* Recent Activities
+* Recent Claims
+* Recent Memberships
+* Monthly Trends
+* Yearly Trends
+* Welfare Distribution Trends
+
+All widgets must contain live-looking data.
+
+---
+
+# Reports
+
+Generate realistic reports for:
+
+* Membership Growth
+* Membership Fees Collected
+* Membership Fees Outstanding
+* FRF Contributions
+* FRF Claim Payments
+* Recruitment Performance
+* Medical Aid
+* Loan Scheme
+* Employment Scheme
+* Welfare Assistance
+* Event Participation
+
+All reports should be export-ready.
+
+---
+
+# Notifications
+
+Generate:
+
+* Membership Approvals
+* Membership Fee Reminders
+* FRF Contribution Reminders
+* Referral Notifications
+* Recruitment Awards
+* Claim Notifications
+* Welfare Request Notifications
+
+Include read and unread states.
+
+---
+
+# Timelines
+
+Every application, claim, loan, and welfare request should contain:
+
+* Multiple status changes
+* Different dates
+* Different committee actions
+* Different notes
+
+No timeline should appear empty.
+
+---
+
+# Data Quality Rules
+
+* No Demo User
+* No Test User
+* No Sample User
+* No Placeholder Data
+* No Duplicate Records
+* Every record must be unique
+* Every chart must contain plotted data
+* Every leaderboard must contain rankings
+* Every report must contain realistic totals
+* Every dashboard must look production-ready
+
+---
+
+# Final Goal
+
+The DKMO Portal should look like a fully operational live production deployment containing:
+
+* Unified DKMO Membership
+* Automatic FRF Eligibility
+* Membership Fee Management (SAR 100)
+* FRF Contribution Tracking (SAR 50 per claim event)
+* Referral & Recruitment Tracking
+* Committee Performance Analytics
+* Welfare Services Management
+* Claims Management
+* Loan Management
+* Employment Assistance
+* Medical Aid
+* Community Service Operations
+
+The application must be presentation-ready, stakeholder-ready, screenshot-ready, testing-ready, and suitable for live demonstrations immediately after deployment.

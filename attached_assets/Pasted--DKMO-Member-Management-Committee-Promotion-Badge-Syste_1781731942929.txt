@@ -1,0 +1,191 @@
+ DKMO Member Management – Committee Promotion & Badge System Update
+
+
+
+Please improve the Member Management module to properly support committee hierarchy and member roles.
+
+
+
+#### 1. Add Promotion Options in Member Actions Menu
+
+
+
+Currently, when creating a member, we can only select a designation such as President, Advisor, Auditor, Treasurer, etc.
+
+
+
+The problem is that there is no way to classify that person as an **Executive Member** or **Core Committee Member** in addition to their designation.
+
+
+
+Please add the following options inside the **Actions (⋯) menu** for each member:
+
+
+
+* Promote to Core Committee Member
+
+* Promote to Executive Member
+
+* Remove from Core Committee
+
+* Remove from Executive Committee
+
+
+
+A member should be able to have:
+
+
+
+**Committee Level**
+
+
+
+* Regular Member
+
+* Core Committee Member
+
+* Executive Member
+
+
+
+AND
+
+
+
+**Designation**
+
+
+
+* President
+
+* Vice President
+
+* General Secretary
+
+* Treasurer
+
+* Advisor
+
+* Auditor
+
+* FRF Convenor
+
+* Event Organizer
+
+* etc.
+
+
+
+These should be independent fields.
+
+
+
+Example:
+
+
+
+* Fazlurrahman Kolkar
+
+
+
+  * Executive Member
+
+  * Core Committee member
+
+
+
+  * President
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+---
+
+
+
+#### 2. Add Committee Level Badges Under Member Names
+
+
+
+
+
+
+
+Use different badge colors:
+
+
+
+* Executive Member → shiny gold 
+
+* Core Committee Member → shiny silver 
+
+* Designation badges → diffrent colurs but similar to the badges for example auditor siimlar in every place then for advisor one assigned colour ets, just assign one colur to each roles 
+
+
+
+Maintain the existing DKMO Portal design language, spacing, and styling.
+
+
+
+---
+
+
+
+#### 3. Committee Module Integration
+
+
+
+When a member is promoted to:
+
+
+
+* Executive Member → automatically appear in Executive Members section
+
+* Core Committee Member → automatically appear in Core Committee section
+
+
+
+The Committee module, Dashboard statistics, Attendance module, Reports, and Leaderboards should all use these classifications automatically.
+
+
+
+No duplicate member records should be created.
+
+
+
+One member record should be the single source of truth, with:
+
+
+
+* Member Information
+
+* Committee Level
+
+* Designation
+
+* Membership Status
+
+* Referral Information
+
+
+
+all linked together.
+
+
+
+---
+
+
+
+This will make the committee structure much more realistic and allow members to hold a designation (President, Advisor, Auditor, etc.) while also belonging to either the Executive Committee or Core Committee.

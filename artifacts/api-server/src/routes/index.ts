@@ -1,0 +1,46 @@
+import { Router, type IRouter } from "express";
+import healthRouter from "./health";
+import authRouter from "./auth";
+import meRouter from "./me";
+import membersRouter from "./members";
+import paymentsRouter from "./payments";
+import dashboardRouter from "./dashboard";
+import sponsorsRouter from "./sponsors";
+import eventsRouter from "./events";
+import eventFinancialRouter from "./event-financial";
+import tasksRouter from "./tasks";
+import frfRouter from "./frf";
+import welfareRouter from "./welfare";
+import dkmoMembershipRouter from "./dkmo-membership";
+import storageRouter from "./storage";
+import loansRouter from "./loans";
+import receiptsRouter from "./receipts";
+import searchRouter from "./search";
+import auditRouter from "./audit";
+import documentsRouter from "./documents";
+import meetingsRouter from "./meetings";
+
+const router: IRouter = Router();
+
+router.use(healthRouter);
+router.use(authRouter);
+router.use(meRouter);
+router.use(dkmoMembershipRouter);
+router.use(membersRouter);
+router.use(paymentsRouter);
+router.use(dashboardRouter);
+router.use(sponsorsRouter);
+router.use(eventsRouter);
+router.use(eventFinancialRouter);
+router.use(tasksRouter);
+router.use(frfRouter);
+router.use(welfareRouter);
+router.use(storageRouter);
+router.use(loansRouter);
+router.use(receiptsRouter);
+router.use(searchRouter);
+router.use(auditRouter);
+router.use(documentsRouter);
+router.use(meetingsRouter);
+
+export default router;
