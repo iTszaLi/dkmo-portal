@@ -29,7 +29,26 @@ app.use(
   }),
 );
 
-app.use(cors({ credentials: true, origin: true }));
+// Only allow credentialed requests from this app's own domains (dev preview
+// and published domains). Same-origin requests have no Origin header and are
+// unaffected.
+const allowedOrigins = new Set<string>();
+if (process.env.REPLIT_DEV_DOMAIN) allowedOrigins.add(`https://${process.env.REPLIT_DEV_DOMAIN}`);
+for (const d of (process.env.REPLIT_DOMAINS ?? "").split(",")) {
+  if (d.trim()) allowedOrigins.add(`https://${d.trim()}`);
+}
+app.use(
+  cors({
+    credentials: true,
+    origin: (origin, cb) => {
+      if (!origin || allowedOrigins.has(origin) || origin.startsWith("http://localhost")) {
+        cb(null, true);
+      } else {
+        cb(null, false);
+      }
+    },
+  }),
+);
 
 // Baseline HTTP security headers (no external dependency needed).
 app.use((_req, res, next) => {

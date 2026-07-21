@@ -480,6 +480,12 @@ async function main() {
       WHERE status <> 'rejected' AND email <> '';
   `);
 
+  // Indexes for frequent payment lookups (member history, claim collection,
+  // recent-payments ordering).
+  await pool.query(`CREATE INDEX IF NOT EXISTS payments_member_idx ON payments (member_id);`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS payments_frf_claim_idx ON payments (frf_claim_id);`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS payments_paid_at_idx ON payments (paid_at DESC);`);
+
   console.log("✅  All tables created.");
   await pool.end();
 }

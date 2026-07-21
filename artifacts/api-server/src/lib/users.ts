@@ -12,18 +12,31 @@ export interface ExecutiveUser {
 
 const SALT_ROUNDS = 10;
 
+// Per-user password can be overridden with EXEC_PASSWORD_<USERNAME> (e.g.
+// EXEC_PASSWORD_ADMIN1); EXEC_PASSWORD sets a shared default for all users.
+// The hardcoded value is a development fallback only — set the secrets in
+// production.
+const DEFAULT_DEV_PASSWORD = "dkmo@2026";
+
+function seedPassword(username: string): string {
+  return (
+    process.env[`EXEC_PASSWORD_${username.toUpperCase()}`] ||
+    process.env.EXEC_PASSWORD ||
+    DEFAULT_DEV_PASSWORD
+  );
+}
+
 const SEED_USERS: ReadonlyArray<{
   id: string;
   username: string;
   displayName: string;
   role: Role;
-  password: string;
 }> = [
-  { id: "u_admin1",   username: "admin1",   displayName: "Administrator",   role: "admin",   password: "dkmo@2026" },
-  { id: "u_finance1", username: "finance1", displayName: "Finance Lead",    role: "finance", password: "dkmo@2026" },
-  { id: "u_finance2", username: "finance2", displayName: "Finance Officer", role: "finance", password: "dkmo@2026" },
-  { id: "u_event",    username: "event",    displayName: "Event Manager",   role: "event",   password: "dkmo@2026" },
-  { id: "u_user1",    username: "user1",    displayName: "Viewer",          role: "viewer",  password: "dkmo@2026" },
+  { id: "u_admin1",   username: "admin1",   displayName: "Administrator",   role: "admin" },
+  { id: "u_finance1", username: "finance1", displayName: "Finance Lead",    role: "finance" },
+  { id: "u_finance2", username: "finance2", displayName: "Finance Officer", role: "finance" },
+  { id: "u_event",    username: "event",    displayName: "Event Manager",   role: "event" },
+  { id: "u_user1",    username: "user1",    displayName: "Viewer",          role: "viewer" },
 ];
 
 const usersByUsername = new Map<string, ExecutiveUser>();
@@ -40,10 +53,11 @@ function ensureUsers(): Promise<void> {
     // Identical seed passwords share one hash computation.
     const hashCache = new Map<string, string>();
     for (const seed of SEED_USERS) {
-      let passwordHash = hashCache.get(seed.password);
+      const password = seedPassword(seed.username);
+      let passwordHash = hashCache.get(password);
       if (!passwordHash) {
-        passwordHash = await bcrypt.hash(seed.password, SALT_ROUNDS);
-        hashCache.set(seed.password, passwordHash);
+        passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+        hashCache.set(password, passwordHash);
       }
       const user: ExecutiveUser = {
         id: seed.id,
