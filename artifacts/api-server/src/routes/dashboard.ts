@@ -67,14 +67,25 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
     else activeCount++;
   }
 
-  // Total FRF contribution amount still pending across all members.
-  const [frfPending] = (
+  // FRF aggregates: pending/collected contribution totals, members still
+  // owing, and open (active) cases.
+  const [frfAgg] = (
     await db.execute(sql`
-      SELECT COALESCE(SUM(amount), 0) AS total
+      SELECT
+        COALESCE(SUM(amount) FILTER (WHERE status = 'pending'), 0) AS pending_total,
+        COALESCE(SUM(amount) FILTER (WHERE status = 'paid'), 0) AS collected_total,
+        COUNT(DISTINCT member_id) FILTER (WHERE status = 'pending') AS members_pending
       FROM frf_contributions
-      WHERE status = 'pending'
     `)
-  ).rows as Array<{ total: string | number }>;
+  ).rows as Array<{ pending_total: string | number; collected_total: string | number; members_pending: string | number }>;
+
+  const [activeCases] = (
+    await db.execute(sql`
+      SELECT COUNT(*) AS count
+      FROM frf_claims
+      WHERE status NOT IN ('disbursed', 'rejected')
+    `)
+  ).rows as Array<{ count: string | number }>;
 
   res.json({
     totalMembers: members.length,
@@ -87,7 +98,10 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
     activeMembersCount: activeCount,
     suspendedMembersCount: suspendedCount,
     inactiveMembersCount: inactiveCount,
-    frfOutstandingTotal: Number(frfPending?.total ?? 0),
+    frfOutstandingTotal: Number(frfAgg?.pending_total ?? 0),
+    frfCollectedTotal: Number(frfAgg?.collected_total ?? 0),
+    activeFrfCasesCount: Number(activeCases?.count ?? 0),
+    membersPendingFrfCount: Number(frfAgg?.members_pending ?? 0),
   });
 });
 

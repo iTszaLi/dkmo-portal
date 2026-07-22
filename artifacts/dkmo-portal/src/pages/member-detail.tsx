@@ -140,6 +140,15 @@ export default function MemberDetail() {
     [payments],
   );
 
+  // Latest recorded membership-fee payment (for method / receipt display).
+  const membershipFeePayment = useMemo(() => {
+    const feePayments = (payments ?? []).filter((p) => p.paymentType === "membership_fee");
+    if (feePayments.length === 0) return null;
+    return [...feePayments].sort(
+      (a, b) => new Date(b.paidAt ?? 0).getTime() - new Date(a.paidAt ?? 0).getTime(),
+    )[0]!;
+  }, [payments]);
+
   const isCommittee = !!member?.designation;
 
   // Committee contribution — sourced from the same committee-performance endpoint
@@ -547,10 +556,20 @@ export default function MemberDetail() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
                     <div>
                       <p className="text-xs font-medium text-emerald-600 dark:text-slate-500">Paid On</p>
                       <p className="mt-1 text-emerald-900 dark:text-slate-200 font-medium">{member.feePaidAt ? formatDate(member.feePaidAt) : "—"}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-emerald-600 dark:text-slate-500">Payment Method</p>
+                      <p className="mt-1 text-emerald-900 dark:text-slate-200 font-medium capitalize">
+                        {membershipFeePayment?.paymentMethod ? membershipFeePayment.paymentMethod.replace(/_/g, " ") : "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-emerald-600 dark:text-slate-500">Receipt / Reference</p>
+                      <p className="mt-1 text-emerald-900 dark:text-slate-200 font-medium">{membershipFeePayment?.receiptNumber || "—"}</p>
                     </div>
                     <div>
                       <p className="text-xs font-medium text-emerald-600 dark:text-slate-500">Updated By</p>

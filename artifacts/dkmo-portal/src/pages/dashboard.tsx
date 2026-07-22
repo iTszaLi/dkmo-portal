@@ -684,6 +684,113 @@ export default function Dashboard() {
         </Link>
       </div>
 
+      {/* Fees & FRF KPI Cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <Link href="/pending" className="block group" data-testid="link-summary-fees-pending">
+          <Card className="glass rounded-2xl border-amber-100 dark:border-amber-900/40 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-amber-300 group-active:scale-[0.98] cursor-pointer h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-amber-900 dark:text-amber-300">Membership Fees Pending</CardTitle>
+              <UserCheck className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            </CardHeader>
+            <CardContent>
+              {isLoadingSummary ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <AnimatedNumber
+                  value={(summary?.unpaidMembersCount ?? 0) + (summary?.pendingMembersCount ?? 0)}
+                  className="text-2xl font-bold text-amber-700 dark:text-amber-400"
+                />
+              )}
+              <p className="text-xs text-amber-700/80 dark:text-amber-500/80 mt-1">
+                {summary ? `${formatSAR(summary.outstandingFees)} outstanding` : "Members yet to pay SAR 100"}
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/frf" className="block group" data-testid="link-summary-active-frf-cases">
+          <Card className="glass rounded-2xl border-green-100 dark:border-slate-800 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-green-300 dark:group-hover:border-green-700 group-active:scale-[0.98] cursor-pointer h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-green-900 dark:text-slate-300">Active FRF Cases</CardTitle>
+              <HeartHandshake className="h-4 w-4 text-green-700 dark:text-green-400" />
+            </CardHeader>
+            <CardContent>
+              {isLoadingSummary ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <AnimatedNumber
+                  value={summary?.activeFrfCasesCount ?? 0}
+                  className="text-2xl font-bold text-green-950 dark:text-white"
+                />
+              )}
+              <p className="text-xs text-green-700/80 dark:text-slate-500 mt-1">Open cases collecting contributions</p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/frf" className="block group" data-testid="link-summary-members-pending-frf">
+          <Card className="glass rounded-2xl border-orange-100 dark:border-orange-900/40 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-orange-300 group-active:scale-[0.98] cursor-pointer h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-orange-900 dark:text-orange-300">Members Pending FRF</CardTitle>
+              <Users className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+            </CardHeader>
+            <CardContent>
+              {isLoadingSummary ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <AnimatedNumber
+                  value={summary?.membersPendingFrfCount ?? 0}
+                  className="text-2xl font-bold text-orange-700 dark:text-orange-400"
+                />
+              )}
+              <p className="text-xs text-orange-700/80 dark:text-orange-500/80 mt-1">Members with unpaid contributions</p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/payments" className="block group" data-testid="link-summary-frf-collected">
+          <Card className="glass rounded-2xl border-green-100 dark:border-slate-800 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-green-300 dark:group-hover:border-green-700 group-active:scale-[0.98] cursor-pointer h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-green-900 dark:text-slate-300">FRF Collected</CardTitle>
+              <HandCoins className="h-4 w-4 text-green-700 dark:text-green-400" />
+            </CardHeader>
+            <CardContent>
+              {isLoadingSummary ? (
+                <Skeleton className="h-8 w-24" />
+              ) : (
+                <AnimatedNumber
+                  value={summary?.frfCollectedTotal ?? 0}
+                  format={(n) => formatSAR(n)}
+                  className="text-2xl font-bold text-green-950 dark:text-green-300"
+                />
+              )}
+              <p className="text-xs text-green-700/80 dark:text-slate-500 mt-1">Total FRF contributions received</p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/frf" className="block group" data-testid="link-summary-frf-outstanding">
+          <Card className="glass rounded-2xl border-red-100 dark:border-red-900/40 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-red-300 group-active:scale-[0.98] cursor-pointer h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-red-900 dark:text-red-300">FRF Outstanding</CardTitle>
+              <TrendingUp className="h-4 w-4 text-red-600 dark:text-red-400" />
+            </CardHeader>
+            <CardContent>
+              {isLoadingSummary ? (
+                <Skeleton className="h-8 w-24" />
+              ) : (
+                <AnimatedNumber
+                  value={summary?.frfOutstandingTotal ?? 0}
+                  format={(n) => formatSAR(n)}
+                  className="text-2xl font-bold text-red-700 dark:text-red-400"
+                />
+              )}
+              <p className="text-xs text-red-700/80 dark:text-red-500/80 mt-1">Contributions still due</p>
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
+
       {/* FRF Collection Overview */}
       {frfOverview && frfOverview.expectedTotal > 0 && (
         <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">

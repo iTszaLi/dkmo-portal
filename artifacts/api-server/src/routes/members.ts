@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, ilike, or, desc, sql, type SQL } from "drizzle-orm";
-import { db, membersTable, frfClaimsTable, frfContributionsTable } from "@workspace/db";
+import { db, membersTable, frfClaimsTable, frfContributionsTable, paymentsTable } from "@workspace/db";
 import {
   CreateMemberBody,
   UpdateMemberBody,
@@ -429,9 +429,10 @@ router.get("/members/:id/frf-summary", async (req, res): Promise<void> => {
 
     // Own contribution ledger with claim context.
     const ledger = await db
-      .select({ contribution: frfContributionsTable, claim: frfClaimsTable })
+      .select({ contribution: frfContributionsTable, claim: frfClaimsTable, payment: paymentsTable })
       .from(frfContributionsTable)
       .innerJoin(frfClaimsTable, eq(frfContributionsTable.claimId, frfClaimsTable.id))
+      .leftJoin(paymentsTable, eq(frfContributionsTable.paymentId, paymentsTable.id))
       .where(eq(frfContributionsTable.memberId, params.data.id))
       .orderBy(desc(frfContributionsTable.createdAt));
 
@@ -439,20 +440,24 @@ router.get("/members/:id/frf-summary", async (req, res): Promise<void> => {
     let totalDue = 0;
     let totalPaid = 0;
     let totalOutstanding = 0;
+    let casesPaid = 0;
+    let casesPending = 0;
     let lastContributionAt: Date | null = null;
 
-    const history = ledger.map(({ contribution: c, claim }) => {
+    const history = ledger.map(({ contribution: c, claim, payment }) => {
       const status = deriveContributionStatus(c, claim.approvedDate, now);
       const amount = Number(c.amount);
       if (status !== "cancelled") {
         totalClaims += 1;
         totalDue += amount;
         if (status === "paid") {
+          casesPaid += 1;
           totalPaid += amount;
           if (c.paidAt && (!lastContributionAt || c.paidAt > lastContributionAt)) {
             lastContributionAt = c.paidAt;
           }
         } else {
+          casesPending += 1;
           totalOutstanding += amount;
         }
       }
@@ -465,6 +470,9 @@ router.get("/members/:id/frf-summary", async (req, res): Promise<void> => {
         status,
         approvedDate: claim.approvedDate?.toISOString() ?? null,
         paidAt: c.paidAt?.toISOString() ?? null,
+        paymentMethod: payment?.paymentMethod ?? null,
+        receiptNumber: payment?.receiptNumber ?? null,
+        remarks: payment?.notes ?? null,
       };
     });
 
@@ -527,6 +535,8 @@ router.get("/members/:id/frf-summary", async (req, res): Promise<void> => {
       totalDue,
       totalPaid,
       totalOutstanding,
+      casesPaid,
+      casesPending,
       lastContributionAt: lastContributionAt
         ? (lastContributionAt as Date).toISOString()
         : null,

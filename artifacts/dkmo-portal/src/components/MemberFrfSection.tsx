@@ -75,12 +75,14 @@ export function MemberFrfSection({ memberId }: { memberId: string }) {
           <CardDescription className="dark:text-slate-400">{data.eligibility.reason}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {[
-              { label: "Claims Owed", value: String(data.totalClaims) },
+              { label: "Total FRF Cases", value: String(data.totalClaims) },
+              { label: "Cases Paid", value: String(data.casesPaid), cls: "text-green-700 dark:text-green-300" },
+              { label: "Cases Pending", value: String(data.casesPending), cls: data.casesPending > 0 ? "text-orange-600 dark:text-orange-400" : undefined },
               { label: "Total Due", value: formatSAR(data.totalDue) },
               { label: "Paid", value: formatSAR(data.totalPaid), cls: "text-green-700 dark:text-green-300" },
-              { label: "Outstanding", value: formatSAR(data.totalOutstanding), cls: data.totalOutstanding > 0 ? "text-red-600 dark:text-red-400" : "text-green-700 dark:text-green-300" },
+              { label: "Remaining Due", value: formatSAR(data.totalOutstanding), cls: data.totalOutstanding > 0 ? "text-red-600 dark:text-red-400" : "text-green-700 dark:text-green-300" },
             ].map((s) => (
               <div key={s.label} className="rounded-xl border border-emerald-100 dark:border-slate-800 p-3 text-center">
                 <p className="text-xs text-slate-500 dark:text-slate-400">{s.label}</p>
@@ -116,12 +118,15 @@ export function MemberFrfSection({ memberId }: { memberId: string }) {
                 <TableHead>Status</TableHead>
                 <TableHead>Approved</TableHead>
                 <TableHead>Paid</TableHead>
+                <TableHead>Method</TableHead>
+                <TableHead>Receipt / Ref</TableHead>
+                <TableHead>Remarks</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {data.history.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-20 text-center text-slate-500">No FRF contributions recorded yet.</TableCell>
+                  <TableCell colSpan={9} className="h-20 text-center text-slate-500">No FRF contributions recorded yet.</TableCell>
                 </TableRow>
               ) : (
                 data.history.map((h) => (
@@ -136,6 +141,9 @@ export function MemberFrfSection({ memberId }: { memberId: string }) {
                     <TableCell><Badge className={cn("text-[11px] capitalize", STATUS_STYLE[h.status] ?? "")}>{h.status}</Badge></TableCell>
                     <TableCell className="text-sm text-slate-500">{h.approvedDate ? formatDate(h.approvedDate) : "—"}</TableCell>
                     <TableCell className="text-sm text-slate-500">{h.paidAt ? formatDate(h.paidAt) : "—"}</TableCell>
+                    <TableCell className="text-sm text-slate-500 capitalize">{h.paymentMethod ? h.paymentMethod.replace(/_/g, " ") : "—"}</TableCell>
+                    <TableCell className="text-sm text-slate-500">{h.receiptNumber || "—"}</TableCell>
+                    <TableCell className="text-sm text-slate-500 max-w-[160px] truncate" title={h.remarks ?? undefined}>{h.remarks || "—"}</TableCell>
                   </TableRow>
                 ))
               )}

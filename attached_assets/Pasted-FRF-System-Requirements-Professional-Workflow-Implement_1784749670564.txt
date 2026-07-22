@@ -1,0 +1,142 @@
+FRF System Requirements (Professional Workflow)
+
+Implement the FRF (Family Relief Fund) module like a professional membership management system. It should automatically maintain records and update member statuses without requiring manual updates everywhere.
+
+FRF Case Management
+
+When an admin creates a new FRF case, they should enter:
+
+* Case Title
+* Case Type (Death, Medical Emergency, Family Assistance, etc.)
+* Beneficiary Member
+* Description
+* Target Amount Required
+* Default Contribution Per Member (Default: SAR 50, editable)
+* Opening Date
+* Closing Date (optional)
+* Status (Open / Closed)
+
+Automatic Linking
+
+As soon as a new FRF case is created:
+
+* Automatically link the case to every active member.
+* Every active member should automatically receive an FRF payment record for that case.
+* Default payment status should be Pending.
+* No manual creation of records for each member should be required.
+
+Member Payment Status
+
+For every member in each FRF case, display one of the following:
+
+* Pending
+* Partially Paid
+* Paid
+* Exempt (if applicable)
+
+Also display:
+
+* Amount Due
+* Amount Paid
+* Remaining Balance
+* Date Paid
+* Payment Method
+    * Cash
+    * UPI
+    * Card
+    * Bank Transfer
+    * Cheque
+* Receipt/Transaction Number
+* Admin Remarks
+
+The payment status should update automatically based on the amount received.
+
+Professional Record Keeping
+
+Every payment should automatically update:
+
+* The member’s payment history
+* The FRF case summary
+* Dashboard statistics
+* Outstanding balances
+* Collection progress
+
+No duplicate or inconsistent records should occur.
+
+FRF Case Summary
+
+Each FRF case should show:
+
+* Beneficiary Member
+* Case Status (Open /Closed)
+* Target Amount Required
+* Default Contribution (SAR 50)
+* Number of Eligible Members
+* Number Paid
+* Number Partially Paid
+* Number Pending
+* Number Exempt
+* Total Amount Collected
+* Total Amount Committed
+* Remaining Amount to Reach Target
+* Collection Percentage
+* Last Payment Date
+
+Member Profile
+
+When opening a member’s profile, display a complete FRF history:
+
+For each FRF case:
+
+* Case Name
+* Beneficiary
+* Amount Due
+* Amount Paid
+* Balance Remaining
+* Payment Status
+* Payment Date
+* Payment Method
+
+This should act as a permanent payment ledger.
+
+Beneficiary Member Profile
+
+For the member for whom the FRF case was created, show:
+
+* Total Target Amount
+* Total Amount Collected
+* Total Amount Committed
+* Remaining Amount Required
+* Collection Progress
+* Case Status (Open/Closed)
+
+Dashboard
+
+Automatically update dashboard statistics in real time:
+
+* Total Active FRF Cases
+* Total Closed FRF Cases
+* Total Target Amount
+* Total Amount Collected
+* Total Amount Committed
+* Remaining Amount to Collect
+* Members Pending Payment
+* Members Partially Paid
+* Members Fully Paid
+
+Automation
+
+The portal should behave like professional ERP/CRM software:
+
+* Every new FRF case automatically creates payment records for all active members.
+* Every payment immediately updates all related pages and reports.
+* Closing an FRF case should freeze the records while keeping them visible for future reference and audit.
+* Maintain complete payment history with no data loss.
+* Ensure calculations are always accurate and synchronized across the portal.
+
+Important
+
+* Do not modify or delete existing member data.
+* Check whether these features already exist before implementing them.
+* If a feature already exists, improve it instead of creating a duplicate.
+* Keep the interface clean, modern, responsive, and easy for admins to use.

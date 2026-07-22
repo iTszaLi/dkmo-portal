@@ -489,6 +489,9 @@ export interface DashboardSummary {
   suspendedMembersCount: number;
   inactiveMembersCount: number;
   frfOutstandingTotal: number;
+  frfCollectedTotal: number;
+  activeFrfCasesCount: number;
+  membersPendingFrfCount: number;
 }
 
 export type PendingMemberFeeStatus =
@@ -1083,6 +1086,12 @@ export interface MemberFrfHistoryItem {
   approvedDate?: string | null;
   /** @nullable */
   paidAt?: string | null;
+  /** @nullable */
+  paymentMethod?: string | null;
+  /** @nullable */
+  receiptNumber?: string | null;
+  /** @nullable */
+  remarks?: string | null;
 }
 
 export type FrfReferenceMemberItemFrfEligibility =
@@ -1138,6 +1147,8 @@ export interface MemberFrfSummary {
   totalDue: number;
   totalPaid: number;
   totalOutstanding: number;
+  casesPaid: number;
+  casesPending: number;
   /** @nullable */
   lastContributionAt?: string | null;
   history: MemberFrfHistoryItem[];

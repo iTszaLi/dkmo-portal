@@ -2217,6 +2217,12 @@ components:
           type: integer
         frfOutstandingTotal:
           type: number
+        frfCollectedTotal:
+          type: number
+        activeFrfCasesCount:
+          type: integer
+        membersPendingFrfCount:
+          type: integer
       required:
         - totalMembers
         - paidMembersCount
@@ -2229,6 +2235,9 @@ components:
         - suspendedMembersCount
         - inactiveMembersCount
         - frfOutstandingTotal
+        - frfCollectedTotal
+        - activeFrfCasesCount
+        - membersPendingFrfCount
 
     PendingMember:
       type: object
@@ -2820,6 +2829,12 @@ components:
         paidAt:
           type: ["string", "null"]
           format: date-time
+        paymentMethod:
+          type: ["string", "null"]
+        receiptNumber:
+          type: ["string", "null"]
+        remarks:
+          type: ["string", "null"]
       required: [contributionId, claimId, claimantName, claimType, amount, status]
 
     FrfReferenceMemberItem:
@@ -2855,6 +2870,8 @@ components:
         totalDue: { type: number }
         totalPaid: { type: number }
         totalOutstanding: { type: number }
+        casesPaid: { type: integer }
+        casesPending: { type: integer }
         lastContributionAt:
           type: ["string", "null"]
           format: date-time
@@ -2876,7 +2893,7 @@ components:
               items:
                 $ref: "#/components/schemas/FrfReferenceMemberItem"
           required: [totalReferences, fullyPaidCount, pendingCount, overdueCount, collectionRate, totalOutstanding, members]
-      required: [eligibility, totalClaims, totalDue, totalPaid, totalOutstanding, history, referenceCollection]
+      required: [eligibility, totalClaims, totalDue, totalPaid, totalOutstanding, casesPaid, casesPending, history, referenceCollection]
 
     FrfOverview:
       type: object

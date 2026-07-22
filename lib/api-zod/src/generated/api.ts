@@ -511,6 +511,9 @@ export const GetDashboardSummaryResponse = zod.object({
   suspendedMembersCount: zod.number(),
   inactiveMembersCount: zod.number(),
   frfOutstandingTotal: zod.number(),
+  frfCollectedTotal: zod.number(),
+  activeFrfCasesCount: zod.number(),
+  membersPendingFrfCount: zod.number(),
 });
 
 /**
@@ -1627,6 +1630,8 @@ export const GetMemberFrfSummaryResponse = zod.object({
   totalDue: zod.number(),
   totalPaid: zod.number(),
   totalOutstanding: zod.number(),
+  casesPaid: zod.number(),
+  casesPending: zod.number(),
   lastContributionAt: zod.coerce.date().nullish(),
   history: zod.array(
     zod.object({
@@ -1638,6 +1643,9 @@ export const GetMemberFrfSummaryResponse = zod.object({
       status: zod.enum(["paid", "pending", "overdue", "cancelled"]),
       approvedDate: zod.coerce.date().nullish(),
       paidAt: zod.coerce.date().nullish(),
+      paymentMethod: zod.string().nullish(),
+      receiptNumber: zod.string().nullish(),
+      remarks: zod.string().nullish(),
     }),
   ),
   referenceCollection: zod.object({
