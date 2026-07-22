@@ -61,6 +61,8 @@ const formSchema = z.object({
   isCoreCommittee: z.boolean(),
   membershipFee: z.coerce.number().min(0, "Amount must be positive"),
   feeStatus: z.enum(FEE_STATUS_OPTIONS),
+  responsibility: z.enum(["responsible", "not_responsible"]),
+  notes: z.string().optional(),
 });
 
 interface MemberFormProps {
@@ -96,6 +98,8 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
       isCoreCommittee: (defaultValues as any)?.isCoreCommittee === true,
       membershipFee: defaultValues?.membershipFee ?? 100,
       feeStatus: (defaultValues?.feeStatus as (typeof FEE_STATUS_OPTIONS)[number]) || "unpaid",
+      responsibility: ((defaultValues as any)?.responsibility === "responsible" ? "responsible" : "not_responsible") as "responsible" | "not_responsible",
+      notes: (defaultValues as any)?.notes || "",
     },
   });
 
@@ -115,6 +119,8 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
         isCoreCommittee: (defaultValues as any).isCoreCommittee === true,
         membershipFee: defaultValues.membershipFee ?? 100,
         feeStatus: (defaultValues.feeStatus as (typeof FEE_STATUS_OPTIONS)[number]) || "unpaid",
+        responsibility: ((defaultValues as any)?.responsibility === "responsible" ? "responsible" : "not_responsible") as "responsible" | "not_responsible",
+        notes: (defaultValues as any)?.notes || "",
       });
       setRefMember(
         defaultValues.refMemberId
@@ -360,6 +366,45 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
                       </option>
                     ))}
                   </select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="grid grid-cols-1 gap-4">
+          <FormField
+            control={form.control}
+            name="responsibility"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Responsibility</FormLabel>
+                <FormControl>
+                  <select
+                    {...field}
+                    className="w-full border border-input rounded-md px-3 h-10 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="not_responsible">Not Responsible</option>
+                    <option value="responsible">Responsible</option>
+                  </select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Remarks / Notes</FormLabel>
+                <FormControl>
+                  <textarea
+                    {...field}
+                    rows={3}
+                    placeholder="Internal remarks about this member (visible to admins only)"
+                    className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-y"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

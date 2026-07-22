@@ -23,6 +23,8 @@ export const membersTable = pgTable("members", {
   feePaidAt: timestamp("fee_paid_at", { withTimezone: true }),
   feeUpdatedBy: text("fee_updated_by").notNull().default(""),
   frfStatus: text("frf_status").notNull().default("active"),
+  responsibility: text("responsibility").notNull().default("not_responsible"),
+  notes: text("notes").notNull().default(""),
   refMemberName: text("ref_member_name").notNull().default(""),
   refMemberId: text("ref_member_id").notNull().default(""),
   createdAt: timestamp("created_at", { withTimezone: true })

@@ -625,11 +625,15 @@ export default function Dashboard() {
                 <Skeleton className="h-8 w-20" />
               ) : (
                 <AnimatedNumber
-                  value={summary?.paidMembersCount || 0}
+                  value={summary?.activeMembersCount || 0}
                   className="text-2xl font-bold text-green-950 dark:text-white"
                 />
               )}
-              <p className="text-xs text-green-700/80 dark:text-slate-500 mt-1">Membership fee paid</p>
+              <p className="text-xs text-green-700/80 dark:text-slate-500 mt-1">
+                {summary
+                  ? `${summary.suspendedMembersCount} suspended · ${summary.inactiveMembersCount} inactive`
+                  : "Active status members"}
+              </p>
             </CardContent>
           </Card>
         </Link>
@@ -649,7 +653,11 @@ export default function Dashboard() {
                   className="text-2xl font-bold text-orange-700 dark:text-orange-400"
                 />
               )}
-              <p className="text-xs text-orange-700/80 dark:text-orange-500/80 mt-1">Awaiting review</p>
+              <p className="text-xs text-orange-700/80 dark:text-orange-500/80 mt-1">
+                {summary && summary.frfOutstandingTotal > 0
+                  ? `${formatSAR(summary.frfOutstandingTotal)} contributions pending`
+                  : "Awaiting review"}
+              </p>
             </CardContent>
           </Card>
         </Link>

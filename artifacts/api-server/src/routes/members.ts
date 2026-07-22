@@ -128,6 +128,8 @@ router.post("/members", async (req, res): Promise<void> => {
         feeStatus,
         feePaidAt: feeStatus === "paid" ? new Date() : null,
         feeUpdatedBy: feeStatus === "paid" ? actor : "",
+        responsibility: parsed.data.responsibility ?? "not_responsible",
+        notes: parsed.data.notes ?? "",
         refMemberName: parsed.data.refMemberName ?? "",
         refMemberId: parsed.data.refMemberId ?? "",
       })
@@ -220,6 +222,8 @@ router.patch("/members/:id", async (req, res): Promise<void> => {
         isCoreCommittee:
           parsed.data.isCoreCommittee ?? existing.isCoreCommittee,
         membershipFee: String(parsed.data.membershipFee ?? existing.membershipFee),
+        responsibility: parsed.data.responsibility ?? existing.responsibility,
+        notes: parsed.data.notes ?? existing.notes,
         refMemberName: parsed.data.refMemberName ?? "",
         refMemberId: parsed.data.refMemberId ?? "",
         ...feeAudit,

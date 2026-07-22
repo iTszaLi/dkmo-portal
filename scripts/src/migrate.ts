@@ -486,6 +486,13 @@ async function main() {
   await pool.query(`CREATE INDEX IF NOT EXISTS payments_frf_claim_idx ON payments (frf_claim_id);`);
   await pool.query(`CREATE INDEX IF NOT EXISTS payments_paid_at_idx ON payments (paid_at DESC);`);
 
+  // Member responsibility flag + admin remarks (additive, non-destructive).
+  await pool.query(`
+    ALTER TABLE members
+      ADD COLUMN IF NOT EXISTS responsibility TEXT NOT NULL DEFAULT 'not_responsible',
+      ADD COLUMN IF NOT EXISTS notes TEXT NOT NULL DEFAULT '';
+  `);
+
   // ── Human-readable member IDs (DKMO-XXXX) ─────────────────────────────────
   // One global, gap-tolerant sequence shared by direct member creation and
   // DKMO membership applications. Numbers are never reused: the sequence only

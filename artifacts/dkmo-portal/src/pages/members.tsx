@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { MemberAvatar } from "@/components/MemberAvatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +30,8 @@ import {
 
 export default function Members() {
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [feeFilter, setFeeFilter] = useState<string>("all");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<any>(null);
   const [deletingMember, setDeletingMember] = useState<any>(null);
@@ -169,6 +172,12 @@ export default function Members() {
     });
   };
 
+  const filteredMembers = members?.filter((m) => {
+    if (statusFilter !== "all" && ((m as any).frfStatus ?? "active") !== statusFilter) return false;
+    if (feeFilter !== "all" && m.feeStatus !== feeFilter) return false;
+    return true;
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -192,14 +201,47 @@ export default function Members() {
         </Dialog>
       </div>
 
-      <div className="flex items-center space-x-2 bg-white dark:bg-slate-900 p-2 rounded-lg border border-emerald-100 dark:border-slate-800 shadow-sm max-w-md">
-        <Search className="h-5 w-5 text-emerald-400 dark:text-slate-500 ml-2 shrink-0" />
-        <Input
-          placeholder="Search by DKMO ID, name, mobile, Iqama, application no, Jamaath, or place..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="border-0 focus-visible:ring-0 shadow-none px-2 h-9 dark:bg-transparent dark:text-slate-200 dark:placeholder:text-slate-500"
-        />
+      <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+        <div className="flex items-center space-x-2 bg-white dark:bg-slate-900 p-2 rounded-lg border border-emerald-100 dark:border-slate-800 shadow-sm w-full sm:max-w-md">
+          <Search className="h-5 w-5 text-emerald-400 dark:text-slate-500 ml-2 shrink-0" />
+          <Input
+            placeholder="Search by DKMO ID, name, mobile, Iqama, application no, Jamaath, or place..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="border-0 focus-visible:ring-0 shadow-none px-2 h-9 dark:bg-transparent dark:text-slate-200 dark:placeholder:text-slate-500"
+          />
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full sm:w-[170px] bg-white dark:bg-slate-900 border-emerald-100 dark:border-slate-800" data-testid="select-status-filter">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All statuses</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="suspended">Suspended</SelectItem>
+            <SelectItem value="inactive">Inactive</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={feeFilter} onValueChange={setFeeFilter}>
+          <SelectTrigger className="w-full sm:w-[170px] bg-white dark:bg-slate-900 border-emerald-100 dark:border-slate-800" data-testid="select-fee-filter">
+            <SelectValue placeholder="Fee status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All fee statuses</SelectItem>
+            <SelectItem value="paid">Fee paid</SelectItem>
+            <SelectItem value="pending">Fee pending</SelectItem>
+            <SelectItem value="unpaid">Fee unpaid</SelectItem>
+          </SelectContent>
+        </Select>
+        {(statusFilter !== "all" || feeFilter !== "all") && (
+          <button
+            onClick={() => { setStatusFilter("all"); setFeeFilter("all"); }}
+            className="text-sm text-emerald-700 dark:text-emerald-400 hover:underline whitespace-nowrap"
+            data-testid="button-clear-filters"
+          >
+            Clear filters
+          </button>
+        )}
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-emerald-100 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -231,14 +273,14 @@ export default function Members() {
                   <TableCell><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
                 </TableRow>
               ))
-            ) : members?.length === 0 ? (
+            ) : filteredMembers?.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={9} className="h-24 text-center text-emerald-600 dark:text-slate-500">
                   No members found.
                 </TableCell>
               </TableRow>
             ) : (
-              members?.map((member) => (
+              filteredMembers?.map((member) => (
                 <TableRow key={member.id} className="hover:bg-emerald-50/30 dark:hover:bg-slate-800/50 cursor-pointer dark:border-slate-800 transition-colors">
                   <TableCell>
                     <Link href={`/members/${member.id}`} className="flex items-center gap-3 w-full">

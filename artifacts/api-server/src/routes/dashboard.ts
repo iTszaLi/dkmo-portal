@@ -44,6 +44,9 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
   let totalFeesCollected = 0;
   let outstandingFees = 0;
   let membershipFeeTotal = 0;
+  let activeCount = 0;
+  let suspendedCount = 0;
+  let inactiveCount = 0;
 
   for (const m of members) {
     const fee = Number(m.membershipFee);
@@ -58,7 +61,20 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
       unpaidCount++;
       outstandingFees += fee;
     }
+    const status = m.frfStatus ?? "active";
+    if (status === "suspended") suspendedCount++;
+    else if (status === "inactive") inactiveCount++;
+    else activeCount++;
   }
+
+  // Total FRF contribution amount still pending across all members.
+  const [frfPending] = (
+    await db.execute(sql`
+      SELECT COALESCE(SUM(amount), 0) AS total
+      FROM frf_contributions
+      WHERE status = 'pending'
+    `)
+  ).rows as Array<{ total: string | number }>;
 
   res.json({
     totalMembers: members.length,
@@ -68,6 +84,10 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
     totalFeesCollected,
     outstandingFees,
     membershipFeeTotal,
+    activeMembersCount: activeCount,
+    suspendedMembersCount: suspendedCount,
+    inactiveMembersCount: inactiveCount,
+    frfOutstandingTotal: Number(frfPending?.total ?? 0),
   });
 });
 

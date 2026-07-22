@@ -173,6 +173,14 @@ export const MemberFrfStatus = {
   inactive: "inactive",
 } as const;
 
+export type MemberResponsibility =
+  (typeof MemberResponsibility)[keyof typeof MemberResponsibility];
+
+export const MemberResponsibility = {
+  responsible: "responsible",
+  not_responsible: "not_responsible",
+} as const;
+
 export interface Member {
   id: string;
   fullName: string;
@@ -194,6 +202,8 @@ export interface Member {
   feePaidAt: string | null;
   feeUpdatedBy: string;
   frfStatus: MemberFrfStatus;
+  responsibility: MemberResponsibility;
+  notes: string;
   frfDue?: number;
   frfPaid?: number;
   frfOutstanding?: number;
@@ -221,6 +231,14 @@ export const MemberDetailFrfStatus = {
   inactive: "inactive",
 } as const;
 
+export type MemberDetailResponsibility =
+  (typeof MemberDetailResponsibility)[keyof typeof MemberDetailResponsibility];
+
+export const MemberDetailResponsibility = {
+  responsible: "responsible",
+  not_responsible: "not_responsible",
+} as const;
+
 export interface MemberDetail {
   id: string;
   fullName: string;
@@ -242,6 +260,8 @@ export interface MemberDetail {
   feePaidAt: string | null;
   feeUpdatedBy: string;
   frfStatus: MemberDetailFrfStatus;
+  responsibility: MemberDetailResponsibility;
+  notes: string;
   refMemberName: string;
   refMemberId: string;
   createdAt: string;
@@ -266,6 +286,14 @@ export const MemberInputFrfStatus = {
   inactive: "inactive",
 } as const;
 
+export type MemberInputResponsibility =
+  (typeof MemberInputResponsibility)[keyof typeof MemberInputResponsibility];
+
+export const MemberInputResponsibility = {
+  responsible: "responsible",
+  not_responsible: "not_responsible",
+} as const;
+
 export interface MemberInput {
   /** @minLength 1 */
   fullName: string;
@@ -284,6 +312,8 @@ export interface MemberInput {
   membershipFee?: number;
   feeStatus?: MemberInputFeeStatus;
   frfStatus?: MemberInputFrfStatus;
+  responsibility?: MemberInputResponsibility;
+  notes?: string;
   refMemberName?: string;
   refMemberId?: string;
 }
@@ -455,6 +485,10 @@ export interface DashboardSummary {
   totalFeesCollected: number;
   outstandingFees: number;
   membershipFeeTotal: number;
+  activeMembersCount: number;
+  suspendedMembersCount: number;
+  inactiveMembersCount: number;
+  frfOutstandingTotal: number;
 }
 
 export type PendingMemberFeeStatus =

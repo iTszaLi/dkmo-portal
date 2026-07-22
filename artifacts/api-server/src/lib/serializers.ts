@@ -20,6 +20,8 @@ export function memberToApi(m: Member) {
     feePaidAt: m.feePaidAt ? m.feePaidAt.toISOString() : null,
     feeUpdatedBy: m.feeUpdatedBy ?? "",
     frfStatus: m.frfStatus ?? "active",
+    responsibility: m.responsibility ?? "not_responsible",
+    notes: m.notes ?? "",
     refMemberName: m.refMemberName ?? "",
     refMemberId: m.refMemberId ?? "",
     createdAt: m.createdAt.toISOString(),

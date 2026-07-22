@@ -1,0 +1,138 @@
+Improve the DKMO Portal to have a modern, clean, and professional UI/UX without changing any existing data, database structure, member records, or breaking any current functionality.
+
+Step 1: Audit the Portal
+
+First, inspect the entire portal and check whether each of the following features already exists.
+
+* If a feature already exists, improve its UI only.
+* If it does not exist, implement it.
+* Do not create duplicate features.
+
+Member List
+
+Ensure every member displays:
+
+* Profile photo (circular avatar)
+* Member ID
+* Full Name
+* Designation/Role
+* District/Unit
+* Phone Number
+* Active/Inactive status badge
+* Search and filtering
+
+Member Details Page
+
+When an admin clicks on a member, open a professional profile page showing all important information.
+
+Basic Information
+
+* Profile photo
+* Member ID
+* Full name
+* Designation
+* District/Unit
+* Phone number
+* Join date
+* Active/Inactive status
+
+Membership Fee
+
+Show clearly:
+
+* Paid / Unpaid
+* Amount
+* Date paid
+* Payment method:
+    * Cash
+    * UPI
+    * Card
+    * Bank Transfer
+    * Cheque
+* Transaction/Receipt number (if available)
+* Expiry date (if applicable)
+
+FRF (Family Relief Fund)
+
+Display:
+
+* Paid / Unpaid status
+* Amount paid
+* Due amount (if any)
+* Date paid
+* Payment method
+* Transaction reference
+* Current FRF eligibility
+
+Member Responsibility
+
+Show whether the member is:
+
+* Responsible
+* Not Responsible
+
+If possible, allow admins to add remarks.
+
+Current Status
+
+Clearly display:
+
+* Active
+* Inactive
+* Suspended (if applicable)
+
+Emergency / Death Benefit
+
+Show eligibility and payment information, including:
+
+* Eligible / Not Eligible
+* Claim status (if any)
+* Pending
+* Approved
+* Rejected
+* Amount paid
+* Amount remaining
+* Date processed
+* Remarks
+
+Outstanding Dues
+
+If any amount is pending, show:
+
+* Membership dues
+* FRF dues
+* Total pending amount
+
+Display this prominently with colored badges.
+
+Dashboard
+
+If missing, add:
+
+* Total Members
+* Active Members
+* Inactive Members
+* Membership Fee Pending
+* FRF Pending
+
+UI Improvements
+
+* Professional dashboard
+* Better typography
+* Modern cards
+* Better spacing
+* Responsive design
+* Attractive status badges
+* Smooth hover animations
+* Consistent colors
+* Better tables and forms
+
+Important Rules
+
+* Do not modify existing member data.
+* Do not remove any functionality.
+* Do not duplicate features that already exist.
+* Improve existing components wherever possible.
+* Keep the code clean and optimized.
+* Test every page after making changes.
+* Ensure all existing features continue to work correctly.

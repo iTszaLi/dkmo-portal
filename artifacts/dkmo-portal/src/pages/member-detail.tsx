@@ -29,6 +29,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MemberForm } from "@/components/MemberForm";
 import { MemberFrfSection } from "@/components/MemberFrfSection";
+import { useGetMemberFrfSummary } from "@workspace/api-client-react";
 import { MemberBadges } from "@/components/MemberBadges";
 import { formatSAR, formatDate, feeStatusLabel, feeStatusBadgeClass } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -115,6 +116,7 @@ export default function MemberDetail() {
   const { data: member, isLoading: isMemberLoading } = useGetMember(id || "", {
     query: { enabled: !!id, queryKey: getGetMemberQueryKey(id || "") },
   });
+  const { data: frfSummary } = useGetMemberFrfSummary(id || "");
 
   const updateMember = useUpdateMember();
   const updateFeeStatus = useUpdateMemberFeeStatus();
@@ -400,10 +402,31 @@ export default function MemberDetail() {
                   className="mt-2 justify-center"
                 />
               </div>
-              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${feeStatusBadgeClass(member.feeStatus)}`}>
-                {member.feeStatus === "paid" ? <CheckCircle2 className="h-3 w-3" /> : member.feeStatus === "pending" ? <Clock className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-                Fee {feeStatusLabel(member.feeStatus)}
-              </span>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${feeStatusBadgeClass(member.feeStatus)}`}>
+                  {member.feeStatus === "paid" ? <CheckCircle2 className="h-3 w-3" /> : member.feeStatus === "pending" ? <Clock className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                  Fee {feeStatusLabel(member.feeStatus)}
+                </span>
+                {(() => {
+                  const s = (member as any).frfStatus ?? "active";
+                  const cls =
+                    s === "active"
+                      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
+                      : s === "suspended"
+                      ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
+                      : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-400";
+                  return (
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold capitalize ${cls}`} data-testid="badge-member-status">
+                      {s}
+                    </span>
+                  );
+                })()}
+                {(member as any).responsibility === "responsible" ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300" data-testid="badge-responsibility">
+                    <UserCheck className="h-3 w-3" /> Responsible
+                  </span>
+                ) : null}
+              </div>
             </div>
 
             <div className="mt-6 space-y-3">
@@ -434,6 +457,58 @@ export default function MemberDetail() {
                 <p className="text-sm text-emerald-500/70 dark:text-slate-500">Direct registration — not referred by another member.</p>
               )}
             </div>
+
+            {/* Outstanding dues at a glance */}
+            {(() => {
+              const feeDue = member.feeStatus !== "paid" ? Number(member.membershipFee) : 0;
+              const frfDue = frfSummary?.totalOutstanding ?? 0;
+              const totalDue = feeDue + frfDue;
+              return (
+                <div className="mt-6 pt-5 border-t border-emerald-100 dark:border-slate-800" data-testid="section-outstanding-dues">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Wallet className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    <span className="text-sm font-semibold text-emerald-900 dark:text-slate-200">Outstanding Dues</span>
+                  </div>
+                  {totalDue > 0 ? (
+                    <div className="rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50/60 dark:bg-red-950/30 p-3 space-y-1.5">
+                      {feeDue > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-red-800 dark:text-red-300">Membership fee</span>
+                          <span className="font-semibold text-red-700 dark:text-red-400">{formatSAR(feeDue)}</span>
+                        </div>
+                      )}
+                      {frfDue > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-red-800 dark:text-red-300">FRF contributions</span>
+                          <span className="font-semibold text-red-700 dark:text-red-400">{formatSAR(frfDue)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-sm pt-1.5 border-t border-red-200 dark:border-red-900/50">
+                        <span className="font-semibold text-red-900 dark:text-red-200">Total due</span>
+                        <span className="font-bold text-red-700 dark:text-red-400">{formatSAR(totalDue)}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/60 dark:bg-emerald-950/30 p-3 flex items-center gap-2 text-sm text-emerald-800 dark:text-emerald-300">
+                      <CheckCircle2 className="h-4 w-4 shrink-0" /> No outstanding dues — all clear.
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Admin remarks */}
+            {(member as any).notes ? (
+              <div className="mt-6 pt-5 border-t border-emerald-100 dark:border-slate-800" data-testid="section-member-notes">
+                <div className="flex items-center gap-2 mb-2">
+                  <FileText className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  <span className="text-sm font-semibold text-emerald-900 dark:text-slate-200">Remarks</span>
+                </div>
+                <p className="text-sm text-emerald-800 dark:text-slate-300 whitespace-pre-wrap rounded-xl bg-emerald-50/60 dark:bg-slate-800/50 p-3">
+                  {(member as any).notes}
+                </p>
+              </div>
+            ) : null}
           </CardContent>
         </Card>
 

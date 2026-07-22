@@ -1850,6 +1850,11 @@ components:
         frfStatus:
           type: string
           enum: [active, suspended, inactive]
+        responsibility:
+          type: string
+          enum: [responsible, not_responsible]
+        notes:
+          type: string
         frfDue: { type: number }
         frfPaid: { type: number }
         frfOutstanding: { type: number }
@@ -1881,6 +1886,8 @@ components:
         - feePaidAt
         - feeUpdatedBy
         - frfStatus
+        - responsibility
+        - notes
         - refMemberName
         - refMemberId
         - createdAt
@@ -1928,6 +1935,11 @@ components:
         frfStatus:
           type: string
           enum: [active, suspended, inactive]
+        responsibility:
+          type: string
+          enum: [responsible, not_responsible]
+        notes:
+          type: string
         refMemberName:
           type: string
         refMemberId:
@@ -1956,6 +1968,8 @@ components:
         - feePaidAt
         - feeUpdatedBy
         - frfStatus
+        - responsibility
+        - notes
         - refMemberName
         - refMemberId
         - createdAt
@@ -2000,6 +2014,11 @@ components:
         frfStatus:
           type: string
           enum: [active, suspended, inactive]
+        responsibility:
+          type: string
+          enum: [responsible, not_responsible]
+        notes:
+          type: string
         refMemberName:
           type: string
         refMemberId:
@@ -2190,6 +2209,14 @@ components:
           type: number
         membershipFeeTotal:
           type: number
+        activeMembersCount:
+          type: integer
+        suspendedMembersCount:
+          type: integer
+        inactiveMembersCount:
+          type: integer
+        frfOutstandingTotal:
+          type: number
       required:
         - totalMembers
         - paidMembersCount
@@ -2198,6 +2225,10 @@ components:
         - totalFeesCollected
         - outstandingFees
         - membershipFeeTotal
+        - activeMembersCount
+        - suspendedMembersCount
+        - inactiveMembersCount
+        - frfOutstandingTotal
 
     PendingMember:
       type: object

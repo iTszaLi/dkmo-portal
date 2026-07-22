@@ -27,7 +27,7 @@ Admins sign in to a secure dashboard that tracks members, records monthly paymen
 
 ## Data model (`lib/db/src/schema/`)
 
-- `members` — fullName, mobileNumber, membershipId (unique, server-assigned sequential `DKMO-XXXX` from `dkmo_id_seq` via `next_dkmo_number()`; permanent, never reused, immutable via API), city, country, designation, membershipFee (one-time 100 SAR), feeStatus (paid|pending|unpaid), feePaidAt, feeUpdatedBy, refMemberName, refMemberId
+- `members` — fullName, mobileNumber, membershipId (unique, server-assigned sequential `DKMO-XXXX` from `dkmo_id_seq` via `next_dkmo_number()`; permanent, never reused, immutable via API), city, country, designation, membershipFee (one-time 100 SAR), feeStatus (paid|pending|unpaid), feePaidAt, feeUpdatedBy, responsibility (responsible|not_responsible), notes (admin remarks), refMemberName, refMemberId
 - `payments` — memberId (FK cascade), month (YYYY-MM), amountPaid, paymentMethod, receiptNumber, notes, paidAt
 
 ## API surface (all under `/api`)
