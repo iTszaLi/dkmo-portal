@@ -4,6 +4,8 @@ import { membersTable } from "./members";
 export const frfClaimsTable = pgTable("frf_claims", {
   id: uuid("id").primaryKey().defaultRandom(),
   memberId: uuid("member_id").references(() => membersTable.id, { onDelete: "set null" }),
+  title: text("title").notNull().default(""),
+  closingDate: timestamp("closing_date", { withTimezone: true }),
   claimantName: text("claimant_name").notNull(),
   membershipId: text("membership_id").notNull().default(""),
   claimType: text("claim_type").notNull().default("death_benefit"),
@@ -46,6 +48,7 @@ export const frfContributionsTable = pgTable(
       .notNull()
       .references(() => membersTable.id, { onDelete: "cascade" }),
     amount: numeric("amount", { precision: 12, scale: 2 }).notNull().default("50"),
+    amountPaid: numeric("amount_paid", { precision: 12, scale: 2 }).notNull().default("0"),
     status: text("status").notNull().default("pending"),
     paymentId: uuid("payment_id"),
     paidAt: timestamp("paid_at", { withTimezone: true }),

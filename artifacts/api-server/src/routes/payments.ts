@@ -127,12 +127,17 @@ router.post("/payments", async (req, res): Promise<void> => {
       // Strict separation — only FRF payments linked to a claim touch the
       // contribution ledger; membership fees and other types never do.
       if (row.paymentType === "frf_contribution" && row.frfClaimId) {
+        const [claim] = await tx
+          .select({ contributionAmount: frfClaimsTable.contributionAmount })
+          .from(frfClaimsTable)
+          .where(eq(frfClaimsTable.id, row.frfClaimId));
         await markContributionPaid(
           {
             claimId: row.frfClaimId,
             memberId: row.memberId,
             paymentId: row.id,
-            amount: Number(row.amountPaid),
+            amountPaid: Number(row.amountPaid),
+            dueAmount: Number(claim?.contributionAmount ?? row.amountPaid),
             paidAt: row.paidAt,
           },
           tx,
@@ -208,8 +213,15 @@ router.delete("/payments/:id", async (req, res): Promise<void> => {
     // always makes the pending obligation reappear.
     await db.transaction(async (tx) => {
       await tx.delete(paymentsTable).where(eq(paymentsTable.id, params.data.id));
-      if (row.payment.paymentType === "frf_contribution") {
-        await revertContributionForPayment(row.payment.id, tx);
+      if (row.payment.paymentType === "frf_contribution" && row.payment.frfClaimId) {
+        await revertContributionForPayment(
+          {
+            claimId: row.payment.frfClaimId,
+            memberId: row.payment.memberId,
+            amountPaid: Number(row.payment.amountPaid),
+          },
+          tx,
+        );
       }
     });
   } catch (err) {

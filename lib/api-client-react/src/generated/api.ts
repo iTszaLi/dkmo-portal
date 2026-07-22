@@ -42,6 +42,8 @@ import type {
   FrfClaim,
   FrfClaimCollection,
   FrfClaimInput,
+  FrfContributionStatusInput,
+  FrfContributionStatusResponse,
   FrfOverview,
   FrfStats,
   GetDashboardCashFlowParams,
@@ -5260,6 +5262,126 @@ export function useGetFrfClaimCollection<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Mark a member exempt for an FRF case, or revert to pending
+ */
+export const getUpdateFrfContributionStatusUrl = (
+  id: string,
+  contributionId: string,
+) => {
+  return `/api/frf/claims/${id}/contributions/${contributionId}`;
+};
+
+export const updateFrfContributionStatus = async (
+  id: string,
+  contributionId: string,
+  frfContributionStatusInput: FrfContributionStatusInput,
+  options?: RequestInit,
+): Promise<FrfContributionStatusResponse> => {
+  return customFetch<FrfContributionStatusResponse>(
+    getUpdateFrfContributionStatusUrl(id, contributionId),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(frfContributionStatusInput),
+    },
+  );
+};
+
+export const getUpdateFrfContributionStatusMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateFrfContributionStatus>>,
+    TError,
+    {
+      id: string;
+      contributionId: string;
+      data: BodyType<FrfContributionStatusInput>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateFrfContributionStatus>>,
+  TError,
+  {
+    id: string;
+    contributionId: string;
+    data: BodyType<FrfContributionStatusInput>;
+  },
+  TContext
+> => {
+  const mutationKey = ["updateFrfContributionStatus"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateFrfContributionStatus>>,
+    {
+      id: string;
+      contributionId: string;
+      data: BodyType<FrfContributionStatusInput>;
+    }
+  > = (props) => {
+    const { id, contributionId, data } = props ?? {};
+
+    return updateFrfContributionStatus(
+      id,
+      contributionId,
+      data,
+      requestOptions,
+    );
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateFrfContributionStatusMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateFrfContributionStatus>>
+>;
+export type UpdateFrfContributionStatusMutationBody =
+  BodyType<FrfContributionStatusInput>;
+export type UpdateFrfContributionStatusMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Mark a member exempt for an FRF case, or revert to pending
+ */
+export const useUpdateFrfContributionStatus = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateFrfContributionStatus>>,
+    TError,
+    {
+      id: string;
+      contributionId: string;
+      data: BodyType<FrfContributionStatusInput>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateFrfContributionStatus>>,
+  TError,
+  {
+    id: string;
+    contributionId: string;
+    data: BodyType<FrfContributionStatusInput>;
+  },
+  TContext
+> => {
+  return useMutation(getUpdateFrfContributionStatusMutationOptions(options));
+};
 
 /**
  * @summary FRF eligibility, contribution summary, history, and reference collection performance

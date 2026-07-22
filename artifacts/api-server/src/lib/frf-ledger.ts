@@ -53,8 +53,10 @@ export function deriveContributionStatus(
   contribution: Pick<FrfContribution, "status">,
   claimApprovedDate: Date | null,
   now: Date = new Date(),
-): "paid" | "pending" | "overdue" | "cancelled" {
+): "paid" | "partial" | "pending" | "overdue" | "cancelled" | "exempt" {
   if (contribution.status === "paid") return "paid";
+  if (contribution.status === "partial") return "partial";
+  if (contribution.status === "exempt") return "exempt";
   if (contribution.status === "cancelled") return "cancelled";
   if (
     claimApprovedDate &&
@@ -147,35 +149,41 @@ export async function reopenCancelledContributions(
 }
 
 /**
- * Link an FRF payment to the member's contribution row for the claim and
- * mark it paid. If no ledger row exists (member activated after approval and
- * chose to contribute anyway), create one as paid.
+ * Link an FRF payment to the member's contribution row for the claim.
+ * Payments accumulate into amount_paid; the status becomes "paid" once the
+ * accumulated total reaches the due amount, otherwise "partial". The due
+ * amount is preserved (never overwritten by the payment amount). If no
+ * ledger row exists (member activated after case creation and chose to
+ * contribute anyway), create one with the claim's due amount.
  */
 export async function markContributionPaid(
   opts: {
     claimId: string;
     memberId: string;
     paymentId: string;
-    amount: number;
+    amountPaid: number;
+    dueAmount: number;
     paidAt: Date;
   },
   executor: Executor = db,
 ): Promise<void> {
+  const paid = String(opts.amountPaid);
   await executor
     .insert(frfContributionsTable)
     .values({
       claimId: opts.claimId,
       memberId: opts.memberId,
-      amount: String(opts.amount),
-      status: "paid",
+      amount: String(opts.dueAmount),
+      amountPaid: paid,
+      status: opts.amountPaid >= opts.dueAmount ? "paid" : "partial",
       paymentId: opts.paymentId,
       paidAt: opts.paidAt,
     })
     .onConflictDoUpdate({
       target: [frfContributionsTable.claimId, frfContributionsTable.memberId],
       set: {
-        status: "paid",
-        amount: String(opts.amount),
+        amountPaid: sql`${frfContributionsTable.amountPaid} + ${paid}::numeric`,
+        status: sql`CASE WHEN ${frfContributionsTable.amountPaid} + ${paid}::numeric >= ${frfContributionsTable.amount} THEN 'paid' ELSE 'partial' END`,
         paymentId: opts.paymentId,
         paidAt: opts.paidAt,
         updatedAt: sql`now()`,
@@ -184,17 +192,33 @@ export async function markContributionPaid(
 }
 
 /**
- * Revert the contribution linked to a deleted/cancelled FRF payment back to
- * pending so the obligation reappears automatically.
+ * Revert the contribution linked to a deleted/cancelled FRF payment. The
+ * deleted payment's amount is subtracted from the accumulated total and the
+ * status recomputed (paid → partial → pending) so the obligation reappears.
  */
 export async function revertContributionForPayment(
-  paymentId: string,
+  opts: { claimId: string; memberId: string; amountPaid: number },
   executor: Executor = db,
 ): Promise<number> {
+  const amt = String(opts.amountPaid);
   const updated = await executor
     .update(frfContributionsTable)
-    .set({ status: "pending", paymentId: null, paidAt: null })
-    .where(eq(frfContributionsTable.paymentId, paymentId))
+    .set({
+      amountPaid: sql`GREATEST(${frfContributionsTable.amountPaid} - ${amt}::numeric, 0)`,
+      status: sql`CASE
+        WHEN GREATEST(${frfContributionsTable.amountPaid} - ${amt}::numeric, 0) = 0 THEN 'pending'
+        WHEN GREATEST(${frfContributionsTable.amountPaid} - ${amt}::numeric, 0) >= ${frfContributionsTable.amount} THEN 'paid'
+        ELSE 'partial'
+      END`,
+      paymentId: null,
+      paidAt: null,
+    })
+    .where(
+      and(
+        eq(frfContributionsTable.claimId, opts.claimId),
+        eq(frfContributionsTable.memberId, opts.memberId),
+      ),
+    )
     .returning({ id: frfContributionsTable.id });
   return updated.length;
 }
@@ -235,7 +259,7 @@ export async function aggregateMemberFrf(
   for (const { contribution: c, approvedDate } of rows) {
     if (filter && !filter.has(c.memberId)) continue;
     const status = deriveContributionStatus(c, approvedDate, now);
-    if (status === "cancelled") continue;
+    if (status === "cancelled" || status === "exempt") continue;
     let agg = map.get(c.memberId);
     if (!agg) {
       agg = {
@@ -251,15 +275,19 @@ export async function aggregateMemberFrf(
       map.set(c.memberId, agg);
     }
     const amount = Number(c.amount);
+    const paid = Number(c.amountPaid);
     agg.totalClaims += 1;
     agg.totalDue += amount;
-    if (status === "paid") {
-      agg.totalPaid += amount;
-      if (c.paidAt && (!agg.lastContributionAt || c.paidAt > agg.lastContributionAt)) {
-        agg.lastContributionAt = c.paidAt;
-      }
-    } else {
-      agg.totalOutstanding += amount;
+    agg.totalPaid += paid;
+    if (
+      paid > 0 &&
+      c.paidAt &&
+      (!agg.lastContributionAt || c.paidAt > agg.lastContributionAt)
+    ) {
+      agg.lastContributionAt = c.paidAt;
+    }
+    if (status !== "paid") {
+      agg.totalOutstanding += Math.max(amount - paid, 0);
       if (status === "overdue") agg.overdueCount += 1;
       else agg.pendingCount += 1;
     }

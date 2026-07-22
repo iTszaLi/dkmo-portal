@@ -1210,6 +1210,34 @@ paths:
               schema:
                 $ref: "#/components/schemas/FrfClaimCollection"
 
+  /frf/claims/{id}/contributions/{contributionId}:
+    patch:
+      operationId: updateFrfContributionStatus
+      tags: [frf]
+      summary: Mark a member exempt for an FRF case, or revert to pending
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+        - in: path
+          name: contributionId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FrfContributionStatusInput"
+      responses:
+        "200":
+          description: Updated contribution status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FrfContributionStatusResponse"
+
   /members/{id}/frf-summary:
     get:
       operationId: getMemberFrfSummary
@@ -2223,6 +2251,16 @@ components:
           type: integer
         membersPendingFrfCount:
           type: integer
+        frfCommittedTotal:
+          type: number
+        frfTargetTotal:
+          type: number
+        closedFrfCasesCount:
+          type: integer
+        membersPartialFrfCount:
+          type: integer
+        membersPaidFrfCount:
+          type: integer
       required:
         - totalMembers
         - paidMembersCount
@@ -2238,6 +2276,11 @@ components:
         - frfCollectedTotal
         - activeFrfCasesCount
         - membersPendingFrfCount
+        - frfCommittedTotal
+        - frfTargetTotal
+        - closedFrfCasesCount
+        - membersPartialFrfCount
+        - membersPaidFrfCount
 
     PendingMember:
       type: object
@@ -2671,6 +2714,13 @@ components:
         id: { type: string }
         memberId:
           type: ["string", "null"]
+        title: { type: string }
+        caseStatus:
+          type: string
+          enum: [open, closed]
+        closingDate:
+          type: ["string", "null"]
+          format: date-time
         claimantName: { type: string }
         membershipId: { type: string }
         claimType:
@@ -2697,6 +2747,8 @@ components:
         updatedAt: { type: string, format: date-time }
       required:
         - id
+        - title
+        - caseStatus
         - claimantName
         - membershipId
         - claimType
@@ -2715,6 +2767,10 @@ components:
     FrfClaimInput:
       type: object
       properties:
+        title: { type: string }
+        closingDate:
+          type: ["string", "null"]
+          format: date-time
         claimantName: { type: string, minLength: 1 }
         membershipId: { type: string }
         memberId:
@@ -2773,15 +2829,21 @@ components:
           type: ["string", "null"]
         refMemberName: { type: string }
         amount: { type: number }
+        amountPaid: { type: number }
+        balance: { type: number }
         status:
           type: string
-          enum: [paid, pending, overdue, cancelled]
+          enum: [paid, partial, pending, overdue, cancelled, exempt]
         paidAt:
           type: ["string", "null"]
           format: date-time
         receiptNumber:
           type: ["string", "null"]
-      required: [contributionId, memberId, fullName, membershipId, mobileNumber, refMemberName, amount, status]
+        paymentMethod:
+          type: ["string", "null"]
+        remarks:
+          type: ["string", "null"]
+      required: [contributionId, memberId, fullName, membershipId, mobileNumber, refMemberName, amount, amountPaid, balance, status]
 
     FrfClaimCollection:
       type: object
@@ -2792,16 +2854,24 @@ components:
         expectedAmount: { type: number }
         collectedAmount: { type: number }
         outstandingAmount: { type: number }
+        targetAmount: { type: number }
+        remainingToTarget: { type: number }
+        targetProgress: { type: number }
         collectionRate: { type: number }
+        lastPaymentAt:
+          type: ["string", "null"]
+          format: date-time
         paidCount: { type: integer }
+        partialCount: { type: integer }
         pendingCount: { type: integer }
         overdueCount: { type: integer }
         cancelledCount: { type: integer }
+        exemptCount: { type: integer }
         contributors:
           type: array
           items:
             $ref: "#/components/schemas/FrfContributor"
-      required: [claim, totalMembers, expectedAmount, collectedAmount, outstandingAmount, collectionRate, paidCount, pendingCount, overdueCount, cancelledCount, contributors]
+      required: [claim, totalMembers, expectedAmount, collectedAmount, outstandingAmount, targetAmount, remainingToTarget, targetProgress, collectionRate, paidCount, partialCount, pendingCount, overdueCount, cancelledCount, exemptCount, contributors]
 
     FrfEligibility:
       type: object
@@ -2817,12 +2887,15 @@ components:
       properties:
         contributionId: { type: string }
         claimId: { type: string }
+        title: { type: string }
         claimantName: { type: string }
         claimType: { type: string }
         amount: { type: number }
+        amountPaid: { type: number }
+        balance: { type: number }
         status:
           type: string
-          enum: [paid, pending, overdue, cancelled]
+          enum: [paid, partial, pending, overdue, cancelled, exempt]
         approvedDate:
           type: ["string", "null"]
           format: date-time
@@ -2835,7 +2908,7 @@ components:
           type: ["string", "null"]
         remarks:
           type: ["string", "null"]
-      required: [contributionId, claimId, claimantName, claimType, amount, status]
+      required: [contributionId, claimId, title, claimantName, claimType, amount, amountPaid, balance, status]
 
     FrfReferenceMemberItem:
       type: object
@@ -2879,6 +2952,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/MemberFrfHistoryItem"
+        beneficiaryCases:
+          type: array
+          items:
+            $ref: "#/components/schemas/MemberBeneficiaryCase"
         referenceCollection:
           type: object
           properties:
@@ -2893,7 +2970,43 @@ components:
               items:
                 $ref: "#/components/schemas/FrfReferenceMemberItem"
           required: [totalReferences, fullyPaidCount, pendingCount, overdueCount, collectionRate, totalOutstanding, members]
-      required: [eligibility, totalClaims, totalDue, totalPaid, totalOutstanding, casesPaid, casesPending, history, referenceCollection]
+      required: [eligibility, totalClaims, totalDue, totalPaid, totalOutstanding, casesPaid, casesPending, history, beneficiaryCases, referenceCollection]
+
+    MemberBeneficiaryCase:
+      type: object
+      properties:
+        claimId: { type: string }
+        title: { type: string }
+        claimantName: { type: string }
+        claimType: { type: string }
+        status: { type: string }
+        caseStatus:
+          type: string
+          enum: [open, closed]
+        targetAmount: { type: number }
+        committedAmount: { type: number }
+        collectedAmount: { type: number }
+        remainingToTarget: { type: number }
+        collectionProgress: { type: number }
+        claimDate:
+          type: ["string", "null"]
+          format: date-time
+      required: [claimId, title, claimantName, claimType, status, caseStatus, targetAmount, committedAmount, collectedAmount, remainingToTarget, collectionProgress]
+
+    FrfContributionStatusInput:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [exempt, pending]
+      required: [status]
+
+    FrfContributionStatusResponse:
+      type: object
+      properties:
+        id: { type: string }
+        status: { type: string }
+      required: [id, status]
 
     FrfOverview:
       type: object

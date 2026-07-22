@@ -564,6 +564,15 @@ async function main() {
     $fn$;
   `);
 
+  // FRF professional workflow: case title + optional closing date on claims;
+  // partial-payment tracking on contributions (amount_paid accumulates).
+  await pool.query(`
+    ALTER TABLE frf_claims ADD COLUMN IF NOT EXISTS title TEXT NOT NULL DEFAULT '';
+    ALTER TABLE frf_claims ADD COLUMN IF NOT EXISTS closing_date TIMESTAMPTZ;
+    ALTER TABLE frf_contributions ADD COLUMN IF NOT EXISTS amount_paid NUMERIC(12,2) NOT NULL DEFAULT 0;
+    UPDATE frf_contributions SET amount_paid = amount WHERE status = 'paid' AND amount_paid = 0;
+  `);
+
   console.log("✅  All tables created.");
   await pool.end();
 }

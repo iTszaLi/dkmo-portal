@@ -16,6 +16,8 @@ const router: IRouter = Router();
 router.use(requireAuth);
 
 const FrfClaimInput = z.object({
+  title: z.string().optional().default(""),
+  closingDate: z.string().datetime().nullable().optional(),
   claimantName: z.string().min(1),
   membershipId: z.string().optional().default(""),
   memberId: z.string().uuid().nullable().optional(),
@@ -34,10 +36,18 @@ const FrfClaimInput = z.object({
   reviewNotes: z.string().optional().default(""),
 });
 
+/** A case is closed once it is disbursed or rejected; otherwise it is open. */
+function caseStatusOf(status: string): "open" | "closed" {
+  return status === "disbursed" || status === "rejected" ? "closed" : "open";
+}
+
 function frfToApi(row: any) {
   return {
     id: row.id,
     memberId: row.memberId ?? null,
+    title: row.title ?? "",
+    caseStatus: caseStatusOf(row.status),
+    closingDate: row.closingDate?.toISOString() ?? null,
     claimantName: row.claimantName,
     membershipId: row.membershipId ?? "",
     claimType: row.claimType,
@@ -122,6 +132,8 @@ router.post("/frf/claims", requireRole("admin", "finance"), async (req, res): Pr
   try {
     const data = parsed.data;
     const [created] = await db.insert(frfClaimsTable).values({
+      title: data.title,
+      closingDate: data.closingDate ? new Date(data.closingDate) : null,
       claimantName: data.claimantName,
       membershipId: data.membershipId,
       memberId: data.memberId ?? null,
@@ -138,9 +150,11 @@ router.post("/frf/claims", requireRole("admin", "finance"), async (req, res): Pr
       description: data.description,
       notes: data.notes,
     }).returning();
-    if (created!.status === "approved") {
+    // Auto-link: every new case immediately creates a pending contribution
+    // record for every active member (unless created directly as rejected).
+    if (created!.status !== "rejected") {
       const generated = await generateContributionsForClaim(created!.id, Number(created!.contributionAmount));
-      req.log.info({ claimId: created!.id, generated }, "FRF contributions generated");
+      req.log.info({ claimId: created!.id, generated }, "FRF contributions generated on case creation");
     }
     logAudit(req, "claim_created", "frf", { entityId: created!.id, entityName: data.claimantName, details: `Type: ${data.claimType}, Status: ${data.status}` });
     res.status(201).json(frfToApi(created!));
@@ -169,6 +183,8 @@ router.put("/frf/claims/:id", requireRole("admin", "finance"), async (req, res):
   try {
     const data = parsed.data;
     const updateData: Record<string, any> = {};
+    if (data.title !== undefined) updateData.title = data.title;
+    if (data.closingDate !== undefined) updateData.closingDate = data.closingDate ? new Date(data.closingDate) : null;
     if (data.claimantName !== undefined) updateData.claimantName = data.claimantName;
     if (data.membershipId !== undefined) updateData.membershipId = data.membershipId;
     if (data.memberId !== undefined) updateData.memberId = data.memberId;
@@ -202,17 +218,20 @@ router.put("/frf/claims/:id", requireRole("admin", "finance"), async (req, res):
     if (!updated) { res.status(404).json({ error: "Not found" }); return; }
 
     // Keep the contribution ledger synchronized with claim status.
-    const wasCollectable = existing.status === "approved" || existing.status === "disbursed";
-    const isCollectable = updated.status === "approved" || updated.status === "disbursed";
-    if (isCollectable && !wasCollectable) {
+    // Contributions exist from case creation; only rejection cancels the
+    // still-pending obligations (paid/partial rows are always preserved).
+    // Closing a case (disbursed) freezes records without cancelling them.
+    const wasRejected = existing.status === "rejected";
+    const isRejected = updated.status === "rejected";
+    if (isRejected && !wasRejected) {
+      const cancelled = await cancelPendingContributions(updated.id);
+      req.log.info({ claimId: updated.id, cancelled }, "FRF pending contributions cancelled on rejection");
+    } else if (!isRejected && wasRejected) {
       const reopened = await reopenCancelledContributions(updated.id);
       const generated = await generateContributionsForClaim(updated.id, Number(updated.contributionAmount));
-      req.log.info({ claimId: updated.id, generated, reopened }, "FRF contributions generated on approval");
-    } else if (!isCollectable && wasCollectable) {
-      const cancelled = await cancelPendingContributions(updated.id);
-      req.log.info({ claimId: updated.id, cancelled }, "FRF pending contributions cancelled");
-    } else if (isCollectable && data.contributionAmount !== undefined && Number(existing.contributionAmount) !== data.contributionAmount) {
-      // Amount changed on an approved claim: update unpaid ledger rows only.
+      req.log.info({ claimId: updated.id, generated, reopened }, "FRF contributions reopened");
+    } else if (!isRejected && data.contributionAmount !== undefined && Number(existing.contributionAmount) !== data.contributionAmount) {
+      // Amount changed on an open claim: update unpaid ledger rows only.
       await db.update(frfContributionsTable)
         .set({ amount: String(data.contributionAmount) })
         .where(and(eq(frfContributionsTable.claimId, updated.id), eq(frfContributionsTable.status, "pending")));
@@ -243,31 +262,48 @@ router.get("/frf/claims/:id/collection", async (req, res): Promise<void> => {
       .where(eq(frfContributionsTable.claimId, id))
       .orderBy(desc(frfContributionsTable.createdAt));
 
-    // Look up receipt numbers for paid contributions in one query.
+    // Look up receipt/method/notes of linked payments in one query.
     const paymentIds = rows.map((r) => r.contribution.paymentId).filter((p): p is string => Boolean(p));
-    const receiptByPaymentId = new Map<string, string>();
+    const paymentById = new Map<string, { receiptNumber: string; paymentMethod: string; notes: string | null }>();
     if (paymentIds.length > 0) {
-      const paymentRows = await db.select({ id: paymentsTable.id, receiptNumber: paymentsTable.receiptNumber }).from(paymentsTable);
+      const paymentRows = await db
+        .select({
+          id: paymentsTable.id,
+          receiptNumber: paymentsTable.receiptNumber,
+          paymentMethod: paymentsTable.paymentMethod,
+          notes: paymentsTable.notes,
+        })
+        .from(paymentsTable);
       const wanted = new Set(paymentIds);
-      for (const p of paymentRows) if (wanted.has(p.id)) receiptByPaymentId.set(p.id, p.receiptNumber);
+      for (const p of paymentRows) if (wanted.has(p.id)) paymentById.set(p.id, p);
     }
 
     const now = new Date();
     let expectedAmount = 0;
     let collectedAmount = 0;
-    let paidCount = 0, pendingCount = 0, overdueCount = 0, cancelledCount = 0;
+    let lastPaymentAt: Date | null = null;
+    let paidCount = 0, partialCount = 0, pendingCount = 0, overdueCount = 0, cancelledCount = 0, exemptCount = 0;
 
     const contributors = rows.map(({ contribution: c, member: m }) => {
       const status = deriveContributionStatus(c, claim.approvedDate, now);
       const amount = Number(c.amount);
+      const amountPaid = Number(c.amountPaid);
       if (status === "cancelled") {
         cancelledCount++;
+      } else if (status === "exempt") {
+        exemptCount++;
       } else {
         expectedAmount += amount;
-        if (status === "paid") { collectedAmount += amount; paidCount++; }
+        collectedAmount += amountPaid;
+        if (status === "paid") paidCount++;
+        else if (status === "partial") partialCount++;
         else if (status === "overdue") overdueCount++;
         else pendingCount++;
       }
+      if (amountPaid > 0 && c.paidAt && (!lastPaymentAt || c.paidAt > lastPaymentAt)) {
+        lastPaymentAt = c.paidAt;
+      }
+      const payment = c.paymentId ? paymentById.get(c.paymentId) : undefined;
       return {
         contributionId: c.id,
         memberId: m.id,
@@ -277,24 +313,35 @@ router.get("/frf/claims/:id/collection", async (req, res): Promise<void> => {
         photoUrl: m.photoUrl ?? null,
         refMemberName: m.refMemberName ?? "",
         amount,
+        amountPaid,
+        balance: Math.max(amount - amountPaid, 0),
         status,
         paidAt: c.paidAt?.toISOString() ?? null,
-        receiptNumber: c.paymentId ? (receiptByPaymentId.get(c.paymentId) ?? null) : null,
+        receiptNumber: payment?.receiptNumber ?? null,
+        paymentMethod: payment?.paymentMethod ?? null,
+        remarks: payment?.notes ?? null,
       };
     });
 
-    const outstandingAmount = expectedAmount - collectedAmount;
+    const outstandingAmount = Math.max(expectedAmount - collectedAmount, 0);
+    const targetAmount = Number(claim.amountRequested);
     res.json({
       claim: frfToApi(claim),
-      totalMembers: paidCount + pendingCount + overdueCount,
+      totalMembers: paidCount + partialCount + pendingCount + overdueCount,
       expectedAmount,
       collectedAmount,
       outstandingAmount,
+      targetAmount,
+      remainingToTarget: Math.max(targetAmount - collectedAmount, 0),
+      targetProgress: targetAmount > 0 ? Math.min(Math.round((collectedAmount / targetAmount) * 100), 100) : 0,
       collectionRate: expectedAmount > 0 ? Math.round((collectedAmount / expectedAmount) * 100) : 0,
+      lastPaymentAt: lastPaymentAt ? (lastPaymentAt as Date).toISOString() : null,
       paidCount,
+      partialCount,
       pendingCount,
       overdueCount,
       cancelledCount,
+      exemptCount,
       contributors,
     });
   } catch (err) {
@@ -302,6 +349,50 @@ router.get("/frf/claims/:id/collection", async (req, res): Promise<void> => {
     res.status(500).json({ error: "Failed to get FRF claim collection" });
   }
 });
+
+const ContributionStatusInput = z.object({
+  status: z.enum(["exempt", "pending"]),
+});
+
+// Mark a member exempt for a case (or revert to pending). Paid/partial rows
+// keep their money on record; only the obligation flag changes.
+router.patch(
+  "/frf/claims/:id/contributions/:contributionId",
+  requireRole("admin", "finance"),
+  async (req, res): Promise<void> => {
+    const claimId = req.params["id"] as string;
+    const contributionId = req.params["contributionId"] as string;
+    const parsed = ContributionStatusInput.safeParse(req.body);
+    if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+    try {
+      const [existing] = await db
+        .select()
+        .from(frfContributionsTable)
+        .where(and(eq(frfContributionsTable.id, contributionId), eq(frfContributionsTable.claimId, claimId)));
+      if (!existing) { res.status(404).json({ error: "Contribution not found" }); return; }
+
+      let newStatus: string = parsed.data.status;
+      if (newStatus === "pending" && Number(existing.amountPaid) > 0) {
+        // Reverting exemption on a row with money recorded: recompute.
+        newStatus = Number(existing.amountPaid) >= Number(existing.amount) ? "paid" : "partial";
+      }
+      const [updated] = await db
+        .update(frfContributionsTable)
+        .set({ status: newStatus })
+        .where(eq(frfContributionsTable.id, contributionId))
+        .returning();
+      logAudit(req, "contribution_status_changed", "frf", {
+        entityId: contributionId,
+        entityName: existing.memberId,
+        details: `Status: ${existing.status} → ${newStatus}`,
+      });
+      res.json({ id: updated!.id, status: updated!.status });
+    } catch (err) {
+      req.log.error(err);
+      res.status(500).json({ error: "Failed to update contribution status" });
+    }
+  },
+);
 
 router.delete("/frf/claims/:id", requireRole("admin"), async (req, res): Promise<void> => {
   const id = req.params["id"] as string;

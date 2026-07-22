@@ -72,20 +72,32 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
   const [frfAgg] = (
     await db.execute(sql`
       SELECT
-        COALESCE(SUM(amount) FILTER (WHERE status = 'pending'), 0) AS pending_total,
-        COALESCE(SUM(amount) FILTER (WHERE status = 'paid'), 0) AS collected_total,
-        COUNT(DISTINCT member_id) FILTER (WHERE status = 'pending') AS members_pending
+        COALESCE(SUM(GREATEST(amount - amount_paid, 0)) FILTER (WHERE status IN ('pending', 'partial')), 0) AS pending_total,
+        COALESCE(SUM(amount_paid) FILTER (WHERE status NOT IN ('cancelled')), 0) AS collected_total,
+        COALESCE(SUM(amount) FILTER (WHERE status NOT IN ('cancelled', 'exempt')), 0) AS committed_total,
+        COUNT(DISTINCT member_id) FILTER (WHERE status = 'pending') AS members_pending,
+        COUNT(DISTINCT member_id) FILTER (WHERE status = 'partial') AS members_partial,
+        COUNT(DISTINCT member_id) FILTER (WHERE status = 'paid') AS members_paid
       FROM frf_contributions
     `)
-  ).rows as Array<{ pending_total: string | number; collected_total: string | number; members_pending: string | number }>;
+  ).rows as Array<{
+    pending_total: string | number;
+    collected_total: string | number;
+    committed_total: string | number;
+    members_pending: string | number;
+    members_partial: string | number;
+    members_paid: string | number;
+  }>;
 
-  const [activeCases] = (
+  const [caseAgg] = (
     await db.execute(sql`
-      SELECT COUNT(*) AS count
+      SELECT
+        COUNT(*) FILTER (WHERE status NOT IN ('disbursed', 'rejected')) AS open_count,
+        COUNT(*) FILTER (WHERE status IN ('disbursed', 'rejected')) AS closed_count,
+        COALESCE(SUM(amount_requested) FILTER (WHERE status NOT IN ('rejected')), 0) AS target_total
       FROM frf_claims
-      WHERE status NOT IN ('disbursed', 'rejected')
     `)
-  ).rows as Array<{ count: string | number }>;
+  ).rows as Array<{ open_count: string | number; closed_count: string | number; target_total: string | number }>;
 
   res.json({
     totalMembers: members.length,
@@ -100,8 +112,13 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
     inactiveMembersCount: inactiveCount,
     frfOutstandingTotal: Number(frfAgg?.pending_total ?? 0),
     frfCollectedTotal: Number(frfAgg?.collected_total ?? 0),
-    activeFrfCasesCount: Number(activeCases?.count ?? 0),
+    frfCommittedTotal: Number(frfAgg?.committed_total ?? 0),
+    frfTargetTotal: Number(caseAgg?.target_total ?? 0),
+    activeFrfCasesCount: Number(caseAgg?.open_count ?? 0),
+    closedFrfCasesCount: Number(caseAgg?.closed_count ?? 0),
     membersPendingFrfCount: Number(frfAgg?.members_pending ?? 0),
+    membersPartialFrfCount: Number(frfAgg?.members_partial ?? 0),
+    membersPaidFrfCount: Number(frfAgg?.members_paid ?? 0),
   });
 });
 

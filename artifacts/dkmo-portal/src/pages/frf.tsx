@@ -60,6 +60,9 @@ const CLAIM_STATUSES: ClaimStatus[] = ["pending", "under_review", "approved", "r
 type FrfClaimFull = {
   id: string;
   memberId?: string | null;
+  title: string;
+  caseStatus: string;
+  closingDate: string | null;
   claimantName: string;
   membershipId: string;
   claimType: string;
@@ -85,6 +88,8 @@ type FrfClaimFull = {
 };
 
 type FrfClaimInput = {
+  title: string;
+  closingDate: string;
   claimantName: string;
   membershipId: string;
   claimType: ClaimType;
@@ -100,6 +105,8 @@ type FrfClaimInput = {
 };
 
 const EMPTY_FORM: FrfClaimInput = {
+  title: "",
+  closingDate: "",
   claimantName: "",
   membershipId: "",
   claimType: "death_benefit",
@@ -228,6 +235,8 @@ export default function Frf() {
   const openEdit = (claim: FrfClaimFull) => {
     setEditingClaim(claim);
     setForm({
+      title: claim.title ?? "",
+      closingDate: claim.closingDate ? claim.closingDate.slice(0, 10) : "",
       claimantName: claim.claimantName,
       membershipId: claim.membershipId,
       claimType: claim.claimType as ClaimType,
@@ -245,10 +254,14 @@ export default function Frf() {
 
   const handleSubmit = () => {
     if (!form.claimantName.trim()) { toast({ title: "Claimant name is required", variant: "destructive" }); return; }
+    const payload = {
+      ...form,
+      closingDate: form.closingDate ? new Date(form.closingDate).toISOString() : null,
+    };
     if (editingClaim) {
-      updateMutation.mutate({ id: editingClaim.id, data: form as any });
+      updateMutation.mutate({ id: editingClaim.id, data: payload as any });
     } else {
-      createMutation.mutate({ data: form as any });
+      createMutation.mutate({ data: payload as any });
     }
   };
 
@@ -389,6 +402,7 @@ export default function Frf() {
                     <TableRow key={claim.id} className="hover:bg-green-50/30 dark:hover:bg-slate-800/50 dark:border-slate-800 transition-colors">
                       <TableCell>
                         <Link href={`/frf/${claim.id}`} className="block hover:underline">
+                          {claim.title && <div className="text-xs font-semibold text-green-700 dark:text-green-400">{claim.title}</div>}
                           <div className="font-medium text-green-950 dark:text-slate-200">{claim.claimantName}</div>
                           {claim.membershipId && <div className="text-xs text-green-600 dark:text-slate-500">ID: {claim.membershipId}</div>}
                         </Link>
@@ -634,6 +648,10 @@ export default function Frf() {
           <div className="space-y-4 py-2">
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2 space-y-1">
+                <label className="text-xs font-medium text-green-800 dark:text-slate-400">Case Title</label>
+                <Input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} placeholder="e.g. FRF Case — Family of Late Ahmed" className="dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200" />
+              </div>
+              <div className="col-span-2 space-y-1">
                 <label className="text-xs font-medium text-green-800 dark:text-slate-400">Claimant Name *</label>
                 <Input value={form.claimantName} onChange={(e) => setForm((f) => ({ ...f, claimantName: e.target.value }))} placeholder="Full name" className="dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200" />
               </div>
@@ -670,6 +688,10 @@ export default function Frf() {
                     {CLAIM_STATUSES.map((s) => <SelectItem key={s} value={s} className="capitalize dark:text-slate-300">{s.replace("_", " ")}</SelectItem>)}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-green-800 dark:text-slate-400">Closing Date</label>
+                <Input type="date" value={form.closingDate} onChange={(e) => setForm((f) => ({ ...f, closingDate: e.target.value }))} className="dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200" />
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-medium text-green-800 dark:text-slate-400">Beneficiary Name</label>

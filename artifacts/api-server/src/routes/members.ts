@@ -447,26 +447,30 @@ router.get("/members/:id/frf-summary", async (req, res): Promise<void> => {
     const history = ledger.map(({ contribution: c, claim, payment }) => {
       const status = deriveContributionStatus(c, claim.approvedDate, now);
       const amount = Number(c.amount);
-      if (status !== "cancelled") {
+      const amountPaid = Number(c.amountPaid);
+      if (status !== "cancelled" && status !== "exempt") {
         totalClaims += 1;
         totalDue += amount;
+        totalPaid += amountPaid;
+        if (amountPaid > 0 && c.paidAt && (!lastContributionAt || c.paidAt > lastContributionAt)) {
+          lastContributionAt = c.paidAt;
+        }
         if (status === "paid") {
           casesPaid += 1;
-          totalPaid += amount;
-          if (c.paidAt && (!lastContributionAt || c.paidAt > lastContributionAt)) {
-            lastContributionAt = c.paidAt;
-          }
         } else {
           casesPending += 1;
-          totalOutstanding += amount;
+          totalOutstanding += Math.max(amount - amountPaid, 0);
         }
       }
       return {
         contributionId: c.id,
         claimId: claim.id,
+        title: claim.title ?? "",
         claimantName: claim.claimantName,
         claimType: claim.claimType,
         amount,
+        amountPaid,
+        balance: Math.max(amount - amountPaid, 0),
         status,
         approvedDate: claim.approvedDate?.toISOString() ?? null,
         paidAt: c.paidAt?.toISOString() ?? null,
@@ -475,6 +479,45 @@ router.get("/members/:id/frf-summary", async (req, res): Promise<void> => {
         remarks: payment?.notes ?? null,
       };
     });
+
+    // Cases where this member is the beneficiary, with live collection
+    // progress derived from the contribution ledger.
+    const beneficiaryClaims = await db
+      .select()
+      .from(frfClaimsTable)
+      .where(eq(frfClaimsTable.memberId, params.data.id))
+      .orderBy(desc(frfClaimsTable.claimDate));
+
+    const beneficiaryCases = [];
+    for (const claim of beneficiaryClaims) {
+      const contribs = await db
+        .select()
+        .from(frfContributionsTable)
+        .where(eq(frfContributionsTable.claimId, claim.id));
+      let committed = 0;
+      let collected = 0;
+      for (const c of contribs) {
+        const st = deriveContributionStatus(c, claim.approvedDate, now);
+        if (st === "cancelled" || st === "exempt") continue;
+        committed += Number(c.amount);
+        collected += Number(c.amountPaid);
+      }
+      const target = Number(claim.amountRequested);
+      beneficiaryCases.push({
+        claimId: claim.id,
+        title: claim.title ?? "",
+        claimantName: claim.claimantName,
+        claimType: claim.claimType,
+        status: claim.status,
+        caseStatus: claim.status === "disbursed" || claim.status === "rejected" ? "closed" : "open",
+        targetAmount: target,
+        committedAmount: committed,
+        collectedAmount: collected,
+        remainingToTarget: Math.max(target - collected, 0),
+        collectionProgress: target > 0 ? Math.min(Math.round((collected / target) * 100), 100) : 0,
+        claimDate: claim.claimDate?.toISOString() ?? null,
+      });
+    }
 
     // Reference collection performance: members this member recruited.
     const referred = await db
@@ -541,6 +584,7 @@ router.get("/members/:id/frf-summary", async (req, res): Promise<void> => {
         ? (lastContributionAt as Date).toISOString()
         : null,
       history,
+      beneficiaryCases,
       referenceCollection: {
         totalReferences: referred.length,
         fullyPaidCount,

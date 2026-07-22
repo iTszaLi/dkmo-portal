@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "wouter";
-import { useGetFrfClaimCollection } from "@workspace/api-client-react";
+import { useGetFrfClaimCollection, useUpdateFrfContributionStatus } from "@workspace/api-client-react";
 import type { FrfContributor } from "@workspace/api-client-react";
+import { useAuth } from "@/lib/auth";
+import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   HeartHandshake, ArrowLeft, Search, Download, FileSpreadsheet, Users,
-  CheckCircle2, Clock, AlertTriangle, DollarSign,
+  CheckCircle2, Clock, AlertTriangle, DollarSign, Target, UserX, RotateCcw,
 } from "lucide-react";
 import { cn, formatSAR, formatDate } from "@/lib/utils";
 import ExcelJS from "exceljs";
@@ -29,9 +31,20 @@ const CLAIM_TYPE_LABEL: Record<string, string> = {
 
 const CONTRIB_STATUS_STYLE: Record<string, string> = {
   paid: "bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-300 ring-1 ring-green-300/50",
+  partial: "bg-blue-100 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 ring-1 ring-blue-300/50",
   pending: "bg-orange-100 dark:bg-orange-950/40 text-orange-800 dark:text-orange-300 ring-1 ring-orange-300/50",
   overdue: "bg-red-100 dark:bg-red-950/40 text-red-800 dark:text-red-300 ring-1 ring-red-300/50",
   cancelled: "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 ring-1 ring-slate-300/50",
+  exempt: "bg-purple-100 dark:bg-purple-950/40 text-purple-800 dark:text-purple-300 ring-1 ring-purple-300/50",
+};
+
+const CONTRIB_STATUS_LABEL: Record<string, string> = {
+  paid: "Paid",
+  partial: "Partially Paid",
+  pending: "Pending",
+  overdue: "Overdue",
+  cancelled: "Cancelled",
+  exempt: "Exempt",
 };
 
 function initials(name: string) {
@@ -40,10 +53,19 @@ function initials(name: string) {
 
 export default function FrfClaimDetail() {
   const { id = "" } = useParams<{ id: string }>();
-  const { data, isLoading, error } = useGetFrfClaimCollection(id);
+  const { data, isLoading, error, refetch } = useGetFrfClaimCollection(id);
+  const { canEdit } = useAuth();
+  const { toast } = useToast();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  const statusMutation = useUpdateFrfContributionStatus({
+    mutation: {
+      onSuccess: () => { void refetch(); toast({ title: "Contribution status updated" }); },
+      onError: (e) => toast({ title: "Error", description: String(e), variant: "destructive" }),
+    },
+  });
 
   const contributors = useMemo(() => {
     let rows: FrfContributor[] = data?.contributors ?? [];
@@ -69,12 +91,13 @@ export default function FrfClaimDetail() {
     ws.addRow([`Type: ${CLAIM_TYPE_LABEL[data.claim.claimType] ?? data.claim.claimType}`, `Contribution: SAR ${data.claim.contributionAmount}`]);
     ws.addRow([`Expected: SAR ${data.expectedAmount}`, `Collected: SAR ${data.collectedAmount}`, `Outstanding: SAR ${data.outstandingAmount}`, `Rate: ${data.collectionRate}%`]);
     ws.addRow([]);
-    const header = ws.addRow(["Member", "Membership ID", "Mobile", "Reference", "Amount (SAR)", "Status", "Paid Date", "Receipt #"]);
+    const header = ws.addRow(["Member", "Membership ID", "Mobile", "Reference", "Due (SAR)", "Paid (SAR)", "Balance (SAR)", "Status", "Method", "Paid Date", "Receipt #", "Remarks"]);
     header.font = { bold: true };
     for (const c of contributors) {
       ws.addRow([
         c.fullName, c.membershipId, c.mobileNumber, c.refMemberName || "—",
-        c.amount, c.status, c.paidAt ? formatDate(c.paidAt) : "—", c.receiptNumber || "—",
+        c.amount, c.amountPaid, c.balance, CONTRIB_STATUS_LABEL[c.status] ?? c.status,
+        c.paymentMethod || "—", c.paidAt ? formatDate(c.paidAt) : "—", c.receiptNumber || "—", c.remarks || "—",
       ]);
     }
     ws.columns.forEach((col) => { col.width = 20; });
@@ -104,10 +127,11 @@ export default function FrfClaimDetail() {
     );
     autoTable(doc, {
       startY: 42,
-      head: [["Member", "Membership ID", "Mobile", "Reference", "Amount", "Status", "Paid Date"]],
+      head: [["Member", "Membership ID", "Mobile", "Due", "Paid", "Balance", "Status", "Paid Date"]],
       body: contributors.map((c) => [
-        c.fullName, c.membershipId, c.mobileNumber, c.refMemberName || "—",
-        `SAR ${c.amount}`, c.status, c.paidAt ? formatDate(c.paidAt) : "—",
+        c.fullName, c.membershipId, c.mobileNumber,
+        `SAR ${c.amount}`, `SAR ${c.amountPaid}`, `SAR ${c.balance}`,
+        CONTRIB_STATUS_LABEL[c.status] ?? c.status, c.paidAt ? formatDate(c.paidAt) : "—",
       ]),
       styles: { fontSize: 8 },
       headStyles: { fillColor: [21, 128, 61] },
@@ -143,10 +167,19 @@ export default function FrfClaimDetail() {
   const { claim } = data;
 
   const stats = [
-    { title: "Contributing Members", value: String(data.totalMembers), icon: Users, color: "text-green-700 dark:text-green-400" },
-    { title: "Collected", value: formatSAR(data.collectedAmount), icon: CheckCircle2, color: "text-green-700 dark:text-green-400", sub: `${data.paidCount} paid` },
-    { title: "Pending", value: formatSAR(data.outstandingAmount), icon: Clock, color: "text-orange-600 dark:text-orange-400", sub: `${data.pendingCount} pending` },
+    { title: "Contributing Members", value: String(data.totalMembers), icon: Users, color: "text-green-700 dark:text-green-400", sub: `${data.exemptCount} exempt` },
+    { title: "Collected", value: formatSAR(data.collectedAmount), icon: CheckCircle2, color: "text-green-700 dark:text-green-400", sub: `${data.paidCount} paid · ${data.partialCount} partial` },
+    { title: "Outstanding", value: formatSAR(data.outstandingAmount), icon: Clock, color: "text-orange-600 dark:text-orange-400", sub: `${data.pendingCount} pending` },
     { title: "Overdue", value: String(data.overdueCount), icon: AlertTriangle, color: "text-red-600 dark:text-red-400", sub: "30+ days" },
+    {
+      title: "Target",
+      value: formatSAR(data.targetAmount),
+      icon: Target,
+      color: "text-blue-700 dark:text-blue-400",
+      sub: data.targetAmount > 0
+        ? `${data.targetProgress}% reached · ${formatSAR(data.remainingToTarget)} to go`
+        : "No target set",
+    },
   ];
 
   return (
@@ -158,11 +191,24 @@ export default function FrfClaimDetail() {
           </Link>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-green-950 dark:text-green-100 flex items-center gap-2">
             <HeartHandshake className="h-6 w-6 text-green-700 dark:text-green-400" />
-            {claim.claimantName}
+            {claim.title || claim.claimantName}
+            <Badge className={cn(
+              "text-[11px] ml-1",
+              claim.caseStatus === "closed"
+                ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 ring-1 ring-slate-300/50"
+                : "bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-300 ring-1 ring-green-300/50",
+            )}>
+              {claim.caseStatus === "closed" ? "Closed" : "Open"}
+            </Badge>
           </h1>
           <p className="text-green-800/70 dark:text-slate-400 mt-1 text-sm">
-            {CLAIM_TYPE_LABEL[claim.claimType] ?? claim.claimType} · Approved {formatDate(claim.approvedDate ?? null)} · Contribution {formatSAR(claim.contributionAmount)} per member
+            {claim.title ? `${claim.claimantName} · ` : ""}{CLAIM_TYPE_LABEL[claim.claimType] ?? claim.claimType} · Opened {formatDate(claim.claimDate ?? null)}{claim.closingDate ? ` · Closes ${formatDate(claim.closingDate)}` : ""} · Contribution {formatSAR(claim.contributionAmount)} per member
           </p>
+          {(claim.beneficiaryName || claim.beneficiaryRelation) && (
+            <p className="text-xs text-green-700/70 dark:text-slate-500 mt-0.5">
+              Beneficiary: {claim.beneficiaryName || "—"}{claim.beneficiaryRelation ? ` (${claim.beneficiaryRelation})` : ""}
+            </p>
+          )}
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={exportExcel} className="dark:border-slate-700">
@@ -174,7 +220,7 @@ export default function FrfClaimDetail() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {stats.map(({ title, value, icon: Icon, color, sub }) => (
           <Card key={title} className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
             <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
@@ -223,8 +269,10 @@ export default function FrfClaimDetail() {
                 <SelectContent className="dark:bg-slate-900 dark:border-slate-800">
                   <SelectItem value="all">All statuses</SelectItem>
                   <SelectItem value="paid">Paid</SelectItem>
+                  <SelectItem value="partial">Partially Paid</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="overdue">Overdue</SelectItem>
+                  <SelectItem value="exempt">Exempt</SelectItem>
                   <SelectItem value="cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
@@ -239,16 +287,21 @@ export default function FrfClaimDetail() {
                   <TableHead className="dark:text-slate-300">Member</TableHead>
                   <TableHead className="dark:text-slate-300">Mobile</TableHead>
                   <TableHead className="dark:text-slate-300">Reference</TableHead>
-                  <TableHead className="text-right dark:text-slate-300">Amount</TableHead>
+                  <TableHead className="text-right dark:text-slate-300">Due</TableHead>
+                  <TableHead className="text-right dark:text-slate-300">Paid</TableHead>
+                  <TableHead className="text-right dark:text-slate-300">Balance</TableHead>
                   <TableHead className="dark:text-slate-300">Status</TableHead>
+                  <TableHead className="dark:text-slate-300">Method</TableHead>
                   <TableHead className="dark:text-slate-300">Paid Date</TableHead>
                   <TableHead className="dark:text-slate-300">Receipt #</TableHead>
+                  <TableHead className="dark:text-slate-300">Remarks</TableHead>
+                  {canEdit && <TableHead className="dark:text-slate-300 w-12"></TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {contributors.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center text-green-600 dark:text-slate-500">
+                    <TableCell colSpan={canEdit ? 12 : 11} className="h-24 text-center text-green-600 dark:text-slate-500">
                       {data.contributors.length === 0
                         ? "No contributions yet. Contributions are generated when the claim is approved."
                         : "No contributors match the current filters."}
@@ -271,12 +324,35 @@ export default function FrfClaimDetail() {
                       </TableCell>
                       <TableCell className="text-sm text-green-800 dark:text-slate-300">{c.mobileNumber}</TableCell>
                       <TableCell className="text-sm text-green-800 dark:text-slate-300">{c.refMemberName || "—"}</TableCell>
-                      <TableCell className="text-right font-medium text-green-900 dark:text-slate-200">{formatSAR(c.amount)}</TableCell>
-                      <TableCell>
-                        <Badge className={cn("text-[11px] capitalize", CONTRIB_STATUS_STYLE[c.status] ?? "")}>{c.status}</Badge>
+                      <TableCell className="text-right font-medium text-green-900 dark:text-slate-200">{c.status === "exempt" ? "—" : formatSAR(c.amount)}</TableCell>
+                      <TableCell className="text-right font-medium text-green-800 dark:text-green-300">{c.amountPaid > 0 ? formatSAR(c.amountPaid) : "—"}</TableCell>
+                      <TableCell className={cn("text-right font-medium", c.status === "exempt" ? "text-slate-400" : c.balance > 0 ? "text-orange-700 dark:text-orange-400" : "text-green-700 dark:text-green-400")}>
+                        {c.status === "exempt" ? "—" : formatSAR(c.balance)}
                       </TableCell>
+                      <TableCell>
+                        <Badge className={cn("text-[11px]", CONTRIB_STATUS_STYLE[c.status] ?? "")}>{CONTRIB_STATUS_LABEL[c.status] ?? c.status}</Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-green-700 dark:text-slate-400 capitalize">{c.paymentMethod ? c.paymentMethod.replace("_", " ") : "—"}</TableCell>
                       <TableCell className="text-sm text-green-700 dark:text-slate-400">{c.paidAt ? formatDate(c.paidAt) : "—"}</TableCell>
                       <TableCell className="text-sm text-green-700 dark:text-slate-400">{c.receiptNumber || "—"}</TableCell>
+                      <TableCell className="text-sm text-green-700 dark:text-slate-400 max-w-[160px] truncate" title={c.remarks ?? undefined}>{c.remarks || "—"}</TableCell>
+                      {canEdit && (
+                        <TableCell>
+                          {c.status === "pending" || c.status === "overdue" ? (
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-purple-600 hover:bg-purple-50 dark:hover:bg-slate-800" title="Mark exempt"
+                              disabled={statusMutation.isPending}
+                              onClick={() => statusMutation.mutate({ id, contributionId: c.contributionId, data: { status: "exempt" } })}>
+                              <UserX className="h-3.5 w-3.5" />
+                            </Button>
+                          ) : c.status === "exempt" ? (
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800" title="Revert to pending"
+                              disabled={statusMutation.isPending}
+                              onClick={() => statusMutation.mutate({ id, contributionId: c.contributionId, data: { status: "pending" } })}>
+                              <RotateCcw className="h-3.5 w-3.5" />
+                            </Button>
+                          ) : null}
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))
                 )}

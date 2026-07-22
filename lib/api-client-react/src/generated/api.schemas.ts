@@ -492,6 +492,11 @@ export interface DashboardSummary {
   frfCollectedTotal: number;
   activeFrfCasesCount: number;
   membersPendingFrfCount: number;
+  frfCommittedTotal: number;
+  frfTargetTotal: number;
+  closedFrfCasesCount: number;
+  membersPartialFrfCount: number;
+  membersPaidFrfCount: number;
 }
 
 export type PendingMemberFeeStatus =
@@ -903,6 +908,14 @@ export interface TaskList {
   total: number;
 }
 
+export type FrfClaimCaseStatus =
+  (typeof FrfClaimCaseStatus)[keyof typeof FrfClaimCaseStatus];
+
+export const FrfClaimCaseStatus = {
+  open: "open",
+  closed: "closed",
+} as const;
+
 export type FrfClaimClaimType =
   (typeof FrfClaimClaimType)[keyof typeof FrfClaimClaimType];
 
@@ -928,6 +941,10 @@ export interface FrfClaim {
   id: string;
   /** @nullable */
   memberId?: string | null;
+  title: string;
+  caseStatus: FrfClaimCaseStatus;
+  /** @nullable */
+  closingDate?: string | null;
   claimantName: string;
   membershipId: string;
   claimType: FrfClaimClaimType;
@@ -970,6 +987,9 @@ export const FrfClaimInputStatus = {
 } as const;
 
 export interface FrfClaimInput {
+  title?: string;
+  /** @nullable */
+  closingDate?: string | null;
   /** @minLength 1 */
   claimantName: string;
   membershipId?: string;
@@ -1014,9 +1034,11 @@ export type FrfContributorStatus =
 
 export const FrfContributorStatus = {
   paid: "paid",
+  partial: "partial",
   pending: "pending",
   overdue: "overdue",
   cancelled: "cancelled",
+  exempt: "exempt",
 } as const;
 
 export interface FrfContributor {
@@ -1029,11 +1051,17 @@ export interface FrfContributor {
   photoUrl?: string | null;
   refMemberName: string;
   amount: number;
+  amountPaid: number;
+  balance: number;
   status: FrfContributorStatus;
   /** @nullable */
   paidAt?: string | null;
   /** @nullable */
   receiptNumber?: string | null;
+  /** @nullable */
+  paymentMethod?: string | null;
+  /** @nullable */
+  remarks?: string | null;
 }
 
 export interface FrfClaimCollection {
@@ -1042,11 +1070,18 @@ export interface FrfClaimCollection {
   expectedAmount: number;
   collectedAmount: number;
   outstandingAmount: number;
+  targetAmount: number;
+  remainingToTarget: number;
+  targetProgress: number;
   collectionRate: number;
+  /** @nullable */
+  lastPaymentAt?: string | null;
   paidCount: number;
+  partialCount: number;
   pendingCount: number;
   overdueCount: number;
   cancelledCount: number;
+  exemptCount: number;
   contributors: FrfContributor[];
 }
 
@@ -1070,17 +1105,22 @@ export type MemberFrfHistoryItemStatus =
 
 export const MemberFrfHistoryItemStatus = {
   paid: "paid",
+  partial: "partial",
   pending: "pending",
   overdue: "overdue",
   cancelled: "cancelled",
+  exempt: "exempt",
 } as const;
 
 export interface MemberFrfHistoryItem {
   contributionId: string;
   claimId: string;
+  title: string;
   claimantName: string;
   claimType: string;
   amount: number;
+  amountPaid: number;
+  balance: number;
   status: MemberFrfHistoryItemStatus;
   /** @nullable */
   approvedDate?: string | null;
@@ -1141,6 +1181,30 @@ export type MemberFrfSummaryReferenceCollection = {
   members: FrfReferenceMemberItem[];
 };
 
+export type MemberBeneficiaryCaseCaseStatus =
+  (typeof MemberBeneficiaryCaseCaseStatus)[keyof typeof MemberBeneficiaryCaseCaseStatus];
+
+export const MemberBeneficiaryCaseCaseStatus = {
+  open: "open",
+  closed: "closed",
+} as const;
+
+export interface MemberBeneficiaryCase {
+  claimId: string;
+  title: string;
+  claimantName: string;
+  claimType: string;
+  status: string;
+  caseStatus: MemberBeneficiaryCaseCaseStatus;
+  targetAmount: number;
+  committedAmount: number;
+  collectedAmount: number;
+  remainingToTarget: number;
+  collectionProgress: number;
+  /** @nullable */
+  claimDate?: string | null;
+}
+
 export interface MemberFrfSummary {
   eligibility: FrfEligibility;
   totalClaims: number;
@@ -1152,7 +1216,25 @@ export interface MemberFrfSummary {
   /** @nullable */
   lastContributionAt?: string | null;
   history: MemberFrfHistoryItem[];
+  beneficiaryCases: MemberBeneficiaryCase[];
   referenceCollection: MemberFrfSummaryReferenceCollection;
+}
+
+export type FrfContributionStatusInputStatus =
+  (typeof FrfContributionStatusInputStatus)[keyof typeof FrfContributionStatusInputStatus];
+
+export const FrfContributionStatusInputStatus = {
+  exempt: "exempt",
+  pending: "pending",
+} as const;
+
+export interface FrfContributionStatusInput {
+  status: FrfContributionStatusInputStatus;
+}
+
+export interface FrfContributionStatusResponse {
+  id: string;
+  status: string;
 }
 
 export type FrfOverviewTopOutstandingMembersItem = {

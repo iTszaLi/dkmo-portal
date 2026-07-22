@@ -514,6 +514,11 @@ export const GetDashboardSummaryResponse = zod.object({
   frfCollectedTotal: zod.number(),
   activeFrfCasesCount: zod.number(),
   membersPendingFrfCount: zod.number(),
+  frfCommittedTotal: zod.number(),
+  frfTargetTotal: zod.number(),
+  closedFrfCasesCount: zod.number(),
+  membersPartialFrfCount: zod.number(),
+  membersPaidFrfCount: zod.number(),
 });
 
 /**
@@ -1352,6 +1357,9 @@ export const ListFrfClaimsQueryParams = zod.object({
 export const ListFrfClaimsResponseItem = zod.object({
   id: zod.string(),
   memberId: zod.string().nullish(),
+  title: zod.string(),
+  caseStatus: zod.enum(["open", "closed"]),
+  closingDate: zod.coerce.date().nullish(),
   claimantName: zod.string(),
   membershipId: zod.string(),
   claimType: zod.enum(["death_benefit", "emergency", "air_ticket", "other"]),
@@ -1388,6 +1396,8 @@ export const createFrfClaimBodyAmountApprovedMin = 0;
 export const createFrfClaimBodyContributionAmountMin = 0;
 
 export const CreateFrfClaimBody = zod.object({
+  title: zod.string().optional(),
+  closingDate: zod.coerce.date().nullish(),
   claimantName: zod.string().min(1),
   membershipId: zod.string().optional(),
   memberId: zod.string().nullish(),
@@ -1447,6 +1457,9 @@ export const GetFrfClaimParams = zod.object({
 export const GetFrfClaimResponse = zod.object({
   id: zod.string(),
   memberId: zod.string().nullish(),
+  title: zod.string(),
+  caseStatus: zod.enum(["open", "closed"]),
+  closingDate: zod.coerce.date().nullish(),
   claimantName: zod.string(),
   membershipId: zod.string(),
   claimType: zod.enum(["death_benefit", "emergency", "air_ticket", "other"]),
@@ -1485,6 +1498,8 @@ export const updateFrfClaimBodyAmountApprovedMin = 0;
 export const updateFrfClaimBodyContributionAmountMin = 0;
 
 export const UpdateFrfClaimBody = zod.object({
+  title: zod.string().optional(),
+  closingDate: zod.coerce.date().nullish(),
   claimantName: zod.string().min(1),
   membershipId: zod.string().optional(),
   memberId: zod.string().nullish(),
@@ -1518,6 +1533,9 @@ export const UpdateFrfClaimBody = zod.object({
 export const UpdateFrfClaimResponse = zod.object({
   id: zod.string(),
   memberId: zod.string().nullish(),
+  title: zod.string(),
+  caseStatus: zod.enum(["open", "closed"]),
+  closingDate: zod.coerce.date().nullish(),
   claimantName: zod.string(),
   membershipId: zod.string(),
   claimType: zod.enum(["death_benefit", "emergency", "air_ticket", "other"]),
@@ -1560,6 +1578,9 @@ export const GetFrfClaimCollectionResponse = zod.object({
   claim: zod.object({
     id: zod.string(),
     memberId: zod.string().nullish(),
+    title: zod.string(),
+    caseStatus: zod.enum(["open", "closed"]),
+    closingDate: zod.coerce.date().nullish(),
     claimantName: zod.string(),
     membershipId: zod.string(),
     claimType: zod.enum(["death_benefit", "emergency", "air_ticket", "other"]),
@@ -1587,11 +1608,17 @@ export const GetFrfClaimCollectionResponse = zod.object({
   expectedAmount: zod.number(),
   collectedAmount: zod.number(),
   outstandingAmount: zod.number(),
+  targetAmount: zod.number(),
+  remainingToTarget: zod.number(),
+  targetProgress: zod.number(),
   collectionRate: zod.number(),
+  lastPaymentAt: zod.coerce.date().nullish(),
   paidCount: zod.number(),
+  partialCount: zod.number(),
   pendingCount: zod.number(),
   overdueCount: zod.number(),
   cancelledCount: zod.number(),
+  exemptCount: zod.number(),
   contributors: zod.array(
     zod.object({
       contributionId: zod.string(),
@@ -1602,11 +1629,39 @@ export const GetFrfClaimCollectionResponse = zod.object({
       photoUrl: zod.string().nullish(),
       refMemberName: zod.string(),
       amount: zod.number(),
-      status: zod.enum(["paid", "pending", "overdue", "cancelled"]),
+      amountPaid: zod.number(),
+      balance: zod.number(),
+      status: zod.enum([
+        "paid",
+        "partial",
+        "pending",
+        "overdue",
+        "cancelled",
+        "exempt",
+      ]),
       paidAt: zod.coerce.date().nullish(),
       receiptNumber: zod.string().nullish(),
+      paymentMethod: zod.string().nullish(),
+      remarks: zod.string().nullish(),
     }),
   ),
+});
+
+/**
+ * @summary Mark a member exempt for an FRF case, or revert to pending
+ */
+export const UpdateFrfContributionStatusParams = zod.object({
+  id: zod.coerce.string().uuid(),
+  contributionId: zod.coerce.string().uuid(),
+});
+
+export const UpdateFrfContributionStatusBody = zod.object({
+  status: zod.enum(["exempt", "pending"]),
+});
+
+export const UpdateFrfContributionStatusResponse = zod.object({
+  id: zod.string(),
+  status: zod.string(),
 });
 
 /**
@@ -1637,15 +1692,41 @@ export const GetMemberFrfSummaryResponse = zod.object({
     zod.object({
       contributionId: zod.string(),
       claimId: zod.string(),
+      title: zod.string(),
       claimantName: zod.string(),
       claimType: zod.string(),
       amount: zod.number(),
-      status: zod.enum(["paid", "pending", "overdue", "cancelled"]),
+      amountPaid: zod.number(),
+      balance: zod.number(),
+      status: zod.enum([
+        "paid",
+        "partial",
+        "pending",
+        "overdue",
+        "cancelled",
+        "exempt",
+      ]),
       approvedDate: zod.coerce.date().nullish(),
       paidAt: zod.coerce.date().nullish(),
       paymentMethod: zod.string().nullish(),
       receiptNumber: zod.string().nullish(),
       remarks: zod.string().nullish(),
+    }),
+  ),
+  beneficiaryCases: zod.array(
+    zod.object({
+      claimId: zod.string(),
+      title: zod.string(),
+      claimantName: zod.string(),
+      claimType: zod.string(),
+      status: zod.string(),
+      caseStatus: zod.enum(["open", "closed"]),
+      targetAmount: zod.number(),
+      committedAmount: zod.number(),
+      collectedAmount: zod.number(),
+      remainingToTarget: zod.number(),
+      collectionProgress: zod.number(),
+      claimDate: zod.coerce.date().nullish(),
     }),
   ),
   referenceCollection: zod.object({
