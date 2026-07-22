@@ -5,6 +5,7 @@
 - [DKMO payments & recruitment model](dkmo-payments-model.md) — no monthly dues; FRF has a per-claim×member frf_contributions ledger synced atomically with payments rows; leaderboard keys on member UUID.
 - [Member reference / group FRF responsibility](member-reference-responsibility.md) — members.refMemberId is TEXT holding the referrer's UUID; group = refMemberId===X.id; FRF responsibility = count × SAR 50.
 - [Documents per-entity views](documents-per-entity-views.md) — /api/documents is paginated; per-member views must filter server-side by linkedEntityType+linkedEntityId, never client-filter page 1.
+- [DKMO ID sequence](dkmo-id-sequence.md) — members + membership applications share one DKMO-XXXX namespace via next_dkmo_number()/dkmo_id_seq; setval in migrate must be advance-only or deleted IDs get reused.
 - [Committee membership is DB-driven & independent](committee-db-driven.md) — role (designation) + two independent booleans isExecutiveCommittee/isCoreCommittee; no nesting/subset; toggle via PATCH /members/:id/committee-status.
 - [Dashboard widget personalization](dashboard-personalization.md) — Reorder widgets persisted to localStorage (sanitized on load); pair drag with keyboard Move buttons; confetti/anim respect reduced-motion; Member-of-Month from refMemberId.
 - [Certificate security](certificate-security.md) — approved-only cert serial allocated lazily & atomically (isNull guard); PDF signing is integrity-only (self-signed), verify page is authenticity; never emit unsigned.

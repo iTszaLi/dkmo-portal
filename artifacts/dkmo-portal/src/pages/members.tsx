@@ -195,7 +195,7 @@ export default function Members() {
       <div className="flex items-center space-x-2 bg-white dark:bg-slate-900 p-2 rounded-lg border border-emerald-100 dark:border-slate-800 shadow-sm max-w-md">
         <Search className="h-5 w-5 text-emerald-400 dark:text-slate-500 ml-2 shrink-0" />
         <Input
-          placeholder="Search by Member ID, mobile (no leading 0), name, Iqama, application no, Jamaath, or place..."
+          placeholder="Search by DKMO ID, name, mobile, Iqama, application no, Jamaath, or place..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="border-0 focus-visible:ring-0 shadow-none px-2 h-9 dark:bg-transparent dark:text-slate-200 dark:placeholder:text-slate-500"

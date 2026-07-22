@@ -1,0 +1,84 @@
+UI/UX Redesign Requirements
+
+Without changing or deleting any existing data, members, payments, records, or database structure, redesign the entire DKMO Portal to look modern, premium, and professional.
+
+Design Goals
+
+* Keep all existing functionality intact.
+* Do not modify, reset, or delete any data.
+* Only improve the UI/UX and frontend experience.
+
+Improve the following:
+
+1. Professional Dashboard
+    * Clean summary cards (Total Members, Active Members, Pending Payments, Total Collections, etc.)
+    * Better spacing and alignment.
+    * Consistent typography and iconography.
+2. Modern Tables
+    * Zebra row styling.
+    * Sticky table headers.
+    * Better column spacing.
+    * Responsive on mobile and desktop.
+    * Hover effects.
+    * Pagination and sorting.
+    * Search and filter options.
+3. Better Member Cards
+    * Display member details in a clean layout.
+    * Replace cluttered text with organized sections.
+    * Show the new readable DKMO ID prominently.
+4. Improved Forms
+    * Better labels and spacing.
+    * Modern input fields.
+    * Inline validation.
+    * Better date pickers and dropdowns.
+    * Clear error and success messages.
+5. Navigation
+    * Professional sidebar with icons.
+    * Highlight the active page.
+    * Smooth page transitions.
+    * Responsive mobile menu.
+6. Buttons
+    * Consistent button styles.
+    * Proper color hierarchy.
+    * Hover and click animations.
+    * Rounded corners and modern shadows.
+7. Status Badges
+    * Green = Paid
+    * Yellow = Pending
+    * Red = Overdue
+    * Blue = Information
+8. Typography
+    * Use a clean professional font.
+    * Better font sizes and spacing.
+    * Consistent headings throughout the application.
+9. Color Theme
+    * Maintain the existing green branding.
+    * Use a premium dark/light palette with high contrast.
+    * Improve accessibility and readability.
+10. Animations
+
+* Smooth transitions.
+* Loading skeletons.
+* Better modals.
+* Toast notifications for success and errors.
+
+11. Mobile Optimization
+
+* Fully responsive.
+* Tables should adapt gracefully.
+* Floating Action Button should not overlap content.
+* Comfortable touch targets.
+
+12. Performance
+
+* Optimize rendering.
+* Reduce unnecessary re-renders.
+* Lazy load components where appropriate.
+* Keep the UI fast and responsive.
+
+Important Requirements
+
+* Do NOT change or delete any existing members, payments, records, or database data.
+* Do NOT break any existing functionality or APIs.
+* Only improve the visual design, layout, responsiveness, and user experience.
+* Preserve all business logic while making the portal look like a polished, enterprise-grade SaaS application with a clean, modern, and premium feel.

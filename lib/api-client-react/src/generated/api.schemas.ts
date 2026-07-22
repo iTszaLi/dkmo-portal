@@ -271,7 +271,7 @@ export interface MemberInput {
   fullName: string;
   /** @minLength 1 */
   mobileNumber: string;
-  /** Optional. When omitted or blank the server auto-generates the next membership number in the format DKMO-YYYY-XXXX. */
+  /** Ignored. Membership IDs are always allocated by the server as the next sequential number in the format DKMO-XXXX (e.g. DKMO-0041) and never change or get reused. */
   membershipId?: string;
   applicationNumber?: string;
   iqamaNumber?: string;

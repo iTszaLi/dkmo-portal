@@ -87,23 +87,14 @@ router.get("/members", async (req, res): Promise<void> => {
 });
 
 /**
- * Generates the next sequential membership ID in the form DKMO-YYYY-XXXX.
- * The sequence resets per calendar year and pads to 4 digits.
+ * Allocates the next sequential membership ID in the form DKMO-XXXX from the
+ * shared Postgres sequence (`next_dkmo_number()`), also used by the public
+ * membership-application flow. Sequence numbers are never reused, even after
+ * a member is deleted.
  */
 async function generateMembershipId(): Promise<string> {
-  const year = new Date().getFullYear();
-  const prefix = `DKMO-${year}-`;
-  const rows = await db
-    .select({ membershipId: membersTable.membershipId })
-    .from(membersTable)
-    .where(ilike(membersTable.membershipId, `${prefix}%`));
-  let max = 0;
-  for (const row of rows) {
-    const suffix = row.membershipId.slice(prefix.length);
-    const n = Number.parseInt(suffix, 10);
-    if (Number.isFinite(n) && n > max) max = n;
-  }
-  return `${prefix}${String(max + 1).padStart(4, "0")}`;
+  const result = await db.execute(sql`SELECT next_dkmo_number() AS num`);
+  return (result.rows[0] as { num: string }).num;
 }
 
 router.post("/members", async (req, res): Promise<void> => {
@@ -116,10 +107,9 @@ router.post("/members", async (req, res): Promise<void> => {
   try {
     const feeStatus = parsed.data.feeStatus ?? "unpaid";
     const actor = (req as AuthedRequest).userId ?? "";
-    const membershipId =
-      parsed.data.membershipId && parsed.data.membershipId.trim()
-        ? parsed.data.membershipId.trim()
-        : await generateMembershipId();
+    // Membership IDs are always allocated by the server so they stay
+    // sequential and unique; any client-provided value is ignored.
+    const membershipId = await generateMembershipId();
     const [created] = await db
       .insert(membersTable)
       .values({
@@ -217,7 +207,8 @@ router.patch("/members/:id", async (req, res): Promise<void> => {
       .set({
         fullName: parsed.data.fullName,
         mobileNumber: parsed.data.mobileNumber,
-        membershipId: parsed.data.membershipId,
+        // Membership IDs are permanent; ignore any client-provided change.
+        membershipId: existing.membershipId,
         applicationNumber: parsed.data.applicationNumber ?? "",
         iqamaNumber: parsed.data.iqamaNumber ?? "",
         jamaath: parsed.data.jamaath ?? "",

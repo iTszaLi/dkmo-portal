@@ -486,6 +486,77 @@ async function main() {
   await pool.query(`CREATE INDEX IF NOT EXISTS payments_frf_claim_idx ON payments (frf_claim_id);`);
   await pool.query(`CREATE INDEX IF NOT EXISTS payments_paid_at_idx ON payments (paid_at DESC);`);
 
+  // ── Human-readable member IDs (DKMO-XXXX) ─────────────────────────────────
+  // One global, gap-tolerant sequence shared by direct member creation and
+  // DKMO membership applications. Numbers are never reused: the sequence only
+  // moves forward, even when members are deleted.
+  await pool.query(`CREATE SEQUENCE IF NOT EXISTS dkmo_id_seq START 1;`);
+
+  // Renumber any members whose membership_id does not match DKMO-NNNN
+  // (e.g. legacy DKMO-YYYY-XXXX ids), in creation order, and propagate the
+  // new id to tables that reference members by membership_id text.
+  await pool.query(`
+    DO $$
+    DECLARE
+      rec RECORD;
+      max_n INT;
+      new_id TEXT;
+    BEGIN
+      SELECT COALESCE(MAX(CAST(SUBSTRING(membership_id FROM 6) AS INT)), 0)
+        INTO max_n FROM members WHERE membership_id ~ '^DKMO-[0-9]{4,}$';
+      FOR rec IN
+        SELECT id, membership_id FROM members
+        WHERE membership_id !~ '^DKMO-[0-9]{4,}$'
+        ORDER BY created_at, id
+      LOOP
+        max_n := max_n + 1;
+        new_id := 'DKMO-' || LPAD(max_n::TEXT, 4, '0');
+        UPDATE frf_claims SET membership_id = new_id WHERE membership_id = rec.membership_id;
+        UPDATE welfare_requests SET membership_id = new_id WHERE membership_id = rec.membership_id;
+        UPDATE dkmo_memberships SET dkmo_number = new_id WHERE member_id = rec.id;
+        UPDATE members SET membership_id = new_id WHERE id = rec.id;
+      END LOOP;
+    END $$;
+  `);
+
+  // Advance the sequence past every number already used by members or
+  // membership applications so new ids can never collide.
+  await pool.query(`
+    WITH m AS (
+      SELECT GREATEST(
+        (SELECT COALESCE(MAX(CAST(SUBSTRING(membership_id FROM 6) AS INT)), 0)
+           FROM members WHERE membership_id ~ '^DKMO-[0-9]{4,}$'),
+        (SELECT COALESCE(MAX(CAST(SUBSTRING(dkmo_number FROM 6) AS INT)), 0)
+           FROM dkmo_memberships WHERE dkmo_number ~ '^DKMO-[0-9]{4,}$')
+      ) AS max_used
+    ),
+    s AS (
+      SELECT last_value, is_called FROM dkmo_id_seq
+    )
+    -- Advance-only: never move the sequence backwards (deleted members leave
+    -- gaps whose numbers must never be reused). On a fresh database leave the
+    -- sequence primed so the first id is DKMO-0001; otherwise mark the
+    -- highest consumed number as called so the next id follows it.
+    SELECT CASE
+      WHEN m.max_used = 0 AND NOT s.is_called THEN 1
+      ELSE setval(
+        'dkmo_id_seq',
+        GREATEST(m.max_used, CASE WHEN s.is_called THEN s.last_value ELSE 0 END, 1),
+        m.max_used > 0 OR s.is_called
+      )
+    END
+    FROM m, s;
+  `);
+
+  // Single source of truth for allocating DKMO ids, used by both the members
+  // API and the public membership application flow.
+  await pool.query(`
+    CREATE OR REPLACE FUNCTION next_dkmo_number() RETURNS TEXT
+    LANGUAGE sql AS $fn$
+      SELECT 'DKMO-' || LPAD(nextval('dkmo_id_seq')::TEXT, 4, '0');
+    $fn$;
+  `);
+
   console.log("✅  All tables created.");
   await pool.end();
 }

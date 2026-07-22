@@ -171,9 +171,13 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
             name="membershipId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Membership ID (auto if blank)</FormLabel>
+                <FormLabel>DKMO ID</FormLabel>
                 <FormControl>
-                  <Input placeholder="Leave blank to auto-generate" {...field} />
+                  <Input
+                    placeholder="Auto-assigned (e.g. DKMO-0041)"
+                    {...field}
+                    disabled
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
