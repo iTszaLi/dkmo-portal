@@ -256,14 +256,14 @@ paths:
           description: "Filter by payment type"
           schema:
             type: string
-            enum: [membership_fee, frf_contribution, donation, sponsorship, other]
+            enum: [membership_fee, frf_contribution, donation, sponsorship, waiver, adjustment, other]
         - in: query
           name: status
           required: false
           description: "Filter by status"
           schema:
             type: string
-            enum: [paid, pending, overdue]
+            enum: [paid, pending, overdue, cancelled, refunded]
         - in: query
           name: paymentMethod
           required: false
@@ -1755,6 +1755,7 @@ components:
         entityName: { type: ["string", "null"] }
         details: { type: ["string", "null"] }
         ipAddress: { type: ["string", "null"] }
+        userAgent: { type: ["string", "null"] }
         createdAt: { type: string, format: date-time }
       required: [id, userId, userName, action, module, createdAt]
 
@@ -2178,7 +2179,7 @@ components:
           type: string
         paymentType:
           type: string
-          enum: [membership_fee, frf_contribution, donation, sponsorship, other]
+          enum: [membership_fee, frf_contribution, donation, sponsorship, waiver, adjustment, other]
         frfClaimId:
           type: ["string", "null"]
         amountDue:
@@ -2187,7 +2188,7 @@ components:
           type: number
         status:
           type: string
-          enum: [paid, pending, overdue]
+          enum: [paid, pending, overdue, cancelled, refunded]
         paymentMethod:
           type: string
           enum: [cash, upi, bank_transfer, card, cheque, other]
@@ -2225,7 +2226,7 @@ components:
           type: string
         paymentType:
           type: string
-          enum: [membership_fee, frf_contribution, donation, sponsorship, other]
+          enum: [membership_fee, frf_contribution, donation, sponsorship, waiver, adjustment, other]
         frfClaimId:
           type: ["string", "null"]
         amountDue:
@@ -2234,7 +2235,7 @@ components:
           type: number
         status:
           type: string
-          enum: [paid, pending, overdue]
+          enum: [paid, pending, overdue, cancelled, refunded]
         paymentMethod:
           type: string
           enum: [cash, upi, bank_transfer, card, cheque, other]

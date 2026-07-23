@@ -575,6 +575,11 @@ async function main() {
     UPDATE frf_contributions SET amount_paid = amount WHERE status = 'paid' AND amount_paid = 0;
   `);
 
+  // Audit trail: capture the acting user's browser/device string.
+  await pool.query(`
+    ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS user_agent TEXT;
+  `);
+
   console.log("✅  All tables created.");
   await pool.end();
 }

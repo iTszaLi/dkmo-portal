@@ -23,17 +23,29 @@ import { PaymentInput } from "@workspace/api-client-react";
 import { useEffect } from "react";
 import { useListMembers, useListFrfClaims } from "@workspace/api-client-react";
 
-const formSchema = z.object({
-  memberId: z.string().min(1, "Member is required"),
-  paymentType: z.enum(["membership_fee", "frf_contribution", "donation", "sponsorship", "other"]),
-  frfClaimId: z.string().optional(),
-  amountDue: z.coerce.number().min(0),
-  amountPaid: z.coerce.number().min(1, "Amount must be greater than 0"),
-  status: z.enum(["paid", "pending", "overdue"]),
-  paymentMethod: z.enum(["cash", "upi", "bank_transfer", "card", "cheque", "other"]),
-  receiptNumber: z.string().min(1, "Receipt number is required"),
-  notes: z.string().optional(),
-});
+const formSchema = z
+  .object({
+    memberId: z.string().min(1, "Member is required"),
+    paymentType: z.enum(["membership_fee", "frf_contribution", "donation", "sponsorship", "waiver", "adjustment", "other"]),
+    frfClaimId: z.string().optional(),
+    amountDue: z.coerce.number().min(0),
+    amountPaid: z.coerce.number().min(0),
+    status: z.enum(["paid", "pending", "overdue", "cancelled", "refunded"]),
+    paymentMethod: z.enum(["cash", "upi", "bank_transfer", "card", "cheque", "other"]),
+    receiptNumber: z.string().min(1, "Receipt number is required"),
+    notes: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    const isSpecialType = data.paymentType === "waiver" || data.paymentType === "adjustment";
+    const isNonCollecting = data.status === "cancelled" || data.status === "refunded";
+    if (data.amountPaid <= 0 && !isSpecialType && !isNonCollecting) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["amountPaid"],
+        message: "Amount must be greater than 0 (only Waiver/Adjustment or Cancelled/Refunded records may be 0)",
+      });
+    }
+  });
 
 interface PaymentFormProps {
   defaultValues?: Partial<PaymentInput>;
@@ -129,6 +141,8 @@ export function PaymentForm({ defaultValues, fixedMemberId, onSubmit, isSubmitti
                     </SelectItem>
                     <SelectItem value="donation">Donation</SelectItem>
                     <SelectItem value="sponsorship">Sponsorship</SelectItem>
+                    <SelectItem value="waiver">Waiver (zero-amount allowed)</SelectItem>
+                    <SelectItem value="adjustment">Adjustment (zero-amount allowed)</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
@@ -152,6 +166,8 @@ export function PaymentForm({ defaultValues, fixedMemberId, onSubmit, isSubmitti
                     <SelectItem value="paid">Paid</SelectItem>
                     <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="overdue">Overdue</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                    <SelectItem value="refunded">Refunded</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />

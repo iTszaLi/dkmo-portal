@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import QRCode from "qrcode";
 import { useSearch, useLocation } from "wouter";
 import { useListPayments, useListReceiptRecords, customFetch } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -30,7 +31,7 @@ async function loadImageAsBase64(url: string): Promise<string> {
   } catch { return ""; }
 }
 
-function buildReceiptPdf(
+async function buildReceiptPdf(
   doc: jsPDF,
   { receiptNumber, memberName, membershipId, paidAt, amountPaid, notes }: {
     receiptNumber: string; memberName: string; membershipId: string;
@@ -55,9 +56,18 @@ function buildReceiptPdf(
   }
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(17);
   doc.setTextColor(...maroon);
-  doc.text("Dakshina Karnataka Muslim Okkoota - DKMO RIYADH", 32, 14);
+  // Auto-fit the title so it never runs into the reserved QR zone (top-right
+  // 22mm square at x = W-28; see the QR block at the end of this function).
+  const title = "Dakshina Karnataka Muslim Okkoota - DKMO RIYADH";
+  const titleMaxW = W - 32 - 30;
+  let titleSize = 17;
+  doc.setFontSize(titleSize);
+  while (titleSize > 10 && doc.getTextWidth(title) > titleMaxW) {
+    titleSize -= 0.5;
+    doc.setFontSize(titleSize);
+  }
+  doc.text(title, 32, 14);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
   doc.setTextColor(...darkGray);
@@ -169,6 +179,20 @@ function buildReceiptPdf(
 
   doc.setFont("helvetica", "normal"); doc.setFontSize(5.5); doc.setTextColor(120, 120, 120);
   doc.text(`Verify: ${receiptNumber}`, W / 2, H - 4, { align: "center" });
+
+  // QR verification (opens the portal's receipt-verify page; requires login —
+  // this is an internal portal, so verification is not publicly accessible).
+  if (receiptNumber) {
+    try {
+      const verifyUrl = `${window.location.origin}${basePath}/print-receipts?verify=${encodeURIComponent(receiptNumber)}`;
+      const qrDataUrl = await QRCode.toDataURL(verifyUrl, { width: 80, margin: 1 });
+      doc.setFillColor(255, 255, 255);
+      doc.rect(W - 28, 5, 22, 22, "F");
+      doc.addImage(qrDataUrl, "PNG", W - 27, 6, 20, 20);
+      doc.setFont("helvetica", "normal"); doc.setFontSize(5); doc.setTextColor(90, 90, 90);
+      doc.text("Scan to verify", W - 17, 28.5, { align: "center" });
+    } catch { /* QR is optional; never block receipt generation */ }
+  }
 }
 
 interface VerifyResult {
@@ -253,14 +277,14 @@ export default function PrintReceipts() {
   const downloadReceiptPDF = async (payment: (typeof filteredPayments)[number]) => {
     const logoDataUrl = await loadImageAsBase64(`${basePath}/logo-circle.png`);
     const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a5" });
-    buildReceiptPdf(doc, { receiptNumber: payment.receiptNumber, memberName: payment.memberName, membershipId: payment.membershipId, paidAt: payment.paidAt, amountPaid: payment.amountPaid, notes: payment.notes }, logoDataUrl);
+    await buildReceiptPdf(doc, { receiptNumber: payment.receiptNumber, memberName: payment.memberName, membershipId: payment.membershipId, paidAt: payment.paidAt, amountPaid: payment.amountPaid, notes: payment.notes }, logoDataUrl);
     doc.save(`DKMO_Receipt_${payment.receiptNumber}.pdf`);
   };
 
   const printReceipt = async (payment: (typeof filteredPayments)[number]) => {
     const logoDataUrl = await loadImageAsBase64(`${basePath}/logo-circle.png`);
     const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a5" });
-    buildReceiptPdf(doc, { receiptNumber: payment.receiptNumber, memberName: payment.memberName, membershipId: payment.membershipId, paidAt: payment.paidAt, amountPaid: payment.amountPaid, notes: payment.notes }, logoDataUrl);
+    await buildReceiptPdf(doc, { receiptNumber: payment.receiptNumber, memberName: payment.memberName, membershipId: payment.membershipId, paidAt: payment.paidAt, amountPaid: payment.amountPaid, notes: payment.notes }, logoDataUrl);
     doc.autoPrint();
     window.open(doc.output("bloburl"), "_blank");
   };
@@ -268,7 +292,7 @@ export default function PrintReceipts() {
   const downloadRecordPDF = async (record: any) => {
     const logoDataUrl = await loadImageAsBase64(`${basePath}/logo-circle.png`);
     const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a5" });
-    buildReceiptPdf(doc, {
+    await buildReceiptPdf(doc, {
       receiptNumber: record.receiptNumber,
       memberName: record.memberName,
       membershipId: record.dkmoId || "",
@@ -277,6 +301,22 @@ export default function PrintReceipts() {
     }, logoDataUrl);
     doc.save(`DKMO_Receipt_${record.receiptNumber}.pdf`);
   };
+
+  // Deep link from receipt QR codes: /print-receipts?verify=DKMO-RC-…
+  // Opens the Verify tab and runs the check automatically (login required).
+  useEffect(() => {
+    const params = new URLSearchParams(searchString);
+    const v = params.get("verify");
+    if (!v) return;
+    setActiveTab("verify");
+    setVerifyInput(v);
+    setVerifying(true);
+    setVerifyResult(null);
+    customFetch<VerifyResult>(`/api/receipts/verify/${encodeURIComponent(v)}`)
+      .then(setVerifyResult)
+      .catch(() => setVerifyResult({ verified: false, error: "Receipt not found or invalid number" }))
+      .finally(() => setVerifying(false));
+  }, [searchString]);
 
   const handleVerify = async () => {
     if (!verifyInput.trim()) return;

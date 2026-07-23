@@ -71,6 +71,7 @@ router.get("/audit-logs", async (req, res): Promise<void> => {
       entityName: r.entityName ?? null,
       details: r.details ?? null,
       ipAddress: r.ipAddress ?? null,
+      userAgent: r.userAgent ?? null,
       createdAt: r.createdAt.toISOString(),
     })),
     total: Number(totalRow?.count ?? 0),

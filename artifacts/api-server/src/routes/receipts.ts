@@ -34,9 +34,10 @@ router.get("/receipts/next-number", requireAuth, async (req, res): Promise<void>
   }
 });
 
-router.get("/receipts/verify/:receiptNumber", async (req, res): Promise<void> => {
+// Internal portal: receipt verification requires an authenticated session.
+router.get("/receipts/verify/:receiptNumber", requireAuth, async (req, res): Promise<void> => {
   try {
-    const { receiptNumber } = req.params;
+    const receiptNumber = String(req.params.receiptNumber ?? "");
     const [row] = await db
       .select()
       .from(receiptsTable)

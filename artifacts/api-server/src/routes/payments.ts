@@ -79,6 +79,19 @@ router.post("/payments", async (req, res): Promise<void> => {
     : new Date();
 
   const paymentType = parsed.data.paymentType ?? "membership_fee";
+  const status = parsed.data.status ?? "paid";
+
+  // Financial integrity: zero/negative amounts are only allowed for special
+  // record types (waiver, adjustment) or non-collecting statuses.
+  const isSpecialType = paymentType === "waiver" || paymentType === "adjustment";
+  const isNonCollecting = status === "cancelled" || status === "refunded";
+  if (Number(parsed.data.amountPaid) <= 0 && !isSpecialType && !isNonCollecting) {
+    res.status(400).json({
+      error:
+        "Payment amount must be greater than 0 (only waiver/adjustment records or cancelled/refunded payments may be 0)",
+    });
+    return;
+  }
   const frfClaimId =
     paymentType === "frf_contribution" ? (parsed.data.frfClaimId ?? null) : null;
 
@@ -114,7 +127,7 @@ router.post("/payments", async (req, res): Promise<void> => {
           frfClaimId,
           amountDue: String(parsed.data.amountDue ?? parsed.data.amountPaid),
           amountPaid: String(parsed.data.amountPaid),
-          status: parsed.data.status ?? "paid",
+          status,
           paymentMethod: parsed.data.paymentMethod,
           receiptNumber: parsed.data.receiptNumber,
           notes: parsed.data.notes ?? null,
@@ -126,7 +139,14 @@ router.post("/payments", async (req, res): Promise<void> => {
 
       // Strict separation — only FRF payments linked to a claim touch the
       // contribution ledger; membership fees and other types never do.
-      if (row.paymentType === "frf_contribution" && row.frfClaimId) {
+      // Cancelled/refunded payments never touch the ledger — they represent
+      // money that was not (or is no longer) collected.
+      if (
+        row.paymentType === "frf_contribution" &&
+        row.frfClaimId &&
+        row.status !== "cancelled" &&
+        row.status !== "refunded"
+      ) {
         const [claim] = await tx
           .select({ contributionAmount: frfClaimsTable.contributionAmount })
           .from(frfClaimsTable)
@@ -213,7 +233,14 @@ router.delete("/payments/:id", async (req, res): Promise<void> => {
     // always makes the pending obligation reappear.
     await db.transaction(async (tx) => {
       await tx.delete(paymentsTable).where(eq(paymentsTable.id, params.data.id));
-      if (row.payment.paymentType === "frf_contribution" && row.payment.frfClaimId) {
+      if (
+        row.payment.paymentType === "frf_contribution" &&
+        row.payment.frfClaimId &&
+        // Symmetric with creation: cancelled/refunded payments never marked
+        // the ledger paid, so deleting them must not revert it.
+        row.payment.status !== "cancelled" &&
+        row.payment.status !== "refunded"
+      ) {
         await revertContributionForPayment(
           {
             claimId: row.payment.frfClaimId,

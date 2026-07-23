@@ -31,7 +31,25 @@ interface AuditLog {
   entityName: string | null;
   details: string | null;
   ipAddress: string | null;
+  userAgent: string | null;
   createdAt: string;
+}
+
+function uaSummary(ua: string | null): string {
+  if (!ua) return "";
+  const browser = /Edg\//.test(ua) ? "Edge"
+    : /OPR\/|Opera/.test(ua) ? "Opera"
+    : /Firefox\//.test(ua) ? "Firefox"
+    : /Chrome\//.test(ua) ? "Chrome"
+    : /Safari\//.test(ua) ? "Safari"
+    : "Other";
+  const os = /Windows/.test(ua) ? "Windows"
+    : /Android/.test(ua) ? "Android"
+    : /iPhone|iPad|iPod/.test(ua) ? "iOS"
+    : /Mac OS X/.test(ua) ? "macOS"
+    : /Linux/.test(ua) ? "Linux"
+    : "";
+  return os ? `${browser} · ${os}` : browser;
 }
 
 interface AuditLogsResponse {
@@ -201,7 +219,7 @@ export default function Audit() {
 
   const exportCSV = async () => {
     const logs = await fetchAllLogs({ module: module !== "all" ? module : "", action: action !== "all" ? action : "", search, from, to });
-    const header = ["Date & Time", "User", "Action", "Module", "Entity", "Details", "IP Address"];
+    const header = ["Date & Time", "User", "Action", "Module", "Entity", "Details", "IP Address", "Device"];
     const rows = logs.map((r) => [
       formatTimestamp(r.createdAt),
       r.userName,
@@ -210,6 +228,7 @@ export default function Audit() {
       r.entityName ?? r.entityId ?? "",
       r.details ?? "",
       r.ipAddress ?? "",
+      uaSummary(r.userAgent),
     ]);
     const csv = [header, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
@@ -233,6 +252,7 @@ export default function Audit() {
       { header: "Entity", key: "entity", width: 28 },
       { header: "Details", key: "details", width: 40 },
       { header: "IP Address", key: "ip", width: 16 },
+      { header: "Device", key: "device", width: 18 },
     ];
     ws.addRows(logs.map((r) => ({
       date: formatTimestamp(r.createdAt),
@@ -242,6 +262,7 @@ export default function Audit() {
       entity: r.entityName ?? r.entityId ?? "",
       details: r.details ?? "",
       ip: r.ipAddress ?? "",
+      device: uaSummary(r.userAgent),
     })));
     ws.getRow(1).font = { bold: true };
     ws.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE8F5E9" } };
@@ -436,6 +457,7 @@ export default function Audit() {
                   <TableHead className="font-semibold text-green-900 dark:text-slate-300">Entity</TableHead>
                   <TableHead className="font-semibold text-green-900 dark:text-slate-300">Details</TableHead>
                   <TableHead className="font-semibold text-green-900 dark:text-slate-300 w-32">IP Address</TableHead>
+                  <TableHead className="font-semibold text-green-900 dark:text-slate-300 w-32">Device</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -449,11 +471,12 @@ export default function Audit() {
                       <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                       <TableCell><Skeleton className="h-4 w-44" /></TableCell>
                       <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                     </TableRow>
                   ))
                 ) : items.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-32 text-center text-green-600 dark:text-slate-500">
+                    <TableCell colSpan={8} className="h-32 text-center text-green-600 dark:text-slate-500">
                       <div className="flex flex-col items-center gap-3">
                         <ScrollText className="h-8 w-8 text-green-200 dark:text-slate-700" />
                         <p className="text-sm">No activity logs found.</p>
@@ -501,6 +524,9 @@ export default function Audit() {
                         </TableCell>
                         <TableCell className="text-xs text-slate-400 dark:text-slate-500 font-mono">
                           {log.ipAddress ?? "—"}
+                        </TableCell>
+                        <TableCell className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                          <span title={log.userAgent ?? ""}>{uaSummary(log.userAgent) || "—"}</span>
                         </TableCell>
                       </TableRow>
                     );

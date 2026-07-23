@@ -379,7 +379,10 @@ export default function ReceiptsPage() {
     const timer = setTimeout(async () => {
       setCheckingDuplicate(true);
       try {
-        const resp = await fetch(`/api/receipts/verify/${encodeURIComponent(watchedReceiptNumber)}`);
+        const resp = await fetch(
+          `${getBasePath()}/api/receipts/verify/${encodeURIComponent(watchedReceiptNumber)}`,
+          { credentials: "include" },
+        );
         if (resp.ok) {
           const data = await resp.json() as { verified: boolean };
           setDuplicateWarning(data.verified);

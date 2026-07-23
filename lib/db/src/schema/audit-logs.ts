@@ -10,6 +10,7 @@ export const auditLogsTable = pgTable("audit_logs", {
   entityName: text("entity_name"),
   details: text("details"),
   ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

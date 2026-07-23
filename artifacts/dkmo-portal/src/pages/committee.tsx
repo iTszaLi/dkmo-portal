@@ -107,8 +107,20 @@ export default function Committee() {
     return matchesSearch && matchesDept;
   });
 
-  const executive = filtered.filter((m) => m.isExecutiveCommittee);
-  const core = filtered.filter((m) => m.isCoreCommittee);
+  // One card per member — Executive members first, each card carries all
+  // position badges (Executive and/or Core) so nobody appears twice.
+  const unified = useMemo(
+    () =>
+      [...filtered].sort((a, b) => {
+        if (a.isExecutiveCommittee !== b.isExecutiveCommittee) {
+          return a.isExecutiveCommittee ? -1 : 1;
+        }
+        return a.name.localeCompare(b.name);
+      }),
+    [filtered],
+  );
+  const executiveCount = committee.filter((m) => m.isExecutiveCommittee).length;
+  const coreCount = committee.filter((m) => m.isCoreCommittee).length;
 
   return (
     <div className="space-y-8">
@@ -181,37 +193,21 @@ export default function Committee() {
             })}
           </div>
 
-          {/* Executive Members */}
+          {/* Committee Members — one card per member with all positions */}
           <section>
-            <h2 className="text-lg font-bold text-green-950 dark:text-green-200 mb-3 flex items-center gap-2">
+            <h2 className="text-lg font-bold text-green-950 dark:text-green-200 mb-3 flex items-center gap-2 flex-wrap">
               <Crown className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-              Executive Members
-              <span className="text-sm font-normal text-green-700/60 dark:text-slate-500">({executive.length})</span>
+              Committee Members
+              <span className="text-sm font-normal text-green-700/60 dark:text-slate-500">
+                ({executiveCount} executive · {coreCount} core)
+              </span>
             </h2>
-            {executive.length === 0 ? (
-              <p className="text-sm text-green-700/60 dark:text-slate-500">No executive members match the current filter.</p>
+            {unified.length === 0 ? (
+              <p className="text-sm text-green-700/60 dark:text-slate-500">No committee members match the current filter.</p>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {executive.map((m) => (
-                  <MemberCard key={m.id} member={m} level="executive" />
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* Core Committee */}
-          <section>
-            <h2 className="text-lg font-bold text-green-950 dark:text-green-200 mb-3 flex items-center gap-2">
-              <Briefcase className="h-5 w-5 text-green-600 dark:text-green-400" />
-              Core Committee
-              <span className="text-sm font-normal text-green-700/60 dark:text-slate-500">({core.length})</span>
-            </h2>
-            {core.length === 0 ? (
-              <p className="text-sm text-green-700/60 dark:text-slate-500">No core committee members match the current filter.</p>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {core.map((m) => (
-                  <MemberCard key={m.id} member={m} level="core" />
+                {unified.map((m) => (
+                  <MemberCard key={m.id} member={m} />
                 ))}
               </div>
             )}
@@ -255,19 +251,14 @@ export default function Committee() {
   );
 }
 
-function MemberCard({
-  member,
-  level,
-}: {
-  member: CommitteeView;
-  level: "core" | "executive";
-}) {
+function MemberCard({ member }: { member: CommitteeView }) {
   const Icon = departmentIconFor(member.department);
-  const levelBadge = COMMITTEE_LEVEL_BADGE[level];
+  // Executive styling wins when a member holds both positions.
+  const style = member.isExecutiveCommittee ? LEVEL_STYLE.executive : LEVEL_STYLE.core;
   return (
     <div className={cn(
       "rounded-xl border p-4 transition-shadow hover:shadow-md dark:hover:shadow-black/20",
-      LEVEL_STYLE[level],
+      style,
     )}>
       <div className="flex items-start gap-3">
         {member.photoUrl ? (
@@ -289,9 +280,16 @@ function MemberCard({
             {member.role}
           </p>
           <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-            <Badge className={cn("text-[10px] uppercase tracking-wider px-2 py-0 border-0", levelBadge.className)}>
-              {levelBadge.label}
-            </Badge>
+            {member.isExecutiveCommittee && (
+              <Badge className={cn("text-[10px] uppercase tracking-wider px-2 py-0 border-0", COMMITTEE_LEVEL_BADGE.executive.className)}>
+                {COMMITTEE_LEVEL_BADGE.executive.label}
+              </Badge>
+            )}
+            {member.isCoreCommittee && (
+              <Badge className={cn("text-[10px] uppercase tracking-wider px-2 py-0 border-0", COMMITTEE_LEVEL_BADGE.core.className)}>
+                {COMMITTEE_LEVEL_BADGE.core.label}
+              </Badge>
+            )}
             <span className={cn("flex items-center gap-1 text-[10px] font-medium", DEPARTMENT_COLOR[member.department] ?? "text-green-700 dark:text-green-400")}>
               <Icon className="h-3 w-3" />
               {member.department}

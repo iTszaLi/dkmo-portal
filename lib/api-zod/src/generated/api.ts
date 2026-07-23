@@ -365,12 +365,14 @@ export const ListPaymentsQueryParams = zod.object({
       "frf_contribution",
       "donation",
       "sponsorship",
+      "waiver",
+      "adjustment",
       "other",
     ])
     .optional()
     .describe("Filter by payment type"),
   status: zod
-    .enum(["paid", "pending", "overdue"])
+    .enum(["paid", "pending", "overdue", "cancelled", "refunded"])
     .optional()
     .describe("Filter by status"),
   paymentMethod: zod.coerce
@@ -389,12 +391,14 @@ export const ListPaymentsResponseItem = zod.object({
     "frf_contribution",
     "donation",
     "sponsorship",
+    "waiver",
+    "adjustment",
     "other",
   ]),
   frfClaimId: zod.string().nullish(),
   amountDue: zod.number(),
   amountPaid: zod.number(),
-  status: zod.enum(["paid", "pending", "overdue"]),
+  status: zod.enum(["paid", "pending", "overdue", "cancelled", "refunded"]),
   paymentMethod: zod.enum([
     "cash",
     "upi",
@@ -423,13 +427,17 @@ export const CreatePaymentBody = zod.object({
       "frf_contribution",
       "donation",
       "sponsorship",
+      "waiver",
+      "adjustment",
       "other",
     ])
     .optional(),
   frfClaimId: zod.string().nullish(),
   amountDue: zod.number().optional(),
   amountPaid: zod.number(),
-  status: zod.enum(["paid", "pending", "overdue"]).optional(),
+  status: zod
+    .enum(["paid", "pending", "overdue", "cancelled", "refunded"])
+    .optional(),
   paymentMethod: zod.enum([
     "cash",
     "upi",
@@ -461,12 +469,14 @@ export const GetPaymentResponse = zod.object({
     "frf_contribution",
     "donation",
     "sponsorship",
+    "waiver",
+    "adjustment",
     "other",
   ]),
   frfClaimId: zod.string().nullish(),
   amountDue: zod.number(),
   amountPaid: zod.number(),
-  status: zod.enum(["paid", "pending", "overdue"]),
+  status: zod.enum(["paid", "pending", "overdue", "cancelled", "refunded"]),
   paymentMethod: zod.enum([
     "cash",
     "upi",
@@ -2440,6 +2450,7 @@ export const ListAuditLogsResponse = zod.object({
       entityName: zod.string().nullish(),
       details: zod.string().nullish(),
       ipAddress: zod.string().nullish(),
+      userAgent: zod.string().nullish(),
       createdAt: zod.coerce.date(),
     }),
   ),

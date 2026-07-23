@@ -33,6 +33,7 @@ export async function logAudit(
       entityName: opts?.entityName ?? null,
       details: opts?.details ?? null,
       ipAddress: getIp(req),
+      userAgent: (req.headers["user-agent"] ?? "").slice(0, 512) || null,
     });
   } catch {
     // Audit logging must never block main operations

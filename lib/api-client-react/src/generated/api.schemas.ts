@@ -19,6 +19,8 @@ export interface AuditLog {
   details?: string | null;
   /** @nullable */
   ipAddress?: string | null;
+  /** @nullable */
+  userAgent?: string | null;
   createdAt: string;
 }
 
@@ -382,6 +384,8 @@ export const PaymentPaymentType = {
   frf_contribution: "frf_contribution",
   donation: "donation",
   sponsorship: "sponsorship",
+  waiver: "waiver",
+  adjustment: "adjustment",
   other: "other",
 } as const;
 
@@ -391,6 +395,8 @@ export const PaymentStatus = {
   paid: "paid",
   pending: "pending",
   overdue: "overdue",
+  cancelled: "cancelled",
+  refunded: "refunded",
 } as const;
 
 export type PaymentPaymentMethod =
@@ -434,6 +440,8 @@ export const PaymentInputPaymentType = {
   frf_contribution: "frf_contribution",
   donation: "donation",
   sponsorship: "sponsorship",
+  waiver: "waiver",
+  adjustment: "adjustment",
   other: "other",
 } as const;
 
@@ -444,6 +452,8 @@ export const PaymentInputStatus = {
   paid: "paid",
   pending: "pending",
   overdue: "overdue",
+  cancelled: "cancelled",
+  refunded: "refunded",
 } as const;
 
 export type PaymentInputPaymentMethod =
@@ -1672,6 +1682,8 @@ export const ListPaymentsPaymentType = {
   frf_contribution: "frf_contribution",
   donation: "donation",
   sponsorship: "sponsorship",
+  waiver: "waiver",
+  adjustment: "adjustment",
   other: "other",
 } as const;
 
@@ -1682,6 +1694,8 @@ export const ListPaymentsStatus = {
   paid: "paid",
   pending: "pending",
   overdue: "overdue",
+  cancelled: "cancelled",
+  refunded: "refunded",
 } as const;
 
 export type GetDashboardSummaryParams = {
