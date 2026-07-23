@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { formatSAR, cn } from "@/lib/utils";
 import { initialsOf } from "@/lib/committee";
 import { Trophy, Users, Coins, HeartHandshake, Landmark, Activity, Search, FileDown, FileSpreadsheet, Printer, X } from "lucide-react";
@@ -29,6 +30,7 @@ export default function CommitteeActivityReport() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("activity");
+  const [selected, setSelected] = useState<CommitteePerformanceEntry | null>(null);
 
   // undefined (not {}) when no dates — keeps the same react-query cache key
   // as other unfiltered consumers of this endpoint.
@@ -382,7 +384,7 @@ export default function CommitteeActivityReport() {
             </div>
           ) : filtered.length === 0 ? (
             <p className="text-sm text-green-700/70 dark:text-slate-500 py-12 text-center">
-              {hasFilters ? "No members match the current filters." : "No committee activity has been recorded yet."}
+              {hasFilters ? "No committee activity found for this selection." : "No committee activity has been recorded yet."}
             </p>
           ) : (
             <div className="overflow-x-auto">
@@ -404,7 +406,17 @@ export default function CommitteeActivityReport() {
                       <tr
                         key={e.name}
                         data-testid={`row-perf-${i}`}
-                        className="border-b border-green-50 dark:border-slate-800/60 hover:bg-green-50/40 dark:hover:bg-slate-800/40 transition-colors"
+                        className="border-b border-green-50 dark:border-slate-800/60 hover:bg-green-50/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+                        onClick={() => setSelected(e)}
+                        tabIndex={0}
+                        role="button"
+                        aria-label={`View activity details for ${e.name}`}
+                        onKeyDown={(ev) => {
+                          if (ev.key === "Enter" || ev.key === " ") {
+                            ev.preventDefault();
+                            setSelected(e);
+                          }
+                        }}
                       >
                         <td className="py-3 pr-3">
                           <div className="flex items-center gap-3">
@@ -448,6 +460,89 @@ export default function CommitteeActivityReport() {
           )}
         </CardContent>
       </Card>
+
+      {/* Member activity detail dialog */}
+      <Dialog open={selected !== null} onOpenChange={(open) => { if (!open) setSelected(null); }}>
+        <DialogContent className="max-w-md dark:bg-slate-900 dark:border-slate-800">
+          {selected && (() => {
+            const member = (allMembers ?? []).find(
+              (m) => m.fullName.trim().toLowerCase() === selected.name.trim().toLowerCase(),
+            );
+            const role = roleByName.get(selected.name.trim().toLowerCase());
+            const activities: string[] = [];
+            if (selected.membersRecruited > 0) activities.push(`Membership drive — recruited ${selected.membersRecruited} new member${selected.membersRecruited === 1 ? "" : "s"}`);
+            if (selected.feesCollected > 0) activities.push(`Fee collection — collected ${formatSAR(selected.feesCollected)} in membership fees`);
+            if (selected.frfReferred > 0) activities.push(`FRF verification — referred ${selected.frfReferred} member${selected.frfReferred === 1 ? "" : "s"} to the FRF program`);
+            if (selected.frfCount > 0) activities.push(`FRF case handling — approved/disbursed ${selected.frfCount} claim${selected.frfCount === 1 ? "" : "s"} (${formatSAR(selected.frfAmount)})`);
+            if (selected.loansProcessed > 0) activities.push(`Loan processing — handled ${selected.loansProcessed} loan${selected.loansProcessed === 1 ? "" : "s"}`);
+            if (selected.welfareHandled > 0) activities.push(`Welfare programs — handled ${selected.welfareHandled} case${selected.welfareHandled === 1 ? "" : "s"}`);
+            return (
+              <>
+                <DialogHeader>
+                  <div className="flex items-center gap-4">
+                    {member?.photoUrl ? (
+                      <img src={member.photoUrl} alt={selected.name} className="h-16 w-16 rounded-full object-cover border-2 border-green-200 dark:border-green-800 shrink-0" />
+                    ) : (
+                      <div className="h-16 w-16 rounded-full bg-green-100 dark:bg-slate-800 border border-green-200 dark:border-slate-700 flex items-center justify-center text-lg font-bold text-green-800 dark:text-green-300 shrink-0">
+                        {initialsOf(selected.name)}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <DialogTitle className="text-green-950 dark:text-green-100 truncate">{selected.name}</DialogTitle>
+                      <DialogDescription className="dark:text-slate-400">
+                        {role ?? "Staff / non-committee"}
+                        {member?.membershipId ? ` • ${member.membershipId}` : ""}
+                      </DialogDescription>
+                    </div>
+                  </div>
+                </DialogHeader>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <StatBox label="Activity Score" value={String(selected.totalContributionScore)} highlight />
+                  <StatBox label="Members Recruited" value={String(selected.membersRecruited)} />
+                  <StatBox label="Fees Collected" value={selected.feesCollected > 0 ? formatSAR(selected.feesCollected) : "—"} />
+                  <StatBox label="FRF Referred" value={String(selected.frfReferred)} />
+                  <StatBox label="Loans Processed" value={String(selected.loansProcessed)} />
+                  <StatBox label="Welfare Cases" value={String(selected.welfareHandled)} />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-green-700/70 dark:text-slate-500 mb-2">Recent Activity</p>
+                  {activities.length > 0 ? (
+                    <ul className="space-y-1.5">
+                      {activities.map((a) => (
+                        <li key={a} className="text-sm text-green-900 dark:text-slate-300 flex gap-2">
+                          <span className="text-green-500 mt-0.5">•</span>
+                          <span>{a}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-green-700/60 dark:text-slate-500">No recorded activity in this period.</p>
+                  )}
+                </div>
+                {member && (
+                  <Button asChild variant="outline" size="sm" className="border-green-300 text-green-800 dark:border-slate-700 dark:text-green-300 self-start" data-testid="button-view-full-profile">
+                    <Link href={`/members/${member.id}`}>View full member profile</Link>
+                  </Button>
+                )}
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function StatBox({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <div className={cn(
+      "rounded-xl border p-3",
+      highlight
+        ? "border-green-300 bg-green-50 dark:border-green-800 dark:bg-green-950/40"
+        : "border-green-100 bg-white dark:border-slate-800 dark:bg-slate-900",
+    )}>
+      <p className="text-[11px] text-green-700/70 dark:text-slate-500">{label}</p>
+      <p className={cn("text-base font-bold tabular-nums", highlight ? "text-green-800 dark:text-green-300" : "text-green-950 dark:text-slate-100")}>{value}</p>
     </div>
   );
 }
