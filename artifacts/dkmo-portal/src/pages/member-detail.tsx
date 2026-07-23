@@ -29,6 +29,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MemberForm } from "@/components/MemberForm";
 import { MemberFrfSection } from "@/components/MemberFrfSection";
+import { MemberLedger } from "@/components/MemberLedger";
 import { useGetMemberFrfSummary } from "@workspace/api-client-react";
 import { MemberBadges } from "@/components/MemberBadges";
 import { formatSAR, formatDate, feeStatusLabel, feeStatusBadgeClass } from "@/lib/utils";
@@ -549,6 +550,7 @@ export default function MemberDetail() {
           <Tabs value={tab} onValueChange={setTab} className="w-full">
             <TabsList className="flex w-full flex-wrap h-auto bg-emerald-50/70 dark:bg-slate-800/70">
               <TabsTrigger value="membership">Membership</TabsTrigger>
+              <TabsTrigger value="ledger">Ledger</TabsTrigger>
               <TabsTrigger value="payments">Payments</TabsTrigger>
               <TabsTrigger value="frf">FRF</TabsTrigger>
               <TabsTrigger value="referrals">Referrals</TabsTrigger>
@@ -620,6 +622,11 @@ export default function MemberDetail() {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* LEDGER */}
+            <TabsContent value="ledger" className="mt-4">
+              <MemberLedger member={member} frfHistory={frfSummary?.history} isLoading={!frfSummary} />
             </TabsContent>
 
             {/* PAYMENTS */}
