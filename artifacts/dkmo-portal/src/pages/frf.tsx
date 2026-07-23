@@ -308,6 +308,12 @@ export default function Frf() {
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const registerRef = useRef<HTMLDivElement>(null);
+
+  const showTypeClaims = (type: string) => {
+    setTypeFilter((cur) => (cur === type ? "all" : type));
+    registerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
   const [caseFilter, setCaseFilter] = useState("all");
   const [searchText, setSearchText] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -454,17 +460,29 @@ export default function Frf() {
       {(stats?.byType?.length ?? 0) > 0 && (
         <div className="grid gap-3 sm:grid-cols-4">
           {(stats?.byType ?? []).map((t: any) => (
-            <div key={t.type} className="rounded-xl border border-green-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 text-center shadow-sm">
+            <button
+              key={t.type}
+              type="button"
+              onClick={() => showTypeClaims(t.type)}
+              aria-pressed={typeFilter === t.type}
+              title={`Show ${CLAIM_TYPE_LABEL[t.type as ClaimType] ?? t.type} claims below`}
+              data-testid={`button-claim-type-${t.type}`}
+              className={cn(
+                "rounded-xl border border-green-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 text-center shadow-sm",
+                "cursor-pointer transition-all hover:shadow-md hover:border-green-300 dark:hover:border-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500",
+                typeFilter === t.type && "ring-2 ring-green-500 dark:ring-green-400",
+              )}
+            >
               <p className="text-xs text-green-700/70 dark:text-slate-500">{CLAIM_TYPE_LABEL[t.type as ClaimType] ?? t.type}</p>
               <p className="text-lg font-bold text-green-950 dark:text-white mt-0.5">{t.count}</p>
               <p className="text-xs text-green-800 dark:text-green-400 font-medium">{formatSAR(t.totalAmount)}</p>
-            </div>
+            </button>
           ))}
         </div>
       )}
 
       {/* Filters + Table */}
-      <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+      <Card ref={registerRef} className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm scroll-mt-4">
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row sm:items-end gap-3">
             <div className="flex-1">
