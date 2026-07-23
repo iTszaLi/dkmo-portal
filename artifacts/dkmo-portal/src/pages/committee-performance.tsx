@@ -213,6 +213,13 @@ export default function CommitteeActivityReport() {
     [filtered],
   );
 
+  // Open the member activity dialog for a given contributor name.
+  const openByName = (name?: string) => {
+    if (!name) return;
+    const entry = entries.find((e) => e.name.trim().toLowerCase() === name.trim().toLowerCase());
+    if (entry) setSelected(entry);
+  };
+
   const rangeLabel =
     fromDate || toDate
       ? `${fromDate || "beginning"} → ${toDate || "today"}`
@@ -396,8 +403,18 @@ export default function CommitteeActivityReport() {
             return (
               <Card
                 key={e.name}
-                className={cn("rounded-2xl shadow-sm", meta.card)}
+                className={cn("rounded-2xl shadow-sm cursor-pointer transition-shadow hover:shadow-md focus-visible:ring-2 focus-visible:ring-green-500 outline-none", meta.card)}
                 data-testid={`card-rank-${rank}`}
+                onClick={() => setSelected(e)}
+                tabIndex={0}
+                role="button"
+                aria-label={`View activity details for ${e.name}`}
+                onKeyDown={(ev) => {
+                  if (ev.key === "Enter" || ev.key === " ") {
+                    ev.preventDefault();
+                    setSelected(e);
+                  }
+                }}
               >
                 <CardContent className="pt-4 pb-4 flex items-center gap-3">
                   <div className={cn("h-12 w-12 rounded-full flex items-center justify-center text-2xl shrink-0", meta.iconBg)} aria-hidden>
@@ -436,6 +453,7 @@ export default function CommitteeActivityReport() {
           loading={isLoading}
           value={highlights.topPerformer && highlights.topPerformer.value > 0 ? highlights.topPerformer.value : "—"}
           name={highlights.topPerformer && highlights.topPerformer.value > 0 ? highlights.topPerformer.name : undefined}
+          onSelect={highlights.topPerformer && highlights.topPerformer.value > 0 ? () => openByName(highlights.topPerformer?.name) : undefined}
         />
         <HighlightCard
           icon={Coins}
@@ -444,6 +462,7 @@ export default function CommitteeActivityReport() {
           loading={isLoading}
           value={highlights.topFees && highlights.topFees.value > 0 ? formatSAR(highlights.topFees.value) : "—"}
           name={highlights.topFees && highlights.topFees.value > 0 ? highlights.topFees.name : undefined}
+          onSelect={highlights.topFees && highlights.topFees.value > 0 ? () => openByName(highlights.topFees?.name) : undefined}
         />
         <HighlightCard
           icon={HeartHandshake}
@@ -452,6 +471,7 @@ export default function CommitteeActivityReport() {
           loading={isLoading}
           value={highlights.topFrf && highlights.topFrf.value > 0 ? highlights.topFrf.value : "—"}
           name={highlights.topFrf && highlights.topFrf.value > 0 ? highlights.topFrf.name : undefined}
+          onSelect={highlights.topFrf && highlights.topFrf.value > 0 ? () => openByName(highlights.topFrf?.name) : undefined}
         />
         <HighlightCard
           icon={Landmark}
@@ -460,6 +480,7 @@ export default function CommitteeActivityReport() {
           loading={isLoading}
           value={highlights.topLoans && highlights.topLoans.value > 0 ? highlights.topLoans.value : "—"}
           name={highlights.topLoans && highlights.topLoans.value > 0 ? highlights.topLoans.name : undefined}
+          onSelect={highlights.topLoans && highlights.topLoans.value > 0 ? () => openByName(highlights.topLoans?.name) : undefined}
         />
       </div>
 
@@ -696,6 +717,7 @@ function HighlightCard({
   name,
   accent,
   loading,
+  onSelect,
 }: {
   icon: typeof Trophy;
   label: string;
@@ -703,9 +725,30 @@ function HighlightCard({
   name?: string;
   accent: string;
   loading: boolean;
+  onSelect?: () => void;
 }) {
+  const interactive = !!onSelect;
   return (
-    <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+    <Card
+      className={cn(
+        "rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm",
+        interactive && "cursor-pointer transition-shadow hover:shadow-md focus-visible:ring-2 focus-visible:ring-green-500 outline-none",
+      )}
+      onClick={onSelect}
+      tabIndex={interactive ? 0 : undefined}
+      role={interactive ? "button" : undefined}
+      aria-label={interactive && name ? `View activity details for ${name}` : undefined}
+      onKeyDown={
+        interactive
+          ? (ev) => {
+              if (ev.key === "Enter" || ev.key === " ") {
+                ev.preventDefault();
+                onSelect?.();
+              }
+            }
+          : undefined
+      }
+    >
       <CardContent className="pt-4 pb-4">
         <div className="flex items-center gap-2">
           <Icon className={`h-4 w-4 shrink-0 ${accent}`} />
