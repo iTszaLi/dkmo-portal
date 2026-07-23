@@ -244,8 +244,18 @@ export default function Sponsors() {
                   {items.map((s) => (
                     <TableRow
                       key={s.id}
-                      className="hover:bg-green-50/40 dark:hover:bg-slate-800/50 dark:border-slate-800 transition-colors"
+                      className="hover:bg-green-50/40 dark:hover:bg-slate-800/50 dark:border-slate-800 transition-colors cursor-pointer"
                       data-testid={`row-sponsor-${s.id}`}
+                      onClick={() => setLocation(`/sponsors/${s.id}`)}
+                      tabIndex={0}
+                      role="link"
+                      aria-label={`View ${s.sponsorName}`}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setLocation(`/sponsors/${s.id}`);
+                        }
+                      }}
                     >
                       <TableCell>
                         <Link
@@ -283,7 +293,7 @@ export default function Sponsors() {
                       <TableCell className="text-xs text-green-800/80 dark:text-slate-400">
                         {s.assignedStaff || "—"}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-1">
                           <Link href={`/sponsors/${s.id}`}>
                             <Button variant="ghost" size="sm" className="text-green-800 dark:text-slate-300 hover:text-green-900 dark:hover:text-slate-100 hover:bg-green-50 dark:hover:bg-slate-800">

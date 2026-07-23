@@ -1,0 +1,102 @@
+Improve the Committee Performance Report page with realistic sample data and fully functional interactions.
+
+Do not redesign the page layout. Keep the current DKMO Executive Suite style.
+
+Tasks:
+
+1. Add more realistic sample data:
+- Create at least 30 committee/member activity records.
+- Make every member have unique activity data.
+- Do not repeat the same numbers.
+- Include different combinations of:
+  - Members recruited
+  - Membership fees collected
+  - FRF members referred
+  - Loans processed
+  - Activity score
+
+Example:
+Member A:
+- Recruited: 5
+- Fees collected: SAR 500
+- FRF referred: 3
+- Loans: 2
+- Score: calculated automatically
+
+Member B:
+- Recruited: 1
+- Fees collected: SAR 1,200
+- FRF referred: 0
+- Loans: 7
+- Different score
+
+Avoid everyone having empty "-" values.
+
+2. Make all dashboard cards dynamic:
+Cards:
+- Active Committee Members
+- Top Performer
+- Top Membership Collector
+- Top FRF Referrer
+- Top Loan Processor
+
+They should calculate automatically from the data.
+
+3. Make all table rows clickable:
+When clicking a committee member:
+Open a detailed profile/activity view showing:
+- Member photo
+- Name
+- Position
+- Department
+- Total score
+- Recruited members
+- Fees collected
+- FRF referrals
+- Loans handled
+- Recent activities
+
+4. Make all tabs, filters and controls functional:
+Search:
+- Search by member name should return matching results.
+
+Designation filter:
+- Filter by position/designation.
+
+Date filters:
+- From and To dates should update the table results.
+
+Sort dropdown:
+Options:
+- Activity score (high → low)
+- Activity score (low → high)
+- Most recruited
+- Highest fees collected
+- Most loans processed
+
+Sorting should actually change the table.
+
+5. Make PDF, Excel and Print buttons functional:
+- PDF should export the current filtered report.
+- Excel should export current data.
+- Print should print the report correctly.
+
+6. Add empty state handling:
+If filters return no results:
+Show:
+"No committee activity found for this selection."
+
+7. Improve data realism:
+Use DKMO-related activities:
+- Membership drive
+- FRF verification
+- Loan processing
+- Fee collection
+- Event coordination
+- Sponsor follow-up
+- Meeting attendance
+
+Do not use fake random names. Use existing DKMO members where possible.
+
+Keep the existing UI, colors, spacing and design.
+Only improve functionality, data quality and interactivity.

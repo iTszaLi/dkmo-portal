@@ -254,7 +254,7 @@ export default function SponsorDetail() {
       </div>
 
       {!isNew && sponsor && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
           <Card className="rounded-2xl border-green-100">
             <CardHeader className="pb-2">
               <CardDescription>Total</CardDescription>
@@ -295,6 +295,19 @@ export default function SponsorDetail() {
                   {sponsor.tier}
                 </Badge>
               </div>
+            </CardHeader>
+          </Card>
+          <Card
+            className="rounded-2xl border-2 border-green-500 bg-gradient-to-br from-green-50 to-emerald-100 shadow-md ring-1 ring-green-200 dark:border-green-600 dark:from-green-950/50 dark:to-emerald-900/40 dark:ring-green-800"
+            data-testid="card-assigned-staff"
+          >
+            <CardHeader className="pb-2">
+              <CardDescription className="text-green-800 font-semibold dark:text-green-300">
+                Assigned Staff
+              </CardDescription>
+              <CardTitle className="text-xl text-green-950 dark:text-green-100">
+                {sponsor.assignedStaff || "—"}
+              </CardTitle>
             </CardHeader>
           </Card>
         </div>
