@@ -36,7 +36,7 @@ const DESIGNATION_OPTIONS = [
   "Member",
 ];
 
-const FEE_STATUS_OPTIONS = ["unpaid", "pending", "paid"] as const;
+const FEE_STATUS_OPTIONS = ["unpaid", "pending", "partial", "paid", "exempt"] as const;
 
 // Saudi mobile: optional +966 / 966 / leading 0, then a 5 and 8 more digits.
 const SAUDI_MOBILE_RE = /^(\+?966|0)?5\d{8}$/;

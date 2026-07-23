@@ -49,8 +49,12 @@ export function feeStatusLabel(status: string | undefined | null): string {
   switch (status) {
     case "paid":
       return "Paid";
+    case "partial":
+      return "Partial";
     case "pending":
       return "Pending";
+    case "exempt":
+      return "Exempt";
     default:
       return "Unpaid";
   }
@@ -60,8 +64,12 @@ export function feeStatusBadgeClass(status: string | undefined | null): string {
   switch (status) {
     case "paid":
       return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300";
+    case "partial":
+      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300";
     case "pending":
       return "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300";
+    case "exempt":
+      return "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400";
     default:
       return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
   }

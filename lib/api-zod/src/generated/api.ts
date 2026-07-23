@@ -49,7 +49,7 @@ export const ListMembersResponseItem = zod.object({
   isExecutiveCommittee: zod.boolean(),
   isCoreCommittee: zod.boolean(),
   membershipFee: zod.number(),
-  feeStatus: zod.enum(["paid", "pending", "unpaid"]),
+  feeStatus: zod.enum(["paid", "partial", "pending", "unpaid", "exempt"]),
   feePaidAt: zod.coerce.date().nullable(),
   feeUpdatedBy: zod.string(),
   frfStatus: zod.enum(["active", "suspended", "inactive"]),
@@ -87,7 +87,9 @@ export const CreateMemberBody = zod.object({
   isExecutiveCommittee: zod.boolean().optional(),
   isCoreCommittee: zod.boolean().optional(),
   membershipFee: zod.number().optional(),
-  feeStatus: zod.enum(["paid", "pending", "unpaid"]).optional(),
+  feeStatus: zod
+    .enum(["paid", "partial", "pending", "unpaid", "exempt"])
+    .optional(),
   frfStatus: zod.enum(["active", "suspended", "inactive"]).optional(),
   responsibility: zod.enum(["responsible", "not_responsible"]).optional(),
   notes: zod.string().optional(),
@@ -117,7 +119,7 @@ export const GetMemberResponse = zod.object({
   isExecutiveCommittee: zod.boolean(),
   isCoreCommittee: zod.boolean(),
   membershipFee: zod.number(),
-  feeStatus: zod.enum(["paid", "pending", "unpaid"]),
+  feeStatus: zod.enum(["paid", "partial", "pending", "unpaid", "exempt"]),
   feePaidAt: zod.coerce.date().nullable(),
   feeUpdatedBy: zod.string(),
   frfStatus: zod.enum(["active", "suspended", "inactive"]),
@@ -154,7 +156,9 @@ export const UpdateMemberBody = zod.object({
   isExecutiveCommittee: zod.boolean().optional(),
   isCoreCommittee: zod.boolean().optional(),
   membershipFee: zod.number().optional(),
-  feeStatus: zod.enum(["paid", "pending", "unpaid"]).optional(),
+  feeStatus: zod
+    .enum(["paid", "partial", "pending", "unpaid", "exempt"])
+    .optional(),
   frfStatus: zod.enum(["active", "suspended", "inactive"]).optional(),
   responsibility: zod.enum(["responsible", "not_responsible"]).optional(),
   notes: zod.string().optional(),
@@ -177,7 +181,7 @@ export const UpdateMemberResponse = zod.object({
   isExecutiveCommittee: zod.boolean(),
   isCoreCommittee: zod.boolean(),
   membershipFee: zod.number(),
-  feeStatus: zod.enum(["paid", "pending", "unpaid"]),
+  feeStatus: zod.enum(["paid", "partial", "pending", "unpaid", "exempt"]),
   feePaidAt: zod.coerce.date().nullable(),
   feeUpdatedBy: zod.string(),
   frfStatus: zod.enum(["active", "suspended", "inactive"]),
@@ -207,7 +211,7 @@ export const UpdateMemberFeeStatusParams = zod.object({
 });
 
 export const UpdateMemberFeeStatusBody = zod.object({
-  feeStatus: zod.enum(["paid", "pending", "unpaid"]),
+  feeStatus: zod.enum(["paid", "partial", "pending", "unpaid", "exempt"]),
 });
 
 export const UpdateMemberFeeStatusResponse = zod.object({
@@ -225,7 +229,7 @@ export const UpdateMemberFeeStatusResponse = zod.object({
   isExecutiveCommittee: zod.boolean(),
   isCoreCommittee: zod.boolean(),
   membershipFee: zod.number(),
-  feeStatus: zod.enum(["paid", "pending", "unpaid"]),
+  feeStatus: zod.enum(["paid", "partial", "pending", "unpaid", "exempt"]),
   feePaidAt: zod.coerce.date().nullable(),
   feeUpdatedBy: zod.string(),
   frfStatus: zod.enum(["active", "suspended", "inactive"]),
@@ -271,7 +275,7 @@ export const UpdateMemberCommitteeStatusResponse = zod.object({
   isExecutiveCommittee: zod.boolean(),
   isCoreCommittee: zod.boolean(),
   membershipFee: zod.number(),
-  feeStatus: zod.enum(["paid", "pending", "unpaid"]),
+  feeStatus: zod.enum(["paid", "partial", "pending", "unpaid", "exempt"]),
   feePaidAt: zod.coerce.date().nullable(),
   feeUpdatedBy: zod.string(),
   frfStatus: zod.enum(["active", "suspended", "inactive"]),
@@ -315,7 +319,7 @@ export const UpdateMemberPhotoResponse = zod.object({
   isExecutiveCommittee: zod.boolean(),
   isCoreCommittee: zod.boolean(),
   membershipFee: zod.number(),
-  feeStatus: zod.enum(["paid", "pending", "unpaid"]),
+  feeStatus: zod.enum(["paid", "partial", "pending", "unpaid", "exempt"]),
   feePaidAt: zod.coerce.date().nullable(),
   feeUpdatedBy: zod.string(),
   frfStatus: zod.enum(["active", "suspended", "inactive"]),
@@ -349,7 +353,7 @@ export const GetMemberReferralsResponse = zod.object({
       mobileNumber: zod.string(),
       city: zod.string(),
       photoUrl: zod.string().nullish(),
-      feeStatus: zod.enum(["paid", "pending", "unpaid"]),
+      feeStatus: zod.enum(["paid", "partial", "pending", "unpaid", "exempt"]),
     }),
   ),
 });

@@ -31,7 +31,7 @@ async function loadImageAsBase64(url: string): Promise<string> {
 }
 
 // ── types ────────────────────────────────────────────────────────────────────
-type FeeStatus = "paid" | "pending" | "unpaid";
+type FeeStatus = "paid" | "partial" | "pending" | "unpaid" | "exempt";
 
 type FeeSummaryRow = {
   membershipId: string;
@@ -81,9 +81,9 @@ export default function Reports() {
   const summaryTotals = useMemo(() => ({
     totalFee: feeSummaryRows.reduce((a, r) => a + r.membershipFee, 0),
     collected: feeSummaryRows.filter((r) => r.feeStatus === "paid").reduce((a, r) => a + r.membershipFee, 0),
-    outstanding: feeSummaryRows.filter((r) => r.feeStatus !== "paid").reduce((a, r) => a + r.membershipFee, 0),
+    outstanding: feeSummaryRows.filter((r) => r.feeStatus !== "paid" && r.feeStatus !== "exempt").reduce((a, r) => a + r.membershipFee, 0),
     paidCount: feeSummaryRows.filter((r) => r.feeStatus === "paid").length,
-    pendingCount: feeSummaryRows.filter((r) => r.feeStatus === "pending").length,
+    pendingCount: feeSummaryRows.filter((r) => r.feeStatus === "pending" || r.feeStatus === "partial").length,
     unpaidCount: feeSummaryRows.filter((r) => r.feeStatus === "unpaid").length,
   }), [feeSummaryRows]);
 
@@ -311,7 +311,7 @@ export default function Reports() {
         feeStatusLabel(r.feeStatus),
         r.feePaidAt ? formatDate(r.feePaidAt) : "—",
       ]);
-      const statusColor = r.feeStatus === "paid" ? "FFD1FAE5" : r.feeStatus === "pending" ? "FFFEF9C3" : "FFFEE2E2";
+      const statusColor = r.feeStatus === "paid" ? "FFD1FAE5" : r.feeStatus === "pending" || r.feeStatus === "partial" ? "FFFEF9C3" : r.feeStatus === "exempt" ? "FFF1F5F9" : "FFFEE2E2";
       row.eachCell((cell) => {
         cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: statusColor } };
         cell.border = { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } };
@@ -607,8 +607,10 @@ export default function Reports() {
                           "dark:border-slate-800 transition-colors",
                           row.feeStatus === "paid"
                             ? "hover:bg-emerald-50/40 dark:hover:bg-emerald-950/20"
-                            : row.feeStatus === "pending"
+                            : row.feeStatus === "pending" || row.feeStatus === "partial"
                             ? "hover:bg-amber-50/40 dark:hover:bg-amber-950/10"
+                            : row.feeStatus === "exempt"
+                            ? "hover:bg-slate-50/60 dark:hover:bg-slate-800/30"
                             : "hover:bg-red-50/40 dark:hover:bg-red-950/10",
                         )}
                       >
@@ -625,8 +627,10 @@ export default function Reports() {
                               "text-xs font-semibold uppercase",
                               row.feeStatus === "paid"
                                 ? "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100"
-                                : row.feeStatus === "pending"
+                                : row.feeStatus === "pending" || row.feeStatus === "partial"
                                 ? "bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 hover:bg-amber-100"
+                                : row.feeStatus === "exempt"
+                                ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100"
                                 : "bg-red-100 dark:bg-red-950/40 text-red-800 dark:text-red-300 hover:bg-red-100",
                             )}
                           >

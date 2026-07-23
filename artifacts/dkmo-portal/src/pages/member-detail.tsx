@@ -35,7 +35,7 @@ import { formatSAR, formatDate, feeStatusLabel, feeStatusBadgeClass } from "@/li
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  ArrowLeft, UserCircle, MapPin, Phone, CalendarDays, CheckCircle2, Clock, XCircle, Users,
+  ArrowLeft, UserCircle, MapPin, Phone, CalendarDays, CheckCircle2, Clock, XCircle, MinusCircle, Users,
   HeartHandshake, HandHelping, Coins, IdCard, FileText, Building2, ChevronDown, ChevronUp,
   Wallet, Pencil, Plus, Printer, Receipt, ArrowRight, Award, UserCheck,
   FolderOpen, Upload, ExternalLink, Download, Camera,
@@ -414,7 +414,7 @@ export default function MemberDetail() {
               </div>
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${feeStatusBadgeClass(member.feeStatus)}`}>
-                  {member.feeStatus === "paid" ? <CheckCircle2 className="h-3 w-3" /> : member.feeStatus === "pending" ? <Clock className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                  {member.feeStatus === "paid" ? <CheckCircle2 className="h-3 w-3" /> : member.feeStatus === "exempt" ? <MinusCircle className="h-3 w-3" /> : member.feeStatus === "pending" || member.feeStatus === "partial" ? <Clock className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
                   Fee {feeStatusLabel(member.feeStatus)}
                 </span>
                 {/* Derived member tags: loans, assistance, recruitment */}
@@ -492,7 +492,7 @@ export default function MemberDetail() {
 
             {/* Outstanding dues at a glance */}
             {(() => {
-              const feeDue = member.feeStatus !== "paid" ? Number(member.membershipFee) : 0;
+              const feeDue = member.feeStatus !== "paid" && member.feeStatus !== "exempt" ? Number(member.membershipFee) : 0;
               const frfDue = frfSummary?.totalOutstanding ?? 0;
               const totalDue = feeDue + frfDue;
               return (
@@ -574,7 +574,7 @@ export default function MemberDetail() {
                     <div className="rounded-xl bg-emerald-50/60 dark:bg-slate-800/50 p-4">
                       <p className="text-xs font-medium text-emerald-600 dark:text-slate-500">Status</p>
                       <span className={`mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${feeStatusBadgeClass(member.feeStatus)}`}>
-                        {member.feeStatus === "paid" ? <CheckCircle2 className="h-3 w-3" /> : member.feeStatus === "pending" ? <Clock className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                        {member.feeStatus === "paid" ? <CheckCircle2 className="h-3 w-3" /> : member.feeStatus === "exempt" ? <MinusCircle className="h-3 w-3" /> : member.feeStatus === "pending" || member.feeStatus === "partial" ? <Clock className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
                         {feeStatusLabel(member.feeStatus)}
                       </span>
                     </div>
@@ -604,6 +604,12 @@ export default function MemberDetail() {
                   <div className="flex flex-wrap gap-2 pt-2 border-t border-emerald-100 dark:border-slate-800">
                     <Button size="sm" variant={member.feeStatus === "paid" ? "default" : "outline"} disabled={member.feeStatus === "paid" || updateFeeStatus.isPending} onClick={() => handleFeeStatus("paid")} className={member.feeStatus === "paid" ? "bg-emerald-700 hover:bg-emerald-800" : "border-emerald-200 text-emerald-700 dark:border-slate-700 dark:text-emerald-400"}>
                       <CheckCircle2 className="mr-2 h-4 w-4" /> Mark Paid
+                    </Button>
+                    <Button size="sm" variant="outline" disabled={member.feeStatus === "partial" || updateFeeStatus.isPending} onClick={() => handleFeeStatus("partial")} className="border-yellow-200 text-yellow-700 dark:border-slate-700 dark:text-yellow-400">
+                      Partial
+                    </Button>
+                    <Button size="sm" variant="outline" disabled={member.feeStatus === "exempt" || updateFeeStatus.isPending} onClick={() => handleFeeStatus("exempt")} className="border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-400">
+                      Exempt
                     </Button>
                     <Button size="sm" variant="outline" disabled={member.feeStatus === "pending" || updateFeeStatus.isPending} onClick={() => handleFeeStatus("pending")} className="border-amber-200 text-amber-700 dark:border-slate-700 dark:text-amber-400">
                       <Clock className="mr-2 h-4 w-4" /> Mark Pending

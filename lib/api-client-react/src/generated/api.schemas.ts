@@ -162,8 +162,10 @@ export type MemberFeeStatus =
 
 export const MemberFeeStatus = {
   paid: "paid",
+  partial: "partial",
   pending: "pending",
   unpaid: "unpaid",
+  exempt: "exempt",
 } as const;
 
 export type MemberFrfStatus =
@@ -220,8 +222,10 @@ export type MemberDetailFeeStatus =
 
 export const MemberDetailFeeStatus = {
   paid: "paid",
+  partial: "partial",
   pending: "pending",
   unpaid: "unpaid",
+  exempt: "exempt",
 } as const;
 
 export type MemberDetailFrfStatus =
@@ -275,8 +279,10 @@ export type MemberInputFeeStatus =
 
 export const MemberInputFeeStatus = {
   paid: "paid",
+  partial: "partial",
   pending: "pending",
   unpaid: "unpaid",
+  exempt: "exempt",
 } as const;
 
 export type MemberInputFrfStatus =
@@ -325,8 +331,10 @@ export type FeeStatusInputFeeStatus =
 
 export const FeeStatusInputFeeStatus = {
   paid: "paid",
+  partial: "partial",
   pending: "pending",
   unpaid: "unpaid",
+  exempt: "exempt",
 } as const;
 
 export interface FeeStatusInput {
@@ -354,8 +362,10 @@ export type MemberReferralItemFeeStatus =
 
 export const MemberReferralItemFeeStatus = {
   paid: "paid",
+  partial: "partial",
   pending: "pending",
   unpaid: "unpaid",
+  exempt: "exempt",
 } as const;
 
 export interface MemberReferralItem {

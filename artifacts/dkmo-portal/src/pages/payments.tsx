@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, UserCircle, MoreHorizontal, Search, Wallet, CheckCircle2, Clock, XCircle, HeartHandshake } from "lucide-react";
+import { Plus, UserCircle, MoreHorizontal, Search, Wallet, CheckCircle2, Clock, XCircle, MinusCircle, HeartHandshake } from "lucide-react";
 import { formatSAR, formatDate, feeStatusLabel, feeStatusBadgeClass } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,8 +20,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 const FEE_STATUSES = [
   { value: "all", label: "All Statuses" },
   { value: "paid", label: "Paid" },
+  { value: "partial", label: "Partial" },
   { value: "pending", label: "Pending" },
   { value: "unpaid", label: "Unpaid" },
+  { value: "exempt", label: "Exempt" },
 ];
 
 export default function Payments() {
@@ -36,7 +38,7 @@ export default function Payments() {
   const filtered = (members ?? []).filter((m) => statusFilter === "all" || m.feeStatus === statusFilter);
 
   const totalCollected = (members ?? []).filter((m) => m.feeStatus === "paid").reduce((acc, m) => acc + m.membershipFee, 0);
-  const totalOutstanding = (members ?? []).filter((m) => m.feeStatus !== "paid").reduce((acc, m) => acc + m.membershipFee, 0);
+  const totalOutstanding = (members ?? []).filter((m) => m.feeStatus !== "paid" && m.feeStatus !== "exempt").reduce((acc, m) => acc + m.membershipFee, 0);
 
   const handleFeeStatus = (id: string, feeStatus: FeeStatusInputFeeStatus) => {
     updateFeeStatus.mutate({ id, data: { feeStatus } }, {
@@ -196,7 +198,7 @@ export default function Payments() {
                   </TableCell>
                   <TableCell>
                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${feeStatusBadgeClass(member.feeStatus)}`}>
-                      {member.feeStatus === "paid" ? <CheckCircle2 className="h-3 w-3" /> : member.feeStatus === "pending" ? <Clock className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                      {member.feeStatus === "paid" ? <CheckCircle2 className="h-3 w-3" /> : member.feeStatus === "exempt" ? <MinusCircle className="h-3 w-3" /> : member.feeStatus === "pending" || member.feeStatus === "partial" ? <Clock className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
                       {feeStatusLabel(member.feeStatus)}
                     </span>
                   </TableCell>
@@ -217,9 +219,19 @@ export default function Payments() {
                             <CheckCircle2 className="mr-2 h-4 w-4" /> Mark Fee Paid
                           </DropdownMenuItem>
                         )}
+                        {member.feeStatus !== "partial" && (
+                          <DropdownMenuItem onClick={() => handleFeeStatus(member.id, "partial")} className="text-yellow-700 dark:text-yellow-400 dark:focus:bg-slate-800">
+                            <Clock className="mr-2 h-4 w-4" /> Mark Fee Partial
+                          </DropdownMenuItem>
+                        )}
                         {member.feeStatus !== "pending" && (
                           <DropdownMenuItem onClick={() => handleFeeStatus(member.id, "pending")} className="text-amber-700 dark:text-amber-400 dark:focus:bg-slate-800">
                             <Clock className="mr-2 h-4 w-4" /> Mark Fee Pending
+                          </DropdownMenuItem>
+                        )}
+                        {member.feeStatus !== "exempt" && (
+                          <DropdownMenuItem onClick={() => handleFeeStatus(member.id, "exempt")} className="text-slate-600 dark:text-slate-400 dark:focus:bg-slate-800">
+                            <MinusCircle className="mr-2 h-4 w-4" /> Mark Fee Exempt
                           </DropdownMenuItem>
                         )}
                         {member.feeStatus !== "unpaid" && (

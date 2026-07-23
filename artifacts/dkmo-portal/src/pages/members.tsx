@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { MemberForm } from "@/components/MemberForm";
 import { MemberBadges } from "@/components/MemberBadges";
-import { Search, Plus, UserCircle, MapPin, Phone, MoreHorizontal, Edit, Trash, Users, CheckCircle2, Clock, XCircle, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
+import { Search, Plus, UserCircle, MapPin, Phone, MoreHorizontal, Edit, Trash, Users, CheckCircle2, Clock, XCircle, MinusCircle, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
 import { formatSAR, feeStatusLabel, feeStatusBadgeClass } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { MemberAvatar } from "@/components/MemberAvatar";
@@ -232,8 +232,10 @@ export default function Members() {
           <SelectContent>
             <SelectItem value="all">All fee statuses</SelectItem>
             <SelectItem value="paid">Fee paid</SelectItem>
+            <SelectItem value="partial">Fee partial</SelectItem>
             <SelectItem value="pending">Fee pending</SelectItem>
             <SelectItem value="unpaid">Fee unpaid</SelectItem>
+            <SelectItem value="exempt">Fee exempt</SelectItem>
           </SelectContent>
         </Select>
         {(statusFilter !== "all" || feeFilter !== "all") && (
@@ -332,7 +334,7 @@ export default function Members() {
                   </TableCell>
                   <TableCell>
                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${feeStatusBadgeClass(member.feeStatus)}`}>
-                      {member.feeStatus === "paid" ? <CheckCircle2 className="h-3 w-3" /> : member.feeStatus === "pending" ? <Clock className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                      {member.feeStatus === "paid" ? <CheckCircle2 className="h-3 w-3" /> : member.feeStatus === "exempt" ? <MinusCircle className="h-3 w-3" /> : member.feeStatus === "pending" || member.feeStatus === "partial" ? <Clock className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
                       {feeStatusLabel(member.feeStatus)}
                     </span>
                   </TableCell>
@@ -420,9 +422,19 @@ export default function Members() {
                             <CheckCircle2 className="mr-2 h-4 w-4" /> Mark Fee Paid
                           </DropdownMenuItem>
                         )}
+                        {member.feeStatus !== "partial" && (
+                          <DropdownMenuItem onClick={() => handleFeeStatus(member.id, "partial")} className="text-yellow-700 dark:text-yellow-400 dark:focus:bg-slate-800">
+                            <Clock className="mr-2 h-4 w-4" /> Mark Fee Partial
+                          </DropdownMenuItem>
+                        )}
                         {member.feeStatus !== "pending" && (
                           <DropdownMenuItem onClick={() => handleFeeStatus(member.id, "pending")} className="text-amber-700 dark:text-amber-400 dark:focus:bg-slate-800">
                             <Clock className="mr-2 h-4 w-4" /> Mark Fee Pending
+                          </DropdownMenuItem>
+                        )}
+                        {member.feeStatus !== "exempt" && (
+                          <DropdownMenuItem onClick={() => handleFeeStatus(member.id, "exempt")} className="text-slate-600 dark:text-slate-400 dark:focus:bg-slate-800">
+                            <MinusCircle className="mr-2 h-4 w-4" /> Mark Fee Exempt
                           </DropdownMenuItem>
                         )}
                         {member.feeStatus !== "unpaid" && (

@@ -1905,7 +1905,7 @@ components:
           type: number
         feeStatus:
           type: string
-          enum: [paid, pending, unpaid]
+          enum: [paid, partial, pending, unpaid, exempt]
         feePaidAt:
           type: ["string", "null"]
           format: date-time
@@ -1990,7 +1990,7 @@ components:
           type: number
         feeStatus:
           type: string
-          enum: [paid, pending, unpaid]
+          enum: [paid, partial, pending, unpaid, exempt]
         feePaidAt:
           type: ["string", "null"]
           format: date-time
@@ -2074,7 +2074,7 @@ components:
           type: number
         feeStatus:
           type: string
-          enum: [paid, pending, unpaid]
+          enum: [paid, partial, pending, unpaid, exempt]
         frfStatus:
           type: string
           enum: [active, suspended, inactive]
@@ -2096,7 +2096,7 @@ components:
       properties:
         feeStatus:
           type: string
-          enum: [paid, pending, unpaid]
+          enum: [paid, partial, pending, unpaid, exempt]
       required:
         - feeStatus
 
@@ -2138,7 +2138,7 @@ components:
           type: ["string", "null"]
         feeStatus:
           type: string
-          enum: [paid, pending, unpaid]
+          enum: [paid, partial, pending, unpaid, exempt]
       required:
         - id
         - fullName

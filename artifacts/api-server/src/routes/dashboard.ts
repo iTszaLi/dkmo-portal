@@ -54,9 +54,11 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
     if (m.feeStatus === "paid") {
       paidCount++;
       totalFeesCollected += fee;
-    } else if (m.feeStatus === "pending") {
+    } else if (m.feeStatus === "pending" || m.feeStatus === "partial") {
       pendingCount++;
       outstandingFees += fee;
+    } else if (m.feeStatus === "exempt") {
+      // Exempt members owe nothing — excluded from outstanding totals.
     } else {
       unpaidCount++;
       outstandingFees += fee;
@@ -134,7 +136,7 @@ router.get("/dashboard/pending", async (req, res): Promise<void> => {
 
   const result = [];
   for (const m of members) {
-    if (m.feeStatus === "paid") continue;
+    if (m.feeStatus === "paid" || m.feeStatus === "exempt") continue;
     result.push({
       memberId: m.id,
       fullName: m.fullName,
@@ -143,7 +145,7 @@ router.get("/dashboard/pending", async (req, res): Promise<void> => {
       city: m.city,
       country: m.country,
       membershipFee: Number(m.membershipFee),
-      feeStatus: m.feeStatus === "pending" ? "pending" : "unpaid",
+      feeStatus: m.feeStatus === "pending" || m.feeStatus === "partial" ? "pending" : "unpaid",
       refMemberName: m.refMemberName ?? "",
       refMemberId: m.refMemberId ?? "",
     });
@@ -330,7 +332,7 @@ router.get("/dashboard/financial-summary", async (req, res): Promise<void> => {
   for (const m of membersAll) {
     const fee = Number(m.membershipFee);
     if (m.feeStatus === "paid") feesCollected += fee;
-    else feesOutstanding += fee;
+    else if (m.feeStatus !== "exempt") feesOutstanding += fee;
   }
 
   res.json({
@@ -404,7 +406,7 @@ router.get("/dashboard/alerts", async (req, res): Promise<void> => {
   }
 
   // Members with pending membership fee
-  const pendingMembers = membersAll.filter((m) => m.feeStatus === "pending");
+  const pendingMembers = membersAll.filter((m) => m.feeStatus === "pending" || m.feeStatus === "partial");
   if (pendingMembers.length > 0) {
     alerts.push({
       id: "pending-members",
