@@ -14,7 +14,38 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MemberInput } from "@workspace/api-client-react";
 import { MemberRefPicker, type MemberRefEntry } from "@/components/MemberRefPicker";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Upload, X } from "lucide-react";
+
+const PHOTO_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+const PHOTO_SIZE = 512;
+
+/** Center-crop the image to a square and downscale to PHOTO_SIZE, returning a jpeg data URL. */
+function fileToSquareDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Could not read file"));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("Could not load image"));
+      img.onload = () => {
+        const side = Math.min(img.width, img.height);
+        const sx = (img.width - side) / 2;
+        const sy = (img.height - side) / 2;
+        const canvas = document.createElement("canvas");
+        canvas.width = PHOTO_SIZE;
+        canvas.height = PHOTO_SIZE;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return reject(new Error("Canvas not supported"));
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(img, sx, sy, side, side, 0, 0, PHOTO_SIZE, PHOTO_SIZE);
+        resolve(canvas.toDataURL("image/jpeg", 0.85));
+      };
+      img.src = String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 const DESIGNATION_OPTIONS = [
   "",
@@ -72,6 +103,11 @@ interface MemberFormProps {
 }
 
 export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberFormProps) {
+  const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(
+    (defaultValues as any)?.photoUrl ?? null,
+  );
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const [refMember, setRefMember] = useState<MemberRefEntry | null>(
     defaultValues?.refMemberId
       ? {
@@ -122,6 +158,7 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
         responsibility: ((defaultValues as any)?.responsibility === "responsible" ? "responsible" : "not_responsible") as "responsible" | "not_responsible",
         notes: (defaultValues as any)?.notes || "",
       });
+      setPhotoDataUrl((defaultValues as any)?.photoUrl ?? null);
       setRefMember(
         defaultValues.refMemberId
           ? {
@@ -139,6 +176,7 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
       ...data,
       refMemberId: refMember?.id || "",
       refMemberName: refMember?.fullName || "",
+      photoUrl: photoDataUrl,
     } as MemberInput);
   };
 
@@ -282,6 +320,63 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
               </FormItem>
             )}
           />
+          <div className="space-y-2">
+            <Label>Member Photo</Label>
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
+              className="hidden"
+              data-testid="input-member-photo"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                e.target.value = "";
+                if (!file) return;
+                if (!PHOTO_TYPES.includes(file.type.toLowerCase())) {
+                  setPhotoError("Please choose a JPG, PNG, or WEBP image");
+                  return;
+                }
+                try {
+                  setPhotoError(null);
+                  setPhotoDataUrl(await fileToSquareDataUrl(file));
+                } catch {
+                  setPhotoError("Could not process this image");
+                }
+              }}
+            />
+            <div className="flex items-center gap-3">
+              {photoDataUrl ? (
+                <div className="relative shrink-0">
+                  <img
+                    src={photoDataUrl}
+                    alt="Member photo preview"
+                    className="h-10 w-10 rounded-full object-cover border border-input"
+                    data-testid="img-member-photo-preview"
+                  />
+                  <button
+                    type="button"
+                    aria-label="Remove photo"
+                    data-testid="button-remove-member-photo"
+                    onClick={() => setPhotoDataUrl(null)}
+                    className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ) : null}
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10 flex-1 justify-start text-muted-foreground font-normal"
+                onClick={() => photoInputRef.current?.click()}
+                data-testid="button-upload-member-photo"
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                {photoDataUrl ? "Change Photo" : "Upload Photo"}
+              </Button>
+            </div>
+            {photoError ? <p className="text-sm text-destructive">{photoError}</p> : null}
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <FormField

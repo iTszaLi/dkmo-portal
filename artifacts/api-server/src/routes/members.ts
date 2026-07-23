@@ -137,6 +137,7 @@ router.post("/members", async (req, res): Promise<void> => {
         notes: parsed.data.notes ?? "",
         refMemberName: parsed.data.refMemberName ?? "",
         refMemberId: parsed.data.refMemberId ?? "",
+        photoUrl: parsed.data.photoUrl ?? null,
       })
       .returning();
     if (!created) {
@@ -231,6 +232,9 @@ router.patch("/members/:id", async (req, res): Promise<void> => {
         notes: parsed.data.notes ?? existing.notes,
         refMemberName: parsed.data.refMemberName ?? "",
         refMemberId: parsed.data.refMemberId ?? "",
+        // Photo is only changed when explicitly provided (photo edits normally
+        // go through the dedicated /members/:id/photo endpoint).
+        ...(parsed.data.photoUrl !== undefined ? { photoUrl: parsed.data.photoUrl } : {}),
         ...feeAudit,
       })
       .where(eq(membersTable.id, params.data.id))

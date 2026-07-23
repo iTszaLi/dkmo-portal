@@ -71,6 +71,10 @@ export const ListMembersResponse = zod.array(ListMembersResponseItem);
  * @summary Create a member
  */
 
+export const createMemberBodyPhotoUrlRegExp = new RegExp(
+  "^data:image\/(jpeg|jpg|png|webp);base64,",
+);
+
 export const CreateMemberBody = zod.object({
   fullName: zod.string().min(1),
   mobileNumber: zod.string().min(1),
@@ -97,6 +101,11 @@ export const CreateMemberBody = zod.object({
   notes: zod.string().optional(),
   refMemberName: zod.string().optional(),
   refMemberId: zod.string().optional(),
+  photoUrl: zod
+    .string()
+    .regex(createMemberBodyPhotoUrlRegExp)
+    .nullish()
+    .describe("Optional square profile photo as a jpeg\/png\/webp data URL."),
 });
 
 /**
@@ -140,6 +149,10 @@ export const UpdateMemberParams = zod.object({
   id: zod.coerce.string(),
 });
 
+export const updateMemberBodyPhotoUrlRegExp = new RegExp(
+  "^data:image\/(jpeg|jpg|png|webp);base64,",
+);
+
 export const UpdateMemberBody = zod.object({
   fullName: zod.string().min(1),
   mobileNumber: zod.string().min(1),
@@ -166,6 +179,11 @@ export const UpdateMemberBody = zod.object({
   notes: zod.string().optional(),
   refMemberName: zod.string().optional(),
   refMemberId: zod.string().optional(),
+  photoUrl: zod
+    .string()
+    .regex(updateMemberBodyPhotoUrlRegExp)
+    .nullish()
+    .describe("Optional square profile photo as a jpeg\/png\/webp data URL."),
 });
 
 export const UpdateMemberResponse = zod.object({

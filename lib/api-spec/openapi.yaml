@@ -2100,6 +2100,10 @@ components:
           type: string
         refMemberId:
           type: string
+        photoUrl:
+          type: ["string", "null"]
+          description: Optional square profile photo as a jpeg/png/webp data URL.
+          pattern: "^data:image/(jpeg|jpg|png|webp);base64,"
       required:
         - fullName
         - mobileNumber

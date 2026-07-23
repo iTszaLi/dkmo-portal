@@ -326,6 +326,12 @@ export interface MemberInput {
   notes?: string;
   refMemberName?: string;
   refMemberId?: string;
+  /**
+   * Optional square profile photo as a jpeg/png/webp data URL.
+   * @nullable
+   * @pattern ^data:image/(jpeg|jpg|png|webp);base64,
+   */
+  photoUrl?: string | null;
 }
 
 export type FeeStatusInputFeeStatus =
