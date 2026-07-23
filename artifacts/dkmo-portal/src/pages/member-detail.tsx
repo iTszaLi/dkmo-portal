@@ -309,7 +309,10 @@ export default function MemberDetail() {
       @media print{body{background:#fff;padding:0;} .card{box-shadow:none;}}
     </style></head><body>
       <div class="card">
-        <div class="head"><h1>DKMO</h1><p>Dakshina Karnataka Muslim Ookota — Membership Card</p></div>
+        <div class="head" style="display:flex;align-items:center;gap:14px;">
+          <img src="${window.location.origin}${import.meta.env.BASE_URL}logo-circle.png" alt="DKMO logo" style="width:52px;height:52px;border-radius:50%;background:#fff;padding:3px;flex-shrink:0;object-fit:contain;" />
+          <div><h1>DKMO</h1><p>Dakshina Karnataka Muslim Ookota — Membership Card</p></div>
+        </div>
         <div class="body">
           <div style="display:flex;align-items:center;gap:14px;padding:0 12px 12px;">
             ${safePhotoUrl ? `<img src="${safePhotoUrl}" alt="Member photo" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid #059669;flex-shrink:0;" />` : ""}
