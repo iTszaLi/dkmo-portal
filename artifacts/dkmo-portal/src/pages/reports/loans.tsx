@@ -77,7 +77,7 @@ export default function LoanReport() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
-  const { data, isLoading } = useListLoans({ pageSize: 10000 });
+  const { data, isLoading } = useListLoans({ pageSize: 200 });
   const { data: members } = useListMembers();
 
   const memberById = useMemo(() => {
