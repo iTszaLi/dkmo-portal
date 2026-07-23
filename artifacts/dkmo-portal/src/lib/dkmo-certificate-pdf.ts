@@ -54,12 +54,15 @@ function fmtDate(iso: string | null | undefined): string {
  * accents. The art is drawn fully opaque here; transparency is applied when the
  * stamp is placed into the PDF via the graphics state.
  */
-function makeApprovalStampDataUrl(stamp: {
+async function makeApprovalStampDataUrl(stamp: {
   certificateNumber: string;
   membershipNumber: string;
   approvalDate: string;
-}): string {
-  const S = 600;
+  /** DKMO logo as a data URL (optional — stamp renders fine without it). */
+  logoDataUrl?: string | null;
+}): Promise<string> {
+  // High-resolution canvas so the stamp stays crisp when printed from the PDF.
+  const S = 1200;
   const canvas = document.createElement("canvas");
   canvas.width = S;
   canvas.height = S;
@@ -70,117 +73,154 @@ function makeApprovalStampDataUrl(stamp: {
   const cy = S / 2;
   const green = "#15803d";
   const gold = "#b8860b";
+  const FONT = "Helvetica, Arial, sans-serif";
 
   ctx.clearRect(0, 0, S, S);
 
-  // Outer thick green ring
-  ctx.lineWidth = 14;
-  ctx.strokeStyle = green;
-  ctx.beginPath();
-  ctx.arc(cx, cy, 270, 0, Math.PI * 2);
-  ctx.stroke();
+  // ── Rings ────────────────────────────────────────────────────────────────
+  const ring = (r: number, width: number, color: string) => {
+    ctx.lineWidth = width;
+    ctx.strokeStyle = color;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+  };
+  ring(556, 26, green); // outer thick green ring
+  ring(524, 6, gold); //  gold accent just inside it
+  ring(396, 6, gold); //  gold ring separating the text band from the core
+  ring(382, 10, green); // green ring around the inner core
 
-  // Gold accent rings (inner + outer thin)
-  ctx.lineWidth = 4;
-  ctx.strokeStyle = gold;
-  ctx.beginPath();
-  ctx.arc(cx, cy, 250, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(cx, cy, 188, 0, Math.PI * 2);
-  ctx.stroke();
-
-  // Curved text helper. centerAngle in radians (0 = east, PI/2 = south).
-  function arcText(
+  // ── Curved text (proportional spacing, always upright & left→right) ──────
+  // centerAngle: -PI/2 = top of the circle, PI/2 = bottom (canvas y grows down).
+  const arcText = (
     text: string,
     radius: number,
     centerAngle: number,
-    arcSpan: number,
     fontPx: number,
-    flip: boolean,
-  ) {
-    ctx!.save();
-    ctx!.fillStyle = green;
-    ctx!.font = `bold ${fontPx}px Helvetica, Arial, sans-serif`;
-    ctx!.textAlign = "center";
-    ctx!.textBaseline = "middle";
-    const n = text.length;
-    const per = arcSpan / Math.max(n, 1);
-    for (let i = 0; i < n; i++) {
-      const a = centerAngle - arcSpan / 2 + per * (i + 0.5);
-      ctx!.save();
-      ctx!.translate(cx + radius * Math.cos(a), cy + radius * Math.sin(a));
-      ctx!.rotate(flip ? a - Math.PI / 2 : a + Math.PI / 2);
-      ctx!.fillText(text[i]!, 0, 0);
-      ctx!.restore();
+    position: "top" | "bottom",
+    letterSpacing = 6,
+  ) => {
+    ctx.save();
+    ctx.fillStyle = green;
+    ctx.font = `bold ${fontPx}px ${FONT}`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    const widths = [...text].map((ch) => ctx.measureText(ch).width + letterSpacing);
+    const totalAngle = widths.reduce((s, w) => s + w, 0) / radius;
+    // Top text is read clockwise (angles increase); bottom text must be laid
+    // counter-clockwise (angles decrease) so it still reads left→right with
+    // every glyph upright — this is what fixes the mirrored/upside-down look.
+    let a = position === "top" ? centerAngle - totalAngle / 2 : centerAngle + totalAngle / 2;
+    for (let i = 0; i < text.length; i++) {
+      const half = widths[i]! / (2 * radius);
+      const mid = position === "top" ? a + half : a - half;
+      ctx.save();
+      ctx.translate(cx + radius * Math.cos(mid), cy + radius * Math.sin(mid));
+      ctx.rotate(position === "top" ? mid + Math.PI / 2 : mid - Math.PI / 2);
+      ctx.fillText(text[i]!, 0, 0);
+      ctx.restore();
+      a = position === "top" ? a + 2 * half : a - 2 * half;
     }
-    ctx!.restore();
-  }
+    ctx.restore();
+  };
 
-  // Top arc (reads left→right across the top)
-  arcText("DAKSHINA KARNATAKA MUSLIM OKKOOTA", 222, -Math.PI / 2, Math.PI * 1.15, 30, false);
-  // Bottom arc (reads left→right across the bottom)
-  arcText("OFFICIAL  •  KINGDOM OF SAUDI ARABIA", 222, Math.PI / 2, Math.PI * 0.9, 26, true);
+  // Outer ring text band (between the gold rings, radius ~460)
+  arcText("DAKSHINA KARNATAKA MUSLIM OKKOOTA", 460, -Math.PI / 2, 58, "top");
+  arcText("DKMO RIYADH", 468, Math.PI / 2, 58, "bottom", 10);
 
-  // Side stars
+  // Gold separator stars between the two arcs (left + right, on the band)
   ctx.fillStyle = gold;
-  ctx.font = "bold 34px Helvetica, Arial, sans-serif";
+  ctx.font = `bold 60px ${FONT}`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("★", cx - 250, cy);
-  ctx.fillText("★", cx + 250, cy);
+  ctx.fillText("★", cx - 460, cy + 10);
+  ctx.fillText("★", cx + 460, cy + 10);
 
-  // Center checkmark circle
+  // ── Inner core ───────────────────────────────────────────────────────────
+  // DKMO logo emblem at the top of the core
+  const logoR = 88;
+  const logoCy = cy - 236;
+  if (stamp.logoDataUrl) {
+    const img = await new Promise<HTMLImageElement | null>((res) => {
+      const el = new Image();
+      el.onload = () => res(el);
+      el.onerror = () => res(null);
+      el.src = stamp.logoDataUrl!;
+    });
+    if (img) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, logoCy, logoR, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(img, cx - logoR, logoCy - logoR, logoR * 2, logoR * 2);
+      ctx.restore();
+      ctx.strokeStyle = gold;
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.arc(cx, logoCy, logoR, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+
+  // Green approval check badge (bottom-right of the logo)
+  const badgeR = 44;
+  const bx = cx + logoR - 8;
+  const by = logoCy + logoR - 8;
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.arc(bx, by, badgeR + 6, 0, Math.PI * 2);
+  ctx.fill();
   ctx.fillStyle = green;
   ctx.beginPath();
-  ctx.arc(cx, cy - 118, 34, 0, Math.PI * 2);
+  ctx.arc(bx, by, badgeR, 0, Math.PI * 2);
   ctx.fill();
   ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 8;
+  ctx.lineWidth = 11;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   ctx.beginPath();
-  ctx.moveTo(cx - 16, cy - 118);
-  ctx.lineTo(cx - 5, cy - 107);
-  ctx.lineTo(cx + 18, cy - 132);
+  ctx.moveTo(bx - 20, by + 2);
+  ctx.lineTo(bx - 5, by + 17);
+  ctx.lineTo(bx + 23, by - 15);
   ctx.stroke();
 
-  // Center heading
+  // Font autosizer for values so long serials never overflow the core.
+  const fitFont = (text: string, maxWidth: number, startPx: number) => {
+    let px = startPx;
+    ctx.font = `bold ${px}px ${FONT}`;
+    while (px > 20 && ctx.measureText(text).width > maxWidth) {
+      px -= 2;
+      ctx.font = `bold ${px}px ${FONT}`;
+    }
+  };
+
+  // "APPROVED BY DKMO" heading
   ctx.fillStyle = green;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.font = "bold 46px Helvetica, Arial, sans-serif";
-  ctx.fillText("APPROVED BY DKMO", cx, cy - 64);
+  fitFont("APPROVED BY DKMO", 560, 62);
+  ctx.fillText("APPROVED BY DKMO", cx, cy - 96);
 
-  // Divider line under the heading
+  // Gold divider under the heading
   ctx.strokeStyle = gold;
-  ctx.lineWidth = 3;
+  ctx.lineWidth = 5;
   ctx.beginPath();
-  ctx.moveTo(cx - 130, cy - 38);
-  ctx.lineTo(cx + 130, cy - 38);
+  ctx.moveTo(cx - 180, cy - 54);
+  ctx.lineTo(cx + 180, cy - 54);
   ctx.stroke();
 
-  // Dynamic data — makes every stamp unique to its certificate.
-  const fitFont = (text: string, maxWidth: number, startPx: number): number => {
-    let px = startPx;
-    ctx.font = `bold ${px}px Helvetica, Arial, sans-serif`;
-    while (px > 12 && ctx.measureText(text).width > maxWidth) {
-      px -= 1;
-      ctx.font = `bold ${px}px Helvetica, Arial, sans-serif`;
-    }
-    return px;
-  };
+  // ── Certificate details (label over value, evenly spaced) ────────────────
   const dataLine = (label: string, value: string, y: number) => {
     ctx.fillStyle = gold;
-    ctx.font = "bold 18px Helvetica, Arial, sans-serif";
+    ctx.font = `bold 30px ${FONT}`;
     ctx.fillText(label, cx, y);
     ctx.fillStyle = green;
-    fitFont(value, 300, 24);
-    ctx.fillText(value, cx, y + 25);
+    fitFont(value, 520, 42);
+    ctx.fillText(value, cx, y + 44);
   };
-  dataLine("CERTIFICATE No.", stamp.certificateNumber || "—", cy - 6);
-  dataLine("MEMBERSHIP No.", stamp.membershipNumber || "—", cy + 52);
-  dataLine("APPROVED ON", stamp.approvalDate || "—", cy + 110);
+  dataLine("CERTIFICATE No.", stamp.certificateNumber || "—", cy - 8);
+  dataLine("MEMBERSHIP No.", stamp.membershipNumber || "—", cy + 106);
+  dataLine("APPROVED ON", stamp.approvalDate || "—", cy + 220);
 
   return canvas.toDataURL("image/png");
 }
@@ -394,10 +434,11 @@ export async function generateMembershipCertificatePdf(
   }
 
   // Stamp (right side, overlapping toward the lower area for an authentic look)
-  const stampUrl = makeApprovalStampDataUrl({
+  const stampUrl = await makeApprovalStampDataUrl({
     certificateNumber: data.certificateNumber || "",
     membershipNumber: data.dkmoNumber,
     approvalDate: fmtDate(approvalDate),
+    logoDataUrl,
   });
   if (stampUrl) {
     const gs = (doc as unknown as { GState?: new (o: { opacity: number }) => unknown }).GState;
