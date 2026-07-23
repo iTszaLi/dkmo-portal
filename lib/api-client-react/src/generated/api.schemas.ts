@@ -1904,6 +1904,17 @@ export type GetDashboardCashFlowParams = {
   quarter?: number;
 };
 
+export type GetCommitteePerformanceParams = {
+  /**
+   * Only count activity recorded on or after this date (YYYY-MM-DD)
+   */
+  from?: string;
+  /**
+   * Only count activity recorded on or before this date (YYYY-MM-DD)
+   */
+  to?: string;
+};
+
 export type ListReceiptRecordsParams = {
   search?: string;
   page?: number;

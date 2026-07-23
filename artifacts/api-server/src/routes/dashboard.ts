@@ -700,7 +700,29 @@ interface PerfEntry {
   frfReferred: number;
 }
 
-router.get("/dashboard/committee-performance", async (_req, res): Promise<void> => {
+router.get("/dashboard/committee-performance", async (req, res): Promise<void> => {
+  // Optional date-range filter (additive; default behavior unchanged).
+  // Dates are compared as calendar days in Asia/Riyadh (the organization's
+  // timezone), so "from 2026-07-01" means from the start of July 1 in KSA.
+  const parseDay = (v: unknown): string | null =>
+    typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null;
+  const from = parseDay(req.query.from);
+  const to = parseDay(req.query.to);
+  const dayFmt = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Riyadh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const inRange = (d: Date | null | undefined): boolean => {
+    if (!from && !to) return true;
+    if (!d) return false;
+    const day = dayFmt.format(d); // "YYYY-MM-DD" — lexicographically comparable
+    if (from && day < from) return false;
+    if (to && day > to) return false;
+    return true;
+  };
+
   const [members, frfClaims, welfare, loans] = await Promise.all([
     db.select().from(membersTable),
     db.select().from(frfClaimsTable),
@@ -732,6 +754,7 @@ router.get("/dashboard/committee-performance", async (_req, res): Promise<void> 
   };
 
   for (const m of members) {
+    if (!inRange(m.createdAt)) continue;
     const recruiter = get(m.refMemberName ?? "");
     if (recruiter) {
       recruiter.membersRecruited += 1;
@@ -744,6 +767,7 @@ router.get("/dashboard/committee-performance", async (_req, res): Promise<void> 
   }
 
   for (const c of frfClaims) {
+    if (!inRange(c.createdAt)) continue;
     if (!FRF_GRANTED.includes(c.status)) continue;
     const actor = get(c.approvedBy || c.disbursedBy);
     if (actor) {
@@ -753,6 +777,7 @@ router.get("/dashboard/committee-performance", async (_req, res): Promise<void> 
   }
 
   for (const w of welfare) {
+    if (!inRange(w.createdAt)) continue;
     if (!WELFARE_GRANTED.includes(w.status)) continue;
     const actor = get(w.approvedBy || w.completedBy || w.assignedTo);
     if (actor) {
@@ -763,6 +788,7 @@ router.get("/dashboard/committee-performance", async (_req, res): Promise<void> 
   }
 
   for (const l of loans) {
+    if (!inRange(l.createdAt)) continue;
     const actor = get(l.convenorName ?? "");
     if (actor) actor.loansProcessed += 1;
   }

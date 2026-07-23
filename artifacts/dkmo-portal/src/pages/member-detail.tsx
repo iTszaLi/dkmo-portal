@@ -157,7 +157,7 @@ export default function MemberDetail() {
 
   // Committee contribution — sourced from the same committee-performance endpoint
   // so the figures stay consistent across the portal (single source of truth).
-  const { data: committeePerf } = useGetCommitteePerformance({
+  const { data: committeePerf } = useGetCommitteePerformance(undefined, {
     query: { enabled: isCommittee, queryKey: getGetCommitteePerformanceQueryKey() },
   });
   const committeeEntry = useMemo(() => {

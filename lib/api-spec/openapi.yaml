@@ -1459,6 +1459,17 @@ paths:
       operationId: getCommitteePerformance
       tags: [dashboard]
       summary: Get per-committee-member activity metrics
+      parameters:
+        - in: query
+          name: from
+          required: false
+          description: Only count activity recorded on or after this date (YYYY-MM-DD)
+          schema: { type: string, format: date }
+        - in: query
+          name: to
+          required: false
+          description: Only count activity recorded on or before this date (YYYY-MM-DD)
+          schema: { type: string, format: date }
       responses:
         "200":
           description: Activity metrics grouped by committee member

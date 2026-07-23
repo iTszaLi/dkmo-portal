@@ -46,6 +46,7 @@ import type {
   FrfContributionStatusResponse,
   FrfOverview,
   FrfStats,
+  GetCommitteePerformanceParams,
   GetDashboardCashFlowParams,
   GetDashboardFinancialSummaryParams,
   GetDashboardSummaryParams,
@@ -6349,42 +6350,69 @@ export function useGetDashboardImpact<
 /**
  * @summary Get per-committee-member activity metrics
  */
-export const getGetCommitteePerformanceUrl = () => {
-  return `/api/dashboard/committee-performance`;
+export const getGetCommitteePerformanceUrl = (
+  params?: GetCommitteePerformanceParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/dashboard/committee-performance?${stringifiedParams}`
+    : `/api/dashboard/committee-performance`;
 };
 
 export const getCommitteePerformance = async (
+  params?: GetCommitteePerformanceParams,
   options?: RequestInit,
 ): Promise<CommitteePerformance> => {
-  return customFetch<CommitteePerformance>(getGetCommitteePerformanceUrl(), {
-    ...options,
-    method: "GET",
-  });
+  return customFetch<CommitteePerformance>(
+    getGetCommitteePerformanceUrl(params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
 };
 
-export const getGetCommitteePerformanceQueryKey = () => {
-  return [`/api/dashboard/committee-performance`] as const;
+export const getGetCommitteePerformanceQueryKey = (
+  params?: GetCommitteePerformanceParams,
+) => {
+  return [
+    `/api/dashboard/committee-performance`,
+    ...(params ? [params] : []),
+  ] as const;
 };
 
 export const getGetCommitteePerformanceQueryOptions = <
   TData = Awaited<ReturnType<typeof getCommitteePerformance>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getCommitteePerformance>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
+>(
+  params?: GetCommitteePerformanceParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getCommitteePerformance>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
   const queryKey =
-    queryOptions?.queryKey ?? getGetCommitteePerformanceQueryKey();
+    queryOptions?.queryKey ?? getGetCommitteePerformanceQueryKey(params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof getCommitteePerformance>>
-  > = ({ signal }) => getCommitteePerformance({ signal, ...requestOptions });
+  > = ({ signal }) =>
+    getCommitteePerformance(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof getCommitteePerformance>>,
@@ -6405,15 +6433,18 @@ export type GetCommitteePerformanceQueryError = ErrorType<unknown>;
 export function useGetCommitteePerformance<
   TData = Awaited<ReturnType<typeof getCommitteePerformance>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getCommitteePerformance>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getGetCommitteePerformanceQueryOptions(options);
+>(
+  params?: GetCommitteePerformanceParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getCommitteePerformance>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetCommitteePerformanceQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

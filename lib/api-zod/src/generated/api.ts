@@ -2307,6 +2307,21 @@ export const GetDashboardImpactResponse = zod.object({
 /**
  * @summary Get per-committee-member activity metrics
  */
+export const GetCommitteePerformanceQueryParams = zod.object({
+  from: zod
+    .date()
+    .optional()
+    .describe(
+      "Only count activity recorded on or after this date (YYYY-MM-DD)",
+    ),
+  to: zod
+    .date()
+    .optional()
+    .describe(
+      "Only count activity recorded on or before this date (YYYY-MM-DD)",
+    ),
+});
+
 export const GetCommitteePerformanceResponse = zod.object({
   entries: zod.array(
     zod.object({

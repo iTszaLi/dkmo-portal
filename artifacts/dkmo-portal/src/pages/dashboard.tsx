@@ -38,6 +38,7 @@ import { MemberOfTheMonth } from "@/components/dashboard/MemberOfTheMonth";
 import { ActionRequired } from "@/components/dashboard/ActionRequired";
 import { ImpactSummary } from "@/components/dashboard/ImpactSummary";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
+import { CommitteeActivitySummary } from "@/components/dashboard/CommitteeActivitySummary";
 import { TrendsCharts } from "@/components/dashboard/TrendsCharts";
 import { QuickActionsMenu } from "@/components/dashboard/QuickActionsMenu";
 import { useAuth } from "@/lib/auth";
@@ -49,8 +50,8 @@ const TRANSFER_METHOD_LABELS: Record<string, string> = {
   cheque: "Cheque",
 };
 
-type WidgetKey = "actionRequired" | "activityFeed" | "trends" | "impact" | "memberOfMonth" | "recruiters" | "events" | "sponsors";
-const DEFAULT_ORDER: WidgetKey[] = ["actionRequired", "activityFeed", "trends", "impact", "memberOfMonth", "recruiters", "events", "sponsors"];
+type WidgetKey = "actionRequired" | "committeeActivity" | "activityFeed" | "trends" | "impact" | "memberOfMonth" | "recruiters" | "events" | "sponsors";
+const DEFAULT_ORDER: WidgetKey[] = ["actionRequired", "committeeActivity", "activityFeed", "trends", "impact", "memberOfMonth", "recruiters", "events", "sponsors"];
 const ORDER_STORAGE_KEY = "dkmo.dashboard.widgetOrder";
 const MILESTONE_STORAGE_KEY = "dkmo.dashboard.recruitMilestone";
 
@@ -578,6 +579,8 @@ export default function Dashboard() {
     switch (key) {
       case "actionRequired":
         return <ActionRequired />;
+      case "committeeActivity":
+        return <CommitteeActivitySummary />;
       case "activityFeed":
         return canSeeActivity ? <ActivityFeed /> : null;
       case "trends":
