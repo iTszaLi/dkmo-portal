@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { MemberForm } from "@/components/MemberForm";
+import { RefMemberCell, useMemberIndex } from "@/components/RefMemberCell";
 import { MemberBadges } from "@/components/MemberBadges";
 import { Search, Plus, UserCircle, MapPin, Phone, MoreHorizontal, Edit, Trash, Users, CheckCircle2, Clock, XCircle, MinusCircle, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
 import { formatSAR, feeStatusLabel, feeStatusBadgeClass } from "@/lib/utils";
@@ -30,6 +31,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function Members() {
+  const memberIndex = useMemberIndex();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [feeFilter, setFeeFilter] = useState<string>("all");
@@ -318,16 +320,7 @@ export default function Members() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {member.refMemberName ? (
-                      <div className="text-sm">
-                        <div className="text-emerald-900 dark:text-slate-200">{member.refMemberName}</div>
-                        {member.refMemberId ? (
-                          <div className="text-xs text-emerald-600 dark:text-slate-500">ID: {member.refMemberId}</div>
-                        ) : null}
-                      </div>
-                    ) : (
-                      <span className="text-xs text-emerald-500/70 dark:text-slate-600">—</span>
-                    )}
+                    <RefMemberCell refId={member.refMemberId} refName={member.refMemberName} index={memberIndex} emptyLabel="No Referrer" />
                   </TableCell>
                   <TableCell className="text-right font-semibold text-emerald-900 dark:text-green-300">
                     {formatSAR(member.membershipFee)}

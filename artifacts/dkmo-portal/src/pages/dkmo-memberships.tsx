@@ -18,6 +18,7 @@ import { generateDkmoPdf, generateFrfApplicationPdf } from "@/lib/dkmo-pdf";
 import { generateMembershipCertificatePdf } from "@/lib/dkmo-certificate-pdf";
 import { celebrate } from "@/lib/confetti";
 import { Award } from "lucide-react";
+import { formatRefId, useMemberIndex } from "@/components/RefMemberCell";
 
 const bp = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -81,6 +82,7 @@ function fmtDate(iso: string | null | undefined) {
 }
 
 export default function DkmoMemberships() {
+  const memberIndex = useMemberIndex();
   const [memberships, setMemberships] = useState<DkmoMembership[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -317,7 +319,7 @@ export default function DkmoMemberships() {
                         {m.refMemberName ? (
                           <>
                             <p className="font-medium text-green-800 dark:text-green-400">{m.refMemberName}</p>
-                            <p className="text-slate-400">{m.refMemberId}</p>
+                            {formatRefId(m.refMemberId, memberIndex) && <p className="text-slate-400">{formatRefId(m.refMemberId, memberIndex)}</p>}
                           </>
                         ) : <span className="text-slate-300 dark:text-slate-600">—</span>}
                       </div>
@@ -386,7 +388,7 @@ export default function DkmoMemberships() {
                 <StatusBadge status={selected.status} />
                 {selected.refMemberName && (
                   <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 px-2 py-1 rounded-full">
-                    Referred by: {selected.refMemberName} ({selected.refMemberId})
+                    Referred by: {selected.refMemberName}{formatRefId(selected.refMemberId, memberIndex) ? ` (${formatRefId(selected.refMemberId, memberIndex)})` : ""}
                   </span>
                 )}
               </div>

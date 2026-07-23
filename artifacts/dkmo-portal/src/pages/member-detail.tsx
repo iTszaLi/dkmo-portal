@@ -29,6 +29,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MemberForm } from "@/components/MemberForm";
 import { MemberFrfSection } from "@/components/MemberFrfSection";
+import { RefMemberCell, useMemberIndex } from "@/components/RefMemberCell";
 import { MemberLedger } from "@/components/MemberLedger";
 import { useGetMemberFrfSummary } from "@workspace/api-client-react";
 import { MemberBadges } from "@/components/MemberBadges";
@@ -105,6 +106,7 @@ function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string;
 }
 
 export default function MemberDetail() {
+  const memberIndex = useMemberIndex();
   const { id } = useParams();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -477,15 +479,8 @@ export default function MemberDetail() {
                 <UserCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                 <span className="text-sm font-semibold text-emerald-900 dark:text-slate-200">Referred By</span>
               </div>
-              {member.refMemberName ? (
-                member.refMemberId ? (
-                  <Link href={`/members/${member.refMemberId}`} className="block text-sm group">
-                    <p className="text-emerald-900 dark:text-slate-200 font-medium group-hover:underline">{member.refMemberName}</p>
-                    <p className="text-emerald-600 dark:text-slate-500 text-xs mt-0.5">ID: {member.refMemberId}</p>
-                  </Link>
-                ) : (
-                  <p className="text-sm text-emerald-900 dark:text-slate-200 font-medium">{member.refMemberName}</p>
-                )
+              {member.refMemberName || member.refMemberId ? (
+                <RefMemberCell refId={member.refMemberId} refName={member.refMemberName} index={memberIndex} />
               ) : (
                 <p className="text-sm text-emerald-500/70 dark:text-slate-500">Direct registration — not referred by another member.</p>
               )}

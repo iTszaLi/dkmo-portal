@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MessageSquareWarning, UserCircle, Phone, MapPin, Send, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { RefMemberCell, useMemberIndex } from "@/components/RefMemberCell";
 
 function formatMobileForWa(mobileNumber: string): string {
   return mobileNumber.replace(/\D/g, "");
@@ -48,6 +49,7 @@ function sendRemindersToMembers(
 }
 
 export default function Pending() {
+  const memberIndex = useMemberIndex();
   const [bulkSending, setBulkSending] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -284,16 +286,7 @@ export default function Pending() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {member.refMemberName ? (
-                        <div className="text-sm">
-                          <div className="text-emerald-900 dark:text-slate-200">{member.refMemberName}</div>
-                          {member.refMemberId ? (
-                            <div className="text-xs text-emerald-600 dark:text-slate-500">ID: {member.refMemberId}</div>
-                          ) : null}
-                        </div>
-                      ) : (
-                        <span className="text-xs text-emerald-500/70 dark:text-slate-600">—</span>
-                      )}
+                      <RefMemberCell refId={member.refMemberId} refName={member.refMemberName} index={memberIndex} />
                     </TableCell>
                     <TableCell className="text-right text-emerald-900 dark:text-slate-300 font-medium">
                       {formatSAR(member.membershipFee)}

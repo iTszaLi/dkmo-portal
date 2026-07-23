@@ -48,6 +48,9 @@ router.get("/members", async (req, res): Promise<void> => {
       ilike(membersTable.jamaath, like),
       ilike(membersTable.city, like),
       ilike(membersTable.country, like),
+      ilike(membersTable.refMemberName, like),
+      // Match members whose referrer's DKMO ID matches the search term.
+      sql`${membersTable.refMemberId} IN (SELECT ref.id::text FROM members ref WHERE ref.membership_id ILIKE ${like})`,
     ];
     // Mobile search: users type the KSA number without the leading zero
     // (e.g. 502260256). Normalize stored numbers to digits-only and match,
