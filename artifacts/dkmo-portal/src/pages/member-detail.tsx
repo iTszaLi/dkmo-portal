@@ -41,6 +41,7 @@ import {
   FolderOpen, Upload, ExternalLink, Download, Camera,
 } from "lucide-react";
 import { MemberAvatar } from "@/components/MemberAvatar";
+import { MemberTimeline } from "@/components/MemberTimeline";
 import { MemberPhotoDialog } from "@/components/MemberPhotoDialog";
 
 const STANDARD_DOCS = ["Passport", "Iqama", "Photo", "Membership Form"] as const;
@@ -531,6 +532,7 @@ export default function MemberDetail() {
               <TabsTrigger value="referrals">Referrals</TabsTrigger>
               <TabsTrigger value="documents">Documents</TabsTrigger>
               <TabsTrigger value="history">History</TabsTrigger>
+              <TabsTrigger value="timeline">Timeline</TabsTrigger>
               {isCommittee ? <TabsTrigger value="committee">Committee</TabsTrigger> : null}
             </TabsList>
 
@@ -847,6 +849,16 @@ export default function MemberDetail() {
                   )}
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* TIMELINE */}
+            <TabsContent value="timeline" className="mt-4">
+              <MemberTimeline
+                member={member}
+                payments={payments}
+                assistance={assistance?.items}
+                isLoading={isPaymentsLoading || isAssistanceLoading}
+              />
             </TabsContent>
 
             {/* COMMITTEE */}

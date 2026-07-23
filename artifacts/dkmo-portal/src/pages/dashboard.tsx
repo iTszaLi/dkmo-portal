@@ -33,6 +33,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedNumber } from "@/components/dashboard/AnimatedNumber";
 import { DashboardClock } from "@/components/dashboard/DashboardClock";
 import { MemberOfTheMonth } from "@/components/dashboard/MemberOfTheMonth";
+import { ActionRequired } from "@/components/dashboard/ActionRequired";
+import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
+import { QuickActionsMenu } from "@/components/dashboard/QuickActionsMenu";
+import { useAuth } from "@/lib/auth";
 import { celebrateMilestone } from "@/lib/confetti";
 
 const TRANSFER_METHOD_LABELS: Record<string, string> = {
@@ -41,8 +45,8 @@ const TRANSFER_METHOD_LABELS: Record<string, string> = {
   cheque: "Cheque",
 };
 
-type WidgetKey = "memberOfMonth" | "recruiters" | "events" | "sponsors";
-const DEFAULT_ORDER: WidgetKey[] = ["memberOfMonth", "recruiters", "events", "sponsors"];
+type WidgetKey = "actionRequired" | "activityFeed" | "memberOfMonth" | "recruiters" | "events" | "sponsors";
+const DEFAULT_ORDER: WidgetKey[] = ["actionRequired", "activityFeed", "memberOfMonth", "recruiters", "events", "sponsors"];
 const ORDER_STORAGE_KEY = "dkmo.dashboard.widgetOrder";
 const MILESTONE_STORAGE_KEY = "dkmo.dashboard.recruitMilestone";
 
@@ -98,6 +102,9 @@ export default function Dashboard() {
 
   const [order, setOrder] = useState<WidgetKey[]>(DEFAULT_ORDER);
   const [customizing, setCustomizing] = useState(false);
+  const { hasRole } = useAuth();
+  const canSeeActivity = hasRole("admin", "finance");
+  const visibleOrder = canSeeActivity ? order : order.filter((k) => k !== "activityFeed");
 
   useEffect(() => {
     setOrder(loadOrder());
@@ -112,12 +119,30 @@ export default function Dashboard() {
     }
   };
 
+  // index/target refer to positions in the *visible* list; map back to the full order.
   const moveWidget = (index: number, dir: -1 | 1) => {
     const target = index + dir;
-    if (target < 0 || target >= order.length) return;
+    if (target < 0 || target >= visibleOrder.length) return;
+    const a = order.indexOf(visibleOrder[index]!);
+    const b = order.indexOf(visibleOrder[target]!);
+    if (a < 0 || b < 0) return;
     const next = [...order];
-    [next[index], next[target]] = [next[target]!, next[index]!];
+    [next[a], next[b]] = [next[b]!, next[a]!];
     saveOrder(next);
+  };
+
+  // Reorder.Group emits the reordered *visible* list; splice hidden keys back
+  // into their previous positions so they aren't lost from the persisted order.
+  const handleReorder = (nextVisible: WidgetKey[]) => {
+    if (nextVisible.length === order.length) {
+      saveOrder(nextVisible);
+      return;
+    }
+    const merged = [...nextVisible];
+    order.forEach((k, i) => {
+      if (!nextVisible.includes(k)) merged.splice(Math.min(i, merged.length), 0, k);
+    });
+    saveOrder(merged);
   };
 
   const { data: summary, isLoading: isLoadingSummary } = useGetDashboardSummary();
@@ -547,6 +572,10 @@ export default function Dashboard() {
 
   const renderWidget = (key: WidgetKey) => {
     switch (key) {
+      case "actionRequired":
+        return <ActionRequired />;
+      case "activityFeed":
+        return canSeeActivity ? <ActivityFeed /> : null;
       case "memberOfMonth":
         return <MemberOfTheMonth members={members} isLoading={isLoadingMembers} />;
       case "recruiters":
@@ -569,6 +598,7 @@ export default function Dashboard() {
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
           <DashboardClock />
+          <QuickActionsMenu />
           <button
             type="button"
             onClick={() => setCustomizing((v) => !v)}
@@ -849,8 +879,8 @@ export default function Dashboard() {
       )}
 
       {/* Reorderable widgets — personalize layout via drag-and-drop */}
-      <Reorder.Group axis="y" values={order} onReorder={saveOrder} className="space-y-6" as="div">
-        {order.map((key, index) => (
+      <Reorder.Group axis="y" values={visibleOrder} onReorder={handleReorder} className="space-y-6" as="div">
+        {visibleOrder.map((key, index) => (
           <Reorder.Item
             key={key}
             value={key}
@@ -877,7 +907,7 @@ export default function Dashboard() {
                 <button
                   type="button"
                   onClick={() => moveWidget(index, 1)}
-                  disabled={index === order.length - 1}
+                  disabled={index === visibleOrder.length - 1}
                   aria-label={`Move ${key} widget down`}
                   data-testid={`button-move-down-${key}`}
                   className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-green-700 shadow-sm ring-1 ring-green-200 enabled:hover:bg-green-50 disabled:opacity-40 dark:bg-slate-800 dark:text-green-400 dark:ring-slate-700"

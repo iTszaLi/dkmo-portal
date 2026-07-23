@@ -12,3 +12,5 @@ Dashboard widgets are reorderable via framer-motion `Reorder.Group`, persisted t
 - Glassmorphism is intentionally scoped: `.glass` / `.glass-strong` utilities applied only to KPI + hero cards, not every card.
 - Confetti (`src/lib/confetti.ts`, canvas-confetti) must respect `prefers-reduced-motion` and fire only on success paths (member create, membership approval) and milestone crossings (recruiter count multiple-of-5, deduped via localStorage).
 - Hijri date uses native `Intl` `en-US-u-ca-islamic-umalqura` — no extra dependency.
+
+**Hidden widgets vs reorder:** some widgets are role-gated (e.g. activity feed = admin/finance). Reorder UI renders a filtered `visibleOrder`, so move/drag handlers must map visible indices back to the full persisted order and splice hidden keys back in on drag-reorder — otherwise hidden widgets get swapped wrongly or dropped from localStorage.

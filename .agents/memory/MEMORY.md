@@ -13,3 +13,4 @@
 - [Membership certificate approval gate](membership-certificate-gate.md) — official cert PDF gated SERVER-side via public /certificate (403 until approved) + minimal /verify; never rebuild from /track.
 - [DKMO photo upload / 413](dkmo-photo-upload-413.md) — photos sent inline base64 in JSON; raise express body limit + compress client-side; map photoDataUrl→photoUrl; JSON error middleware avoids runtime overlay.
 - [Autoscale startup budget & credentialed CORS](deploy-startup-and-cors.md) — no sync bcrypt at module load (kills publish health probe); CORS allowlist only, seed passwords via EXEC_PASSWORD secrets.
+- [Read access is role-open](read-access-model.md) — all list GETs are auth-only by design; every role can read every module, so global search parity adds no exposure. Mutations are role-gated.

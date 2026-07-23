@@ -30,6 +30,7 @@ import {
   CopyCheck,
 } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
+import { GlobalSearch } from "@/components/GlobalSearch";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -215,7 +216,9 @@ export function AppLayout({ children }: AppLayoutProps) {
             </SheetContent>
           </Sheet>
 
-          <div className="flex-1" />
+          <div className="flex-1 flex justify-center px-4">
+            {user && <GlobalSearch />}
+          </div>
 
           <ThemeToggle />
           {user && <NotificationBell />}
