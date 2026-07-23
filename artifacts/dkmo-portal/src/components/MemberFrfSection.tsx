@@ -18,6 +18,8 @@ const CLAIM_TYPE_LABEL: Record<string, string> = {
 
 const STATUS_STYLE: Record<string, string> = {
   paid: "bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-300",
+  partial: "bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300",
+  exempt: "bg-purple-100 dark:bg-purple-950/40 text-purple-800 dark:text-purple-300",
   pending: "bg-orange-100 dark:bg-orange-950/40 text-orange-800 dark:text-orange-300",
   overdue: "bg-red-100 dark:bg-red-950/40 text-red-800 dark:text-red-300",
   cancelled: "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400",
@@ -102,6 +104,58 @@ export function MemberFrfSection({ memberId }: { memberId: string }) {
         </CardContent>
       </Card>
 
+      {/* Beneficiary cases — claims raised for this member */}
+      {data.beneficiaryCases.length > 0 && (
+        <Card className="rounded-2xl border-emerald-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2 text-emerald-900 dark:text-emerald-200">
+              <HeartHandshake className="h-4 w-4 text-emerald-600" /> Beneficiary Cases
+            </CardTitle>
+            <CardDescription className="dark:text-slate-400">FRF cases raised with this member as beneficiary</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {data.beneficiaryCases.map((bc) => (
+              <div key={bc.claimId} className="rounded-xl border border-emerald-100 dark:border-slate-800 p-4 space-y-3">
+                <div className="flex items-start justify-between flex-wrap gap-2">
+                  <div>
+                    <Link href={`/frf/${bc.claimId}`} className="font-semibold text-emerald-900 dark:text-emerald-200 hover:underline">
+                      {bc.title || bc.claimantName}
+                    </Link>
+                    <p className="text-xs text-slate-500">
+                      {CLAIM_TYPE_LABEL[bc.claimType] ?? bc.claimType}
+                      {bc.claimDate ? ` · ${formatDate(bc.claimDate)}` : ""}
+                    </p>
+                  </div>
+                  <Badge className={cn("text-[11px] capitalize", bc.caseStatus === "open" ? "bg-green-100 text-green-800 dark:bg-green-950/40 dark:text-green-300" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400")}>
+                    {bc.caseStatus}
+                  </Badge>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { label: "Target", value: formatSAR(bc.targetAmount) },
+                    { label: "Committed", value: formatSAR(bc.committedAmount) },
+                    { label: "Collected", value: formatSAR(bc.collectedAmount), cls: "text-green-700 dark:text-green-300" },
+                    { label: "Remaining", value: formatSAR(bc.remainingToTarget), cls: bc.remainingToTarget > 0 ? "text-red-600 dark:text-red-400" : "text-green-700 dark:text-green-300" },
+                  ].map((s) => (
+                    <div key={s.label} className="rounded-lg border border-emerald-100 dark:border-slate-800 p-2 text-center">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">{s.label}</p>
+                      <p className={cn("text-sm font-bold text-emerald-950 dark:text-white", s.cls)}>{s.value}</p>
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+                    <span>Collection progress</span>
+                    <span>{bc.collectionProgress}%</span>
+                  </div>
+                  <Progress value={bc.collectionProgress} className="h-2" />
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       {/* History */}
       <Card className="rounded-2xl border-emerald-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
         <CardHeader className="pb-3">
@@ -114,7 +168,9 @@ export function MemberFrfSection({ memberId }: { memberId: string }) {
               <TableRow className="dark:border-slate-800">
                 <TableHead>Claim</TableHead>
                 <TableHead>Type</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
+                <TableHead className="text-right">Due</TableHead>
+                <TableHead className="text-right">Paid</TableHead>
+                <TableHead className="text-right">Balance</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Approved</TableHead>
                 <TableHead>Paid</TableHead>
@@ -126,18 +182,23 @@ export function MemberFrfSection({ memberId }: { memberId: string }) {
             <TableBody>
               {data.history.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="h-20 text-center text-slate-500">No FRF contributions recorded yet.</TableCell>
+                  <TableCell colSpan={11} className="h-20 text-center text-slate-500">No FRF contributions recorded yet.</TableCell>
                 </TableRow>
               ) : (
                 data.history.map((h) => (
                   <TableRow key={h.contributionId} className="dark:border-slate-800">
                     <TableCell>
                       <Link href={`/frf/${h.claimId}`} className="font-medium text-emerald-800 dark:text-emerald-300 hover:underline">
-                        {h.claimantName}
+                        {h.title || h.claimantName}
                       </Link>
+                      {h.title && <div className="text-xs text-slate-500">{h.claimantName}</div>}
                     </TableCell>
                     <TableCell className="text-sm">{CLAIM_TYPE_LABEL[h.claimType] ?? h.claimType}</TableCell>
-                    <TableCell className="text-right font-medium">{formatSAR(h.amount)}</TableCell>
+                    <TableCell className="text-right font-medium">{h.status === "exempt" ? "—" : formatSAR(h.amount)}</TableCell>
+                    <TableCell className="text-right font-medium text-green-700 dark:text-green-300">{h.status === "exempt" ? "—" : formatSAR(h.amountPaid)}</TableCell>
+                    <TableCell className={cn("text-right font-medium", h.status === "exempt" ? "text-slate-400" : h.balance > 0 ? "text-red-600 dark:text-red-400" : "text-green-700 dark:text-green-300")}>
+                      {h.status === "exempt" ? "—" : formatSAR(h.balance)}
+                    </TableCell>
                     <TableCell><Badge className={cn("text-[11px] capitalize", STATUS_STYLE[h.status] ?? "")}>{h.status}</Badge></TableCell>
                     <TableCell className="text-sm text-slate-500">{h.approvedDate ? formatDate(h.approvedDate) : "—"}</TableCell>
                     <TableCell className="text-sm text-slate-500">{h.paidAt ? formatDate(h.paidAt) : "—"}</TableCell>

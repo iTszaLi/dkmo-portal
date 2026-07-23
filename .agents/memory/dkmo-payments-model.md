@@ -18,3 +18,5 @@ There are NO monthly dues anywhere in DKMO. Two money concepts only:
 - In `scripts/src/seed.ts` this requires a two-pass insert: insert all members first (refMemberId blank), then UPDATE refMemberId to the actual inserted recruiter UUIDs. Setting membershipId there silently produces an empty leaderboard.
 
 **How to apply:** when seeding or adding referral/contribution features, never reintroduce monthly dues, keep payments + frf_contributions ledger in sync inside one DB transaction, and resolve referral links to UUIDs after members exist.
+
+**FRF partial/exempt aggregation rule:** contribution statuses now include `partial` and `exempt`. Every aggregation (claim collection, member summary, dashboard summary, frf-overview) must: use `amountPaid` (capped at `amount`) for collected totals, and exclude both `cancelled` and `exempt` rows from expected/outstanding math. The status PATCH endpoint rejects exempting a row that already has payments (409); reverting exempt→pending recomputes to paid/partial from amountPaid.

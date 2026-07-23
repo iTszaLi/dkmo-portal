@@ -889,14 +889,15 @@ router.get("/dashboard/frf-overview", async (req, res): Promise<void> => {
 
     for (const { contribution: c, approvedDate } of ledger) {
       const status = deriveContributionStatus(c, approvedDate, now);
-      if (status === "cancelled") continue;
+      if (status === "cancelled" || status === "exempt") continue;
       const amount = Number(c.amount);
+      const paid = Math.min(Number(c.amountPaid), amount);
       expectedTotal += amount;
-      if (status === "paid") {
-        collectedTotal += amount;
-      } else {
+      collectedTotal += paid;
+      const remaining = amount - paid;
+      if (remaining > 0) {
         const cur = outstandingByMember.get(c.memberId) ?? { outstanding: 0, pendingClaims: 0 };
-        cur.outstanding += amount;
+        cur.outstanding += remaining;
         cur.pendingClaims += 1;
         outstandingByMember.set(c.memberId, cur);
       }

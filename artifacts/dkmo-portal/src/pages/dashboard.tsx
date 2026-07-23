@@ -723,7 +723,9 @@ export default function Dashboard() {
                   className="text-2xl font-bold text-green-950 dark:text-white"
                 />
               )}
-              <p className="text-xs text-green-700/80 dark:text-slate-500 mt-1">Open cases collecting contributions</p>
+              <p className="text-xs text-green-700/80 dark:text-slate-500 mt-1">
+                {summary ? `${summary.closedFrfCasesCount} closed` : "Open cases collecting contributions"}
+              </p>
             </CardContent>
           </Card>
         </Link>
@@ -743,7 +745,11 @@ export default function Dashboard() {
                   className="text-2xl font-bold text-orange-700 dark:text-orange-400"
                 />
               )}
-              <p className="text-xs text-orange-700/80 dark:text-orange-500/80 mt-1">Members with unpaid contributions</p>
+              <p className="text-xs text-orange-700/80 dark:text-orange-500/80 mt-1">
+                {summary
+                  ? `${summary.membersPaidFrfCount} paid · ${summary.membersPartialFrfCount} partial`
+                  : "Members with unpaid contributions"}
+              </p>
             </CardContent>
           </Card>
         </Link>

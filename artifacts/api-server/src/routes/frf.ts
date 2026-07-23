@@ -372,6 +372,10 @@ router.patch(
       if (!existing) { res.status(404).json({ error: "Contribution not found" }); return; }
 
       let newStatus: string = parsed.data.status;
+      if (newStatus === "exempt" && Number(existing.amountPaid) > 0) {
+        res.status(409).json({ error: "Cannot exempt a contribution that already has payments recorded" });
+        return;
+      }
       if (newStatus === "pending" && Number(existing.amountPaid) > 0) {
         // Reverting exemption on a row with money recorded: recompute.
         newStatus = Number(existing.amountPaid) >= Number(existing.amount) ? "paid" : "partial";
