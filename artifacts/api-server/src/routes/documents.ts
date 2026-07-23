@@ -2,7 +2,13 @@ import { Router, type IRouter } from "express";
 import { eq, desc, ilike, or, count, and } from "drizzle-orm";
 import { z } from "zod";
 import { db, documentsTable, documentVersionsTable } from "@workspace/db";
-import { requireAuth, type AuthedRequest } from "../middlewares/requireAuth";
+import { requireAuth, requireRole, type AuthedRequest } from "../middlewares/requireAuth";
+
+/** FRF case documents are managed by admins only; other document mutations are admin/finance. */
+function canMutateDoc(role: string | undefined, linkedEntityType: string | null | undefined): boolean {
+  if (linkedEntityType === "frf_claim") return role === "admin";
+  return role === "admin" || role === "finance";
+}
 
 const router: IRouter = Router();
 router.use(requireAuth);
@@ -140,7 +146,7 @@ router.get("/documents/:id", async (req, res): Promise<void> => {
     const [row] = await db
       .select()
       .from(documentsTable)
-      .where(eq(documentsTable.id, req.params.id));
+      .where(eq(documentsTable.id, String(req.params.id)));
     if (!row) { res.status(404).json({ error: "Document not found" }); return; }
     res.json(docToApi(row));
   } catch (err) {
@@ -149,14 +155,19 @@ router.get("/documents/:id", async (req, res): Promise<void> => {
   }
 });
 
-router.post("/documents", async (req, res): Promise<void> => {
+router.post("/documents", requireRole("admin", "finance"), async (req, res): Promise<void> => {
   try {
     const parsed = DocumentInput.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: "Invalid input", details: parsed.error.flatten() });
       return;
     }
-    const userId = (req as unknown as AuthedRequest).userId ?? "";
+    const authed = req as unknown as AuthedRequest;
+    if (!canMutateDoc(authed.userRole, parsed.data.linkedEntityType)) {
+      res.status(403).json({ error: "Only admins can manage FRF case documents" });
+      return;
+    }
+    const userId = authed.userId ?? "";
     const [row] = await db
       .insert(documentsTable)
       .values({ ...parsed.data, uploadedBy: userId })
@@ -168,17 +179,27 @@ router.post("/documents", async (req, res): Promise<void> => {
   }
 });
 
-router.put("/documents/:id", async (req, res): Promise<void> => {
+router.put("/documents/:id", requireRole("admin", "finance"), async (req, res): Promise<void> => {
   try {
     const parsed = DocumentInput.partial().safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: "Invalid input", details: parsed.error.flatten() });
       return;
     }
+    const [existing] = await db
+      .select({ linkedEntityType: documentsTable.linkedEntityType })
+      .from(documentsTable)
+      .where(eq(documentsTable.id, String(req.params.id)));
+    if (!existing) { res.status(404).json({ error: "Document not found" }); return; }
+    const role = (req as unknown as AuthedRequest).userRole;
+    if (!canMutateDoc(role, existing.linkedEntityType) || !canMutateDoc(role, parsed.data.linkedEntityType ?? existing.linkedEntityType)) {
+      res.status(403).json({ error: "Only admins can manage FRF case documents" });
+      return;
+    }
     const [row] = await db
       .update(documentsTable)
       .set({ ...parsed.data, updatedAt: new Date() })
-      .where(eq(documentsTable.id, req.params.id))
+      .where(eq(documentsTable.id, String(req.params.id)))
       .returning();
     if (!row) { res.status(404).json({ error: "Document not found" }); return; }
     res.json(docToApi(row));
@@ -188,9 +209,17 @@ router.put("/documents/:id", async (req, res): Promise<void> => {
   }
 });
 
-router.delete("/documents/:id", async (req, res): Promise<void> => {
+router.delete("/documents/:id", requireRole("admin", "finance"), async (req, res): Promise<void> => {
   try {
-    await db.delete(documentsTable).where(eq(documentsTable.id, req.params.id));
+    const [existing] = await db
+      .select({ linkedEntityType: documentsTable.linkedEntityType })
+      .from(documentsTable)
+      .where(eq(documentsTable.id, String(req.params.id)));
+    if (existing && !canMutateDoc((req as unknown as AuthedRequest).userRole, existing.linkedEntityType)) {
+      res.status(403).json({ error: "Only admins can manage FRF case documents" });
+      return;
+    }
+    await db.delete(documentsTable).where(eq(documentsTable.id, String(req.params.id)));
     res.status(204).end();
   } catch (err) {
     req.log.error({ err }, "deleteDocument failed");
@@ -203,7 +232,7 @@ router.get("/documents/:id/versions", async (req, res): Promise<void> => {
     const rows = await db
       .select()
       .from(documentVersionsTable)
-      .where(eq(documentVersionsTable.documentId, req.params.id))
+      .where(eq(documentVersionsTable.documentId, String(req.params.id)))
       .orderBy(desc(documentVersionsTable.version));
     res.json(rows.map(versionToApi));
   } catch (err) {
@@ -212,7 +241,7 @@ router.get("/documents/:id/versions", async (req, res): Promise<void> => {
   }
 });
 
-router.post("/documents/:id/versions", async (req, res): Promise<void> => {
+router.post("/documents/:id/versions", requireRole("admin", "finance"), async (req, res): Promise<void> => {
   try {
     const parsed = AddVersionInput.safeParse(req.body);
     if (!parsed.success) {
@@ -224,13 +253,17 @@ router.post("/documents/:id/versions", async (req, res): Promise<void> => {
     const [doc] = await db
       .select()
       .from(documentsTable)
-      .where(eq(documentsTable.id, req.params.id));
+      .where(eq(documentsTable.id, String(req.params.id)));
     if (!doc) { res.status(404).json({ error: "Document not found" }); return; }
+    if (!canMutateDoc((req as unknown as AuthedRequest).userRole, doc.linkedEntityType)) {
+      res.status(403).json({ error: "Only admins can manage FRF case documents" });
+      return;
+    }
 
     const newVersion = doc.version + 1;
 
     await db.insert(documentVersionsTable).values({
-      documentId: req.params.id,
+      documentId: String(req.params.id),
       version: doc.version,
       fileUrl: doc.fileUrl,
       fileName: doc.fileName,
@@ -250,13 +283,13 @@ router.post("/documents/:id/versions", async (req, res): Promise<void> => {
         notes: parsed.data.notes || doc.notes,
         updatedAt: new Date(),
       })
-      .where(eq(documentsTable.id, req.params.id))
+      .where(eq(documentsTable.id, String(req.params.id)))
       .returning();
 
     const versionRow = await db
       .select()
       .from(documentVersionsTable)
-      .where(eq(documentVersionsTable.documentId, req.params.id))
+      .where(eq(documentVersionsTable.documentId, String(req.params.id)))
       .orderBy(desc(documentVersionsTable.version))
       .limit(1);
 

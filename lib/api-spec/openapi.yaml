@@ -2769,6 +2769,12 @@ components:
         amountRequested: { type: number }
         amountApproved: { type: number }
         contributionAmount: { type: number }
+        collectedAmount:
+          type: number
+          description: Live collected total (list endpoint only)
+        targetProgress:
+          type: number
+          description: Percent of target collected, 0-100 (list endpoint only)
         status:
           type: string
           enum: [pending, under_review, approved, rejected, disbursed]

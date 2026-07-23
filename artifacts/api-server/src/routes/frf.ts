@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, sql, notInArray } from "drizzle-orm";
 import { db, frfClaimsTable, frfContributionsTable, membersTable, paymentsTable } from "@workspace/db";
 import { requireAuth, requireRole } from "../middlewares/requireAuth";
 import { logAudit } from "../lib/audit";
@@ -95,7 +95,27 @@ router.get("/frf/claims", async (req, res): Promise<void> => {
     if (conditions.length > 0) query = query.where(and(...conditions));
 
     const rows = await query.orderBy(desc(frfClaimsTable.claimDate));
-    res.json(rows.map(frfToApi));
+
+    // One grouped query for live collection totals (excludes cancelled/exempt rows).
+    const totals = await db
+      .select({
+        claimId: frfContributionsTable.claimId,
+        collected: sql<string>`COALESCE(SUM(LEAST(${frfContributionsTable.amountPaid}, ${frfContributionsTable.amount})), 0)`,
+      })
+      .from(frfContributionsTable)
+      .where(notInArray(frfContributionsTable.status, ["cancelled", "exempt"]))
+      .groupBy(frfContributionsTable.claimId);
+    const collectedByClaim = new Map(totals.map((t) => [t.claimId, Number(t.collected)]));
+
+    res.json(rows.map((row) => {
+      const collectedAmount = collectedByClaim.get(row.id) ?? 0;
+      const target = Number(row.amountRequested);
+      return {
+        ...frfToApi(row),
+        collectedAmount,
+        targetProgress: target > 0 ? Math.min(100, Math.round((collectedAmount / target) * 100)) : 0,
+      };
+    }));
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to list FRF claims" });

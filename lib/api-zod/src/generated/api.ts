@@ -1368,6 +1368,14 @@ export const ListFrfClaimsResponseItem = zod.object({
   amountRequested: zod.number(),
   amountApproved: zod.number(),
   contributionAmount: zod.number(),
+  collectedAmount: zod
+    .number()
+    .optional()
+    .describe("Live collected total (list endpoint only)"),
+  targetProgress: zod
+    .number()
+    .optional()
+    .describe("Percent of target collected, 0-100 (list endpoint only)"),
   status: zod.enum([
     "pending",
     "under_review",
@@ -1486,6 +1494,14 @@ export const GetFrfClaimResponse = zod.object({
   amountRequested: zod.number(),
   amountApproved: zod.number(),
   contributionAmount: zod.number(),
+  collectedAmount: zod
+    .number()
+    .optional()
+    .describe("Live collected total (list endpoint only)"),
+  targetProgress: zod
+    .number()
+    .optional()
+    .describe("Percent of target collected, 0-100 (list endpoint only)"),
   status: zod.enum([
     "pending",
     "under_review",
@@ -1581,6 +1597,14 @@ export const UpdateFrfClaimResponse = zod.object({
   amountRequested: zod.number(),
   amountApproved: zod.number(),
   contributionAmount: zod.number(),
+  collectedAmount: zod
+    .number()
+    .optional()
+    .describe("Live collected total (list endpoint only)"),
+  targetProgress: zod
+    .number()
+    .optional()
+    .describe("Percent of target collected, 0-100 (list endpoint only)"),
   status: zod.enum([
     "pending",
     "under_review",
@@ -1628,6 +1652,14 @@ export const GetFrfClaimCollectionResponse = zod.object({
     amountRequested: zod.number(),
     amountApproved: zod.number(),
     contributionAmount: zod.number(),
+    collectedAmount: zod
+      .number()
+      .optional()
+      .describe("Live collected total (list endpoint only)"),
+    targetProgress: zod
+      .number()
+      .optional()
+      .describe("Percent of target collected, 0-100 (list endpoint only)"),
     status: zod.enum([
       "pending",
       "under_review",
@@ -1750,6 +1782,14 @@ export const UpdateFrfClaimPhotoResponse = zod.object({
   amountRequested: zod.number(),
   amountApproved: zod.number(),
   contributionAmount: zod.number(),
+  collectedAmount: zod
+    .number()
+    .optional()
+    .describe("Live collected total (list endpoint only)"),
+  targetProgress: zod
+    .number()
+    .optional()
+    .describe("Percent of target collected, 0-100 (list endpoint only)"),
   status: zod.enum([
     "pending",
     "under_review",

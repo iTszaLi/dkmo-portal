@@ -308,6 +308,7 @@ export default function Frf() {
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [caseFilter, setCaseFilter] = useState("all");
   const [searchText, setSearchText] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingClaim, setEditingClaim] = useState<FrfClaimFull | null>(null);
@@ -327,17 +328,28 @@ export default function Frf() {
     claimType: typeFilter !== "all" ? typeFilter : undefined,
   });
 
-  const claims = (searchText.trim()
+  const searched = (searchText.trim()
     ? rawClaims.filter((c) => {
         const q = searchText.toLowerCase();
         return (
           c.claimantName?.toLowerCase().includes(q) ||
           c.membershipId?.toLowerCase().includes(q) ||
           c.beneficiaryName?.toLowerCase().includes(q) ||
+          c.title?.toLowerCase().includes(q) ||
           c.description?.toLowerCase().includes(q)
         );
       })
-    : rawClaims) as unknown as FrfClaimFull[];
+    : rawClaims) as unknown as (FrfClaimFull & { collectedAmount?: number; targetProgress?: number })[];
+
+  const claims = searched.filter((c) => {
+    switch (caseFilter) {
+      case "open": return c.caseStatus === "open";
+      case "closed": return c.caseStatus === "closed";
+      case "reached_target": return (c.targetProgress ?? 0) >= 100;
+      case "recent": return !!c.claimDate && Date.now() - new Date(c.claimDate).getTime() <= 30 * 24 * 60 * 60 * 1000;
+      default: return true;
+    }
+  });
 
   const { data: stats } = useGetFrfStats();
 
@@ -479,6 +491,16 @@ export default function Frf() {
                   {CLAIM_TYPES.map((t) => <SelectItem key={t} value={t} className="dark:text-slate-300">{CLAIM_TYPE_LABEL[t]}</SelectItem>)}
                 </SelectContent>
               </Select>
+              <Select value={caseFilter} onValueChange={setCaseFilter}>
+                <SelectTrigger className="w-[160px] dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200"><SelectValue placeholder="Case" /></SelectTrigger>
+                <SelectContent className="dark:bg-slate-900 dark:border-slate-800">
+                  <SelectItem value="all" className="dark:text-slate-300">All cases</SelectItem>
+                  <SelectItem value="open" className="dark:text-slate-300">Open</SelectItem>
+                  <SelectItem value="closed" className="dark:text-slate-300">Closed</SelectItem>
+                  <SelectItem value="reached_target" className="dark:text-slate-300">Reached Target</SelectItem>
+                  <SelectItem value="recent" className="dark:text-slate-300">Recent (30 days)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardHeader>
@@ -491,6 +513,7 @@ export default function Frf() {
                   <TableHead className="dark:text-slate-300">Type</TableHead>
                   <TableHead className="dark:text-slate-300">Beneficiary</TableHead>
                   <TableHead className="text-right dark:text-slate-300">Requested</TableHead>
+                  <TableHead className="dark:text-slate-300 min-w-[130px]">Collected</TableHead>
                   <TableHead className="text-right dark:text-slate-300">Approved</TableHead>
                   <TableHead className="dark:text-slate-300">Status</TableHead>
                   <TableHead className="dark:text-slate-300">Date</TableHead>
@@ -506,7 +529,7 @@ export default function Frf() {
                   ))
                 ) : claims.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-24 text-center text-green-600 dark:text-slate-500">
+                    <TableCell colSpan={9} className="h-24 text-center text-green-600 dark:text-slate-500">
                       <div className="flex flex-col items-center gap-2">
                         <HeartHandshake className="h-8 w-8 text-green-200 dark:text-slate-700" />
                         <p>No FRF claims found.</p>
@@ -543,6 +566,23 @@ export default function Frf() {
                         ) : <span className="text-green-700/50 dark:text-slate-600">—</span>}
                       </TableCell>
                       <TableCell className="text-right text-green-900 dark:text-slate-300 font-medium">{formatSAR(claim.amountRequested)}</TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between gap-2 text-xs">
+                            <span className="font-semibold text-green-800 dark:text-green-300">{formatSAR((claim as any).collectedAmount ?? 0)}</span>
+                            {claim.amountRequested > 0 && (
+                              <span className={cn("font-medium", ((claim as any).targetProgress ?? 0) >= 100 ? "text-green-700 dark:text-green-400" : "text-green-700/60 dark:text-slate-500")}>
+                                {(claim as any).targetProgress ?? 0}%
+                              </span>
+                            )}
+                          </div>
+                          {claim.amountRequested > 0 && (
+                            <div className="h-1.5 w-full rounded-full bg-green-100 dark:bg-slate-800 overflow-hidden">
+                              <div className="h-full rounded-full bg-green-600 dark:bg-green-500 transition-all" style={{ width: `${Math.min(100, (claim as any).targetProgress ?? 0)}%` }} />
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell className="text-right font-bold text-green-900 dark:text-green-300">
                         {claim.amountApproved > 0 ? formatSAR(claim.amountApproved) : "—"}
                       </TableCell>

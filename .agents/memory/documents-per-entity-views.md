@@ -16,3 +16,5 @@ FK column). With hundreds of members, an unfiltered page-1 fetch hides most reco
 **How to apply:** `useListDocuments({ linkedEntityType: "member", linkedEntityId: id, pageSize: 100 })`.
 Standard member doc checklist labels are stored in the document `title` (Passport, Iqama,
 Photo, Membership Form) with `category: "member_docs"`.
+
+**Mutation authz:** document create/update/delete/version routes require admin|finance, and docs with linkedEntityType `frf_claim` are admin-only (canMutateDoc helper) — UI hiding alone was flagged as broken access control in review; keep server-side checks when adding new linked entity types.

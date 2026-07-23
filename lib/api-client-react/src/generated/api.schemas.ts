@@ -954,6 +954,10 @@ export interface FrfClaim {
   amountRequested: number;
   amountApproved: number;
   contributionAmount: number;
+  /** Live collected total (list endpoint only) */
+  collectedAmount?: number;
+  /** Percent of target collected, 0-100 (list endpoint only) */
+  targetProgress?: number;
   status: FrfClaimStatus;
   /** @nullable */
   claimDate?: string | null;

@@ -16,8 +16,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   HeartHandshake, ArrowLeft, Search, Download, FileSpreadsheet, Users,
   CheckCircle2, Clock, AlertTriangle, DollarSign, Target, UserX, RotateCcw,
-  Camera, Trash2,
+  Camera, Trash2, History, Award, XCircle,
 } from "lucide-react";
+import { FrfCaseDocuments } from "@/components/FrfCaseDocuments";
 import { useRef } from "react";
 import { cn, formatSAR, formatDate } from "@/lib/utils";
 import { fileToCompressedDataUrl } from "@/lib/image-utils";
@@ -49,6 +50,77 @@ const CONTRIB_STATUS_LABEL: Record<string, string> = {
   cancelled: "Cancelled",
   exempt: "Exempt",
 };
+
+type TimelineEvent = {
+  label: string;
+  date: string | null;
+  detail?: string;
+  tone: "done" | "info" | "rejected" | "pending";
+};
+
+/** Builds the case activity timeline from claim milestones + the payment ledger. */
+function buildTimeline(claim: any, contributors: { amountPaid: number; paidAt?: string | null }[], targetAmount: number): TimelineEvent[] {
+  const paidDates = contributors
+    .filter((c) => c.amountPaid > 0 && c.paidAt)
+    .map((c) => c.paidAt as string)
+    .sort();
+  const events: TimelineEvent[] = [
+    { label: "Case created", date: claim.claimDate ?? claim.createdAt, tone: "done" },
+  ];
+  if (targetAmount > 0) {
+    events.push({ label: "Target amount set", date: claim.claimDate ?? claim.createdAt, detail: `Target SAR ${targetAmount.toLocaleString()}`, tone: "done" });
+  }
+  if (claim.underReviewAt) events.push({ label: "Under review", date: claim.underReviewAt, detail: claim.underReviewBy ? `by ${claim.underReviewBy}` : undefined, tone: "info" });
+  if (claim.approvedDate) events.push({ label: "Approved", date: claim.approvedDate, detail: claim.approvedBy ? `by ${claim.approvedBy}` : undefined, tone: "done" });
+  if (paidDates.length > 0) {
+    events.push({ label: "First payment received", date: paidDates[0]!, tone: "done" });
+    if (paidDates.length > 1) events.push({ label: "Latest payment received", date: paidDates[paidDates.length - 1]!, detail: `${paidDates.length} payments so far`, tone: "done" });
+  }
+  if (claim.rejectedAt) events.push({ label: "Case rejected", date: claim.rejectedAt, detail: claim.rejectedBy ? `by ${claim.rejectedBy}` : undefined, tone: "rejected" });
+  if (claim.disbursedAt) events.push({ label: "Funds disbursed", date: claim.disbursedAt, detail: claim.disbursedBy ? `by ${claim.disbursedBy}` : undefined, tone: "done" });
+  if (claim.caseStatus === "closed") {
+    events.push({ label: "Case closed", date: claim.closingDate ?? claim.disbursedAt ?? claim.rejectedAt ?? null, tone: claim.rejectedAt ? "rejected" : "done" });
+  } else if (claim.closingDate) {
+    events.push({ label: "Scheduled to close", date: claim.closingDate, tone: "pending" });
+  }
+  return events.sort((a, b) => (a.date ?? "9999").localeCompare(b.date ?? "9999"));
+}
+
+function CaseTimeline({ events }: { events: TimelineEvent[] }) {
+  return (
+    <div>
+      {events.map((ev, i) => (
+        <div key={`${ev.label}-${i}`} className="flex items-start gap-3">
+          <div className="flex flex-col items-center">
+            <div className={cn(
+              "h-7 w-7 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5",
+              ev.tone === "done" ? "bg-green-600 border-green-600 text-white" :
+              ev.tone === "rejected" ? "bg-red-500 border-red-500 text-white" :
+              ev.tone === "info" ? "border-blue-400 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400" :
+              "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-400",
+            )}>
+              {ev.tone === "done" ? <CheckCircle2 className="h-3.5 w-3.5" /> :
+               ev.tone === "rejected" ? <XCircle className="h-3.5 w-3.5" /> :
+               <Clock className="h-3.5 w-3.5" />}
+            </div>
+            {i < events.length - 1 && <div className="w-0.5 h-7 bg-green-200 dark:bg-slate-700" />}
+          </div>
+          <div className="pb-3 flex-1 min-w-0">
+            <p className={cn("text-sm font-semibold",
+              ev.tone === "rejected" ? "text-red-600 dark:text-red-400" :
+              ev.tone === "pending" ? "text-slate-500 dark:text-slate-400" :
+              "text-green-900 dark:text-slate-200")}>
+              {ev.label}
+            </p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {ev.date ? formatDate(ev.date) : "—"}{ev.detail ? ` · ${ev.detail}` : ""}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function initials(name: string) {
   return name.split(" ").filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("");
@@ -163,6 +235,59 @@ export default function FrfClaimDetail() {
     doc.save(`frf-collection-${data.claim.claimantName.replace(/\s+/g, "-").toLowerCase()}.pdf`);
   };
 
+  const exportCompletionCertificate = () => {
+    if (!data) return;
+    // Collection payload's claim schema omits some milestone timestamps; treat as loose record.
+    const c = data.claim as typeof data.claim & Record<string, any>;
+    const doc = new jsPDF();
+    const pageW = doc.internal.pageSize.getWidth();
+    // Border
+    doc.setDrawColor(21, 128, 61);
+    doc.setLineWidth(1.2);
+    doc.rect(8, 8, pageW - 16, doc.internal.pageSize.getHeight() - 16);
+    doc.setLineWidth(0.3);
+    doc.rect(11, 11, pageW - 22, doc.internal.pageSize.getHeight() - 22);
+    // Header
+    doc.setFontSize(20);
+    doc.setTextColor(20, 83, 45);
+    doc.text("Dakshina Karnataka Muslim Ookota", pageW / 2, 30, { align: "center" });
+    doc.setFontSize(13);
+    doc.setTextColor(60);
+    doc.text("Family Relief Fund — Case Completion Summary", pageW / 2, 40, { align: "center" });
+    doc.setDrawColor(180);
+    doc.line(30, 46, pageW - 30, 46);
+    // Body
+    const paidContribs = data.contributors.filter((x) => x.amountPaid > 0).length;
+    const progress = data.targetAmount > 0 ? data.targetProgress : data.collectionRate;
+    const rows: [string, string][] = [
+      ["Case Title", c.title || "—"],
+      ["Beneficiary Name", c.beneficiaryName || c.claimantName],
+      ["Member ID", c.membershipId || "—"],
+      ["Case Type", CLAIM_TYPE_LABEL[c.claimType] ?? c.claimType],
+      ["Target Amount", data.targetAmount > 0 ? `SAR ${data.targetAmount.toLocaleString()}` : "—"],
+      ["Total Collected", `SAR ${data.collectedAmount.toLocaleString()}`],
+      ["Number of Contributors", `${paidContribs} of ${data.totalMembers} members`],
+      ["Collection Percentage", `${progress}%`],
+      ["Date Opened", formatDate(c.claimDate ?? c.createdAt)],
+      ["Date Closed", c.caseStatus === "closed" ? formatDate(c.closingDate ?? c.disbursedAt ?? c.rejectedAt ?? null) : "Still open"],
+      ["Distribution Status", c.status === "disbursed" ? `Disbursed — SAR ${Number(c.amountApproved).toLocaleString()}` : c.status === "rejected" ? "Rejected" : "Not yet disbursed"],
+    ];
+    autoTable(doc, {
+      startY: 56,
+      margin: { left: 30, right: 30 },
+      body: rows,
+      theme: "plain",
+      styles: { fontSize: 11, cellPadding: 3 },
+      columnStyles: { 0: { fontStyle: "bold", textColor: [20, 83, 45], cellWidth: 62 }, 1: { textColor: [40, 40, 40] } },
+    });
+    const y = (doc as any).lastAutoTable.finalY + 16;
+    doc.setFontSize(9);
+    doc.setTextColor(120);
+    doc.text(`Generated on ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })} · DKMO Management Portal`, pageW / 2, y, { align: "center" });
+    doc.text("This is a permanent record generated for transparency and audit purposes.", pageW / 2, y + 6, { align: "center" });
+    doc.save(`frf-completion-${(c.title || c.claimantName).replace(/\s+/g, "-").toLowerCase()}.pdf`);
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -240,6 +365,15 @@ export default function FrfClaimDetail() {
           </Button>
           <Button variant="outline" size="sm" onClick={exportPdf} className="dark:border-slate-700">
             <Download className="h-4 w-4 mr-1.5 text-green-600" /> PDF
+          </Button>
+          <Button
+            size="sm"
+            onClick={exportCompletionCertificate}
+            className={claim.caseStatus === "closed"
+              ? "bg-green-700 hover:bg-green-800 text-white"
+              : "bg-white dark:bg-slate-900 border border-green-200 dark:border-slate-700 text-green-800 dark:text-green-300 hover:bg-green-50 dark:hover:bg-slate-800"}
+            title="Printable case completion summary">
+            <Award className="h-4 w-4 mr-1.5" /> Certificate
           </Button>
         </div>
       </div>
@@ -338,6 +472,22 @@ export default function FrfClaimDetail() {
           <Progress value={data.collectionRate} className="h-3" />
         </CardContent>
       </Card>
+
+      {/* Activity timeline + case documents */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base text-green-950 dark:text-green-100 flex items-center gap-2">
+              <History className="h-4 w-4 text-green-600" /> Case Timeline
+            </CardTitle>
+            <CardDescription className="dark:text-slate-400">Key milestones and payment activity for this case</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <CaseTimeline events={buildTimeline(claim, data.contributors, data.targetAmount)} />
+          </CardContent>
+        </Card>
+        <FrfCaseDocuments claimId={id} isAdmin={isAdmin} />
+      </div>
 
       <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
         <CardHeader className="pb-3">
