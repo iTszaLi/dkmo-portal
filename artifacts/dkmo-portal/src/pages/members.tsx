@@ -278,9 +278,7 @@ export default function Members() {
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Contact</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Location</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Reference Member</TableHead>
-              <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">Membership Fee</TableHead>
-              <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Fee Status</TableHead>
-              <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">FRF Status</TableHead>
+              <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Status</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">FRF Contributions</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">Actions</TableHead>
             </TableRow>
@@ -293,15 +291,14 @@ export default function Members() {
                   <TableCell><Skeleton className="h-5 w-32" /></TableCell>
                   <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                   <TableCell><Skeleton className="h-5 w-28" /></TableCell>
-                  <TableCell className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
-                  <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                  <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-11 w-32" /></TableCell>
+                  <TableCell className="text-right"><Skeleton className="h-5 w-20 ml-auto" /></TableCell>
                   <TableCell><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
                 </TableRow>
               ))
             ) : filteredMembers?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="h-24 text-center text-emerald-600 dark:text-slate-500">
+                <TableCell colSpan={7} className="h-24 text-center text-emerald-600 dark:text-slate-500">
                   No members found.
                 </TableCell>
               </TableRow>
@@ -341,30 +338,27 @@ export default function Members() {
                   <TableCell>
                     <RefMemberCell refId={member.refMemberId} refName={member.refMemberName} index={memberIndex} emptyLabel="No Referrer" />
                   </TableCell>
-                  <TableCell className="text-right font-semibold text-emerald-900 dark:text-green-300">
-                    {formatSAR(member.membershipFee)}
-                  </TableCell>
                   <TableCell>
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${feeStatusBadgeClass(member.feeStatus)}`}>
-                      {member.feeStatus === "paid" ? <CheckCircle2 className="h-3 w-3" /> : member.feeStatus === "exempt" ? <MinusCircle className="h-3 w-3" /> : member.feeStatus === "pending" || member.feeStatus === "partial" ? <Clock className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-                      {feeStatusLabel(member.feeStatus)}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    {(() => {
-                      const s = (member as any).frfStatus ?? "active";
-                      const cls =
-                        s === "active"
-                          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
-                          : s === "suspended"
-                          ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
-                          : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-400";
-                      return (
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${cls}`}>
-                          {s}
-                        </span>
-                      );
-                    })()}
+                    <div className="flex flex-col gap-1 items-start">
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${feeStatusBadgeClass(member.feeStatus)}`} data-testid={`badge-fee-status-${member.id}`}>
+                        {member.feeStatus === "paid" ? <CheckCircle2 className="h-3 w-3" /> : member.feeStatus === "exempt" ? <MinusCircle className="h-3 w-3" /> : member.feeStatus === "pending" || member.feeStatus === "partial" ? <Clock className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                        Membership: {feeStatusLabel(member.feeStatus)}
+                      </span>
+                      {(() => {
+                        const s = (member as any).frfStatus ?? "active";
+                        const cls =
+                          s === "active"
+                            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
+                            : s === "suspended"
+                            ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
+                            : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-400";
+                        return (
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize ${cls}`} data-testid={`badge-frf-status-${member.id}`}>
+                            FRF: {s}
+                          </span>
+                        );
+                      })()}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
                     {(() => {
