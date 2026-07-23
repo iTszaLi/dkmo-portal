@@ -53,6 +53,7 @@ const COMMANDS: Command[] = [
   { label: "Create Event", keywords: "new event create", href: "/events", kind: "action", roles: ["admin", "finance", "event"] },
   { label: "Generate Receipt", keywords: "receipt print generate", href: "/print-receipts", kind: "action", roles: ["admin", "finance"] },
   { label: "Dashboard", keywords: "dashboard home overview", href: "/dashboard", kind: "page" },
+  { label: "Calendar", keywords: "calendar schedule month agenda birthdays deadlines", href: "/calendar", kind: "page" },
   { label: "Members", keywords: "members people list", href: "/members", kind: "page" },
   { label: "Payments", keywords: "payments fees finance", href: "/payments", kind: "page" },
   { label: "Family Relief Fund", keywords: "frf claims cases relief", href: "/frf", kind: "page" },

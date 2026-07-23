@@ -417,6 +417,28 @@ export default function MemberDetail() {
                   {member.feeStatus === "paid" ? <CheckCircle2 className="h-3 w-3" /> : member.feeStatus === "pending" ? <Clock className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
                   Fee {feeStatusLabel(member.feeStatus)}
                 </span>
+                {/* Derived member tags: loans, assistance, recruitment */}
+                {(() => {
+                  const tags: { label: string; cls: string }[] = [];
+                  // Only granted/ongoing assistance counts toward tags.
+                  const DEAD = new Set(["rejected", "cancelled", "pending", "submitted", "draft"]);
+                  const items = (assistance?.items ?? []).filter((a) => !DEAD.has(a.status.toLowerCase()));
+                  const hasActiveLoan = items.some(
+                    (a) => a.category.toLowerCase().includes("loan") && !["repaid", "closed"].includes(a.status.toLowerCase()),
+                  );
+                  if (hasActiveLoan) tags.push({ label: "Loan Active", cls: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300" });
+                  if (items.some((a) => a.category.toLowerCase().includes("frf") || a.category.toLowerCase().includes("relief")))
+                    tags.push({ label: "FRF Beneficiary", cls: "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300" });
+                  if (items.some((a) => !a.category.toLowerCase().includes("loan") && !a.category.toLowerCase().includes("frf") && !a.category.toLowerCase().includes("relief")))
+                    tags.push({ label: "Aid Recipient", cls: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-300" });
+                  if ((referrals?.totalCount ?? 0) > 0)
+                    tags.push({ label: `Recruiter · ${referrals!.totalCount}`, cls: "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300" });
+                  return tags.map((t) => (
+                    <span key={t.label} className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${t.cls}`}>
+                      {t.label}
+                    </span>
+                  ));
+                })()}
                 {(() => {
                   const s = (member as any).frfStatus ?? "active";
                   const cls =

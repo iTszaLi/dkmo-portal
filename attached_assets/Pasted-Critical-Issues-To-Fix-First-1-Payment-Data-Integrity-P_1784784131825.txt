@@ -1,0 +1,544 @@
+Critical Issues To Fix First 🔴
+1. Payment Data Integrity Problem (HIGH PRIORITY)
+
+I noticed:
+
+Dashboard:
+Payments with zero amount
+
+33 payment records have zero or negative amount.
+
+Then:
+
+Receipt records:
+
+DKMO-FRF-00050
+Amount SAR 0.00
+
+DKMO-FRF-00078
+Amount SAR 0.00
+
+This is dangerous.
+
+A financial portal should NEVER allow:
+
+Amount = 0
+
+unless it is a special record type.
+
+Fix:
+
+Add validation:
+
+Payment Amount must be greater than 0
+
+Except:
+- Waiver
+- Adjustment
+- Cancelled Receipt
+
+Also add:
+
+Payment Status:
+✓ Paid
+✓ Pending
+✓ Cancelled
+✓ Refunded
+2. FRF Module Needs Proper Development 🔴
+
+Currently:
+
+Dashboard:
+
+FRF Collected
+SAR 0.00
+
+FRF Outstanding
+SAR 0.00
+
+But:
+
+Active FRF Cases
+11
+
+and:
+
+FRF Claims
+12 claims
+4 pending
+
+The system is confusing.
+
+Need separation:
+
+FRF Membership
+
+Example:
+
+Member pays monthly contribution:
+
+Member:
+Mohsin Ahmed
+
+FRF Status:
+Active
+
+Monthly Contribution:
+50 SAR
+
+Paid Months:
+Jan
+Feb
+Mar
+
+Outstanding:
+April 50 SAR
+FRF Claims
+
+Separate:
+
+Example:
+
+Claim ID:
+FRF-2026-001
+
+Member:
+XXXXX
+
+Claim Type:
+Death Benefit
+
+Amount:
+50,000 SAR
+
+Status:
+Pending Review
+
+Documents:
+Death Certificate
+Family Proof
+
+Currently it looks mixed.
+
+3. Committee Duplicate Issue 🔴
+
+You have:
+
+Executive Members
+14
+
+Core Committee
+29
+
+But many people appear twice:
+
+Example:
+
+Fazlurrahman:
+
+Executive Committee
+President
+
+Core Committee
+President
+
+Same with:
+
+Asif Kannur
+Irshad Bajpe
+Abdul Rahiman
+Salman Noor
+
+This can create reporting problems.
+
+Better:
+
+One member:
+
+Fazlurrahman Kolkar
+
+Positions:
+✓ President
+✓ Executive Committee
+✓ Core Committee
+
+Instead of duplicate entries.
+
+4. Audit Trail Needs Improvement
+
+Currently:
+
+IP Address
+127.0.0.1
+
+Everywhere.
+
+Meaning it is probably local/server generated.
+
+For production:
+
+Need:
+
+User IP
+Browser
+Device
+Location
+Login time
+Logout time
+
+Example:
+
+Administrator
+
+Action:
+Updated Member
+
+Device:
+Chrome Windows
+
+IP:
+37.xxx.xxx.xxx
+
+Time:
+23 July 2026 10:16 AM
+5. Documents Module Is Too Empty
+
+Currently:
+
+DKMO document archive
+
+0 documents
+
+For a real organization this should become:
+
+Document Categories
+Member Documents
+
+Passport
+Iqama
+ID Copy
+Photo
+
+
+FRF Documents
+
+Death Certificate
+Hospital Reports
+Claim Forms
+
+
+Organization
+
+AGM Minutes
+MOA
+Committee Decisions
+Bank Documents
+
+Add:
+
+expiry reminders
+document verification
+access permissions
+6. Dashboard Needs More "Executive" Feel
+
+Current dashboard is good.
+
+But leadership wants:
+
+"How is DKMO performing?"
+
+Add:
+
+Impact KPIs
+
+Example:
+
+Total Financial Assistance
+
+SAR 447,500
+
+
+Families Helped
+
+28
+
+
+Loans Recovered
+
+SAR 179,350
+
+
+FRF Members
+
+40
+
+
+Community Growth
+
++22%
+7. Recruitment Leaderboard Improvement
+
+Currently:
+
+Fazlurrahman
+3 recruits
+
+Good.
+
+But add:
+
+Monthly leaderboard
+
+Example:
+
+July 2026
+
+1. Fazlurrahman
+2. Asif
+3. Irshad
+
+Because lifetime ranking becomes unfair.
+
+8. Membership Application Workflow
+
+Currently:
+
+Pending
+Approved
+Rejected
+
+Need:
+
+New Application
+
+↓
+
+
+Verification
+
+↓
+
+
+Committee Approval
+
+↓
+
+
+Payment Pending
+
+↓
+
+
+Active Member
+
+Especially because DKMO is community based.
+
+9. Receipt System Needs QR Verification
+
+You already mention:
+
+PDF includes QR verification code
+
+Good.
+
+But implement:
+
+QR opens:
+
+dkmo.org/verify/DKMO-RC-0001
+
+Shows:
+
+Valid Receipt
+
+Member:
+Amount:
+Date:
+Issued By:
+
+This prevents fake receipts.
+
+10. Security Improvements
+
+Currently:
+
+Seeded users
+
+password dkmo@2026
+
+For testing okay.
+
+For production:
+
+Must change.
+
+Need:
+
+Authentication
+
+Add:
+
+bcrypt password hashing
+OTP login option
+session history
+forced password change first login
+UI/UX Improvements 🟡
+Sidebar
+
+Currently very long:
+
+Dashboard
+Impact
+Members
+Committee
+Performance
+Attendance
+Recruitment
+Payments
+...
+
+Better:
+
+Collapse into groups:
+
+📊 Dashboard
+
+👥 Members
+   Members
+   Applications
+   Duplicate Check
+
+💰 Finance
+   Payments
+   Loans
+   Receipts
+
+❤️ Welfare
+   FRF Claims
+   Community Services
+
+🏢 Organization
+   Committee
+   Events
+   Tasks
+
+📄 Reports
+   Reports
+   Audit
+
+Much cleaner.
+
+Features I would add next
+Phase 1 (Must Have)
+
+Priority:
+
+Fix payment validation
+Proper FRF contribution system
+Committee duplicate structure
+Real authentication
+Receipt verification
+Document upload
+Phase 2 (Premium Feel)
+
+Add:
+
+Member Profile Page
+
+Like:
+
+Mohsin Ahmed
+
+Photo
+
+DKMO ID
+Joined Date
+Reference
+Payments
+FRF Status
+Loans
+Attendance
+Documents
+Notification Center
+
+Example:
+
+🔔
+
+2 Membership fees pending
+
+4 FRF claims waiting
+
+9 sponsor tasks overdue
+Global Command Search
+
+You mentioned earlier Ctrl+K.
+
+This fits perfectly.
+
+Example:
+
+Press:
+
+CTRL + K
+
+Search:
+
+Mohsin Ahmed
+
+Shows:
+
+Member
+Loan
+Receipts
+Payments
+Documents
+My recommendation for Replit AI prompt:
+
+Use this:
+
+Review the DKMO portal without redesigning it.
+
+Do not change the existing UI structure.
+
+Improve only reliability and enterprise readiness.
+
+Tasks:
+
+1. Fix payment validation:
+- Prevent zero or negative payment amounts.
+- Add payment statuses Paid, Pending, Cancelled, Refunded.
+
+2. Separate FRF Membership contributions from FRF Claims.
+- FRF membership should track recurring contributions.
+- FRF claims should track death benefit cases separately.
+
+3. Fix committee duplication:
+- A member should have multiple roles instead of duplicate committee records.
+
+4. Improve audit trail:
+- Capture real user activity including browser, device, timestamp and IP.
+
+5. Add document management:
+- Upload documents.
+- Categories.
+- Expiry tracking.
+
+6. Add receipt QR verification system.
+
+7. Improve security:
+- Hash passwords.
+- Force password change for default accounts.
+
+8. Add member profile page showing:
+- Photo
+- Membership
+- Payments
+- FRF
+- Loans
+- Attendance
+- Documents.
+
+Do not modify existing data structure unnecessarily.
+Do not redesign the portal.
+Keep the current DKMO professional style.

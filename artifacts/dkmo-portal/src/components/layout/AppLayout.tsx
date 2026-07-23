@@ -59,30 +59,58 @@ interface NavItem {
   roles?: Role[];
 }
 
-const navigation: NavItem[] = [
-  { name: "Dashboard",         href: "/dashboard",         icon: LayoutDashboard },
-  { name: "DKMO Impact",       href: "/impact",            icon: Sparkles },
-  { name: "Members",           href: "/members",           icon: Users },
-  { name: "Committee",         href: "/committee",         icon: Crown },
-  { name: "Committee Performance", href: "/committee-performance", icon: Activity },
-  { name: "Meeting Attendance", href: "/meetings", icon: ClipboardCheck },
-  { name: "Recruitment Leaderboard", href: "/recruitment-leaderboard", icon: Trophy },
-  { name: "Payments",          href: "/payments",          icon: CreditCard },
-  { name: "Community Services", href: "/services",          icon: HandHelping },
-  { name: "FRF Claims",        href: "/frf",               icon: HeartHandshake },
-  { name: "DKMO Membership",  href: "/dkmo-memberships",  icon: BookUser },
-  { name: "Duplicate Detection", href: "/duplicates", icon: CopyCheck, roles: ["admin"] },
-  { name: "Sponsors",          href: "/sponsors",          icon: Handshake },
-  { name: "Events",            href: "/events",            icon: CalendarDays },
-  { name: "Tasks",             href: "/tasks",             icon: ListChecks },
-  { name: "Pending",           href: "/pending",           icon: AlertCircle },
-  { name: "Loans",             href: "/loans",             icon: Landmark },
-  { name: "Receipts",          href: "/receipts",          icon: Receipt },
-  { name: "Print Receipts",    href: "/print-receipts",    icon: Printer },
-  { name: "Documents",         href: "/documents",         icon: FolderOpen },
-  { name: "Reports",           href: "/reports",           icon: FileText },
-  { name: "Audit Trail",       href: "/audit",             icon: ScrollText, roles: ["admin", "finance"] },
-  { name: "Settings",          href: "/settings",          icon: Cog, roles: ["admin"] },
+type NavSection = { title: string | null; items: NavItem[] };
+
+const navigation: NavSection[] = [
+  {
+    title: null,
+    items: [
+      { name: "Dashboard",   href: "/dashboard", icon: LayoutDashboard },
+      { name: "Calendar",    href: "/calendar",  icon: CalendarDays },
+      { name: "DKMO Impact", href: "/impact",    icon: Sparkles },
+    ],
+  },
+  {
+    title: "People",
+    items: [
+      { name: "Members",           href: "/members",   icon: Users },
+      { name: "Committee",         href: "/committee", icon: Crown },
+      { name: "Committee Performance", href: "/committee-performance", icon: Activity },
+      { name: "Meeting Attendance", href: "/meetings", icon: ClipboardCheck },
+      { name: "Recruitment Leaderboard", href: "/recruitment-leaderboard", icon: Trophy },
+      { name: "DKMO Membership",   href: "/dkmo-memberships", icon: BookUser },
+    ],
+  },
+  {
+    title: "Finance",
+    items: [
+      { name: "Payments",       href: "/payments",       icon: CreditCard },
+      { name: "Pending",        href: "/pending",        icon: AlertCircle },
+      { name: "Receipts",       href: "/receipts",       icon: Receipt },
+      { name: "Print Receipts", href: "/print-receipts", icon: Printer },
+      { name: "Loans",          href: "/loans",          icon: Landmark },
+      { name: "Sponsors",       href: "/sponsors",       icon: Handshake },
+      { name: "Reports",        href: "/reports",        icon: FileText },
+    ],
+  },
+  {
+    title: "Community",
+    items: [
+      { name: "FRF Claims",         href: "/frf",      icon: HeartHandshake },
+      { name: "Community Services", href: "/services", icon: HandHelping },
+      { name: "Events",             href: "/events",   icon: CalendarDays },
+      { name: "Tasks",              href: "/tasks",    icon: ListChecks },
+    ],
+  },
+  {
+    title: "Administration",
+    items: [
+      { name: "Documents",           href: "/documents",  icon: FolderOpen },
+      { name: "Duplicate Detection", href: "/duplicates", icon: CopyCheck, roles: ["admin"] },
+      { name: "Audit Trail",         href: "/audit",      icon: ScrollText, roles: ["admin", "finance"] },
+      { name: "Settings",            href: "/settings",   icon: Cog, roles: ["admin"] },
+    ],
+  },
 ];
 
 function initialsOf(name: string): string {
@@ -109,13 +137,14 @@ export function AppLayout({ children }: AppLayoutProps) {
   };
 
   const role: Role = (user?.role ?? "viewer") as Role;
-  const visibleNav = navigation.filter(
-    (item) => !item.roles || item.roles.includes(role),
-  );
+  const visibleSections = navigation
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => !item.roles || item.roles.includes(role)),
+    }))
+    .filter((section) => section.items.length > 0);
 
-  const SidebarLinks = ({ onNavigate }: { onNavigate?: () => void }) => (
-    <nav className="flex flex-col gap-1.5">
-      {visibleNav.map((item) => {
+  const NavLink = ({ item, onNavigate }: { item: NavItem; onNavigate?: () => void }) => {
         const isActive =
           location === item.href ||
           (item.href !== "/dashboard" && location.startsWith(item.href + "/"));
@@ -152,7 +181,22 @@ export function AppLayout({ children }: AppLayoutProps) {
             />
           </Link>
         );
-      })}
+  };
+
+  const SidebarLinks = ({ onNavigate }: { onNavigate?: () => void }) => (
+    <nav className="flex flex-col gap-4">
+      {visibleSections.map((section, si) => (
+        <div key={section.title ?? `section-${si}`} className="flex flex-col gap-1.5">
+          {section.title ? (
+            <p className="px-3.5 pt-1 text-[10px] font-bold uppercase tracking-widest text-green-800/50 dark:text-slate-500">
+              {section.title}
+            </p>
+          ) : null}
+          {section.items.map((item) => (
+            <NavLink key={item.name} item={item} onNavigate={onNavigate} />
+          ))}
+        </div>
+      ))}
     </nav>
   );
 

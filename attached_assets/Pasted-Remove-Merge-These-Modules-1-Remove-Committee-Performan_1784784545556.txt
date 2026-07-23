@@ -1,0 +1,307 @@
+Remove / Merge These Modules 🟡
+1. Remove: Committee Performance ❌
+
+Current:
+
+Committee Performance
+
+Members Recruited
+Fees Collected
+FRF Referred
+Loans Processed
+Score
+Leaderboard
+
+My opinion: remove it.
+
+Why?
+
+It creates unnecessary competition inside a welfare organization.
+Scores can become controversial.
+Many committee members will have roles that cannot be measured equally.
+
+Example:
+
+A Treasurer collecting money gets points.
+
+An Event Organizer arranging a huge event may get 0.
+
+Not fair.
+
+Replace with:
+Committee Activity Report
+
+Only show:
+
+Tasks completed
+Meetings attended
+Responsibilities handled
+
+No ranking.
+
+2. Merge: Recruitment Leaderboard + Members Referral
+
+Current:
+
+Recruitment Leaderboard
+
+and Members page has:
+
+Reference Member
+
+These are separated.
+
+Better:
+
+Remove standalone leaderboard.
+
+Inside Members:
+
+Referral Analytics
+
+Top Referrers
+Total New Members
+Monthly Growth
+
+One place.
+
+3. Remove: DKMO Impact Page (or simplify)
+
+Current:
+
+DKMO Impact
+
+Total Assistance Distributed
+FRF Beneficiaries
+Medical Aid Cases
+Loan Beneficiaries
+
+This is good for public website, but inside admin portal?
+
+Not necessary as a separate page.
+
+Move it into:
+
+Dashboard
+↓
+Community Impact Summary
+
+A card section.
+
+Remove the full page.
+
+4. Remove: Duplicate Detection Page ❌
+
+Current:
+
+Duplicate Detection
+
+0 duplicate groups
+
+This should not be a page.
+
+It is a background system.
+
+Nobody will open it daily.
+
+Better:
+
+When adding member:
+
+⚠ Possible Duplicate Found
+
+Same mobile number exists:
+Mohammed Ahmed
+DKMO-0023
+
+So remove sidebar item.
+
+5. Remove: Print Receipts Separate Page ❌
+
+Currently:
+
+Receipt Generator
+
++
+
+Print Receipts
+
+Two receipt areas.
+
+Confusing.
+
+Merge:
+
+Receipts
+
+Inside:
+
+Tabs:
+
+Generate Receipt
+
+Receipt History
+
+Verify Receipt
+6. Remove: Tasks as Main Module (Maybe)
+
+Current:
+
+Tasks & Follow-ups
+
+I like the idea, but it is too much for DKMO.
+
+A community organization probably doesn't need a full project management system.
+
+Instead:
+
+Merge into:
+
+Events
+
+Event:
+Sports Day
+
+Tasks:
+- Confirm venue
+- Arrange trophies
+- Invite guests
+
+Task belongs to events/sponsors.
+
+7. Remove: Settings Page for Normal Admins
+
+Currently:
+
+Settings
+
+Seeded users
+Role permissions
+
+Only super admin should see this.
+
+Sidebar:
+
+Remove.
+
+Put under:
+
+Admin Control
+
+hidden.
+
+8. Remove: Documents as Main Menu (Maybe)
+
+Don't remove the feature.
+
+But move it.
+
+Current:
+
+Documents
+
+Standalone.
+
+Better:
+
+Inside:
+
+Members
+
+Member Profile
+
+Documents
+
+Example:
+
+Mohsin Ahmed:
+
+Documents:
+Passport
+Iqama
+Photo
+Application
+
+Organization documents can remain separate.
+
+9. Remove: Community Services Separate Page (Maybe)
+
+Currently:
+
+Community Services
+
+Medical Aid
+Relief Fund
+Emergency
+Air Ticket
+India Support
+
+This is good.
+
+Keep it.
+
+But rename:
+
+Welfare Programs
+
+More professional.
+
+Final Recommended Sidebar
+
+I would make DKMO like this:
+
+Dashboard
+
+
+Members
+ ├ Members
+ ├ Applications
+ └ Pending Fees
+
+
+Finance
+ ├ Payments
+ ├ FRF
+ ├ Loans
+ └ Receipts
+
+
+Welfare
+ ├ Claims
+ └ Community Services
+
+
+Organization
+ ├ Committee
+ ├ Attendance
+ ├ Events
+
+
+Sponsors
+
+
+Reports
+
+
+Audit Trail
+
+
+Admin Settings
+Things I would definitely keep ✅
+
+Keep:
+
+✅ Dashboard
+✅ Members
+✅ Committee
+✅ Attendance
+✅ Payments
+✅ FRF Claims
+✅ Loans
+✅ Sponsors
+✅ Events
+✅ Receipts
+✅ Reports
+✅ Audit Trail
+
+These are core.

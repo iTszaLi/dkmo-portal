@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/lib/theme";
 // Pages
 import LoginPage from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
+import CalendarPage from "@/pages/calendar";
 import Members from "@/pages/members";
 import MemberDetail from "@/pages/member-detail";
 import Payments from "@/pages/payments";
@@ -123,6 +124,7 @@ function AppRoutes() {
       <Route path="/sign-up/:rest*" component={() => <Redirect to="/login" />} />
 
       <Route path="/dashboard" component={() => <AuthenticatedRoute component={Dashboard} />} />
+      <Route path="/calendar" component={() => <AuthenticatedRoute component={CalendarPage} />} />
       <Route path="/members" component={() => <AuthenticatedRoute component={Members} />} />
       <Route path="/members/:id" component={() => <AuthenticatedRoute component={MemberDetail} />} />
       <Route path="/payments" component={() => <AuthenticatedRoute component={Payments} />} />

@@ -35,6 +35,7 @@ import { DashboardClock } from "@/components/dashboard/DashboardClock";
 import { MemberOfTheMonth } from "@/components/dashboard/MemberOfTheMonth";
 import { ActionRequired } from "@/components/dashboard/ActionRequired";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
+import { TrendsCharts } from "@/components/dashboard/TrendsCharts";
 import { QuickActionsMenu } from "@/components/dashboard/QuickActionsMenu";
 import { useAuth } from "@/lib/auth";
 import { celebrateMilestone } from "@/lib/confetti";
@@ -45,8 +46,8 @@ const TRANSFER_METHOD_LABELS: Record<string, string> = {
   cheque: "Cheque",
 };
 
-type WidgetKey = "actionRequired" | "activityFeed" | "memberOfMonth" | "recruiters" | "events" | "sponsors";
-const DEFAULT_ORDER: WidgetKey[] = ["actionRequired", "activityFeed", "memberOfMonth", "recruiters", "events", "sponsors"];
+type WidgetKey = "actionRequired" | "activityFeed" | "trends" | "memberOfMonth" | "recruiters" | "events" | "sponsors";
+const DEFAULT_ORDER: WidgetKey[] = ["actionRequired", "activityFeed", "trends", "memberOfMonth", "recruiters", "events", "sponsors"];
 const ORDER_STORAGE_KEY = "dkmo.dashboard.widgetOrder";
 const MILESTONE_STORAGE_KEY = "dkmo.dashboard.recruitMilestone";
 
@@ -576,6 +577,8 @@ export default function Dashboard() {
         return <ActionRequired />;
       case "activityFeed":
         return canSeeActivity ? <ActivityFeed /> : null;
+      case "trends":
+        return <TrendsCharts memberCreatedDates={(members ?? []).map((m) => m.createdAt)} />;
       case "memberOfMonth":
         return <MemberOfTheMonth members={members} isLoading={isLoadingMembers} />;
       case "recruiters":
