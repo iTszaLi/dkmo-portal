@@ -112,8 +112,17 @@ export default function DkmoMemberships() {
 
   useEffect(() => { void fetchData(); }, []);
 
+  // Group filters match the stat-card groupings used by the server:
+  // "pending" = submitted + under_review; "approved" = approved + completed.
+  const matchesStatus = (status: string): boolean => {
+    if (statusFilter === "all") return true;
+    if (statusFilter === "pending") return status === "submitted" || status === "under_review";
+    if (statusFilter === "approved") return status === "approved" || status === "completed";
+    return status === statusFilter;
+  };
+
   const filtered = memberships.filter((m) => {
-    if (statusFilter !== "all" && m.status !== statusFilter) return false;
+    if (!matchesStatus(m.status)) return false;
     if (q) {
       const lq = q.toLowerCase();
       return (
@@ -220,21 +229,41 @@ export default function DkmoMemberships() {
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "Total",    value: stats.total,    icon: Users,         color: "text-blue-700 dark:text-blue-400",   bg: "bg-blue-50 dark:bg-blue-950/20" },
-            { label: "Pending",  value: stats.pending,  icon: AlertCircle,   color: "text-amber-700 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-950/20" },
-            { label: "Approved", value: stats.approved, icon: CheckCircle,   color: "text-green-700 dark:text-green-400", bg: "bg-green-50 dark:bg-green-950/20" },
-            { label: "Rejected", value: stats.rejected, icon: XCircle,       color: "text-red-700 dark:text-red-400",     bg: "bg-red-50 dark:bg-red-950/20" },
-          ].map(({ label, value, icon: Icon, color, bg }) => (
-            <Card key={label} className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
-              <CardContent className="pt-4 pb-4">
-                <div className={`inline-flex h-9 w-9 rounded-lg items-center justify-center ${bg} mb-2`}>
-                  <Icon className={`h-4 w-4 ${color}`} />
-                </div>
-                <p className="text-2xl font-bold text-green-950 dark:text-white">{value}</p>
-                <p className="text-xs text-green-700/70 dark:text-slate-400">{label}</p>
-              </CardContent>
-            </Card>
-          ))}
+            { label: "Total",    value: stats.total,    filter: "all",      icon: Users,         color: "text-blue-700 dark:text-blue-400",   bg: "bg-blue-50 dark:bg-blue-950/20" },
+            { label: "Pending",  value: stats.pending,  filter: "pending",  icon: AlertCircle,   color: "text-amber-700 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-950/20" },
+            { label: "Approved", value: stats.approved, filter: "approved", icon: CheckCircle,   color: "text-green-700 dark:text-green-400", bg: "bg-green-50 dark:bg-green-950/20" },
+            { label: "Rejected", value: stats.rejected, filter: "rejected", icon: XCircle,       color: "text-red-700 dark:text-red-400",     bg: "bg-red-50 dark:bg-red-950/20" },
+          ].map(({ label, value, filter, icon: Icon, color, bg }) => {
+            const active = statusFilter === filter;
+            return (
+              <Card
+                key={label}
+                role="button"
+                tabIndex={0}
+                aria-pressed={active}
+                aria-label={`Show ${label.toLowerCase()} applications`}
+                data-testid={`card-stat-${label.toLowerCase()}`}
+                onClick={() => setStatusFilter(filter)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setStatusFilter(filter);
+                  }
+                }}
+                className={`rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm cursor-pointer transition hover:shadow-md hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600 ${
+                  active ? "ring-2 ring-green-600 dark:ring-green-500" : ""
+                }`}
+              >
+                <CardContent className="pt-4 pb-4">
+                  <div className={`inline-flex h-9 w-9 rounded-lg items-center justify-center ${bg} mb-2`}>
+                    <Icon className={`h-4 w-4 ${color}`} />
+                  </div>
+                  <p className="text-2xl font-bold text-green-950 dark:text-white">{value}</p>
+                  <p className="text-xs text-green-700/70 dark:text-slate-400">{label}</p>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
@@ -256,7 +285,8 @@ export default function DkmoMemberships() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="submitted">Pending</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="submitted">Submitted</SelectItem>
               <SelectItem value="under_review">Under Review</SelectItem>
               <SelectItem value="approved">Approved</SelectItem>
               <SelectItem value="rejected">Rejected</SelectItem>
