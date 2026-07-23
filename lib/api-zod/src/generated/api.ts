@@ -1358,6 +1358,8 @@ export const ListFrfClaimsResponseItem = zod.object({
   id: zod.string(),
   memberId: zod.string().nullish(),
   title: zod.string(),
+  photoUrl: zod.string().nullish(),
+  supportingPhotos: zod.array(zod.string()).optional(),
   caseStatus: zod.enum(["open", "closed"]),
   closingDate: zod.coerce.date().nullish(),
   claimantName: zod.string(),
@@ -1388,6 +1390,13 @@ export const ListFrfClaimsResponse = zod.array(ListFrfClaimsResponseItem);
 /**
  * @summary Create FRF claim
  */
+export const createFrfClaimBodyPhotoUrlRegExp = new RegExp(
+  "^data:image\/(jpeg|jpg|png|webp);base64,",
+);
+export const createFrfClaimBodySupportingPhotosItemRegExp = new RegExp(
+  "^data:image\/(jpeg|jpg|png|webp);base64,",
+);
+export const createFrfClaimBodySupportingPhotosMax = 6;
 
 export const createFrfClaimBodyAmountRequestedMin = 0;
 
@@ -1397,6 +1406,15 @@ export const createFrfClaimBodyContributionAmountMin = 0;
 
 export const CreateFrfClaimBody = zod.object({
   title: zod.string().optional(),
+  photoUrl: zod
+    .string()
+    .regex(createFrfClaimBodyPhotoUrlRegExp)
+    .nullish()
+    .describe("Beneficiary photo as a jpeg\/png\/webp data URL"),
+  supportingPhotos: zod
+    .array(zod.string().regex(createFrfClaimBodySupportingPhotosItemRegExp))
+    .max(createFrfClaimBodySupportingPhotosMax)
+    .optional(),
   closingDate: zod.coerce.date().nullish(),
   claimantName: zod.string().min(1),
   membershipId: zod.string().optional(),
@@ -1458,6 +1476,8 @@ export const GetFrfClaimResponse = zod.object({
   id: zod.string(),
   memberId: zod.string().nullish(),
   title: zod.string(),
+  photoUrl: zod.string().nullish(),
+  supportingPhotos: zod.array(zod.string()).optional(),
   caseStatus: zod.enum(["open", "closed"]),
   closingDate: zod.coerce.date().nullish(),
   claimantName: zod.string(),
@@ -1491,6 +1511,14 @@ export const UpdateFrfClaimParams = zod.object({
   id: zod.coerce.string().uuid(),
 });
 
+export const updateFrfClaimBodyPhotoUrlRegExp = new RegExp(
+  "^data:image\/(jpeg|jpg|png|webp);base64,",
+);
+export const updateFrfClaimBodySupportingPhotosItemRegExp = new RegExp(
+  "^data:image\/(jpeg|jpg|png|webp);base64,",
+);
+export const updateFrfClaimBodySupportingPhotosMax = 6;
+
 export const updateFrfClaimBodyAmountRequestedMin = 0;
 
 export const updateFrfClaimBodyAmountApprovedMin = 0;
@@ -1499,6 +1527,15 @@ export const updateFrfClaimBodyContributionAmountMin = 0;
 
 export const UpdateFrfClaimBody = zod.object({
   title: zod.string().optional(),
+  photoUrl: zod
+    .string()
+    .regex(updateFrfClaimBodyPhotoUrlRegExp)
+    .nullish()
+    .describe("Beneficiary photo as a jpeg\/png\/webp data URL"),
+  supportingPhotos: zod
+    .array(zod.string().regex(updateFrfClaimBodySupportingPhotosItemRegExp))
+    .max(updateFrfClaimBodySupportingPhotosMax)
+    .optional(),
   closingDate: zod.coerce.date().nullish(),
   claimantName: zod.string().min(1),
   membershipId: zod.string().optional(),
@@ -1534,6 +1571,8 @@ export const UpdateFrfClaimResponse = zod.object({
   id: zod.string(),
   memberId: zod.string().nullish(),
   title: zod.string(),
+  photoUrl: zod.string().nullish(),
+  supportingPhotos: zod.array(zod.string()).optional(),
   caseStatus: zod.enum(["open", "closed"]),
   closingDate: zod.coerce.date().nullish(),
   claimantName: zod.string(),
@@ -1579,6 +1618,8 @@ export const GetFrfClaimCollectionResponse = zod.object({
     id: zod.string(),
     memberId: zod.string().nullish(),
     title: zod.string(),
+    photoUrl: zod.string().nullish(),
+    supportingPhotos: zod.array(zod.string()).optional(),
     caseStatus: zod.enum(["open", "closed"]),
     closingDate: zod.coerce.date().nullish(),
     claimantName: zod.string(),
@@ -1665,6 +1706,69 @@ export const UpdateFrfContributionStatusResponse = zod.object({
 });
 
 /**
+ * @summary Replace or remove the beneficiary photo / supporting photos (admin only)
+ */
+export const UpdateFrfClaimPhotoParams = zod.object({
+  id: zod.coerce.string().uuid(),
+});
+
+export const updateFrfClaimPhotoBodyPhotoUrlRegExp = new RegExp(
+  "^data:image\/(jpeg|jpg|png|webp);base64,",
+);
+export const updateFrfClaimPhotoBodySupportingPhotosItemRegExp = new RegExp(
+  "^data:image\/(jpeg|jpg|png|webp);base64,",
+);
+export const updateFrfClaimPhotoBodySupportingPhotosMax = 6;
+
+export const UpdateFrfClaimPhotoBody = zod.object({
+  photoUrl: zod
+    .string()
+    .regex(updateFrfClaimPhotoBodyPhotoUrlRegExp)
+    .nullish()
+    .describe(
+      "Beneficiary photo as a jpeg\/png\/webp data URL, or null to remove",
+    ),
+  supportingPhotos: zod
+    .array(
+      zod.string().regex(updateFrfClaimPhotoBodySupportingPhotosItemRegExp),
+    )
+    .max(updateFrfClaimPhotoBodySupportingPhotosMax)
+    .optional(),
+});
+
+export const UpdateFrfClaimPhotoResponse = zod.object({
+  id: zod.string(),
+  memberId: zod.string().nullish(),
+  title: zod.string(),
+  photoUrl: zod.string().nullish(),
+  supportingPhotos: zod.array(zod.string()).optional(),
+  caseStatus: zod.enum(["open", "closed"]),
+  closingDate: zod.coerce.date().nullish(),
+  claimantName: zod.string(),
+  membershipId: zod.string(),
+  claimType: zod.enum(["death_benefit", "emergency", "air_ticket", "other"]),
+  amountRequested: zod.number(),
+  amountApproved: zod.number(),
+  contributionAmount: zod.number(),
+  status: zod.enum([
+    "pending",
+    "under_review",
+    "approved",
+    "rejected",
+    "disbursed",
+  ]),
+  claimDate: zod.coerce.date().nullish(),
+  approvedDate: zod.coerce.date().nullish(),
+  approvedBy: zod.string(),
+  beneficiaryName: zod.string(),
+  beneficiaryRelation: zod.string(),
+  description: zod.string(),
+  notes: zod.string(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
  * @summary FRF eligibility, contribution summary, history, and reference collection performance
  */
 export const GetMemberFrfSummaryParams = zod.object({
@@ -1717,6 +1821,7 @@ export const GetMemberFrfSummaryResponse = zod.object({
     zod.object({
       claimId: zod.string(),
       title: zod.string(),
+      photoUrl: zod.string().nullish(),
       claimantName: zod.string(),
       claimType: zod.string(),
       status: zod.string(),

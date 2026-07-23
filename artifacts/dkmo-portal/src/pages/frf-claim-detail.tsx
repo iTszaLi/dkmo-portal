@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "wouter";
-import { useGetFrfClaimCollection, useUpdateFrfContributionStatus } from "@workspace/api-client-react";
+import { useGetFrfClaimCollection, useUpdateFrfContributionStatus, useUpdateFrfClaimPhoto } from "@workspace/api-client-react";
 import type { FrfContributor } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -16,8 +16,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   HeartHandshake, ArrowLeft, Search, Download, FileSpreadsheet, Users,
   CheckCircle2, Clock, AlertTriangle, DollarSign, Target, UserX, RotateCcw,
+  Camera, Trash2,
 } from "lucide-react";
+import { useRef } from "react";
 import { cn, formatSAR, formatDate } from "@/lib/utils";
+import { fileToCompressedDataUrl } from "@/lib/image-utils";
 import ExcelJS from "exceljs";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -54,8 +57,29 @@ function initials(name: string) {
 export default function FrfClaimDetail() {
   const { id = "" } = useParams<{ id: string }>();
   const { data, isLoading, error, refetch } = useGetFrfClaimCollection(id);
-  const { canEdit } = useAuth();
+  const { canEdit, hasRole } = useAuth();
+  const isAdmin = hasRole("admin");
   const { toast } = useToast();
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
+  const photoMutation = useUpdateFrfClaimPhoto({
+    mutation: {
+      onSuccess: () => { void refetch(); toast({ title: "Beneficiary photo updated" }); },
+      onError: (e) => toast({ title: "Error", description: String(e), variant: "destructive" }),
+    },
+  });
+
+  async function onPhotoFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    try {
+      const dataUrl = await fileToCompressedDataUrl(file, 800);
+      photoMutation.mutate({ id, data: { photoUrl: dataUrl } });
+    } catch (err) {
+      toast({ title: "Could not read image", description: String(err instanceof Error ? err.message : err), variant: "destructive" });
+    }
+  }
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -219,6 +243,72 @@ export default function FrfClaimDetail() {
           </Button>
         </div>
       </div>
+
+      {/* Beneficiary hero */}
+      <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm overflow-hidden">
+        <CardContent className="p-5 sm:p-6">
+          <div className="flex flex-col sm:flex-row gap-5 sm:gap-6">
+            <div className="shrink-0 flex flex-col items-center gap-2">
+              <Avatar className="h-32 w-32 sm:h-40 sm:w-40 rounded-2xl ring-2 ring-green-200 dark:ring-slate-700">
+                <AvatarImage src={claim.photoUrl ?? undefined} alt={claim.beneficiaryName || claim.claimantName} className="object-cover" />
+                <AvatarFallback className="rounded-2xl bg-green-100 dark:bg-slate-800 text-green-600 dark:text-green-400">
+                  <HeartHandshake className="h-12 w-12" />
+                </AvatarFallback>
+              </Avatar>
+              {isAdmin && (
+                <div className="flex gap-1.5">
+                  <Button size="sm" variant="outline" className="h-7 text-xs dark:border-slate-700" disabled={photoMutation.isPending} onClick={() => photoInputRef.current?.click()}>
+                    <Camera className="h-3 w-3 mr-1" /> {claim.photoUrl ? "Replace" : "Upload"}
+                  </Button>
+                  {claim.photoUrl && (
+                    <Button size="sm" variant="outline" className="h-7 text-xs text-red-600 dark:text-red-400 dark:border-slate-700" disabled={photoMutation.isPending}
+                      onClick={() => photoMutation.mutate({ id, data: { photoUrl: null } })}>
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  )}
+                  <input ref={photoInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onPhotoFile} />
+                </div>
+              )}
+            </div>
+            <div className="flex-1 min-w-0 space-y-3">
+              <div>
+                <p className="text-xl font-bold text-green-950 dark:text-green-100">{claim.beneficiaryName || claim.claimantName}</p>
+                <p className="text-sm text-green-800/70 dark:text-slate-400">
+                  {claim.membershipId ? `Member ID: ${claim.membershipId} · ` : ""}{CLAIM_TYPE_LABEL[claim.claimType] ?? claim.claimType}
+                  {claim.beneficiaryRelation ? ` · ${claim.beneficiaryRelation}` : ""}
+                </p>
+                {claim.title && <p className="text-sm font-medium text-green-800 dark:text-green-300 mt-0.5">{claim.title}</p>}
+                {claim.description && <p className="text-sm text-green-900/80 dark:text-slate-300 mt-1.5">{claim.description}</p>}
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-2 text-sm">
+                <div><span className="text-xs text-green-700/70 dark:text-slate-500 block">Target</span><span className="font-semibold text-green-950 dark:text-slate-200">{data.targetAmount > 0 ? formatSAR(data.targetAmount) : "—"}</span></div>
+                <div><span className="text-xs text-green-700/70 dark:text-slate-500 block">Collected</span><span className="font-semibold text-green-700 dark:text-green-300">{formatSAR(data.collectedAmount)}</span></div>
+                <div><span className="text-xs text-green-700/70 dark:text-slate-500 block">Committed</span><span className="font-semibold text-blue-700 dark:text-blue-300">{formatSAR(data.expectedAmount)}</span></div>
+                <div><span className="text-xs text-green-700/70 dark:text-slate-500 block">Remaining</span><span className="font-semibold text-orange-700 dark:text-orange-300">{data.targetAmount > 0 ? formatSAR(data.remainingToTarget) : formatSAR(data.outstandingAmount)}</span></div>
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-green-700/70 dark:text-slate-500">Collection Progress</span>
+                  <span className="text-xs font-semibold text-green-800 dark:text-green-300">{data.targetAmount > 0 ? data.targetProgress : data.collectionRate}%</span>
+                </div>
+                <Progress value={data.targetAmount > 0 ? data.targetProgress : data.collectionRate} className="h-2" />
+              </div>
+              {(claim.supportingPhotos?.length ?? 0) > 0 && (
+                <div>
+                  <p className="text-xs text-green-700/70 dark:text-slate-500 mb-1.5">Supporting Photos</p>
+                  <div className="flex flex-wrap gap-2">
+                    {claim.supportingPhotos!.map((url: string, i: number) => (
+                      <a key={i} href={url} target="_blank" rel="noreferrer">
+                        <img src={url} alt={`Supporting ${i + 1}`} loading="lazy" className="h-16 w-16 rounded-lg object-cover ring-1 ring-green-200 dark:ring-slate-700 hover:opacity-90" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {stats.map(({ title, value, icon: Icon, color, sub }) => (

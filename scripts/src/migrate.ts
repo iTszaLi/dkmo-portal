@@ -570,6 +570,8 @@ async function main() {
     ALTER TABLE frf_claims ADD COLUMN IF NOT EXISTS title TEXT NOT NULL DEFAULT '';
     ALTER TABLE frf_claims ADD COLUMN IF NOT EXISTS closing_date TIMESTAMPTZ;
     ALTER TABLE frf_contributions ADD COLUMN IF NOT EXISTS amount_paid NUMERIC(12,2) NOT NULL DEFAULT 0;
+    ALTER TABLE frf_claims ADD COLUMN IF NOT EXISTS photo_url TEXT;
+    ALTER TABLE frf_claims ADD COLUMN IF NOT EXISTS supporting_photos TEXT[] NOT NULL DEFAULT '{}';
     UPDATE frf_contributions SET amount_paid = amount WHERE status = 'paid' AND amount_paid = 0;
   `);
 

@@ -15,8 +15,16 @@ import {
 const router: IRouter = Router();
 router.use(requireAuth);
 
+const DATA_URL_RE = /^data:image\/(jpeg|jpg|png|webp);base64,/;
+const PhotoDataUrl = z
+  .string()
+  .max(1_500_000, "Photo is too large — please upload a smaller image")
+  .regex(DATA_URL_RE, "Photo must be a jpeg/png/webp data URL");
+
 const FrfClaimInput = z.object({
   title: z.string().optional().default(""),
+  photoUrl: PhotoDataUrl.nullable().optional(),
+  supportingPhotos: z.array(PhotoDataUrl).max(6).optional(),
   closingDate: z.string().datetime().nullable().optional(),
   claimantName: z.string().min(1),
   membershipId: z.string().optional().default(""),
@@ -46,6 +54,8 @@ function frfToApi(row: any) {
     id: row.id,
     memberId: row.memberId ?? null,
     title: row.title ?? "",
+    photoUrl: row.photoUrl ?? null,
+    supportingPhotos: row.supportingPhotos ?? [],
     caseStatus: caseStatusOf(row.status),
     closingDate: row.closingDate?.toISOString() ?? null,
     claimantName: row.claimantName,
@@ -133,6 +143,8 @@ router.post("/frf/claims", requireRole("admin", "finance"), async (req, res): Pr
     const data = parsed.data;
     const [created] = await db.insert(frfClaimsTable).values({
       title: data.title,
+      photoUrl: data.photoUrl ?? null,
+      supportingPhotos: data.supportingPhotos ?? [],
       closingDate: data.closingDate ? new Date(data.closingDate) : null,
       claimantName: data.claimantName,
       membershipId: data.membershipId,
@@ -184,6 +196,8 @@ router.put("/frf/claims/:id", requireRole("admin", "finance"), async (req, res):
     const data = parsed.data;
     const updateData: Record<string, any> = {};
     if (data.title !== undefined) updateData.title = data.title;
+    if (data.photoUrl !== undefined) updateData.photoUrl = data.photoUrl;
+    if (data.supportingPhotos !== undefined) updateData.supportingPhotos = data.supportingPhotos;
     if (data.closingDate !== undefined) updateData.closingDate = data.closingDate ? new Date(data.closingDate) : null;
     if (data.claimantName !== undefined) updateData.claimantName = data.claimantName;
     if (data.membershipId !== undefined) updateData.membershipId = data.membershipId;
@@ -397,6 +411,38 @@ router.patch(
     }
   },
 );
+
+const ClaimPhotoInput = z.object({
+  photoUrl: PhotoDataUrl.nullable().optional(),
+  supportingPhotos: z.array(PhotoDataUrl).max(6).optional(),
+});
+
+router.patch("/frf/claims/:id/photo", requireRole("admin"), async (req, res): Promise<void> => {
+  const id = req.params["id"] as string;
+  const parsed = ClaimPhotoInput.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  try {
+    const updateData: Record<string, any> = {};
+    if (parsed.data.photoUrl !== undefined) updateData.photoUrl = parsed.data.photoUrl;
+    if (parsed.data.supportingPhotos !== undefined) updateData.supportingPhotos = parsed.data.supportingPhotos;
+    if (Object.keys(updateData).length === 0) { res.status(400).json({ error: "Nothing to update" }); return; }
+    const [updated] = await db
+      .update(frfClaimsTable)
+      .set(updateData)
+      .where(eq(frfClaimsTable.id, id))
+      .returning();
+    if (!updated) { res.status(404).json({ error: "Not found" }); return; }
+    logAudit(req, "claim_photo_updated", "frf", {
+      entityId: updated.id,
+      entityName: updated.claimantName,
+      details: parsed.data.photoUrl === null ? "Beneficiary photo removed" : "Beneficiary photo updated",
+    });
+    res.json(frfToApi(updated));
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Failed to update claim photo" });
+  }
+});
 
 router.delete("/frf/claims/:id", requireRole("admin"), async (req, res): Promise<void> => {
   const id = req.params["id"] as string;

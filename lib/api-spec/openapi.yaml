@@ -1238,6 +1238,41 @@ paths:
               schema:
                 $ref: "#/components/schemas/FrfContributionStatusResponse"
 
+  /frf/claims/{id}/photo:
+    patch:
+      operationId: updateFrfClaimPhoto
+      tags: [frf]
+      summary: Replace or remove the beneficiary photo / supporting photos (admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                photoUrl:
+                  type: ["string", "null"]
+                  description: Beneficiary photo as a jpeg/png/webp data URL, or null to remove
+                  pattern: "^data:image/(jpeg|jpg|png|webp);base64,"
+                supportingPhotos:
+                  type: array
+                  maxItems: 6
+                  items:
+                    type: string
+                    pattern: "^data:image/(jpeg|jpg|png|webp);base64,"
+      responses:
+        "200":
+          description: Updated claim
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FrfClaim"
+
   /members/{id}/frf-summary:
     get:
       operationId: getMemberFrfSummary
@@ -2715,6 +2750,11 @@ components:
         memberId:
           type: ["string", "null"]
         title: { type: string }
+        photoUrl:
+          type: ["string", "null"]
+        supportingPhotos:
+          type: array
+          items: { type: string }
         caseStatus:
           type: string
           enum: [open, closed]
@@ -2768,6 +2808,16 @@ components:
       type: object
       properties:
         title: { type: string }
+        photoUrl:
+          type: ["string", "null"]
+          description: Beneficiary photo as a jpeg/png/webp data URL
+          pattern: "^data:image/(jpeg|jpg|png|webp);base64,"
+        supportingPhotos:
+          type: array
+          maxItems: 6
+          items:
+            type: string
+            pattern: "^data:image/(jpeg|jpg|png|webp);base64,"
         closingDate:
           type: ["string", "null"]
           format: date-time
@@ -2977,6 +3027,8 @@ components:
       properties:
         claimId: { type: string }
         title: { type: string }
+        photoUrl:
+          type: ["string", "null"]
         claimantName: { type: string }
         claimType: { type: string }
         status: { type: string }

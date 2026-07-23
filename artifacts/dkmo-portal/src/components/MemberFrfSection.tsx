@@ -117,14 +117,22 @@ export function MemberFrfSection({ memberId }: { memberId: string }) {
             {data.beneficiaryCases.map((bc) => (
               <div key={bc.claimId} className="rounded-xl border border-emerald-100 dark:border-slate-800 p-4 space-y-3">
                 <div className="flex items-start justify-between flex-wrap gap-2">
-                  <div>
-                    <Link href={`/frf/${bc.claimId}`} className="font-semibold text-emerald-900 dark:text-emerald-200 hover:underline">
-                      {bc.title || bc.claimantName}
-                    </Link>
-                    <p className="text-xs text-slate-500">
-                      {CLAIM_TYPE_LABEL[bc.claimType] ?? bc.claimType}
-                      {bc.claimDate ? ` · ${formatDate(bc.claimDate)}` : ""}
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-11 w-11 shrink-0 rounded-lg ring-1 ring-emerald-200 dark:ring-slate-700">
+                      <AvatarImage src={(bc as any).photoUrl ?? undefined} alt={bc.claimantName} className="object-cover" />
+                      <AvatarFallback className="rounded-lg bg-emerald-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400">
+                        <HeartHandshake className="h-5 w-5" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <Link href={`/frf/${bc.claimId}`} className="font-semibold text-emerald-900 dark:text-emerald-200 hover:underline">
+                        {bc.title || bc.claimantName}
+                      </Link>
+                      <p className="text-xs text-slate-500">
+                        {CLAIM_TYPE_LABEL[bc.claimType] ?? bc.claimType}
+                        {bc.claimDate ? ` · ${formatDate(bc.claimDate)}` : ""}
+                      </p>
+                    </div>
                   </div>
                   <Badge className={cn("text-[11px] capitalize", bc.caseStatus === "open" ? "bg-green-100 text-green-800 dark:bg-green-950/40 dark:text-green-300" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400")}>
                     {bc.caseStatus}

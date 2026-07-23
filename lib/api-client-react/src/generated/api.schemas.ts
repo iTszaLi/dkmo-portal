@@ -942,6 +942,9 @@ export interface FrfClaim {
   /** @nullable */
   memberId?: string | null;
   title: string;
+  /** @nullable */
+  photoUrl?: string | null;
+  supportingPhotos?: string[];
   caseStatus: FrfClaimCaseStatus;
   /** @nullable */
   closingDate?: string | null;
@@ -988,6 +991,14 @@ export const FrfClaimInputStatus = {
 
 export interface FrfClaimInput {
   title?: string;
+  /**
+   * Beneficiary photo as a jpeg/png/webp data URL
+   * @nullable
+   * @pattern ^data:image/(jpeg|jpg|png|webp);base64,
+   */
+  photoUrl?: string | null;
+  /** @maxItems 6 */
+  supportingPhotos?: string[];
   /** @nullable */
   closingDate?: string | null;
   /** @minLength 1 */
@@ -1192,6 +1203,8 @@ export const MemberBeneficiaryCaseCaseStatus = {
 export interface MemberBeneficiaryCase {
   claimId: string;
   title: string;
+  /** @nullable */
+  photoUrl?: string | null;
   claimantName: string;
   claimType: string;
   status: string;
@@ -1829,6 +1842,17 @@ export const ListSponsorsSort = {
 export type ListFrfClaimsParams = {
   status?: string;
   claimType?: string;
+};
+
+export type UpdateFrfClaimPhotoBody = {
+  /**
+   * Beneficiary photo as a jpeg/png/webp data URL, or null to remove
+   * @nullable
+   * @pattern ^data:image/(jpeg|jpg|png|webp);base64,
+   */
+  photoUrl?: string | null;
+  /** @maxItems 6 */
+  supportingPhotos?: string[];
 };
 
 export type ListWelfareRequestsParams = {

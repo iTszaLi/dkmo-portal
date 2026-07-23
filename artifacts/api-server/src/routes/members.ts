@@ -506,6 +506,7 @@ router.get("/members/:id/frf-summary", async (req, res): Promise<void> => {
       beneficiaryCases.push({
         claimId: claim.id,
         title: claim.title ?? "",
+        photoUrl: claim.photoUrl ?? null,
         claimantName: claim.claimantName,
         claimType: claim.claimType,
         status: claim.status,

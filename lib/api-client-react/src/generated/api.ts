@@ -93,6 +93,7 @@ import type {
   Task,
   TaskInput,
   TaskList,
+  UpdateFrfClaimPhotoBody,
   WelfareRequest,
   WelfareRequestInput,
   WelfareRequestUpdate,
@@ -5381,6 +5382,93 @@ export const useUpdateFrfContributionStatus = <
   TContext
 > => {
   return useMutation(getUpdateFrfContributionStatusMutationOptions(options));
+};
+
+/**
+ * @summary Replace or remove the beneficiary photo / supporting photos (admin only)
+ */
+export const getUpdateFrfClaimPhotoUrl = (id: string) => {
+  return `/api/frf/claims/${id}/photo`;
+};
+
+export const updateFrfClaimPhoto = async (
+  id: string,
+  updateFrfClaimPhotoBody: UpdateFrfClaimPhotoBody,
+  options?: RequestInit,
+): Promise<FrfClaim> => {
+  return customFetch<FrfClaim>(getUpdateFrfClaimPhotoUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateFrfClaimPhotoBody),
+  });
+};
+
+export const getUpdateFrfClaimPhotoMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateFrfClaimPhoto>>,
+    TError,
+    { id: string; data: BodyType<UpdateFrfClaimPhotoBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateFrfClaimPhoto>>,
+  TError,
+  { id: string; data: BodyType<UpdateFrfClaimPhotoBody> },
+  TContext
+> => {
+  const mutationKey = ["updateFrfClaimPhoto"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateFrfClaimPhoto>>,
+    { id: string; data: BodyType<UpdateFrfClaimPhotoBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateFrfClaimPhoto(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateFrfClaimPhotoMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateFrfClaimPhoto>>
+>;
+export type UpdateFrfClaimPhotoMutationBody = BodyType<UpdateFrfClaimPhotoBody>;
+export type UpdateFrfClaimPhotoMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Replace or remove the beneficiary photo / supporting photos (admin only)
+ */
+export const useUpdateFrfClaimPhoto = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateFrfClaimPhoto>>,
+    TError,
+    { id: string; data: BodyType<UpdateFrfClaimPhotoBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateFrfClaimPhoto>>,
+  TError,
+  { id: string; data: BodyType<UpdateFrfClaimPhotoBody> },
+  TContext
+> => {
+  return useMutation(getUpdateFrfClaimPhotoMutationOptions(options));
 };
 
 /**

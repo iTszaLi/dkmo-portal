@@ -23,6 +23,8 @@ export const frfClaimsTable = pgTable("frf_claims", {
   rejectedBy: text("rejected_by").notNull().default(""),
   rejectedAt: timestamp("rejected_at", { withTimezone: true }),
   reviewNotes: text("review_notes").notNull().default(""),
+  photoUrl: text("photo_url"),
+  supportingPhotos: text("supporting_photos").array().notNull().default([]),
   beneficiaryName: text("beneficiary_name").notNull().default(""),
   beneficiaryRelation: text("beneficiary_relation").notNull().default(""),
   description: text("description").notNull().default(""),

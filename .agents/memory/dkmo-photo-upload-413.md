@@ -14,3 +14,5 @@ Photos are sent **inline as base64 data URLs in the JSON body** (no object stora
 - The API has a terminal JSON error middleware so body-parser errors (`entity.too.large`, `entity.parse.failed`) return JSON, not an HTML page that surfaces as a vite runtime-error overlay in the SPA.
 
 **Why:** a proxy/Express HTML error response in the SPA shows up as `[plugin:runtime-error-plugin] (unknown runtime error)`, which is opaque to users.
+
+**FRF beneficiary photos** follow the same inline-base64 pattern: frf_claims.photo_url + supporting_photos TEXT[] (max 6), client compression via src/lib/image-utils.ts caps each data URL at ~1MB (server zod caps 1.5MB); replace/remove via admin-only PATCH /frf/claims/:id/photo.
