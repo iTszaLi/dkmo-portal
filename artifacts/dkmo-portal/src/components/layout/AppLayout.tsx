@@ -67,7 +67,6 @@ const navigation: NavSection[] = [
     items: [
       { name: "Dashboard",   href: "/dashboard", icon: LayoutDashboard },
       { name: "Calendar",    href: "/calendar",  icon: CalendarDays },
-      { name: "DKMO Impact", href: "/impact",    icon: Sparkles },
     ],
   },
   {
@@ -75,9 +74,8 @@ const navigation: NavSection[] = [
     items: [
       { name: "Members",           href: "/members",   icon: Users },
       { name: "Committee",         href: "/committee", icon: Crown },
-      { name: "Committee Performance", href: "/committee-performance", icon: Activity },
+      { name: "Committee Activity", href: "/committee-performance", icon: Activity },
       { name: "Meeting Attendance", href: "/meetings", icon: ClipboardCheck },
-      { name: "Recruitment Leaderboard", href: "/recruitment-leaderboard", icon: Trophy },
       { name: "DKMO Membership",   href: "/dkmo-memberships", icon: BookUser },
     ],
   },
@@ -87,7 +85,6 @@ const navigation: NavSection[] = [
       { name: "Payments",       href: "/payments",       icon: CreditCard },
       { name: "Pending",        href: "/pending",        icon: AlertCircle },
       { name: "Receipts",       href: "/receipts",       icon: Receipt },
-      { name: "Print Receipts", href: "/print-receipts", icon: Printer },
       { name: "Loans",          href: "/loans",          icon: Landmark },
       { name: "Sponsors",       href: "/sponsors",       icon: Handshake },
       { name: "Reports",        href: "/reports",        icon: FileText },
@@ -97,7 +94,7 @@ const navigation: NavSection[] = [
     title: "Community",
     items: [
       { name: "FRF Claims",         href: "/frf",      icon: HeartHandshake },
-      { name: "Community Services", href: "/services", icon: HandHelping },
+      { name: "Welfare Programs", href: "/services", icon: HandHelping },
       { name: "Events",             href: "/events",   icon: CalendarDays },
       { name: "Tasks",              href: "/tasks",    icon: ListChecks },
     ],
@@ -106,7 +103,6 @@ const navigation: NavSection[] = [
     title: "Administration",
     items: [
       { name: "Documents",           href: "/documents",  icon: FolderOpen },
-      { name: "Duplicate Detection", href: "/duplicates", icon: CopyCheck, roles: ["admin"] },
       { name: "Audit Trail",         href: "/audit",      icon: ScrollText, roles: ["admin", "finance"] },
       { name: "Settings",            href: "/settings",   icon: Cog, roles: ["admin"] },
     ],

@@ -8,7 +8,7 @@ import { formatSAR, cn } from "@/lib/utils";
 import { initialsOf } from "@/lib/committee";
 import { Trophy, UserPlus, Coins, HeartHandshake, Landmark, Activity } from "lucide-react";
 
-export default function CommitteePerformance() {
+export default function CommitteeActivityReport() {
   const { data, isLoading } = useGetCommitteePerformance();
   const { data: allMembers } = useListMembers();
 
@@ -60,7 +60,8 @@ export default function CommitteePerformance() {
       if (!rosterNames.has(e.name.toLowerCase())) merged.push(e);
     }
 
-    return merged.sort((a, b) => b.totalContributionScore - a.totalContributionScore);
+    // Neutral activity report: alphabetical, no ranking or scoring.
+    return merged.sort((a, b) => a.name.localeCompare(b.name));
   }, [data, roster]);
 
   const activeCount = (data?.entries ?? []).length;
@@ -71,19 +72,18 @@ export default function CommitteePerformance() {
       acc.fees += e.feesCollected;
       acc.frfReferred += e.frfReferred;
       acc.loans += e.loansProcessed;
-      acc.score += e.totalContributionScore;
       return acc;
     },
-    { recruited: 0, fees: 0, frfReferred: 0, loans: 0, score: 0 },
+    { recruited: 0, fees: 0, frfReferred: 0, loans: 0 },
   );
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-green-950 dark:text-green-100">Committee Performance</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-green-950 dark:text-green-100">Committee Activity Report</h1>
           <p className="text-sm text-green-800/70 dark:text-slate-400 mt-1">
-            Activity contributed by each committee member across all programs
+            Activity recorded for each committee member across all programs — listed alphabetically, without ranking
           </p>
         </div>
         <div className="text-sm text-green-900 dark:text-green-300 bg-green-50 dark:bg-slate-800 border border-green-100 dark:border-slate-700 px-3.5 py-1.5 rounded-full font-medium inline-flex items-center gap-2">
@@ -93,22 +93,21 @@ export default function CommitteePerformance() {
       </div>
 
       {/* Totals row */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <TotalCard icon={UserPlus} label="Members Recruited" value={totals.recruited} accent="text-green-700 dark:text-green-400" loading={isLoading} />
         <TotalCard icon={Coins} label="Membership Fees Collected" value={formatSAR(totals.fees)} accent="text-emerald-700 dark:text-emerald-400" loading={isLoading} />
         <TotalCard icon={HeartHandshake} label="FRF Members Referred" value={totals.frfReferred} accent="text-rose-600 dark:text-rose-400" loading={isLoading} />
         <TotalCard icon={Landmark} label="Loans Processed" value={totals.loans} accent="text-purple-600 dark:text-purple-400" loading={isLoading} />
-        <TotalCard icon={Activity} label="Total Contribution Score" value={totals.score} accent="text-amber-600 dark:text-amber-400" loading={isLoading} />
       </div>
 
       <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
         <CardHeader>
           <CardTitle className="text-base text-green-950 dark:text-green-100 flex items-center gap-2">
-            <Trophy className="h-4 w-4 text-amber-500" />
-            Contribution Leaderboard
+            <Activity className="h-4 w-4 text-green-600" />
+            Activity by Member
           </CardTitle>
           <CardDescription className="dark:text-slate-400">
-            Ranked by total recorded actions. Includes fee collection, recruitment, and case handling.
+            Recorded actions per committee member — fee collection, recruitment, and case handling.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -127,13 +126,11 @@ export default function CommitteePerformance() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-xs uppercase tracking-wider text-green-700/70 dark:text-slate-500 border-b border-green-100 dark:border-slate-800">
-                    <th className="py-2 pr-3 font-medium">#</th>
                     <th className="py-2 pr-3 font-medium">Committee Member</th>
                     <th className="py-2 px-2 font-medium text-right">Members Recruited</th>
                     <th className="py-2 px-2 font-medium text-right">Fees Collected</th>
                     <th className="py-2 px-2 font-medium text-right">FRF Referred</th>
-                    <th className="py-2 px-2 font-medium text-right">Loans</th>
-                    <th className="py-2 pl-2 font-medium text-right">Score</th>
+                    <th className="py-2 pl-2 font-medium text-right">Loans</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -145,7 +142,6 @@ export default function CommitteePerformance() {
                         data-testid={`row-perf-${i}`}
                         className="border-b border-green-50 dark:border-slate-800/60 hover:bg-green-50/40 dark:hover:bg-slate-800/40 transition-colors"
                       >
-                        <td className="py-3 pr-3 text-green-700/60 dark:text-slate-500 font-medium">{i + 1}</td>
                         <td className="py-3 pr-3">
                           <div className="flex items-center gap-3">
                             <div className="h-9 w-9 rounded-full bg-green-100 dark:bg-slate-800 border border-green-100 dark:border-slate-700 flex items-center justify-center text-xs font-bold text-green-800 dark:text-green-300 shrink-0">
@@ -169,7 +165,6 @@ export default function CommitteePerformance() {
                         </td>
                         <NumCell value={e.frfReferred} />
                         <NumCell value={e.loansProcessed} />
-                        <td className="py-3 pl-2 text-right tabular-nums font-bold text-green-950 dark:text-white">{e.totalContributionScore}</td>
                       </tr>
                     );
                   })}

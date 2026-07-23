@@ -14,7 +14,6 @@ import MemberDetail from "@/pages/member-detail";
 import Payments from "@/pages/payments";
 import Pending from "@/pages/pending";
 import Reports from "@/pages/reports";
-import TopContributors from "@/pages/top-contributors";
 import Sponsors from "@/pages/sponsors";
 import SponsorDetail from "@/pages/sponsor-detail";
 import Events from "@/pages/events";
@@ -25,7 +24,6 @@ import Settings from "@/pages/settings";
 import Committee from "@/pages/committee";
 import CommitteePerformance from "@/pages/committee-performance";
 import Meetings from "@/pages/meetings";
-import Impact from "@/pages/impact";
 import Frf from "@/pages/frf";
 import FrfClaimDetail from "@/pages/frf-claim-detail";
 import CommunityServices from "@/pages/community-services";
@@ -38,7 +36,6 @@ import DkmoMemberships from "@/pages/dkmo-memberships";
 import DkmoDuplicates from "@/pages/dkmo-duplicates";
 import Loans from "@/pages/loans";
 import Receipts from "@/pages/receipts";
-import PrintReceipts from "@/pages/print-receipts";
 import Documents from "@/pages/documents";
 import Audit from "@/pages/audit";
 import Forbidden from "@/pages/forbidden";
@@ -46,6 +43,13 @@ import NotFound from "@/pages/not-found";
 import { AppLayout } from "@/components/layout/AppLayout";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+/** Redirect a retired route to its new home, preserving the query string
+ *  (old receipt QR codes link to /print-receipts?verify=…). */
+function LegacyRedirect({ to, keepQuery = false }: { to: string; keepQuery?: boolean }) {
+  const suffix = keepQuery ? window.location.search : "";
+  return <Redirect to={`${to}${suffix}`} replace />;
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -130,8 +134,8 @@ function AppRoutes() {
       <Route path="/payments" component={() => <AuthenticatedRoute component={Payments} />} />
       <Route path="/pending" component={() => <AuthenticatedRoute component={Pending} />} />
       <Route path="/reports" component={() => <AuthenticatedRoute component={Reports} />} />
-      <Route path="/recruitment-leaderboard" component={() => <AuthenticatedRoute component={TopContributors} />} />
-      <Route path="/top-contributors" component={() => <AuthenticatedRoute component={TopContributors} />} />
+      <Route path="/recruitment-leaderboard" component={() => <LegacyRedirect to="/members?referrals=1" />} />
+      <Route path="/top-contributors" component={() => <LegacyRedirect to="/members?referrals=1" />} />
 
       <Route path="/sponsors" component={() => <AuthenticatedRoute component={Sponsors} />} />
       <Route path="/sponsors/:id" component={() => <AuthenticatedRoute component={SponsorDetail} />} />
@@ -139,7 +143,7 @@ function AppRoutes() {
       <Route path="/events/:id" component={() => <AuthenticatedRoute component={EventDetail} />} />
       <Route path="/tasks" component={() => <AuthenticatedRoute component={Tasks} />} />
       <Route path="/tasks/:id" component={() => <AuthenticatedRoute component={TaskDetail} />} />
-      <Route path="/impact" component={() => <AuthenticatedRoute component={Impact} />} />
+      <Route path="/impact" component={() => <LegacyRedirect to="/dashboard" />} />
       <Route path="/committee" component={() => <AuthenticatedRoute component={Committee} />} />
       <Route path="/committee-performance" component={() => <AuthenticatedRoute component={CommitteePerformance} />} />
       <Route path="/meetings" component={() => <AuthenticatedRoute component={Meetings} />} />
@@ -151,7 +155,7 @@ function AppRoutes() {
       <Route path="/duplicates" component={() => <AuthenticatedRoute component={DkmoDuplicates} roles={["admin"]} />} />
       <Route path="/loans" component={() => <AuthenticatedRoute component={Loans} />} />
       <Route path="/receipts" component={() => <AuthenticatedRoute component={Receipts} />} />
-      <Route path="/print-receipts" component={() => <AuthenticatedRoute component={PrintReceipts} />} />
+      <Route path="/print-receipts" component={() => <LegacyRedirect to="/receipts" keepQuery />} />
       <Route path="/documents" component={() => <AuthenticatedRoute component={Documents} />} />
       <Route
         path="/audit"

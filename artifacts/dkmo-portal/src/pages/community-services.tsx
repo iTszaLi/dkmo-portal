@@ -22,7 +22,7 @@ export default function CommunityServicesPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-green-950 dark:text-green-100">Community Services</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-green-950 dark:text-green-100">Welfare Programs</h1>
         <p className="text-green-800/70 dark:text-slate-400 mt-1 max-w-2xl">
           DKMO welfare programs supporting members and their families in times of need. Select a service to manage requests through the unified review workflow.
         </p>

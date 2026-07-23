@@ -51,7 +51,7 @@ const COMMANDS: Command[] = [
   { label: "Upload Document", keywords: "upload document new file", href: "/documents", kind: "action", roles: ["admin", "finance"] },
   { label: "Add Sponsor", keywords: "new sponsor add", href: "/sponsors", kind: "action", roles: ["admin", "finance"] },
   { label: "Create Event", keywords: "new event create", href: "/events", kind: "action", roles: ["admin", "finance", "event"] },
-  { label: "Generate Receipt", keywords: "receipt print generate", href: "/print-receipts", kind: "action", roles: ["admin", "finance"] },
+  { label: "Generate Receipt", keywords: "receipt print generate", href: "/receipts?tab=generate", kind: "action", roles: ["admin", "finance"] },
   { label: "Dashboard", keywords: "dashboard home overview", href: "/dashboard", kind: "page" },
   { label: "Calendar", keywords: "calendar schedule month agenda birthdays deadlines", href: "/calendar", kind: "page" },
   { label: "Members", keywords: "members people list", href: "/members", kind: "page" },
@@ -60,13 +60,13 @@ const COMMANDS: Command[] = [
   { label: "Loans", keywords: "loans lending", href: "/loans", kind: "page" },
   { label: "Sponsors", keywords: "sponsors donors", href: "/sponsors", kind: "page" },
   { label: "Events", keywords: "events calendar", href: "/events", kind: "page" },
-  { label: "Community Services", keywords: "services welfare medical education marriage funeral housing", href: "/services", kind: "page" },
+  { label: "Welfare Programs", keywords: "services community welfare medical education marriage funeral housing", href: "/services", kind: "page" },
   { label: "Committee", keywords: "committee executive core", href: "/committee", kind: "page" },
   { label: "Meetings", keywords: "meetings attendance", href: "/meetings", kind: "page" },
   { label: "Tasks", keywords: "tasks todo", href: "/tasks", kind: "page" },
   { label: "Documents", keywords: "documents files", href: "/documents", kind: "page" },
   { label: "Reports", keywords: "reports export", href: "/reports", kind: "page" },
-  { label: "Receipts", keywords: "receipts print", href: "/receipts", kind: "page" },
+  { label: "Receipts", keywords: "receipts print history verify", href: "/receipts", kind: "page" },
   { label: "Membership Applications", keywords: "applications dkmo memberships recruitment", href: "/dkmo-memberships", kind: "page" },
   { label: "Audit Log", keywords: "audit trail history log", href: "/audit", kind: "page", roles: ["admin", "finance"] },
   { label: "Settings", keywords: "settings users configuration", href: "/settings", kind: "page", roles: ["admin"] },
@@ -132,7 +132,7 @@ export function GlobalSearch() {
       items: results.loans.map((l) => ({ key: `l-${l.id}`, primary: `${l.memberName} — ${l.loanType}`, secondary: `SAR ${Number(l.principalAmount).toLocaleString()} · ${l.status}`, href: `/loans` })),
     });
     if (results.welfare?.length) g.push({
-      label: "Community Services", icon: <LifeBuoy className="h-3.5 w-3.5" />,
+      label: "Welfare Programs", icon: <LifeBuoy className="h-3.5 w-3.5" />,
       colorClass: "text-cyan-700 dark:text-cyan-400 bg-cyan-50/80 dark:bg-cyan-950/40",
       items: results.welfare.map((w) => ({ key: `w-${w.id}`, primary: `${w.applicantName} — ${SERVICE_LABEL[w.serviceType] ?? w.serviceType}`, secondary: `${w.requestNumber} · ${w.status}`, href: `/services/${w.serviceType}` })),
     });

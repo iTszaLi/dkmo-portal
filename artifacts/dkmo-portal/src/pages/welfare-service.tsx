@@ -14,7 +14,7 @@ export default function WelfareServicePage() {
   return (
     <div className="space-y-4">
       <Link href="/services" className="inline-flex items-center gap-1.5 text-sm text-green-700 dark:text-green-400 hover:underline">
-        <ArrowLeft className="h-4 w-4" /> Community Services
+        <ArrowLeft className="h-4 w-4" /> Welfare Programs
       </Link>
       <WelfareModule serviceType={type} />
     </div>

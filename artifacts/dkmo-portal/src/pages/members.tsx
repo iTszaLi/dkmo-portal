@@ -14,6 +14,7 @@ import { Search, Plus, UserCircle, MapPin, Phone, MoreHorizontal, Edit, Trash, U
 import { formatSAR, feeStatusLabel, feeStatusBadgeClass } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { MemberAvatar } from "@/components/MemberAvatar";
+import { ReferralAnalytics } from "@/components/ReferralAnalytics";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -200,6 +201,8 @@ export default function Members() {
           </DialogContent>
         </Dialog>
       </div>
+
+      <ReferralAnalytics />
 
       <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
         <div className="flex items-center space-x-2 bg-white dark:bg-slate-900 p-2 rounded-lg border border-emerald-100 dark:border-slate-800 shadow-sm w-full sm:max-w-md">

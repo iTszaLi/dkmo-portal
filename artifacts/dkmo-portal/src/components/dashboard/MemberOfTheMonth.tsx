@@ -151,10 +151,10 @@ export function MemberOfTheMonth({
         )}
 
         <Link
-          href="/recruitment-leaderboard"
+          href="/members?referrals=1"
           className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-green-800 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300"
         >
-          View full leaderboard <ArrowRight className="h-3.5 w-3.5" />
+          View referral analytics <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       </CardContent>
     </Card>

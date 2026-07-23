@@ -29,7 +29,7 @@ const ACTIONS: Action[] = [
   { label: "Upload Document", icon: FileUp, to: "/documents", roles: ["admin", "finance"], testId: "qa-upload-doc" },
   { label: "Add Sponsor", icon: Handshake, to: "/sponsors", roles: ["admin", "finance"], testId: "qa-add-sponsor" },
   { label: "Create Event", icon: CalendarPlus, to: "/events", roles: ["admin", "finance", "event"], testId: "qa-create-event" },
-  { label: "Generate Receipt", icon: ReceiptText, to: "/print-receipts", roles: ["admin", "finance"], testId: "qa-receipt" },
+  { label: "Generate Receipt", icon: ReceiptText, to: "/receipts?tab=generate", roles: ["admin", "finance"], testId: "qa-receipt" },
 ];
 
 /** Top-right dashboard quick actions dropdown. */

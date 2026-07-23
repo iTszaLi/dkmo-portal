@@ -34,6 +34,7 @@ import { AnimatedNumber } from "@/components/dashboard/AnimatedNumber";
 import { DashboardClock } from "@/components/dashboard/DashboardClock";
 import { MemberOfTheMonth } from "@/components/dashboard/MemberOfTheMonth";
 import { ActionRequired } from "@/components/dashboard/ActionRequired";
+import { ImpactSummary } from "@/components/dashboard/ImpactSummary";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
 import { TrendsCharts } from "@/components/dashboard/TrendsCharts";
 import { QuickActionsMenu } from "@/components/dashboard/QuickActionsMenu";
@@ -46,8 +47,8 @@ const TRANSFER_METHOD_LABELS: Record<string, string> = {
   cheque: "Cheque",
 };
 
-type WidgetKey = "actionRequired" | "activityFeed" | "trends" | "memberOfMonth" | "recruiters" | "events" | "sponsors";
-const DEFAULT_ORDER: WidgetKey[] = ["actionRequired", "activityFeed", "trends", "memberOfMonth", "recruiters", "events", "sponsors"];
+type WidgetKey = "actionRequired" | "activityFeed" | "trends" | "impact" | "memberOfMonth" | "recruiters" | "events" | "sponsors";
+const DEFAULT_ORDER: WidgetKey[] = ["actionRequired", "activityFeed", "trends", "impact", "memberOfMonth", "recruiters", "events", "sponsors"];
 const ORDER_STORAGE_KEY = "dkmo.dashboard.widgetOrder";
 const MILESTONE_STORAGE_KEY = "dkmo.dashboard.recruitMilestone";
 
@@ -260,7 +261,7 @@ export default function Dashboard() {
             <CardDescription className="dark:text-slate-400">Members who referred the most new members</CardDescription>
           </div>
           <Link
-            href="/recruitment-leaderboard"
+            href="/members?referrals=1"
             className="text-sm text-green-800 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300 font-medium inline-flex items-center gap-1"
           >
             View all <ArrowRight className="h-3.5 w-3.5" />
@@ -579,6 +580,8 @@ export default function Dashboard() {
         return canSeeActivity ? <ActivityFeed /> : null;
       case "trends":
         return <TrendsCharts memberCreatedDates={(members ?? []).map((m) => m.createdAt)} />;
+      case "impact":
+        return <ImpactSummary />;
       case "memberOfMonth":
         return <MemberOfTheMonth members={members} isLoading={isLoadingMembers} />;
       case "recruiters":
