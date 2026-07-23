@@ -17,6 +17,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { RefMemberCell, useMemberIndex } from "@/components/RefMemberCell";
+import FrfFeesPanel from "@/components/payments/FrfFeesPanel";
+import { cn } from "@/lib/utils";
 
 const FEE_STATUSES = [
   { value: "all", label: "All Statuses" },
@@ -27,7 +29,10 @@ const FEE_STATUSES = [
   { value: "exempt", label: "Exempt" },
 ];
 
+type PaymentTab = "membership" | "frf";
+
 export default function Payments() {
+  const [tab, setTab] = useState<PaymentTab>("membership");
   const memberIndex = useMemberIndex();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [textSearch, setTextSearch] = useState("");
@@ -58,25 +63,61 @@ export default function Payments() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-emerald-950 dark:text-emerald-100">Membership Fees</h1>
-          <p className="text-emerald-700/80 dark:text-slate-400">Track the one-time registration fee for each member</p>
+          <h1 className="text-3xl font-bold tracking-tight text-emerald-950 dark:text-emerald-100">
+            {tab === "membership" ? "Membership Fees" : "FRF Fees"}
+          </h1>
+          <p className="text-emerald-700/80 dark:text-slate-400">
+            {tab === "membership"
+              ? "Track the one-time SAR 100 registration fee for each member"
+              : "Track SAR 50 FRF fees per member for each FRF case"}
+          </p>
         </div>
-        <Link href="/members">
-          <Button className="bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-700 text-white">
-            <Plus className="mr-2 h-4 w-4" /> Add Member
-          </Button>
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Payment type switcher */}
+          <div
+            className="inline-flex rounded-xl border border-emerald-200 dark:border-slate-700 bg-emerald-50/60 dark:bg-slate-800/60 p-1"
+            role="group"
+            aria-label="Payment type"
+          >
+            {([["membership", "Membership Fees"], ["frf", "FRF Fees"]] as const).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={tab === value}
+                onClick={() => setTab(value)}
+                data-testid={`tab-payments-${value}`}
+                className={cn(
+                  "px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors",
+                  tab === value
+                    ? "bg-emerald-700 text-white shadow-sm dark:bg-emerald-600"
+                    : "text-emerald-800 dark:text-slate-300 hover:bg-emerald-100/70 dark:hover:bg-slate-700/60",
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <Link href="/members">
+            <Button className="bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-700 text-white">
+              <Plus className="mr-2 h-4 w-4" /> Add Member
+            </Button>
+          </Link>
+        </div>
       </div>
 
-      {/* FRF placeholder banner */}
+      {tab === "frf" ? (
+        <FrfFeesPanel />
+      ) : (
+      <>
+      {/* Membership fee banner */}
       <div className="flex items-start gap-3 rounded-xl border border-emerald-100 dark:border-slate-800 bg-emerald-50/50 dark:bg-slate-900 p-4">
         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 shrink-0">
           <HeartHandshake className="h-5 w-5" />
         </div>
         <div className="text-sm">
-          <p className="font-semibold text-emerald-900 dark:text-slate-200">Family Relief Fund (FRF) contributions</p>
+          <p className="font-semibold text-emerald-900 dark:text-slate-200">One-time membership fee — SAR 100 per member</p>
           <p className="text-emerald-700/80 dark:text-slate-400">
-            Recurring FRF contribution cycles will be tracked here in a future phase. For now, this page covers the one-time membership registration fee.
+            Family Relief Fund (FRF) fees are tracked separately — switch to the FRF Fees tab above.
           </p>
         </div>
       </div>
@@ -241,6 +282,8 @@ export default function Payments() {
           </TableBody>
         </Table>
       </div>
+      </>
+      )}
     </div>
   );
 }
