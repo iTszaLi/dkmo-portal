@@ -165,6 +165,24 @@ export default function CommitteeActivityReport() {
     const { default: JsPDF } = await import("jspdf");
     const { default: autoTable } = await import("jspdf-autotable");
     const doc = new JsPDF({ orientation: "landscape" });
+    // DKMO logo, top-right corner
+    try {
+      const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+      const resp = await fetch(`${basePath}/logo-circle.png`);
+      if (resp.ok) {
+        const blob = await resp.blob();
+        const logoDataUrl = await new Promise<string>((res, rej) => {
+          const fr = new FileReader();
+          fr.onloadend = () => res(fr.result as string);
+          fr.onerror = rej;
+          fr.readAsDataURL(blob);
+        });
+        const pageW = doc.internal.pageSize.getWidth();
+        doc.addImage(logoDataUrl, "PNG", pageW - 14 - 18, 6, 18, 18);
+      }
+    } catch {
+      // Logo is decorative — continue without it if it can't be loaded.
+    }
     doc.setFontSize(16);
     doc.setTextColor(6, 78, 59);
     doc.text("DKMO — Committee Performance Report", 14, 16);
