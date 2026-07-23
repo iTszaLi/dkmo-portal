@@ -1,0 +1,76 @@
+Feature Request: Home Dashboard Reminder Widgets
+
+Enhance the DKMO Portal homepage by adding two dedicated dashboard widgets (key cards) for WhatsApp reminders.
+
+Requirements
+
+1. Membership Reminder Widget
+
+Create a dashboard card titled:
+
+📩 Membership Reminder
+
+Display:
+
+* Total members with pending Membership Fees
+* Total Membership amount due (optional if already calculated)
+* A “Send Reminders” button or make the entire card clickable
+
+When clicked, it should navigate directly to the Membership WhatsApp Reminder page.
+
+⸻
+
+2. FRF Reminder Widget
+
+Create another dashboard card titled:
+
+📩 FRF Reminder
+
+Display:
+
+* Total members with pending FRF dues
+* Total outstanding FRF amount across all members (sum of all unpaid FRF cases)
+* A “Send Reminders” button or make the entire card clickable
+
+When clicked, it should navigate directly to the FRF WhatsApp Reminder page.
+
+⸻
+
+Design Requirements
+
+* Use the same modern card style as the existing homepage KPI widgets.
+* Keep spacing, typography, icons, colors, and shadows consistent with the rest of the dashboard.
+* The cards should be responsive on desktop, tablet, and mobile.
+* Use clear icons (WhatsApp/message/reminder icons) to distinguish each widget.
+* Add a subtle hover animation (lift/shadow effect) to indicate the cards are clickable.
+
+⸻
+
+Dynamic Data
+
+Both widgets must update automatically whenever:
+
+* A payment is recorded.
+* A new Membership Fee is generated.
+* A new FRF case is created.
+* A reminder is sent.
+
+No manual refresh should be required.
+
+⸻
+
+Navigation
+
+Clicking anywhere on the widget should redirect users to the corresponding WhatsApp Reminder page.
+
+* Membership Reminder Widget → Membership WhatsApp Reminder page
+* FRF Reminder Widget → FRF WhatsApp Reminder page
+
+⸻
+
+Important
+
+* Do not modify or remove any existing homepage widgets.
+* Add these as two new KPI cards while preserving the current dashboard layout.
+* Keep the UI professional, modern, and consistent with the DKMO Portal design system.
+* Ensure navigation, counts, and reminder data remain synchronized with the database in real time.
