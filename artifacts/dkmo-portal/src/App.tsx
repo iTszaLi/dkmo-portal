@@ -19,6 +19,7 @@ import ReportFees from "@/pages/reports/fees";
 import ReportFrf from "@/pages/reports/frf";
 import ReportLoans from "@/pages/reports/loans";
 import ReportLoanRecovery from "@/pages/reports/loan-recovery";
+import ReportFrfFees from "@/pages/reports/frf-fees";
 import ReportFinancial from "@/pages/reports/financial-summary";
 import Sponsors from "@/pages/sponsors";
 import SponsorDetail from "@/pages/sponsor-detail";
@@ -146,6 +147,7 @@ function AppRoutes() {
       <Route path="/reports/frf" component={() => <AuthenticatedRoute component={ReportFrf} />} />
       <Route path="/reports/loans" component={() => <AuthenticatedRoute component={ReportLoans} />} />
       <Route path="/reports/loan-recovery" component={() => <AuthenticatedRoute component={ReportLoanRecovery} />} />
+      <Route path="/reports/frf-fees" component={() => <AuthenticatedRoute component={ReportFrfFees} />} />
       <Route path="/reports/committee-performance" component={() => <AuthenticatedRoute component={CommitteePerformance} />} />
       <Route path="/reports/financial-summary" component={() => <AuthenticatedRoute component={ReportFinancial} />} />
       <Route path="/recruitment-leaderboard" component={() => <LegacyRedirect to="/members?referrals=1" />} />

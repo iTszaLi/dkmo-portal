@@ -6,6 +6,7 @@ import {
   HeartHandshake,
   Landmark,
   HandCoins,
+  Wallet,
   Activity,
   BarChart3,
   ArrowRight,
@@ -32,6 +33,13 @@ const REPORTS = [
     description: "Family Relief Fund claims — amounts requested, approved, and collected.",
     icon: HeartHandshake,
     tone: "text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30",
+  },
+  {
+    href: "/reports/frf-fees",
+    title: "FRF Fee Report",
+    description: "Per-case FRF fee tracking — SAR 50 per member, paid vs pending, and collections.",
+    icon: Wallet,
+    tone: "text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-950/30",
   },
   {
     href: "/reports/loans",
