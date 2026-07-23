@@ -1,17 +1,18 @@
 import { useMemo, useState } from "react";
-import { useListMembers, useListPayments } from "@workspace/api-client-react";
+import { Link } from "wouter";
+import { useListMembers } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { FileText, FileSpreadsheet, Users, CreditCard, BarChart3, Search } from "lucide-react";
-import { formatSAR, formatDate, feeStatusLabel } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { formatSAR, formatDate, feeStatusLabel, cn } from "@/lib/utils";
+import { ArrowLeft, Search, FileDown, FileSpreadsheet, Printer, BarChart3 } from "lucide-react";
 import ExcelJS from "exceljs";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -44,13 +45,14 @@ type FeeSummaryRow = {
   feePaidAt: string | null;
 };
 
-export default function Reports() {
-  const [reportSearch, setReportSearch] = useState("");
+export default function FeesReport() {
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
 
-  const { data: members, isLoading: isMembersLoading } = useListMembers();
-  const { data: payments } = useListPayments();
+  const { data: members, isLoading } = useListMembers();
 
-  // ── membership fee summary ────────────────────────────────────────────────
   const feeSummaryRows = useMemo((): FeeSummaryRow[] => {
     if (!members) return [];
     return members.map((m) => ({
@@ -65,202 +67,41 @@ export default function Reports() {
     }));
   }, [members]);
 
-  const filteredSummaryRows = useMemo(() => {
-    if (!reportSearch.trim()) return feeSummaryRows;
-    const q = reportSearch.toLowerCase();
-    return feeSummaryRows.filter(
-      (r) =>
-        r.fullName.toLowerCase().includes(q) ||
-        r.membershipId.toLowerCase().includes(q) ||
-        r.designation.toLowerCase().includes(q) ||
-        r.city.toLowerCase().includes(q) ||
-        r.refMemberName.toLowerCase().includes(q),
-    );
-  }, [feeSummaryRows, reportSearch]);
+  const filteredRows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const hasDateBound = fromDate !== "" || toDate !== "";
+    return feeSummaryRows.filter((r) => {
+      if (q) {
+        const hay = [r.fullName, r.membershipId, r.designation, r.city, r.refMemberName]
+          .map((v) => v.toLowerCase())
+          .join(" ");
+        if (!hay.includes(q)) return false;
+      }
+      if (statusFilter !== "all" && r.feeStatus !== statusFilter) return false;
+      if (hasDateBound) {
+        if (!r.feePaidAt) return false;
+        const d = r.feePaidAt.slice(0, 10);
+        if (fromDate && d < fromDate) return false;
+        if (toDate && d > toDate) return false;
+      }
+      return true;
+    });
+  }, [feeSummaryRows, search, statusFilter, fromDate, toDate]);
 
   const summaryTotals = useMemo(() => ({
-    totalFee: feeSummaryRows.reduce((a, r) => a + r.membershipFee, 0),
-    collected: feeSummaryRows.filter((r) => r.feeStatus === "paid").reduce((a, r) => a + r.membershipFee, 0),
-    outstanding: feeSummaryRows.filter((r) => r.feeStatus !== "paid" && r.feeStatus !== "exempt").reduce((a, r) => a + r.membershipFee, 0),
-    paidCount: feeSummaryRows.filter((r) => r.feeStatus === "paid").length,
-    pendingCount: feeSummaryRows.filter((r) => r.feeStatus === "pending" || r.feeStatus === "partial").length,
-    unpaidCount: feeSummaryRows.filter((r) => r.feeStatus === "unpaid").length,
-  }), [feeSummaryRows]);
+    totalFee: filteredRows.reduce((a, r) => a + r.membershipFee, 0),
+    collected: filteredRows.filter((r) => r.feeStatus === "paid").reduce((a, r) => a + r.membershipFee, 0),
+    outstanding: filteredRows.filter((r) => r.feeStatus !== "paid" && r.feeStatus !== "exempt").reduce((a, r) => a + r.membershipFee, 0),
+    paidCount: filteredRows.filter((r) => r.feeStatus === "paid").length,
+    pendingCount: filteredRows.filter((r) => r.feeStatus === "pending" || r.feeStatus === "partial").length,
+    unpaidCount: filteredRows.filter((r) => r.feeStatus === "unpaid").length,
+  }), [filteredRows]);
 
-  // ── helpers ───────────────────────────────────────────────────────────────
-  const downloadExcel = async (
-    filename: string,
-    sheetName: string,
-    columns: { header: string; key: string; width?: number }[],
-    rows: Record<string, unknown>[],
-  ) => {
-    const workbook = new ExcelJS.Workbook();
-    const sheet = workbook.addWorksheet(sheetName);
-    sheet.columns = columns;
-    sheet.addRows(rows);
-    sheet.getRow(1).font = { bold: true };
-    const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  // ── exports: members / payments ───────────────────────────────────────────
-  const exportMembersExcel = () => {
-    if (!members) return;
-    downloadExcel(
-      `DKMO_Members_${new Date().toISOString().split("T")[0]}.xlsx`,
-      "Members",
-      [
-        { header: "Member ID", key: "memberId", width: 16 },
-        { header: "Full Name", key: "fullName", width: 24 },
-        { header: "Designation", key: "designation", width: 24 },
-        { header: "Mobile", key: "mobile", width: 16 },
-        { header: "City", key: "city", width: 16 },
-        { header: "Country", key: "country", width: 16 },
-        { header: "Reference Member", key: "refMember", width: 22 },
-        { header: "Membership Fee", key: "membershipFee", width: 16 },
-        { header: "Fee Status", key: "feeStatus", width: 14 },
-        { header: "Fee Paid On", key: "feePaidAt", width: 16 },
-        { header: "Joined Date", key: "joinedDate", width: 16 },
-      ],
-      members.map((m) => ({
-        memberId: m.membershipId,
-        fullName: m.fullName,
-        designation: m.designation ?? "",
-        mobile: m.mobileNumber,
-        city: m.city,
-        country: m.country,
-        refMember: m.refMemberName ?? "",
-        membershipFee: Number(m.membershipFee),
-        feeStatus: feeStatusLabel(m.feeStatus),
-        feePaidAt: m.feePaidAt ? formatDate(m.feePaidAt) : "—",
-        joinedDate: formatDate(m.createdAt),
-      })),
-    );
-  };
-
-  const exportPaymentsExcel = () => {
-    if (!payments) return;
-    downloadExcel(
-      `DKMO_Payments_${new Date().toISOString().split("T")[0]}.xlsx`,
-      "Payments",
-      [
-        { header: "Receipt No", key: "receiptNo", width: 16 },
-        { header: "Date", key: "date", width: 16 },
-        { header: "Member ID", key: "memberId", width: 16 },
-        { header: "Member Name", key: "memberName", width: 24 },
-        { header: "Type", key: "type", width: 16 },
-        { header: "Method", key: "method", width: 14 },
-        { header: "Amount", key: "amount", width: 12 },
-        { header: "Notes", key: "notes", width: 24 },
-      ],
-      payments.map((p) => ({
-        receiptNo: p.receiptNumber,
-        date: formatDate(p.paidAt),
-        memberId: p.membershipId,
-        memberName: p.memberName,
-        type: p.paymentType === "frf_contribution" ? "FRF Contribution" : "Membership Fee",
-        method: p.paymentMethod,
-        amount: p.amountPaid,
-        notes: p.notes ?? "",
-      })),
-    );
-  };
-
-  const exportMembersPDF = async () => {
-    if (!members) return;
-    const doc = new jsPDF();
-    const logoDataUrl = await loadImageAsBase64(`${basePath}/logo-circle.png`);
-    const green: [number, number, number] = [5, 150, 105];
-
-    // Header band
-    doc.setFillColor(...green);
-    doc.rect(0, 0, 210, 32, "F");
-
-    // Logo
-    if (logoDataUrl) {
-      doc.addImage(logoDataUrl, "PNG", 5, 4, 22, 22);
-    }
-
-    // Title
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(18);
-    doc.setTextColor(255, 255, 255);
-    doc.text("DKMO Members Report", 32, 15);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.text("Dakshina Karnataka Muslim Ookota — Committed to the Community", 32, 23);
-
-    // Generated line below header
-    doc.setTextColor(80, 80, 80);
-    doc.setFontSize(9);
-    doc.text(`Generated on: ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })}`, 14, 39);
-
-    autoTable(doc, {
-      startY: 44,
-      head: [["ID", "Name", "Designation", "City", "Reference", "Fee", "Status"]],
-      body: members.map((m) => [
-        m.membershipId,
-        m.fullName,
-        m.designation ?? "",
-        m.city,
-        m.refMemberName ?? "—",
-        `SAR ${Number(m.membershipFee)}`,
-        feeStatusLabel(m.feeStatus),
-      ]),
-      theme: "grid",
-      headStyles: { fillColor: green },
-    });
-    doc.save(`DKMO_Members_${new Date().toISOString().split("T")[0]}.pdf`);
-  };
-
-  const exportPaymentsPDF = async () => {
-    if (!payments) return;
-    const doc = new jsPDF();
-    const logoDataUrl = await loadImageAsBase64(`${basePath}/logo-circle.png`);
-    const green: [number, number, number] = [5, 150, 105];
-
-    // Header band
-    doc.setFillColor(...green);
-    doc.rect(0, 0, 210, 32, "F");
-
-    // Logo
-    if (logoDataUrl) {
-      doc.addImage(logoDataUrl, "PNG", 5, 4, 22, 22);
-    }
-
-    // Title
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(18);
-    doc.setTextColor(255, 255, 255);
-    doc.text("DKMO Payments Report", 32, 15);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.text("Dakshina Karnataka Muslim Ookota — Committed to the Community", 32, 23);
-
-    // Generated line below header
-    doc.setTextColor(80, 80, 80);
-    doc.setFontSize(9);
-    doc.text(`Generated on: ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })}`, 14, 39);
-
-    autoTable(doc, {
-      startY: 44,
-      head: [["Receipt", "Date", "Member", "Type", "Amount"]],
-      body: payments.map((p) => [p.receiptNumber, formatDate(p.paidAt), p.memberName, p.paymentType === "frf_contribution" ? "FRF Contribution" : "Membership Fee", `SAR ${p.amountPaid}`]),
-      theme: "grid",
-      headStyles: { fillColor: green },
-    });
-    doc.save(`DKMO_Payments_${new Date().toISOString().split("T")[0]}.pdf`);
-  };
+  const hasFilters = search.trim() !== "" || statusFilter !== "all" || fromDate !== "" || toDate !== "";
 
   // ── exports: membership fee summary ───────────────────────────────────────
   const exportFeeSummaryExcel = async () => {
-    if (feeSummaryRows.length === 0) return;
+    if (filteredRows.length === 0) return;
     const workbook = new ExcelJS.Workbook();
     workbook.creator = "DKMO Portal";
     workbook.created = new Date();
@@ -304,7 +145,7 @@ export default function Reports() {
     });
 
     // Data rows
-    feeSummaryRows.forEach((r, i) => {
+    filteredRows.forEach((r, i) => {
       const row = sheet.addRow([
         i + 1, r.membershipId, r.fullName, r.city, r.refMemberName || "—",
         Number(r.membershipFee.toFixed(2)),
@@ -348,7 +189,7 @@ export default function Reports() {
   };
 
   const exportFeeSummaryPDF = async () => {
-    if (feeSummaryRows.length === 0) return;
+    if (filteredRows.length === 0) return;
     const doc = new jsPDF({ orientation: "landscape" });
     const pageW = doc.internal.pageSize.getWidth();
     const green: [number, number, number] = [5, 150, 105];
@@ -376,7 +217,7 @@ export default function Reports() {
     doc.setTextColor(80, 80, 80);
     doc.setFontSize(8);
     doc.text(
-      `Generated: ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })}   |   Total Members: ${feeSummaryRows.length}   |   Collected: SAR ${summaryTotals.collected.toLocaleString("en-IN", { minimumFractionDigits: 2 })}   |   Outstanding: SAR ${summaryTotals.outstanding.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+      `Generated: ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })}   |   Total Members: ${filteredRows.length}   |   Collected: SAR ${summaryTotals.collected.toLocaleString("en-IN", { minimumFractionDigits: 2 })}   |   Outstanding: SAR ${summaryTotals.outstanding.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
       pageW / 2, 33, { align: "center" },
     );
 
@@ -396,7 +237,7 @@ export default function Reports() {
       startY: 48,
       head: [["#", "Member ID", "Full Name", "City", "Reference Member", "Fee", "Status", "Paid On"]],
       body: [
-        ...feeSummaryRows.map((r, i) => [
+        ...filteredRows.map((r, i) => [
           String(i + 1),
           r.membershipId,
           r.fullName,
@@ -427,7 +268,7 @@ export default function Reports() {
         7: { cellWidth: 28 },
       },
       didParseCell: (data) => {
-        const isLastRow = data.row.index === feeSummaryRows.length;
+        const isLastRow = data.row.index === filteredRows.length;
         if (isLastRow) {
           data.cell.styles.fontStyle = "bold";
           data.cell.styles.fillColor = [240, 253, 244];
@@ -451,102 +292,83 @@ export default function Reports() {
     doc.save(`DKMO_Membership_Fees_${new Date().toISOString().split("T")[0]}.pdf`);
   };
 
-  const isLoading = isMembersLoading;
-
   return (
     <div className="space-y-6">
+      <div className="print:hidden">
+        <Link href="/reports" className="inline-flex items-center gap-1 text-sm font-medium text-emerald-700 dark:text-emerald-400 hover:underline" data-testid="link-all-reports">
+          <ArrowLeft className="h-3.5 w-3.5" /> All Reports
+        </Link>
+      </div>
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-emerald-950 dark:text-emerald-100">Reports & Exports</h1>
-          <p className="text-emerald-700/80 dark:text-slate-400">Generate reports and export data</p>
+          <h1 className="text-3xl font-bold tracking-tight text-emerald-950 dark:text-emerald-100">Membership Fee Report</h1>
+          <p className="text-emerald-700/80 dark:text-slate-400">Fee status for every member — paid, pending, unpaid, and collections.</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 print:hidden">
+          <Button variant="outline" size="sm" onClick={exportFeeSummaryPDF} disabled={isLoading || filteredRows.length === 0} className="border-emerald-300 text-emerald-800 dark:border-slate-700 dark:text-emerald-300" data-testid="button-export-pdf">
+            <FileDown className="h-4 w-4 mr-1" /> PDF
+          </Button>
+          <Button variant="outline" size="sm" onClick={exportFeeSummaryExcel} disabled={isLoading || filteredRows.length === 0} className="border-emerald-300 text-emerald-800 dark:border-slate-700 dark:text-emerald-300" data-testid="button-export-excel">
+            <FileSpreadsheet className="h-4 w-4 mr-1" /> Excel
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => window.print()} className="border-emerald-300 text-emerald-800 dark:border-slate-700 dark:text-emerald-300" data-testid="button-print-report">
+            <Printer className="h-4 w-4 mr-1" /> Print
+          </Button>
         </div>
       </div>
 
-      {/* ── members / payments exports ── */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="rounded-2xl border-emerald-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-emerald-900 dark:text-emerald-200">
-              <Users className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-              Members Data
-            </CardTitle>
-            <CardDescription className="dark:text-slate-400">Export complete member directory with fee status</CardDescription>
-          </CardHeader>
-          <CardContent className="flex gap-4">
-            <Button onClick={exportMembersExcel} className="flex-1 bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-700 text-white">
-              <FileSpreadsheet className="mr-2 h-4 w-4" /> Excel
-            </Button>
-            <Button onClick={exportMembersPDF} variant="outline" className="flex-1 border-emerald-200 dark:border-slate-700 text-emerald-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-slate-800">
-              <FileText className="mr-2 h-4 w-4" /> PDF
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl border-emerald-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-emerald-900 dark:text-emerald-200">
-              <CreditCard className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-              Payments Data
-            </CardTitle>
-            <CardDescription className="dark:text-slate-400">Export all recorded payment history</CardDescription>
-          </CardHeader>
-          <CardContent className="flex gap-4">
-            <Button onClick={exportPaymentsExcel} className="flex-1 bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-700 text-white">
-              <FileSpreadsheet className="mr-2 h-4 w-4" /> Excel
-            </Button>
-            <Button onClick={exportPaymentsPDF} variant="outline" className="flex-1 border-emerald-200 dark:border-slate-700 text-emerald-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-slate-800">
-              <FileText className="mr-2 h-4 w-4" /> PDF
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* ── Membership Fee Summary ── */}
-      <Card className="rounded-2xl border-emerald-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+      {/* Filters */}
+      <Card className="rounded-2xl border-emerald-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm print:hidden">
+        <CardContent className="pt-6 flex flex-wrap items-end gap-3">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500 dark:text-slate-500" />
+            <Input
+              placeholder="Search member, ID, city, reference…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 border-emerald-100 dark:bg-slate-800 dark:border-slate-700"
+              data-testid="input-search-fees"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px] dark:bg-slate-800 dark:border-slate-700" data-testid="select-fee-status">
+              <SelectValue placeholder="Fee status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="paid">Paid</SelectItem>
+              <SelectItem value="partial">Partial</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="unpaid">Unpaid</SelectItem>
+              <SelectItem value="exempt">Exempt</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="flex items-center gap-2">
             <div>
-              <CardTitle className="flex items-center gap-2 text-emerald-900 dark:text-emerald-200">
-                <BarChart3 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                Membership Fee Summary
-              </CardTitle>
-              <CardDescription className="dark:text-slate-400">
-                One-time registration fee status for every member — paid, pending, and unpaid
-              </CardDescription>
+              <label className="text-[11px] text-emerald-700/70 dark:text-slate-500 block mb-1">From</label>
+              <input type="date" value={fromDate} max={toDate || undefined} onChange={(e) => setFromDate(e.target.value)} className="w-[150px] h-9 rounded-md border border-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 px-3 text-sm" data-testid="input-date-from" />
             </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              {/* Inline search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-400 dark:text-slate-500" />
-                <Input
-                  placeholder="Search member…"
-                  value={reportSearch}
-                  onChange={(e) => setReportSearch(e.target.value)}
-                  className="pl-9 h-9 w-48 border-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:placeholder:text-slate-500"
-                />
-              </div>
-
-              <Button
-                onClick={exportFeeSummaryExcel}
-                disabled={isLoading || feeSummaryRows.length === 0}
-                className="bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-700 text-white"
-              >
-                <FileSpreadsheet className="mr-2 h-4 w-4" /> Excel
-              </Button>
-              <Button
-                onClick={exportFeeSummaryPDF}
-                disabled={isLoading || feeSummaryRows.length === 0}
-                variant="outline"
-                className="border-emerald-200 dark:border-slate-700 text-emerald-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-slate-800"
-              >
-                <FileText className="mr-2 h-4 w-4" /> PDF
-              </Button>
+            <div>
+              <label className="text-[11px] text-emerald-700/70 dark:text-slate-500 block mb-1">To</label>
+              <input type="date" value={toDate} min={fromDate || undefined} onChange={(e) => setToDate(e.target.value)} className="w-[150px] h-9 rounded-md border border-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 px-3 text-sm" data-testid="input-date-to" />
             </div>
           </div>
+        </CardContent>
+      </Card>
 
-          {/* Summary stat chips */}
-          {!isLoading && feeSummaryRows.length > 0 && (
+      <Card className="rounded-2xl border-emerald-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-emerald-900 dark:text-emerald-200">
+            <BarChart3 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+            Membership Fee Summary
+          </CardTitle>
+          <CardDescription className="dark:text-slate-400">
+            One-time registration fee status for every member — paid, pending, and unpaid.
+            {hasFilters ? ` Showing ${filteredRows.length} of ${feeSummaryRows.length}.` : ""}
+          </CardDescription>
+
+          {!isLoading && (
             <div className="flex flex-wrap gap-2 mt-3">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300">
                 Paid: {summaryTotals.paidCount}
@@ -592,15 +414,15 @@ export default function Reports() {
                       <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                     </TableRow>
                   ))
-                ) : feeSummaryRows.length === 0 ? (
+                ) : filteredRows.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-10 text-emerald-600 dark:text-slate-500">
-                      No members yet.
+                      {hasFilters ? "No members match the current filters." : "No members yet."}
                     </TableCell>
                   </TableRow>
                 ) : (
                   <>
-                    {filteredSummaryRows.map((row, i) => (
+                    {filteredRows.map((row, i) => (
                       <TableRow
                         key={row.membershipId}
                         className={cn(
@@ -613,6 +435,7 @@ export default function Reports() {
                             ? "hover:bg-slate-50/60 dark:hover:bg-slate-800/30"
                             : "hover:bg-red-50/40 dark:hover:bg-red-950/10",
                         )}
+                        data-testid={`row-fee-${i}`}
                       >
                         <TableCell className="text-emerald-500 dark:text-slate-500 text-sm">{i + 1}</TableCell>
                         <TableCell>
@@ -647,7 +470,7 @@ export default function Reports() {
                     <TableRow className="bg-emerald-50/60 dark:bg-slate-800/40 border-t-2 border-emerald-200 dark:border-slate-600">
                       <TableCell />
                       <TableCell className="font-bold text-emerald-950 dark:text-slate-100" colSpan={2}>
-                        Totals — {feeSummaryRows.length} members
+                        Totals — {filteredRows.length} members
                       </TableCell>
                       <TableCell className="text-right font-bold text-emerald-900 dark:text-slate-200">{formatSAR(summaryTotals.totalFee)}</TableCell>
                       <TableCell colSpan={2} />
@@ -659,7 +482,6 @@ export default function Reports() {
           </div>
         </CardContent>
       </Card>
-
     </div>
   );
 }

@@ -1,0 +1,89 @@
+Replace Committee Activity Module with Reports Module
+
+I want to improve the portal architecture and make it more scalable and professional.
+
+Remove the standalone Committee Activity module from the sidebar navigation.
+
+Do not delete any data, database tables, backend logic, APIs, or calculations. This is only a UI and navigation restructuring.
+
+Create a new module called Reports.
+
+Inside the Reports module, create the following report pages:
+
+* Membership Report
+* Membership Fee Report
+* FRF Report
+* Loan Report
+* Committee Performance Report
+* Financial Summary Report
+
+Move the current Committee Activity page into Reports.
+
+Rename:
+
+Committee Activity Report
+➡️ Committee Performance Report
+
+This page should remain a detailed performance report with:
+
+* Search
+* Filters
+* Export PDF
+* Export Excel
+* Print
+* Performance table
+* Activity Score
+
+Improve the Committee Performance Report
+
+Remove duplicate summary cards that already exist elsewhere if they do not add value.
+
+Instead, show a compact summary such as:
+
+* Active Committee Members
+* Top Performer
+* Highest Membership Collector
+* Highest FRF Referrer
+* Highest Loan Processor
+
+Keep the detailed performance table below.
+
+Reports Dashboard
+
+The Reports module should become the central place for all reporting and exports.
+
+Each report should have:
+
+* Search
+* Filters
+* Date range
+* Export PDF
+* Export Excel
+* Print
+
+Use a consistent design across all reports.
+
+Navigation
+
+The sidebar should become:
+
+* Dashboard
+* Members
+* Membership Fees
+* FRF
+* Loans
+* Reports
+* Settings
+
+Do not create unnecessary standalone modules for reports. All reports should live under the Reports section to keep the navigation clean and scalable.
+
+Important
+
+* Do not delete any existing functionality.
+* Do not modify the database.
+* Do not remove any calculations.
+* Only reorganize the UI and navigation into a more professional structure suitable for long-term growth.
+
+⸻
+
+I think this is the cleanest architecture for DKMO. Instead of having separate menu items for every report, users know that all reporting and exports live under one “Reports” module, which is how many professional admin systems are organized.

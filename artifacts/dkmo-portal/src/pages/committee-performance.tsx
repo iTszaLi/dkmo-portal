@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "wouter";
 import type { CommitteePerformanceEntry } from "@workspace/api-client-react";
 import { useGetCommitteePerformance, useListMembers } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatSAR, cn } from "@/lib/utils";
 import { initialsOf } from "@/lib/committee";
-import { Trophy, UserPlus, Coins, HeartHandshake, Landmark, Activity, Search, FileDown, FileSpreadsheet, Printer, X } from "lucide-react";
+import { Trophy, Users, Coins, HeartHandshake, Landmark, Activity, Search, FileDown, FileSpreadsheet, Printer, X } from "lucide-react";
 
 type SortKey = "activity" | "name" | "recruited" | "fees" | "frf" | "loans";
 
@@ -119,16 +120,30 @@ export default function CommitteeActivityReport() {
   const activeCount = (data?.entries ?? []).length;
   const hasFilters = search.trim() !== "" || designation !== "all" || fromDate !== "" || toDate !== "";
 
-  const totals = filtered.reduce(
-    (acc, e) => {
-      acc.recruited += e.membersRecruited;
-      acc.fees += e.feesCollected;
-      acc.frfReferred += e.frfReferred;
-      acc.loans += e.loansProcessed;
-      return acc;
-    },
-    { recruited: 0, fees: 0, frfReferred: 0, loans: 0 },
-  );
+  // Compact highlights derived from the current filtered set.
+  const highlights = useMemo(() => {
+    const activeMembers = filtered.filter((e) => e.totalActions > 0).length;
+
+    const pickMax = (
+      selector: (e: CommitteePerformanceEntry) => number,
+    ): { name: string; value: number } | null => {
+      let best: CommitteePerformanceEntry | null = null;
+      for (const e of filtered) {
+        if (best === null || selector(e) > selector(best)) best = e;
+      }
+      if (!best) return null;
+      const value = selector(best);
+      return { name: best.name, value };
+    };
+
+    return {
+      activeMembers,
+      topPerformer: pickMax((e) => e.totalContributionScore),
+      topFees: pickMax((e) => e.feesCollected),
+      topFrf: pickMax((e) => e.frfReferred),
+      topLoans: pickMax((e) => e.loansProcessed),
+    };
+  }, [filtered]);
 
   const rangeLabel =
     fromDate || toDate
@@ -152,7 +167,7 @@ export default function CommitteeActivityReport() {
     const doc = new JsPDF({ orientation: "landscape" });
     doc.setFontSize(16);
     doc.setTextColor(6, 78, 59);
-    doc.text("DKMO — Committee Activity Report", 14, 16);
+    doc.text("DKMO — Committee Performance Report", 14, 16);
     doc.setFontSize(10);
     doc.setTextColor(70);
     doc.text(`Period: ${rangeLabel}   •   Generated: ${new Date().toLocaleDateString()}   •   ${filtered.length} member(s)`, 14, 23);
@@ -164,13 +179,13 @@ export default function CommitteeActivityReport() {
       headStyles: { fillColor: [21, 128, 61] },
       alternateRowStyles: { fillColor: [240, 253, 244] },
     });
-    doc.save(`committee-activity-report-${new Date().toISOString().slice(0, 10)}.pdf`);
+    doc.save(`committee-performance-report-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
 
   const exportExcel = async () => {
     const ExcelJS = (await import("exceljs")).default;
     const wb = new ExcelJS.Workbook();
-    const ws = wb.addWorksheet("Committee Activity");
+    const ws = wb.addWorksheet("Committee Performance");
     ws.columns = [
       { header: "Committee Member", key: "name", width: 30 },
       { header: "Designation", key: "designation", width: 24 },
@@ -189,7 +204,7 @@ export default function CommitteeActivityReport() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `committee-activity-report-${new Date().toISOString().slice(0, 10)}.xlsx`;
+    a.download = `committee-performance-report-${new Date().toISOString().slice(0, 10)}.xlsx`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -198,7 +213,14 @@ export default function CommitteeActivityReport() {
     <div className="space-y-6 print:space-y-3">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-green-950 dark:text-green-100 print:text-xl">Committee Activity Report</h1>
+          <Link
+            href="/reports"
+            className="inline-flex items-center gap-1 text-sm font-medium text-emerald-700 dark:text-emerald-400 hover:underline print:hidden"
+            data-testid="link-all-reports"
+          >
+            ← All Reports
+          </Link>
+          <h1 className="text-3xl font-bold tracking-tight text-green-950 dark:text-green-100 print:text-xl mt-1">Committee Performance Report</h1>
           <p className="text-sm text-green-800/70 dark:text-slate-400 mt-1">
             Full per-member activity across all programs — {rangeLabel}
           </p>
@@ -279,12 +301,47 @@ export default function CommitteeActivityReport() {
         </CardContent>
       </Card>
 
-      {/* Totals row (reflects current filters) */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 print:grid-cols-4">
-        <TotalCard icon={UserPlus} label="Members Recruited" value={totals.recruited} accent="text-green-700 dark:text-green-400" loading={isLoading} />
-        <TotalCard icon={Coins} label="Membership Fees Collected" value={formatSAR(totals.fees)} accent="text-emerald-700 dark:text-emerald-400" loading={isLoading} />
-        <TotalCard icon={HeartHandshake} label="FRF Members Referred" value={totals.frfReferred} accent="text-rose-600 dark:text-rose-400" loading={isLoading} />
-        <TotalCard icon={Landmark} label="Loans Processed" value={totals.loans} accent="text-purple-600 dark:text-purple-400" loading={isLoading} />
+      {/* Highlights strip (reflects current filters) */}
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 print:grid-cols-5">
+        <HighlightCard
+          icon={Users}
+          label="Active Committee Members"
+          accent="text-green-700 dark:text-green-400"
+          loading={isLoading}
+          value={highlights.activeMembers}
+        />
+        <HighlightCard
+          icon={Trophy}
+          label="Top Performer"
+          accent="text-amber-600 dark:text-amber-400"
+          loading={isLoading}
+          value={highlights.topPerformer && highlights.topPerformer.value > 0 ? highlights.topPerformer.value : "—"}
+          name={highlights.topPerformer && highlights.topPerformer.value > 0 ? highlights.topPerformer.name : undefined}
+        />
+        <HighlightCard
+          icon={Coins}
+          label="Top Membership Collector"
+          accent="text-emerald-700 dark:text-emerald-400"
+          loading={isLoading}
+          value={highlights.topFees && highlights.topFees.value > 0 ? formatSAR(highlights.topFees.value) : "—"}
+          name={highlights.topFees && highlights.topFees.value > 0 ? highlights.topFees.name : undefined}
+        />
+        <HighlightCard
+          icon={HeartHandshake}
+          label="Top FRF Referrer"
+          accent="text-rose-600 dark:text-rose-400"
+          loading={isLoading}
+          value={highlights.topFrf && highlights.topFrf.value > 0 ? highlights.topFrf.value : "—"}
+          name={highlights.topFrf && highlights.topFrf.value > 0 ? highlights.topFrf.name : undefined}
+        />
+        <HighlightCard
+          icon={Landmark}
+          label="Top Loan Processor"
+          accent="text-purple-600 dark:text-purple-400"
+          loading={isLoading}
+          value={highlights.topLoans && highlights.topLoans.value > 0 ? highlights.topLoans.value : "—"}
+          name={highlights.topLoans && highlights.topLoans.value > 0 ? highlights.topLoans.name : undefined}
+        />
       </div>
 
       <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
@@ -385,27 +442,40 @@ function NumCell({ value }: { value: number }) {
   );
 }
 
-function TotalCard({
+function HighlightCard({
   icon: Icon,
   label,
   value,
+  name,
   accent,
   loading,
 }: {
   icon: typeof Trophy;
   label: string;
   value: number | string;
+  name?: string;
   accent: string;
   loading: boolean;
 }) {
   return (
     <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-xs font-medium text-green-900 dark:text-slate-300">{label}</CardTitle>
-        <Icon className={`h-4 w-4 ${accent}`} />
-      </CardHeader>
-      <CardContent>
-        {loading ? <Skeleton className="h-7 w-14" /> : <div className="text-xl font-bold text-green-950 dark:text-white">{value}</div>}
+      <CardContent className="pt-4 pb-4">
+        <div className="flex items-center gap-2">
+          <Icon className={`h-4 w-4 shrink-0 ${accent}`} />
+          <span className="text-[11px] font-medium text-green-900 dark:text-slate-300 leading-tight">{label}</span>
+        </div>
+        {loading ? (
+          <Skeleton className="h-6 w-16 mt-2" />
+        ) : (
+          <>
+            <div className="text-lg font-bold text-green-950 dark:text-white mt-2 tabular-nums truncate">{value}</div>
+            {name ? (
+              <p className="text-[11px] text-green-700/70 dark:text-slate-400 mt-0.5 truncate">{name}</p>
+            ) : (
+              <p className="text-[11px] text-transparent mt-0.5 select-none" aria-hidden>—</p>
+            )}
+          </>
+        )}
       </CardContent>
     </Card>
   );

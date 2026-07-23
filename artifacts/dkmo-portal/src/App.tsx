@@ -13,7 +13,12 @@ import Members from "@/pages/members";
 import MemberDetail from "@/pages/member-detail";
 import Payments from "@/pages/payments";
 import Pending from "@/pages/pending";
-import Reports from "@/pages/reports";
+import Reports from "@/pages/reports/index";
+import ReportMembership from "@/pages/reports/membership";
+import ReportFees from "@/pages/reports/fees";
+import ReportFrf from "@/pages/reports/frf";
+import ReportLoans from "@/pages/reports/loans";
+import ReportFinancial from "@/pages/reports/financial-summary";
 import Sponsors from "@/pages/sponsors";
 import SponsorDetail from "@/pages/sponsor-detail";
 import Events from "@/pages/events";
@@ -135,6 +140,12 @@ function AppRoutes() {
       <Route path="/payments" component={() => <AuthenticatedRoute component={Payments} />} />
       <Route path="/pending" component={() => <AuthenticatedRoute component={Pending} />} />
       <Route path="/reports" component={() => <AuthenticatedRoute component={Reports} />} />
+      <Route path="/reports/membership" component={() => <AuthenticatedRoute component={ReportMembership} />} />
+      <Route path="/reports/fees" component={() => <AuthenticatedRoute component={ReportFees} />} />
+      <Route path="/reports/frf" component={() => <AuthenticatedRoute component={ReportFrf} />} />
+      <Route path="/reports/loans" component={() => <AuthenticatedRoute component={ReportLoans} />} />
+      <Route path="/reports/committee-performance" component={() => <AuthenticatedRoute component={CommitteePerformance} />} />
+      <Route path="/reports/financial-summary" component={() => <AuthenticatedRoute component={ReportFinancial} />} />
       <Route path="/recruitment-leaderboard" component={() => <LegacyRedirect to="/members?referrals=1" />} />
       <Route path="/top-contributors" component={() => <LegacyRedirect to="/members?referrals=1" />} />
 
@@ -146,7 +157,7 @@ function AppRoutes() {
       <Route path="/tasks/:id" component={() => <AuthenticatedRoute component={TaskDetail} />} />
       <Route path="/impact" component={() => <LegacyRedirect to="/dashboard" />} />
       <Route path="/committee" component={() => <AuthenticatedRoute component={Committee} />} />
-      <Route path="/committee-performance" component={() => <AuthenticatedRoute component={CommitteePerformance} />} />
+      <Route path="/committee-performance" component={() => <LegacyRedirect to="/reports/committee-performance" keepQuery />} />
       <Route path="/meetings" component={() => <AuthenticatedRoute component={Meetings} />} />
       <Route path="/services" component={() => <AuthenticatedRoute component={CommunityServices} />} />
       <Route path="/services/:type" component={() => <AuthenticatedRoute component={WelfareService} />} />

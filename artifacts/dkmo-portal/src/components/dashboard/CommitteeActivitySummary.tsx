@@ -59,7 +59,7 @@ export function CommitteeActivitySummary() {
           </CardDescription>
         </div>
         <Button asChild variant="outline" size="sm" className="border-green-300 text-green-800 dark:border-slate-700 dark:text-green-300 shrink-0" data-testid="button-full-activity-report">
-          <Link href="/committee-performance">
+          <Link href="/reports/committee-performance">
             View Full Activity Report <ArrowRight className="h-3.5 w-3.5 ml-1" />
           </Link>
         </Button>

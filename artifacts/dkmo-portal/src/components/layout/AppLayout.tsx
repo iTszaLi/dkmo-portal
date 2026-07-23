@@ -74,7 +74,6 @@ const navigation: NavSection[] = [
     items: [
       { name: "Members",           href: "/members",   icon: Users },
       { name: "Committee",         href: "/committee", icon: Crown },
-      { name: "Committee Activity", href: "/committee-performance", icon: Activity },
       { name: "Meeting Attendance", href: "/meetings", icon: ClipboardCheck },
       { name: "DKMO Membership",   href: "/dkmo-memberships", icon: BookUser },
     ],

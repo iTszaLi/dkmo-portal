@@ -928,7 +928,7 @@ export default function MemberDetail() {
                         <p className="mt-1 text-2xl font-bold text-emerald-900 dark:text-slate-100">{committeeEntry?.frfReferred ?? 0}</p>
                       </div>
                     </div>
-                    <Link href="/committee-performance" className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-emerald-700 dark:text-emerald-400 hover:underline">
+                    <Link href="/reports/committee-performance" className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-emerald-700 dark:text-emerald-400 hover:underline">
                       View full committee performance <ArrowRight className="h-4 w-4" />
                     </Link>
                   </CardContent>
