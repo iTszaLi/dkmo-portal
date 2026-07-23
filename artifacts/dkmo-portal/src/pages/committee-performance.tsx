@@ -24,6 +24,41 @@ const SORT_LABEL: Record<SortKey, string> = {
   loans: "Loans processed",
 };
 
+// Podium + row accents for the automatic Top-3 ranking. Subtle DKMO-style
+// tints, not flashy colors.
+const PODIUM = [
+  {
+    title: "Rank 1 — Top Contributor",
+    icon: "🏆",
+    card: "border-amber-300 bg-gradient-to-br from-amber-50 to-yellow-50 dark:border-amber-700 dark:from-amber-950/40 dark:to-slate-900",
+    iconBg: "bg-amber-100 dark:bg-amber-900/50",
+    label: "text-amber-700 dark:text-amber-400",
+    score: "bg-amber-100 text-amber-900 dark:bg-amber-900/50 dark:text-amber-300",
+  },
+  {
+    title: "Rank 2 — Silver",
+    icon: "🥈",
+    card: "border-slate-300 bg-gradient-to-br from-slate-50 to-gray-100 dark:border-slate-600 dark:from-slate-800/60 dark:to-slate-900",
+    iconBg: "bg-slate-200 dark:bg-slate-700/60",
+    label: "text-slate-600 dark:text-slate-300",
+    score: "bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-200",
+  },
+  {
+    title: "Rank 3 — Bronze",
+    icon: "🥉",
+    card: "border-orange-300 bg-gradient-to-br from-orange-50 to-amber-50 dark:border-orange-800 dark:from-orange-950/40 dark:to-slate-900",
+    iconBg: "bg-orange-100 dark:bg-orange-900/50",
+    label: "text-orange-700 dark:text-orange-400",
+    score: "bg-orange-100 text-orange-900 dark:bg-orange-900/50 dark:text-orange-300",
+  },
+] as const;
+
+const ROW_RANK = {
+  1: { icon: "🏆", row: "bg-amber-50/60 hover:bg-amber-50 dark:bg-amber-950/20 dark:hover:bg-amber-950/30" },
+  2: { icon: "🥈", row: "bg-slate-50/70 hover:bg-slate-100/70 dark:bg-slate-800/30 dark:hover:bg-slate-800/40" },
+  3: { icon: "🥉", row: "bg-orange-50/60 hover:bg-orange-50 dark:bg-orange-950/20 dark:hover:bg-orange-950/30" },
+} as const;
+
 export default function CommitteeActivityReport() {
   const [search, setSearch] = useState("");
   const [designation, setDesignation] = useState("all");
@@ -146,6 +181,37 @@ export default function CommitteeActivityReport() {
       topLoans: pickMax((e) => e.loansProcessed),
     };
   }, [filtered]);
+
+  // Automatic ranking — top 3 by activity score within the current filtered
+  // view. Recomputed whenever data or filters change; never manually assigned.
+  const ranks = useMemo(() => {
+    // Tie-aware (competition) ranking: equal scores share the same rank and
+    // the next rank is skipped (e.g. 1, 1, 3). All members holding a rank of
+    // 3 or better are highlighted, even past the third row.
+    const sorted = [...filtered]
+      .filter((e) => e.totalContributionScore > 0)
+      .sort((a, b) => b.totalContributionScore - a.totalContributionScore || a.name.localeCompare(b.name));
+    const byName = new Map<string, number>();
+    const top3: { entry: CommitteePerformanceEntry; rank: number }[] = [];
+    let rank = 0;
+    let prevScore: number | null = null;
+    sorted.forEach((e, i) => {
+      if (e.totalContributionScore !== prevScore) {
+        rank = i + 1;
+        prevScore = e.totalContributionScore;
+      }
+      if (rank <= 3) {
+        byName.set(e.name.trim().toLowerCase(), rank);
+        if (top3.length < 3) top3.push({ entry: e, rank });
+      }
+    });
+    return { top3, byName };
+  }, [filtered]);
+
+  const maxFees = useMemo(
+    () => Math.max(0, ...filtered.map((e) => e.feesCollected)),
+    [filtered],
+  );
 
   const rangeLabel =
     fromDate || toDate
@@ -321,6 +387,39 @@ export default function CommitteeActivityReport() {
         </CardContent>
       </Card>
 
+      {/* Top 3 achievement podium (auto-ranked by activity score) */}
+      {!isLoading && ranks.top3.length > 0 && (
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-3 print:grid-cols-3">
+          {ranks.top3.map(({ entry: e, rank }) => {
+            const meta = PODIUM[rank - 1]!;
+            const role = roleByName.get(e.name.trim().toLowerCase()) ?? "Staff / non-committee";
+            return (
+              <Card
+                key={e.name}
+                className={cn("rounded-2xl shadow-sm", meta.card)}
+                data-testid={`card-rank-${rank}`}
+              >
+                <CardContent className="pt-4 pb-4 flex items-center gap-3">
+                  <div className={cn("h-12 w-12 rounded-full flex items-center justify-center text-2xl shrink-0", meta.iconBg)} aria-hidden>
+                    {meta.icon}
+                  </div>
+                  <div className="min-w-0">
+                    <p className={cn("text-[11px] font-semibold uppercase tracking-wider", meta.label)}>
+                      {meta.title}
+                    </p>
+                    <p className="font-bold text-green-950 dark:text-slate-100 truncate">{e.name}</p>
+                    <p className="text-[11px] text-green-700/70 dark:text-slate-400 truncate">{role}</p>
+                  </div>
+                  <span className={cn("ml-auto inline-flex items-center px-2.5 py-1 rounded-full text-sm font-bold tabular-nums shrink-0", meta.score)}>
+                    {e.totalContributionScore}
+                  </span>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
       {/* Highlights strip (reflects current filters) */}
       <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 print:grid-cols-5">
         <HighlightCard
@@ -402,11 +501,16 @@ export default function CommitteeActivityReport() {
                 <tbody>
                   {filtered.map((e, i) => {
                     const role = roleByName.get(e.name.trim().toLowerCase());
+                    const rank = ranks.byName.get(e.name.trim().toLowerCase());
+                    const rankMeta = rank ? ROW_RANK[rank as 1 | 2 | 3] : undefined;
                     return (
                       <tr
                         key={e.name}
                         data-testid={`row-perf-${i}`}
-                        className="border-b border-green-50 dark:border-slate-800/60 hover:bg-green-50/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+                        className={cn(
+                          "border-b border-green-50 dark:border-slate-800/60 transition-colors cursor-pointer",
+                          rankMeta ? rankMeta.row : "hover:bg-green-50/40 dark:hover:bg-slate-800/40",
+                        )}
                         onClick={() => setSelected(e)}
                         tabIndex={0}
                         role="button"
@@ -424,7 +528,10 @@ export default function CommitteeActivityReport() {
                               {initialsOf(e.name)}
                             </div>
                             <div className="min-w-0">
-                              <p className="font-semibold text-green-950 dark:text-slate-100 truncate">{e.name}</p>
+                              <p className="font-semibold text-green-950 dark:text-slate-100 truncate">
+                                {rankMeta && <span className="mr-1" aria-label={`Rank ${rank}`}>{rankMeta.icon}</span>}
+                                {e.name}
+                              </p>
                               {role ? (
                                 <Badge className="mt-0.5 bg-green-100 dark:bg-green-900/40 text-green-900 dark:text-green-300 text-[10px] px-1.5 py-0">
                                   {role}
@@ -435,18 +542,39 @@ export default function CommitteeActivityReport() {
                             </div>
                           </div>
                         </td>
-                        <NumCell value={e.membersRecruited} />
-                        <td className="py-3 px-2 text-right tabular-nums text-emerald-700 dark:text-emerald-400 font-medium">
-                          {e.feesCollected > 0 ? formatSAR(e.feesCollected) : "—"}
+                        <BadgeCell
+                          value={e.membersRecruited}
+                          label={(v) => `+${v} Member${v === 1 ? "" : "s"}`}
+                          tone="bg-green-100 text-green-900 dark:bg-green-900/40 dark:text-green-300"
+                        />
+                        <td className={cn(
+                          "py-3 px-2 text-right tabular-nums",
+                          e.feesCollected > 0
+                            ? cn("text-emerald-700 dark:text-emerald-400 font-medium", maxFees > 0 && e.feesCollected === maxFees && "font-bold")
+                            : "text-green-400/50 dark:text-slate-600",
+                        )}>
+                          {e.feesCollected > 0 ? (
+                            <span className={cn(maxFees > 0 && e.feesCollected === maxFees && "inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40")}>
+                              {formatSAR(e.feesCollected)}
+                            </span>
+                          ) : "—"}
                         </td>
-                        <NumCell value={e.frfReferred} />
-                        <NumCell value={e.loansProcessed} />
+                        <BadgeCell
+                          value={e.frfReferred}
+                          label={(v) => `${v} referral${v === 1 ? "" : "s"}`}
+                          tone="bg-rose-100 text-rose-900 dark:bg-rose-900/40 dark:text-rose-300"
+                        />
+                        <BadgeCell
+                          value={e.loansProcessed}
+                          label={(v) => `${v} loan${v === 1 ? "" : "s"}`}
+                          tone="bg-purple-100 text-purple-900 dark:bg-purple-900/40 dark:text-purple-300"
+                        />
                         <td className="py-3 pl-2 text-right">
                           <span className={cn(
-                            "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold tabular-nums",
+                            "inline-flex items-center px-2.5 py-1 rounded-full text-sm font-bold tabular-nums ring-1",
                             e.totalContributionScore > 0
-                              ? "bg-green-100 text-green-900 dark:bg-green-900/40 dark:text-green-300"
-                              : "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-600",
+                              ? "bg-green-100 text-green-900 ring-green-300 dark:bg-green-900/40 dark:text-green-300 dark:ring-green-800"
+                              : "bg-slate-100 text-slate-400 ring-slate-200 dark:bg-slate-800 dark:text-slate-600 dark:ring-slate-700",
                           )}>
                             {e.totalContributionScore}
                           </span>
@@ -547,10 +675,16 @@ function StatBox({ label, value, highlight }: { label: string; value: string; hi
   );
 }
 
-function NumCell({ value }: { value: number }) {
+function BadgeCell({ value, label, tone }: { value: number; label: (v: number) => string; tone: string }) {
   return (
-    <td className={cn("py-3 px-2 text-right tabular-nums", value > 0 ? "text-green-900 dark:text-slate-200 font-medium" : "text-green-400/50 dark:text-slate-600")}>
-      {value > 0 ? value : "—"}
+    <td className="py-3 px-2 text-right tabular-nums">
+      {value > 0 ? (
+        <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap", tone)}>
+          {label(value)}
+        </span>
+      ) : (
+        <span className="text-green-400/50 dark:text-slate-600">—</span>
+      )}
     </td>
   );
 }
