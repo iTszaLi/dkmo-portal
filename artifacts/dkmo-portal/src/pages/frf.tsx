@@ -35,7 +35,7 @@ import { cn, formatSAR, formatDate } from "@/lib/utils";
 import { fileToCompressedDataUrl } from "@/lib/image-utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRef } from "react";
-import { Camera, ImagePlus, X } from "lucide-react";
+import { Camera, ImagePlus, X, Send } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { generateClaimPdf } from "@/lib/frf-claim-pdf";
@@ -425,12 +425,19 @@ export default function Frf() {
             FRF has been running for 18 years · Rs 3 lakh provided to families of deceased members
           </p>
         </div>
-        {canEdit && (
-          <Button onClick={() => { setForm(EMPTY_FORM); setEditingClaim(null); setIsFormOpen(true); }}
-            className="bg-green-700 hover:bg-green-800 dark:bg-green-600 dark:hover:bg-green-700 text-white">
-            <Plus className="h-4 w-4 mr-1" /> New Claim
-          </Button>
-        )}
+        <div className="flex flex-wrap gap-2">
+          <Link href="/frf/reminders">
+            <Button variant="outline" className="border-green-300 text-green-800 dark:border-slate-700 dark:text-green-300" data-testid="button-frf-reminders">
+              <Send className="h-4 w-4 mr-1" /> Send FRF Reminder
+            </Button>
+          </Link>
+          {canEdit && (
+            <Button onClick={() => { setForm(EMPTY_FORM); setEditingClaim(null); setIsFormOpen(true); }}
+              className="bg-green-700 hover:bg-green-800 dark:bg-green-600 dark:hover:bg-green-700 text-white">
+              <Plus className="h-4 w-4 mr-1" /> New Claim
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Stats */}

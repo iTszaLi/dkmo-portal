@@ -1922,6 +1922,8 @@ components:
         frfDue: { type: number }
         frfPaid: { type: number }
         frfOutstanding: { type: number }
+        frfOverdueCount: { type: integer }
+        frfPendingCount: { type: integer }
         refMemberName:
           type: string
         refMemberId:

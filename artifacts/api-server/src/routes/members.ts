@@ -84,6 +84,8 @@ router.get("/members", async (req, res): Promise<void> => {
         frfDue: agg?.totalDue ?? 0,
         frfPaid: agg?.totalPaid ?? 0,
         frfOutstanding: agg?.totalOutstanding ?? 0,
+        frfOverdueCount: agg?.overdueCount ?? 0,
+        frfPendingCount: agg?.pendingCount ?? 0,
       };
     }),
   );

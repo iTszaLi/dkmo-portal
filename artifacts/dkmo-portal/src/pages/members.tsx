@@ -35,6 +35,7 @@ export default function Members() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [feeFilter, setFeeFilter] = useState<string>("all");
+  const [frfDueFilter, setFrfDueFilter] = useState<string>("all");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<any>(null);
   const [deletingMember, setDeletingMember] = useState<any>(null);
@@ -178,6 +179,13 @@ export default function Members() {
   const filteredMembers = members?.filter((m) => {
     if (statusFilter !== "all" && ((m as any).frfStatus ?? "active") !== statusFilter) return false;
     if (feeFilter !== "all" && m.feeStatus !== feeFilter) return false;
+    if (frfDueFilter !== "all") {
+      const outstanding = (m as any).frfOutstanding ?? 0;
+      const overdueCount = (m as any).frfOverdueCount ?? 0;
+      if (frfDueFilter === "none" && outstanding > 0) return false;
+      if (frfDueFilter === "due" && outstanding <= 0) return false;
+      if (frfDueFilter === "overdue" && overdueCount <= 0) return false;
+    }
     return true;
   });
 
@@ -240,9 +248,20 @@ export default function Members() {
             <SelectItem value="exempt">Fee exempt</SelectItem>
           </SelectContent>
         </Select>
-        {(statusFilter !== "all" || feeFilter !== "all") && (
+        <Select value={frfDueFilter} onValueChange={setFrfDueFilter}>
+          <SelectTrigger className="w-full sm:w-[170px] bg-white dark:bg-slate-900 border-emerald-100 dark:border-slate-800" data-testid="select-frf-due-filter">
+            <SelectValue placeholder="FRF dues" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All FRF dues</SelectItem>
+            <SelectItem value="none">No FRF Due</SelectItem>
+            <SelectItem value="due">FRF Due</SelectItem>
+            <SelectItem value="overdue">Overdue FRF</SelectItem>
+          </SelectContent>
+        </Select>
+        {(statusFilter !== "all" || feeFilter !== "all" || frfDueFilter !== "all") && (
           <button
-            onClick={() => { setStatusFilter("all"); setFeeFilter("all"); }}
+            onClick={() => { setStatusFilter("all"); setFeeFilter("all"); setFrfDueFilter("all"); }}
             className="text-sm text-emerald-700 dark:text-emerald-400 hover:underline whitespace-nowrap"
             data-testid="button-clear-filters"
           >
@@ -359,7 +378,9 @@ export default function Members() {
                         <div className="text-xs leading-5">
                           <div className="text-emerald-800 dark:text-emerald-300 font-medium">{formatSAR(paid)} / {formatSAR(due)}</div>
                           {outstanding > 0 ? (
-                            <div className="text-red-600 dark:text-red-400 font-semibold">{formatSAR(outstanding)} due</div>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${((member as any).frfOverdueCount ?? 0) > 0 ? "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300" : "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"}`}>
+                              Outstanding: {formatSAR(outstanding)}
+                            </span>
                           ) : (
                             <div className="text-emerald-600 dark:text-emerald-400">Fully paid</div>
                           )}

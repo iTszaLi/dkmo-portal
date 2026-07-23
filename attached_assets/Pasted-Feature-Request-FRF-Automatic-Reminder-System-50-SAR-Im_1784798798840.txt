@@ -1,0 +1,74 @@
+Feature Request: FRF Automatic Reminder System (50 SAR)
+
+Implement an FRF Reminder System similar to the existing Membership Fee Reminder (100 SAR) feature.
+
+Requirements
+
+1. One-Click WhatsApp Reminder
+
+* Add a “Send FRF Reminder” button.
+* On one click, automatically generate and send WhatsApp reminder messages to all members with pending FRF dues.
+* Use the same workflow and UI as the existing Membership Reminder feature for consistency.
+
+2. Automatic Outstanding Calculation
+
+The system must automatically calculate the member’s total pending FRF amount.
+
+Example:
+
+* Previous FRF case unpaid: 50 SAR
+* New FRF case: 50 SAR
+* Total FRF Due: 100 SAR
+
+If a member has:
+
+* 3 unpaid FRF cases → 150 SAR Due
+* 4 unpaid FRF cases → 200 SAR Due
+
+The reminder must always show the total outstanding FRF amount, not just the latest case.
+
+3. Database Logic
+
+* Track every FRF case individually.
+* Maintain payment status for each FRF case (Paid / Unpaid).
+* When generating reminders, sum all unpaid FRF cases for that member.
+* Once payment is recorded, mark the corresponding FRF entries as Paid and automatically reduce the outstanding balance.
+
+4. WhatsApp Message Template
+
+English
+
+Dear {{MemberName}},
+
+This is a reminder that your Family Relief Fund (FRF) contribution is pending.
+
+Outstanding FRF Amount: SAR {{TotalFRFDue}}
+
+This amount includes any previous unpaid FRF contributions.
+
+Kindly make the payment at your earliest convenience.
+
+Thank you.
+
+5. UI Improvements
+
+* Display Total Outstanding FRF beside each member in the Members table.
+* Add filters:
+    * No FRF Due
+    * FRF Due
+    * Overdue FRF
+* Add a badge showing:
+    * Outstanding: SAR {{TotalFRFDue}}
+* In the member profile, show complete FRF payment history with:
+    * Case Number
+    * Case Date
+    * Amount
+    * Status (Paid/Unpaid)
+    * Running Outstanding Total
+
+6. Important
+
+* Do not change or break the existing Membership Reminder functionality.
+* Reuse the existing WhatsApp reminder architecture and UI.
+* Keep the design consistent with the DKMO Portal.
+* Ensure calculations are accurate and update instantly whenever FRF payments are recorded.

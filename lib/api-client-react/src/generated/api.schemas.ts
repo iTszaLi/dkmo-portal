@@ -211,6 +211,8 @@ export interface Member {
   frfDue?: number;
   frfPaid?: number;
   frfOutstanding?: number;
+  frfOverdueCount?: number;
+  frfPendingCount?: number;
   refMemberName: string;
   refMemberId: string;
   createdAt: string;

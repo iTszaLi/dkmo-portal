@@ -179,6 +179,7 @@ export function MemberFrfSection({ memberId }: { memberId: string }) {
                 <TableHead className="text-right">Due</TableHead>
                 <TableHead className="text-right">Paid</TableHead>
                 <TableHead className="text-right">Balance</TableHead>
+                <TableHead className="text-right">Running Outstanding</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Approved</TableHead>
                 <TableHead>Paid</TableHead>
@@ -190,10 +191,16 @@ export function MemberFrfSection({ memberId }: { memberId: string }) {
             <TableBody>
               {data.history.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={11} className="h-20 text-center text-slate-500">No FRF contributions recorded yet.</TableCell>
+                  <TableCell colSpan={12} className="h-20 text-center text-slate-500">No FRF contributions recorded yet.</TableCell>
                 </TableRow>
               ) : (
-                data.history.map((h) => (
+                (() => {
+                  let running = 0;
+                  return data.history.map((h) => {
+                    if (h.status !== "exempt" && h.status !== "cancelled") running += Math.max(h.balance, 0);
+                    return { h, running };
+                  });
+                })().map(({ h, running }) => (
                   <TableRow key={h.contributionId} className="dark:border-slate-800">
                     <TableCell>
                       <Link href={`/frf/${h.claimId}`} className="font-medium text-emerald-800 dark:text-emerald-300 hover:underline">
@@ -206,6 +213,9 @@ export function MemberFrfSection({ memberId }: { memberId: string }) {
                     <TableCell className="text-right font-medium text-green-700 dark:text-green-300">{h.status === "exempt" ? "—" : formatSAR(h.amountPaid)}</TableCell>
                     <TableCell className={cn("text-right font-medium", h.status === "exempt" ? "text-slate-400" : h.balance > 0 ? "text-red-600 dark:text-red-400" : "text-green-700 dark:text-green-300")}>
                       {h.status === "exempt" ? "—" : formatSAR(h.balance)}
+                    </TableCell>
+                    <TableCell className={cn("text-right font-semibold", running > 0 ? "text-red-600 dark:text-red-400" : "text-green-700 dark:text-green-300")}>
+                      {formatSAR(running)}
                     </TableCell>
                     <TableCell><Badge className={cn("text-[11px] capitalize", STATUS_STYLE[h.status] ?? "")}>{h.status}</Badge></TableCell>
                     <TableCell className="text-sm text-slate-500">{h.approvedDate ? formatDate(h.approvedDate) : "—"}</TableCell>
