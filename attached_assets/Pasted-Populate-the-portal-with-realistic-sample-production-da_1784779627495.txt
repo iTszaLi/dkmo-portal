@@ -1,0 +1,65 @@
+Populate the portal with realistic **sample production data** so I can properly evaluate the workflows, UI, reports, and overall user experience.
+
+### Requirements
+
+* Add **at least 5 realistic sample records** to **every module that is currently empty or has little/no data**, including (where applicable):
+
+  * FRF Claims
+  * Sponsors
+  * Events
+  * Tasks / Follow-ups
+  * Loans
+  * Documents
+  * Audit Trail
+  * Receipts
+  * Print Receipts
+  * Community Services requests (Medical Aid, General Relief Fund, Emergency Response, Air Ticket Assistance, India Representative Support)
+  * DKMO Membership Applications
+  * Any other empty tables or modules
+
+### Important
+
+**DO NOT MODIFY THE MEMBERS TABLE.**
+
+* Do **not** add, remove, edit, reorder, or delete any member records.
+* Do **not** change member IDs, committee assignments, payment status, FRF status, or any existing member information.
+* Leave the Members module exactly as it is.
+
+### Sample Data Guidelines
+
+Create realistic, interconnected data.
+
+For example:
+
+* Sponsors should have assigned committee members.
+* Events should have budgets, statuses, venues, and linked sponsors where applicable.
+* Tasks should be assigned to existing committee members.
+* Loans should belong to existing members and include repayment schedules and statuses.
+* FRF Claims should reference existing members and beneficiaries.
+* Receipts should correspond to actual payments.
+* Documents should have categories, upload dates, expiry dates (where applicable), and tags.
+* Audit Trail should contain realistic login activities, edits, approvals, deletions, exports, and payment actions from different users and roles.
+* Membership Applications should contain realistic pending, approved, and rejected applications.
+
+### Keep Everything Consistent
+
+* Use existing members wherever relationships are required.
+* Ensure totals, dashboard cards, reports, and statistics update correctly.
+* Dates should be realistic and spread across recent months.
+* Amounts should be believable.
+* Statuses should be mixed (Pending, Approved, Rejected, Active, Completed, Overdue, etc.).
+
+### Purpose
+
+The objective is **not** to test random dummy data.
+
+The goal is to make the portal look and behave like a real production system with meaningful interconnected records so the complete workflow, reports, dashboards, filters, analytics, and navigation can be properly reviewed.
+
+### Final Requirement
+
+After generating the sample data:
+
+* Verify there are no broken relationships.
+* Verify all counts, summaries, dashboard cards, charts, reports, and filters reflect the new sample data correctly.
+* Ensure there are no console errors, database errors, or foreign key issues.
+* Do **not** change the portal's design, layout, navigation, or existing functionality—only populate the system with realistic sample data.
