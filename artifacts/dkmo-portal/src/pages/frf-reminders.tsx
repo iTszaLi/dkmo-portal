@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { cn, formatSAR } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, HandCoins, MessageSquareWarning, Phone, Send, UserCircle } from "lucide-react";
+import { normalizeWhatsAppNumber, buildWhatsAppLink, type WhatsAppTarget } from "@/lib/whatsapp";
+import { WhatsAppBulkDialog } from "@/components/WhatsAppBulkDialog";
 
 type FrfMember = Member & {
   frfOutstanding?: number;
@@ -18,44 +20,23 @@ type FrfMember = Member & {
   frfPendingCount?: number;
 };
 
-function formatMobileForWa(mobileNumber: string): string {
-  return mobileNumber.replace(/\D/g, "");
-}
-
 function buildFrfReminderMessage(member: FrfMember): string {
   const total = member.frfOutstanding ?? 0;
   return `Dear ${member.fullName},\n\nThis is a reminder that your Family Relief Fund (FRF) contribution is pending.\n\nOutstanding FRF Amount: SAR ${total.toFixed(2)}\n\nThis amount includes any previous unpaid FRF contributions.\n\nKindly make the payment at your earliest convenience.\n\nThank you.\nDKMO (Dakshina Karnataka Muslim Ookota)`;
 }
 
-function sendFrfReminders(
-  members: FrfMember[],
-  onDone: (opened: number) => void,
-  setBulkSending: (v: boolean) => void,
-) {
-  const valid = members.filter((m) => formatMobileForWa(m.mobileNumber));
-  if (valid.length === 0) {
-    onDone(0);
-    return;
-  }
-  setBulkSending(true);
-  let opened = 0;
-  valid.forEach((member, idx) => {
-    setTimeout(() => {
-      const message = encodeURIComponent(buildFrfReminderMessage(member));
-      window.open(`https://wa.me/${formatMobileForWa(member.mobileNumber)}?text=${message}`, "_blank");
-      opened += 1;
-      if (idx === valid.length - 1) {
-        setBulkSending(false);
-        onDone(opened);
-      }
-    }, idx * 350);
+function toWhatsAppTargets(members: FrfMember[]): WhatsAppTarget[] {
+  return members.flatMap((m) => {
+    const number = normalizeWhatsAppNumber(m.mobileNumber);
+    return number ? [{ id: m.id, name: m.fullName, number, message: buildFrfReminderMessage(m) }] : [];
   });
 }
 
 export default function FrfReminders() {
   const { toast } = useToast();
-  const [bulkSending, setBulkSending] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkTargets, setBulkTargets] = useState<WhatsAppTarget[]>([]);
 
   const { data: members, isLoading } = useListMembers({});
 
@@ -78,35 +59,33 @@ export default function FrfReminders() {
 
   const allSelected = dueMembers.length > 0 && dueMembers.every((m) => selectedIds.has(m.id));
 
-  const startBulkSend = (targets: FrfMember[], label: string) => {
-    const sendable = targets.filter((m) => formatMobileForWa(m.mobileNumber));
-    if (sendable.length === 0) {
+  const startBulkSend = (members: FrfMember[]) => {
+    const targets = toWhatsAppTargets(members);
+    if (targets.length === 0) {
       toast({ title: "No valid mobile numbers", description: "None of the selected members have a WhatsApp-capable number.", variant: "destructive" });
       return;
     }
-    const ok = window.confirm(
-      `This will open ${sendable.length} WhatsApp tab${sendable.length === 1 ? "" : "s"} (${label}). Your browser may ask to allow pop-ups. Continue?`,
-    );
-    if (!ok) return;
-    sendFrfReminders(targets, (opened) => {
-      toast({
-        title: "FRF reminders prepared",
-        description: `Opened WhatsApp for ${opened} member${opened === 1 ? "" : "s"}.`,
-      });
-    }, setBulkSending);
+    setBulkTargets(targets);
+    setBulkOpen(true);
   };
 
   const sendSingle = (member: FrfMember) => {
-    const wa = formatMobileForWa(member.mobileNumber);
-    if (!wa) {
+    const number = normalizeWhatsAppNumber(member.mobileNumber);
+    if (!number) {
       toast({ title: "No mobile number", description: `${member.fullName} has no valid WhatsApp number.`, variant: "destructive" });
       return;
     }
-    window.open(`https://wa.me/${wa}?text=${encodeURIComponent(buildFrfReminderMessage(member))}`, "_blank");
+    window.open(buildWhatsAppLink(number, buildFrfReminderMessage(member)), "_blank", "noopener");
   };
 
   return (
     <div className="space-y-6">
+      <WhatsAppBulkDialog
+        open={bulkOpen}
+        onOpenChange={(o) => { setBulkOpen(o); if (!o) setSelectedIds(new Set()); }}
+        targets={bulkTargets}
+        title="FRF Reminders"
+      />
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <Link href="/frf" className="inline-flex items-center gap-1 text-sm text-green-700 dark:text-green-400 hover:underline mb-1" data-testid="link-back-frf">
@@ -123,8 +102,8 @@ export default function FrfReminders() {
           {selectedMembers.length > 0 && (
             <Button
               variant="outline"
-              disabled={bulkSending}
-              onClick={() => startBulkSend(selectedMembers, "selected members")}
+              disabled={bulkOpen}
+              onClick={() => startBulkSend(selectedMembers)}
               className="border-green-300 text-green-800 dark:border-slate-700 dark:text-green-300"
               data-testid="button-remind-selected"
             >
@@ -132,12 +111,12 @@ export default function FrfReminders() {
             </Button>
           )}
           <Button
-            disabled={bulkSending || dueMembers.length === 0}
-            onClick={() => startBulkSend(dueMembers, "all members with FRF dues")}
+            disabled={bulkOpen || dueMembers.length === 0}
+            onClick={() => startBulkSend(dueMembers)}
             className="bg-green-700 hover:bg-green-800 dark:bg-green-600 dark:hover:bg-green-700 text-white"
             data-testid="button-remind-all"
           >
-            <Send className="h-4 w-4 mr-1" /> {bulkSending ? "Opening WhatsApp…" : `Send FRF Reminder — All (${dueMembers.length})`}
+            <Send className="h-4 w-4 mr-1" /> Send FRF Reminder — All ({dueMembers.length})
           </Button>
         </div>
       </div>
@@ -242,7 +221,7 @@ export default function FrfReminders() {
                           size="sm"
                           variant="outline"
                           onClick={() => sendSingle(member)}
-                          className={cn("border-green-300 text-green-800 dark:border-slate-700 dark:text-green-300", !formatMobileForWa(member.mobileNumber) && "opacity-50")}
+                          className={cn("border-green-300 text-green-800 dark:border-slate-700 dark:text-green-300", !normalizeWhatsAppNumber(member.mobileNumber) && "opacity-50")}
                           data-testid={`button-remind-${member.membershipId}`}
                         >
                           <Send className="h-3.5 w-3.5 mr-1" /> Remind

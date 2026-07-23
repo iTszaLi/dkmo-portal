@@ -17,41 +17,25 @@ import { MessageSquareWarning, UserCircle, Phone, MapPin, Send, CheckCircle2 } f
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { RefMemberCell, useMemberIndex } from "@/components/RefMemberCell";
-
-function formatMobileForWa(mobileNumber: string): string {
-  return mobileNumber.replace(/\D/g, "");
-}
+import { normalizeWhatsAppNumber, buildWhatsAppLink, type WhatsAppTarget } from "@/lib/whatsapp";
+import { WhatsAppBulkDialog } from "@/components/WhatsAppBulkDialog";
 
 function buildReminderMessage(member: PendingMember): string {
   return `Assalamu Alaikum ${member.fullName},\n\nThis is a gentle reminder from DKMO (Dakshina Karnataka Muslim Ookota — Committed to the Community). Your one-time membership registration fee of ${formatSAR(member.membershipFee)} is currently ${member.feeStatus}.\n\nPlease complete the payment at your earliest convenience to activate your membership.\n\nJazakallah Khair.`;
 }
 
-function sendRemindersToMembers(
-  members: PendingMember[],
-  onDone: (opened: number) => void,
-  setBulkSending: (v: boolean) => void
-) {
-  const validMembers = members.filter((m) => formatMobileForWa(m.mobileNumber));
-  if (validMembers.length === 0) { onDone(0); return; }
-  setBulkSending(true);
-  let opened = 0;
-  validMembers.forEach((member, idx) => {
-    setTimeout(() => {
-      const message = encodeURIComponent(buildReminderMessage(member));
-      window.open(`https://wa.me/${formatMobileForWa(member.mobileNumber)}?text=${message}`, "_blank");
-      opened += 1;
-      if (idx === validMembers.length - 1) {
-        setBulkSending(false);
-        onDone(opened);
-      }
-    }, idx * 350);
+function toWhatsAppTargets(members: PendingMember[]): WhatsAppTarget[] {
+  return members.flatMap((m) => {
+    const number = normalizeWhatsAppNumber(m.mobileNumber);
+    return number ? [{ id: m.memberId, name: m.fullName, number, message: buildReminderMessage(m) }] : [];
   });
 }
 
 export default function Pending() {
   const memberIndex = useMemberIndex();
-  const [bulkSending, setBulkSending] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkTargets, setBulkTargets] = useState<WhatsAppTarget[]>([]);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -78,31 +62,32 @@ export default function Pending() {
   };
 
   const handleWhatsAppReminder = (member: PendingMember) => {
-    const formattedNum = formatMobileForWa(member.mobileNumber);
-    if (!formattedNum) {
+    const number = normalizeWhatsAppNumber(member.mobileNumber);
+    if (!number) {
       toast({ title: "Cannot send reminder", description: "Member has no valid mobile number", variant: "destructive" });
       return;
     }
-    const message = encodeURIComponent(buildReminderMessage(member));
-    window.open(`https://wa.me/${formattedNum}?text=${message}`, "_blank");
+    window.open(buildWhatsAppLink(number, buildReminderMessage(member)), "_blank", "noopener");
+  };
+
+  const startBulk = (members: PendingMember[]) => {
+    const targets = toWhatsAppTargets(members);
+    if (targets.length === 0) {
+      toast({ title: "No valid mobile numbers", description: "None of these members have a WhatsApp-capable number.", variant: "destructive" });
+      return;
+    }
+    setBulkTargets(targets);
+    setBulkOpen(true);
   };
 
   const handleBulkReminder = () => {
     if (!pendingMembers || pendingMembers.length === 0) return;
-    if (!window.confirm(`Send a WhatsApp reminder to all ${pendingMembers.length} pending members? Your browser may ask permission to open multiple tabs.`)) return;
-    sendRemindersToMembers(pendingMembers, (opened) => {
-      toast({ title: "Bulk reminder sent", description: `Opened ${opened} WhatsApp tab${opened === 1 ? "" : "s"}.` });
-    }, setBulkSending);
+    startBulk(pendingMembers);
   };
 
   const handleSelectedReminder = () => {
     if (!pendingMembers || selectedCount === 0) return;
-    const selected = pendingMembers.filter((m) => selectedIds.has(m.memberId));
-    if (!window.confirm(`Send a WhatsApp reminder to ${selected.length} selected member${selected.length === 1 ? "" : "s"}? Your browser may ask permission to open multiple tabs.`)) return;
-    sendRemindersToMembers(selected, (opened) => {
-      toast({ title: "Reminders sent", description: `Opened ${opened} WhatsApp tab${opened === 1 ? "" : "s"}.` });
-      setSelectedIds(new Set());
-    }, setBulkSending);
+    startBulk(pendingMembers.filter((m) => selectedIds.has(m.memberId)));
   };
 
   const handleMarkPaid = (member: PendingMember) => {
@@ -130,25 +115,32 @@ export default function Pending() {
           {selectedCount > 0 && (
             <Button
               onClick={handleSelectedReminder}
-              disabled={bulkSending}
+              disabled={bulkOpen}
               variant="outline"
               className="border-[#25D366] text-[#25D366] hover:bg-[#25D366]/10"
             >
               <Send className="mr-2 h-4 w-4" />
-              {bulkSending ? "Opening..." : `Remind Selected (${selectedCount})`}
+              {`Remind Selected (${selectedCount})`}
             </Button>
           )}
 
           <Button
             onClick={handleBulkReminder}
-            disabled={bulkSending || !pendingMembers || pendingMembers.length === 0}
+            disabled={bulkOpen || !pendingMembers || pendingMembers.length === 0}
             className="bg-[#25D366] hover:bg-[#128C7E] text-white"
           >
             <Send className="mr-2 h-4 w-4" />
-            {bulkSending ? "Opening..." : `Remind All (${pendingMembers?.length || 0})`}
+            {`Remind All (${pendingMembers?.length || 0})`}
           </Button>
         </div>
       </div>
+
+      <WhatsAppBulkDialog
+        open={bulkOpen}
+        onOpenChange={(o) => { setBulkOpen(o); if (!o) setSelectedIds(new Set()); }}
+        targets={bulkTargets}
+        title="Membership Fee Reminders"
+      />
 
       {/* Summary cards */}
       <div className="grid gap-4 md:grid-cols-3">
