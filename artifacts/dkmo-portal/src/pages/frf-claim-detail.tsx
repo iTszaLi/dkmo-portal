@@ -133,6 +133,7 @@ export default function FrfClaimDetail() {
   const isAdmin = hasRole("admin");
   const { toast } = useToast();
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const contributorsRef = useRef<HTMLDivElement>(null);
 
   const photoMutation = useUpdateFrfClaimPhoto({
     mutation: {
@@ -165,7 +166,9 @@ export default function FrfClaimDetail() {
 
   const contributors = useMemo(() => {
     let rows: FrfContributor[] = data?.contributors ?? [];
-    if (statusFilter !== "all") rows = rows.filter((c) => c.status === statusFilter);
+    if (statusFilter === "collected") rows = rows.filter((c) => c.status === "paid" || c.status === "partial");
+    else if (statusFilter === "owing") rows = rows.filter((c) => c.status === "pending" || c.status === "overdue" || c.status === "partial");
+    else if (statusFilter !== "all") rows = rows.filter((c) => c.status === statusFilter);
     const q = search.trim().toLowerCase();
     if (q) {
       rows = rows.filter(
@@ -315,11 +318,11 @@ export default function FrfClaimDetail() {
 
   const { claim } = data;
 
-  const stats = [
-    { title: "Contributing Members", value: String(data.totalMembers), icon: Users, color: "text-green-700 dark:text-green-400", sub: `${data.exemptCount} exempt` },
-    { title: "Collected", value: formatSAR(data.collectedAmount), icon: CheckCircle2, color: "text-green-700 dark:text-green-400", sub: `${data.paidCount} paid · ${data.partialCount} partial` },
-    { title: "Outstanding", value: formatSAR(data.outstandingAmount), icon: Clock, color: "text-orange-600 dark:text-orange-400", sub: `${data.pendingCount} pending` },
-    { title: "Overdue", value: String(data.overdueCount), icon: AlertTriangle, color: "text-red-600 dark:text-red-400", sub: "30+ days" },
+  const stats: { title: string; value: string; icon: typeof Users; color: string; sub?: string; filter?: string }[] = [
+    { title: "Contributing Members", value: String(data.totalMembers), icon: Users, color: "text-green-700 dark:text-green-400", sub: `${data.exemptCount} exempt`, filter: "all" },
+    { title: "Collected", value: formatSAR(data.collectedAmount), icon: CheckCircle2, color: "text-green-700 dark:text-green-400", sub: `${data.paidCount} paid · ${data.partialCount} partial`, filter: "collected" },
+    { title: "Outstanding", value: formatSAR(data.outstandingAmount), icon: Clock, color: "text-orange-600 dark:text-orange-400", sub: `${data.pendingCount} pending · ${data.overdueCount} overdue · ${data.partialCount} partial`, filter: "owing" },
+    { title: "Overdue", value: String(data.overdueCount), icon: AlertTriangle, color: "text-red-600 dark:text-red-400", sub: "30+ days", filter: "overdue" },
     {
       title: "Target",
       value: formatSAR(data.targetAmount),
@@ -330,6 +333,11 @@ export default function FrfClaimDetail() {
         : "No target set",
     },
   ];
+
+  const showContributors = (filter: string) => {
+    setStatusFilter(filter);
+    contributorsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
     <div className="space-y-6">
@@ -445,8 +453,22 @@ export default function FrfClaimDetail() {
       </Card>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        {stats.map(({ title, value, icon: Icon, color, sub }) => (
-          <Card key={title} className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+        {stats.map(({ title, value, icon: Icon, color, sub, filter }) => (
+          <Card
+            key={title}
+            role={filter ? "button" : undefined}
+            tabIndex={filter ? 0 : undefined}
+            aria-pressed={filter ? statusFilter === filter && statusFilter !== "all" : undefined}
+            onClick={filter ? () => showContributors(filter) : undefined}
+            onKeyDown={filter ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showContributors(filter); } } : undefined}
+            title={filter ? "Show these members below" : undefined}
+            data-testid={`card-stat-${title.toLowerCase().replace(/\s+/g, "-")}`}
+            className={cn(
+              "rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm",
+              filter && "cursor-pointer transition-all hover:shadow-md hover:border-green-300 dark:hover:border-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500",
+              filter && statusFilter === filter && statusFilter !== "all" && "ring-2 ring-green-500 dark:ring-green-400",
+            )}
+          >
             <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-sm font-medium text-green-900 dark:text-slate-300">{title}</CardTitle>
               <Icon className={`h-4 w-4 ${color}`} />
@@ -489,7 +511,7 @@ export default function FrfClaimDetail() {
         <FrfCaseDocuments claimId={id} isAdmin={isAdmin} />
       </div>
 
-      <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+      <Card ref={contributorsRef} className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm scroll-mt-4">
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row sm:items-end gap-3">
             <div className="flex-1">
@@ -508,6 +530,8 @@ export default function FrfClaimDetail() {
                 <SelectTrigger className="w-[140px] dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200"><SelectValue placeholder="Status" /></SelectTrigger>
                 <SelectContent className="dark:bg-slate-900 dark:border-slate-800">
                   <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="collected">Collected (paid + partial)</SelectItem>
+                  <SelectItem value="owing">Owing (pending + overdue + partial)</SelectItem>
                   <SelectItem value="paid">Paid</SelectItem>
                   <SelectItem value="partial">Partially Paid</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
