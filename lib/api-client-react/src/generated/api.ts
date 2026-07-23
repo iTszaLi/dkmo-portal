@@ -95,6 +95,7 @@ import type {
   Task,
   TaskInput,
   TaskList,
+  TicketSalesRecord,
   UpdateFrfClaimPhotoBody,
   WelfareRequest,
   WelfareRequestInput,
@@ -3444,6 +3445,82 @@ export const useUpdateEventTicket = <
 > => {
   return useMutation(getUpdateEventTicketMutationOptions(options));
 };
+
+/**
+ * @summary Per-seller per-event ticket sales aggregates
+ */
+export const getGetTicketSalesAnalyticsUrl = () => {
+  return `/api/events-analytics/ticket-sales`;
+};
+
+export const getTicketSalesAnalytics = async (
+  options?: RequestInit,
+): Promise<TicketSalesRecord[]> => {
+  return customFetch<TicketSalesRecord[]>(getGetTicketSalesAnalyticsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetTicketSalesAnalyticsQueryKey = () => {
+  return [`/api/events-analytics/ticket-sales`] as const;
+};
+
+export const getGetTicketSalesAnalyticsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTicketSalesAnalytics>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getTicketSalesAnalytics>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetTicketSalesAnalyticsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getTicketSalesAnalytics>>
+  > = ({ signal }) => getTicketSalesAnalytics({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getTicketSalesAnalytics>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetTicketSalesAnalyticsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getTicketSalesAnalytics>>
+>;
+export type GetTicketSalesAnalyticsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Per-seller per-event ticket sales aggregates
+ */
+
+export function useGetTicketSalesAnalytics<
+  TData = Awaited<ReturnType<typeof getTicketSalesAnalytics>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getTicketSalesAnalytics>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetTicketSalesAnalyticsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary Get financial summary for an event

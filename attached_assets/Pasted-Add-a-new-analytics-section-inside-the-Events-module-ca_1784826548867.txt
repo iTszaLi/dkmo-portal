@@ -1,0 +1,147 @@
+Add a new analytics section inside the Events module called "Top Ticket Sales Performance".
+
+
+
+Requirements:
+
+
+
+1. Add a section/card/table that shows:
+
+- Highest tickets sold by which member/person
+
+- The event where they sold the most tickets
+
+- Total number of tickets sold
+
+- Total revenue generated from those ticket sales (if ticket price exists)
+
+- Date range of the event
+
+- Ranking position (1st, 2nd, 3rd, etc.)
+
+
+
+2. Add proper event-wise filtering:
+
+- Select Event dropdown
+
+- Select date range
+
+- Show top ticket sellers for the selected event only
+
+- Show overall top performers across all events
+
+
+
+3. Create logical sample data:
+
+- Add minimum 7 unique sample records for each event
+
+- Each sample record should have different members, ticket quantities, and events
+
+- Avoid duplicate names or identical data
+
+- Make the data realistic
+
+
+
+4. Add visual analytics:
+
+- Top Seller leaderboard
+
+- Bar chart comparing ticket sales by members
+
+- Total tickets sold per event
+
+- Highest-performing event by ticket sales
+
+
+
+5. Add details when clicking a person:
+
+Show:
+
+- Person name
+
+- Contact/member ID
+
+- Events they sold tickets for
+
+- Number of tickets sold in each event
+
+- Total contribution
+
+
+
+6. Add sorting options:
+
+- Highest tickets sold
+
+- Highest revenue
+
+- Most events participated in selling
+
+
+
+7. Make sure this integrates with the existing Events module and does not affect existing functionality.
+
+
+
+Keep the UI consistent with the current DKMO portal design. Do not redesign the module; only add this analytics section cleanly.
+
+8. Add achievement badges/visual ranking system:
+
+- For the Top 3 ticket sellers, display awards:
+
+  - 🥇 Gold Trophy for Rank #1 (Highest tickets sold)
+
+  - 🥈 Silver Medal for Rank #2
+
+  - 🥉 Bronze Medal for Rank #3
+
+
+
+9. Trophy/medal display requirements:
+
+- Show the trophy/medal icon beside the member name in the leaderboard
+
+- Highlight the top 3 performers visually
+
+- Display:
+
+  - Rank
+
+  - Award icon
+
+  - Member name
+
+  - Event name
+
+  - Tickets sold
+
+  - Revenue generated
+
+  - Performance percentage compared to others
+
+
+
+10. Add a premium leaderboard style:
+
+- Rank #1 should have a gold trophy badge
+
+- Rank #2 should have a silver medal badge
+
+- Rank #3 should have a bronze medal badge
+
+- Remaining members should show normal ranking numbers
+
+
+
+11. The ranking should automatically update based on ticket sales data:
+
+- If another member sells more tickets, rankings and medals should automatically change
+
+- Do not hardcode the winners
+
+- Use real event ticket sales calculations

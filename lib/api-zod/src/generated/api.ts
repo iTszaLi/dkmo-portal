@@ -1047,6 +1047,24 @@ export const UpdateEventTicketResponse = zod.object({
 });
 
 /**
+ * @summary Per-seller per-event ticket sales aggregates
+ */
+export const GetTicketSalesAnalyticsResponseItem = zod.object({
+  eventId: zod.string(),
+  eventName: zod.string(),
+  eventDate: zod.coerce.date().nullish(),
+  eventStatus: zod.string(),
+  sellerName: zod.string(),
+  sellerMemberId: zod.string().nullish(),
+  sellerMembershipId: zod.string().nullish(),
+  ticketsSold: zod.number(),
+  revenue: zod.number(),
+});
+export const GetTicketSalesAnalyticsResponse = zod.array(
+  GetTicketSalesAnalyticsResponseItem,
+);
+
+/**
  * @summary Get financial summary for an event
  */
 export const GetEventFinancialSummaryParams = zod.object({

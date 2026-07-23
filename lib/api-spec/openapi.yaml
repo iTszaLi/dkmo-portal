@@ -789,6 +789,21 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/EventTicket" }
 
+  /events-analytics/ticket-sales:
+    get:
+      operationId: getTicketSalesAnalytics
+      tags: [events]
+      summary: Per-seller per-event ticket sales aggregates
+      responses:
+        "200":
+          description: Ticket sales aggregates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TicketSalesRecord"
+
   /events/{eventId}/financial-summary:
     get:
       operationId: getEventFinancialSummary
@@ -2359,6 +2374,39 @@ components:
         - closedFrfCasesCount
         - membersPartialFrfCount
         - membersPaidFrfCount
+
+    TicketSalesRecord:
+      type: object
+      properties:
+        eventId:
+          type: string
+        eventName:
+          type: string
+        eventDate:
+          type: string
+          format: date-time
+          nullable: true
+        eventStatus:
+          type: string
+        sellerName:
+          type: string
+        sellerMemberId:
+          type: string
+          nullable: true
+        sellerMembershipId:
+          type: string
+          nullable: true
+        ticketsSold:
+          type: number
+        revenue:
+          type: number
+      required:
+        - eventId
+        - eventName
+        - eventStatus
+        - sellerName
+        - ticketsSold
+        - revenue
 
     PendingFrfFee:
       type: object

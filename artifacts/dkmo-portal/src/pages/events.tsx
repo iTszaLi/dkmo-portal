@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import TicketSalesAnalytics from "@/components/events/TicketSalesAnalytics";
 import { Link, useLocation } from "wouter";
 import { useListEvents, useDeleteEvent } from "@workspace/api-client-react";
 import {
@@ -292,6 +293,8 @@ export default function Events() {
           )}
         </CardContent>
       </Card>
+
+      <TicketSalesAnalytics />
     </div>
   );
 }

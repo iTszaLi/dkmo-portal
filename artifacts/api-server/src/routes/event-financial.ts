@@ -314,6 +314,50 @@ router.patch("/events/:eventId/booklets/:bookletId/tickets/:ticketId", requireRo
 });
 
 // ═══════════════════════════════════════════════════════════════════
+// TICKET SALES ANALYTICS (per-seller per-event aggregates)
+// ═══════════════════════════════════════════════════════════════════
+router.get("/events-analytics/ticket-sales", requireAuth, async (_req, res): Promise<void> => {
+  const rows = await db.execute(sql`
+    WITH member_lookup AS (
+      -- Dedupe by name so a duplicate member name can never fan out ticket rows
+      SELECT DISTINCT ON (lower(full_name)) lower(full_name) AS name_key, id, membership_id
+      FROM members
+      ORDER BY lower(full_name), created_at
+    )
+    SELECT
+      e.id AS event_id,
+      e.name AS event_name,
+      e.event_date AS event_date,
+      e.status AS event_status,
+      t.sold_by AS seller_name,
+      m.id AS seller_member_id,
+      m.membership_id AS seller_membership_id,
+      COUNT(*)::int AS tickets_sold,
+      COALESCE(SUM(t.amount::numeric), 0)::float AS revenue
+    FROM event_tickets t
+    JOIN events e ON e.id = t.event_id
+    LEFT JOIN member_lookup m ON m.name_key = lower(t.sold_by)
+    WHERE t.is_sold AND t.sold_by <> ''
+    GROUP BY e.id, e.name, e.event_date, e.status, t.sold_by, m.id, m.membership_id
+    ORDER BY tickets_sold DESC
+  `);
+
+  res.json(
+    (rows.rows as any[]).map((r) => ({
+      eventId: r.event_id,
+      eventName: r.event_name,
+      eventDate: r.event_date ? new Date(r.event_date).toISOString() : null,
+      eventStatus: r.event_status,
+      sellerName: r.seller_name,
+      sellerMemberId: r.seller_member_id ?? null,
+      sellerMembershipId: r.seller_membership_id ?? null,
+      ticketsSold: Number(r.tickets_sold),
+      revenue: Number(r.revenue),
+    })),
+  );
+});
+
+// ═══════════════════════════════════════════════════════════════════
 // FINANCIAL SUMMARY
 // ═══════════════════════════════════════════════════════════════════
 router.get("/events/:eventId/financial-summary", async (req, res): Promise<void> => {

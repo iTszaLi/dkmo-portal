@@ -536,6 +536,18 @@ export interface DashboardSummary {
   membersPaidFrfCount: number;
 }
 
+export interface TicketSalesRecord {
+  eventId: string;
+  eventName: string;
+  eventDate?: string | null;
+  eventStatus: string;
+  sellerName: string;
+  sellerMemberId?: string | null;
+  sellerMembershipId?: string | null;
+  ticketsSold: number;
+  revenue: number;
+}
+
 export type PendingFrfFeeStatus =
   (typeof PendingFrfFeeStatus)[keyof typeof PendingFrfFeeStatus];
 
