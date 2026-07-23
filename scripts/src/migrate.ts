@@ -191,6 +191,7 @@ async function main() {
 
   await pool.query(`
     ALTER TABLE members
+      ADD COLUMN IF NOT EXISTS date_of_birth TEXT NOT NULL DEFAULT '',
       ADD COLUMN IF NOT EXISTS membership_fee NUMERIC(12,2) NOT NULL DEFAULT 100,
       ADD COLUMN IF NOT EXISTS fee_status TEXT NOT NULL DEFAULT 'unpaid',
       ADD COLUMN IF NOT EXISTS fee_paid_at TIMESTAMPTZ,

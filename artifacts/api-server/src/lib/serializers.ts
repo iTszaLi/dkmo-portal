@@ -12,6 +12,7 @@ export function memberToApi(m: Member) {
     jamaath: m.jamaath ?? "",
     city: m.city,
     country: m.country,
+    dateOfBirth: m.dateOfBirth ?? "",
     designation: m.designation ?? "",
     isExecutiveCommittee: m.isExecutiveCommittee ?? false,
     isCoreCommittee: m.isCoreCommittee ?? false,

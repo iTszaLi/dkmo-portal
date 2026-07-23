@@ -1906,6 +1906,9 @@ components:
           type: string
         country:
           type: string
+        dateOfBirth:
+          type: string
+          description: Date of birth as YYYY-MM-DD, or empty if unknown.
         designation:
           type: string
         isExecutiveCommittee:
@@ -1993,6 +1996,9 @@ components:
           type: string
         country:
           type: string
+        dateOfBirth:
+          type: string
+          description: Date of birth as YYYY-MM-DD, or empty if unknown.
         designation:
           type: string
         isExecutiveCommittee:
@@ -2077,6 +2083,10 @@ components:
           type: string
         country:
           type: string
+        dateOfBirth:
+          type: string
+          description: Date of birth as YYYY-MM-DD, or empty if unknown.
+          pattern: "^(\\d{4}-\\d{2}-\\d{2})?$"
         designation:
           type: string
         isExecutiveCommittee:

@@ -87,6 +87,10 @@ const formSchema = z.object({
   jamaath: z.string().optional(),
   city: z.string().optional(),
   country: z.string().optional(),
+  dateOfBirth: z
+    .string()
+    .optional()
+    .refine((v) => !v || /^\d{4}-\d{2}-\d{2}$/.test(v), "Enter a valid date"),
   designation: z.string().optional(),
   isExecutiveCommittee: z.boolean(),
   isCoreCommittee: z.boolean(),
@@ -129,6 +133,7 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
       jamaath: (defaultValues as any)?.jamaath || "",
       city: defaultValues?.city || "",
       country: defaultValues?.country || "",
+      dateOfBirth: (defaultValues as any)?.dateOfBirth || "",
       designation: (defaultValues as any)?.designation || "",
       isExecutiveCommittee: (defaultValues as any)?.isExecutiveCommittee === true,
       isCoreCommittee: (defaultValues as any)?.isCoreCommittee === true,
@@ -150,6 +155,7 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
         jamaath: (defaultValues as any).jamaath || "",
         city: defaultValues.city || "",
         country: defaultValues.country || "",
+        dateOfBirth: (defaultValues as any)?.dateOfBirth || "",
         designation: (defaultValues as any).designation || "",
         isExecutiveCommittee: (defaultValues as any).isExecutiveCommittee === true,
         isCoreCommittee: (defaultValues as any).isCoreCommittee === true,
@@ -291,6 +297,19 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
                 <FormLabel>Country</FormLabel>
                 <FormControl>
                   <Input placeholder="Saudi Arabia" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="dateOfBirth"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Date of Birth</FormLabel>
+                <FormControl>
+                  <Input type="date" data-testid="input-date-of-birth" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

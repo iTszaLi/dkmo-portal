@@ -13,6 +13,7 @@ export const membersTable = pgTable("members", {
   jamaath: text("jamaath").notNull().default(""),
   city: text("city").notNull().default(""),
   country: text("country").notNull().default(""),
+  dateOfBirth: text("date_of_birth").notNull().default(""),
   designation: text("designation").notNull().default(""),
   isExecutiveCommittee: boolean("is_executive_committee").notNull().default(false),
   isCoreCommittee: boolean("is_core_committee").notNull().default(false),

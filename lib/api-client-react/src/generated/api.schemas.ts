@@ -197,6 +197,8 @@ export interface Member {
   jamaath: string;
   city: string;
   country: string;
+  /** Date of birth as YYYY-MM-DD, or empty if unknown. */
+  dateOfBirth?: string;
   designation: string;
   isExecutiveCommittee: boolean;
   isCoreCommittee: boolean;
@@ -259,6 +261,8 @@ export interface MemberDetail {
   jamaath: string;
   city: string;
   country: string;
+  /** Date of birth as YYYY-MM-DD, or empty if unknown. */
+  dateOfBirth?: string;
   designation: string;
   isExecutiveCommittee: boolean;
   isCoreCommittee: boolean;
@@ -316,6 +320,11 @@ export interface MemberInput {
   jamaath?: string;
   city?: string;
   country?: string;
+  /**
+   * Date of birth as YYYY-MM-DD, or empty if unknown.
+   * @pattern ^(\d{4}-\d{2}-\d{2})?$
+   */
+  dateOfBirth?: string;
   designation?: string;
   isExecutiveCommittee?: boolean;
   isCoreCommittee?: boolean;

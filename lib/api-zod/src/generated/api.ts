@@ -45,6 +45,10 @@ export const ListMembersResponseItem = zod.object({
   jamaath: zod.string(),
   city: zod.string(),
   country: zod.string(),
+  dateOfBirth: zod
+    .string()
+    .optional()
+    .describe("Date of birth as YYYY-MM-DD, or empty if unknown."),
   designation: zod.string(),
   isExecutiveCommittee: zod.boolean(),
   isCoreCommittee: zod.boolean(),
@@ -71,6 +75,9 @@ export const ListMembersResponse = zod.array(ListMembersResponseItem);
  * @summary Create a member
  */
 
+export const createMemberBodyDateOfBirthRegExp = new RegExp(
+  "^(\\d{4}-\\d{2}-\\d{2})?$",
+);
 export const createMemberBodyPhotoUrlRegExp = new RegExp(
   "^data:image\/(jpeg|jpg|png|webp);base64,",
 );
@@ -89,6 +96,11 @@ export const CreateMemberBody = zod.object({
   jamaath: zod.string().optional(),
   city: zod.string().optional(),
   country: zod.string().optional(),
+  dateOfBirth: zod
+    .string()
+    .regex(createMemberBodyDateOfBirthRegExp)
+    .optional()
+    .describe("Date of birth as YYYY-MM-DD, or empty if unknown."),
   designation: zod.string().optional(),
   isExecutiveCommittee: zod.boolean().optional(),
   isCoreCommittee: zod.boolean().optional(),
@@ -126,6 +138,10 @@ export const GetMemberResponse = zod.object({
   jamaath: zod.string(),
   city: zod.string(),
   country: zod.string(),
+  dateOfBirth: zod
+    .string()
+    .optional()
+    .describe("Date of birth as YYYY-MM-DD, or empty if unknown."),
   designation: zod.string(),
   isExecutiveCommittee: zod.boolean(),
   isCoreCommittee: zod.boolean(),
@@ -149,6 +165,9 @@ export const UpdateMemberParams = zod.object({
   id: zod.coerce.string(),
 });
 
+export const updateMemberBodyDateOfBirthRegExp = new RegExp(
+  "^(\\d{4}-\\d{2}-\\d{2})?$",
+);
 export const updateMemberBodyPhotoUrlRegExp = new RegExp(
   "^data:image\/(jpeg|jpg|png|webp);base64,",
 );
@@ -167,6 +186,11 @@ export const UpdateMemberBody = zod.object({
   jamaath: zod.string().optional(),
   city: zod.string().optional(),
   country: zod.string().optional(),
+  dateOfBirth: zod
+    .string()
+    .regex(updateMemberBodyDateOfBirthRegExp)
+    .optional()
+    .describe("Date of birth as YYYY-MM-DD, or empty if unknown."),
   designation: zod.string().optional(),
   isExecutiveCommittee: zod.boolean().optional(),
   isCoreCommittee: zod.boolean().optional(),
@@ -197,6 +221,10 @@ export const UpdateMemberResponse = zod.object({
   jamaath: zod.string(),
   city: zod.string(),
   country: zod.string(),
+  dateOfBirth: zod
+    .string()
+    .optional()
+    .describe("Date of birth as YYYY-MM-DD, or empty if unknown."),
   designation: zod.string(),
   isExecutiveCommittee: zod.boolean(),
   isCoreCommittee: zod.boolean(),
@@ -247,6 +275,10 @@ export const UpdateMemberFeeStatusResponse = zod.object({
   jamaath: zod.string(),
   city: zod.string(),
   country: zod.string(),
+  dateOfBirth: zod
+    .string()
+    .optional()
+    .describe("Date of birth as YYYY-MM-DD, or empty if unknown."),
   designation: zod.string(),
   isExecutiveCommittee: zod.boolean(),
   isCoreCommittee: zod.boolean(),
@@ -295,6 +327,10 @@ export const UpdateMemberCommitteeStatusResponse = zod.object({
   jamaath: zod.string(),
   city: zod.string(),
   country: zod.string(),
+  dateOfBirth: zod
+    .string()
+    .optional()
+    .describe("Date of birth as YYYY-MM-DD, or empty if unknown."),
   designation: zod.string(),
   isExecutiveCommittee: zod.boolean(),
   isCoreCommittee: zod.boolean(),
@@ -341,6 +377,10 @@ export const UpdateMemberPhotoResponse = zod.object({
   jamaath: zod.string(),
   city: zod.string(),
   country: zod.string(),
+  dateOfBirth: zod
+    .string()
+    .optional()
+    .describe("Date of birth as YYYY-MM-DD, or empty if unknown."),
   designation: zod.string(),
   isExecutiveCommittee: zod.boolean(),
   isCoreCommittee: zod.boolean(),

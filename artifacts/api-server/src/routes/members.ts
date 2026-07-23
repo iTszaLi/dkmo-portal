@@ -126,6 +126,7 @@ router.post("/members", async (req, res): Promise<void> => {
         jamaath: parsed.data.jamaath ?? "",
         city: parsed.data.city ?? "",
         country: parsed.data.country ?? "",
+        dateOfBirth: parsed.data.dateOfBirth ?? "",
         designation: parsed.data.designation ?? "",
         isExecutiveCommittee: parsed.data.isExecutiveCommittee ?? false,
         isCoreCommittee: parsed.data.isCoreCommittee ?? false,
@@ -222,6 +223,7 @@ router.patch("/members/:id", async (req, res): Promise<void> => {
         jamaath: parsed.data.jamaath ?? "",
         city: parsed.data.city ?? "",
         country: parsed.data.country ?? "",
+        dateOfBirth: parsed.data.dateOfBirth ?? existing.dateOfBirth,
         designation: parsed.data.designation ?? "",
         isExecutiveCommittee:
           parsed.data.isExecutiveCommittee ?? existing.isExecutiveCommittee,
