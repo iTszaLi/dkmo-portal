@@ -760,10 +760,6 @@ router.get("/dashboard/committee-performance", async (req, res): Promise<void> =
       recruiter.membersRecruited += 1;
       if (m.frfStatus === "active") recruiter.frfReferred += 1;
     }
-    if (m.feeStatus === "paid") {
-      const collector = get(m.feeUpdatedBy ?? "");
-      if (collector) collector.feesCollected += Number(m.membershipFee);
-    }
   }
 
   for (const c of frfClaims) {
@@ -794,20 +790,25 @@ router.get("/dashboard/committee-performance", async (req, res): Promise<void> =
   }
 
   const entries = [...map.values()]
-    .map((e) => ({
-      ...e,
-      totalContributionScore:
-        e.membersRecruited * 10 +
-        e.frfReferred * 5 +
-        e.loansProcessed * 8 +
-        e.welfareHandled * 5 +
-        Math.round(e.feesCollected / 100),
-      totalActions:
-        e.membersRecruited +
-        e.frfCount +
-        e.welfareHandled +
-        e.loansProcessed,
-    }))
+    .map((e) => {
+      // Membership fee is fixed at SAR 100 per recruited member, so fees
+      // collected are derived directly from recruitment (no manual values).
+      const feesCollected = e.membersRecruited * 100;
+      return {
+        ...e,
+        feesCollected,
+        // Loans are intentionally excluded from the activity score.
+        totalContributionScore:
+          e.membersRecruited * 10 +
+          e.frfReferred * 5 +
+          e.welfareHandled * 5 +
+          Math.round(feesCollected / 100),
+        totalActions:
+          e.membersRecruited +
+          e.frfCount +
+          e.welfareHandled,
+      };
+    })
     .sort((a, b) => b.totalContributionScore - a.totalContributionScore);
 
   res.json({ entries });

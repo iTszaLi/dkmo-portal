@@ -11,9 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { formatSAR, cn } from "@/lib/utils";
 import { initialsOf } from "@/lib/committee";
-import { Trophy, Users, Coins, HeartHandshake, Landmark, Activity, Search, FileDown, FileSpreadsheet, Printer, X } from "lucide-react";
+import { Trophy, Users, Coins, HeartHandshake, Activity, Search, FileDown, FileSpreadsheet, Printer, X } from "lucide-react";
 
-type SortKey = "activity" | "name" | "recruited" | "fees" | "frf" | "loans";
+type SortKey = "activity" | "name" | "recruited" | "fees" | "frf";
 
 const SORT_LABEL: Record<SortKey, string> = {
   activity: "Activity score (high → low)",
@@ -21,7 +21,6 @@ const SORT_LABEL: Record<SortKey, string> = {
   recruited: "Members recruited",
   fees: "Fees collected",
   frf: "FRF referred",
-  loans: "Loans processed",
 };
 
 // Podium + row accents for the automatic Top-3 ranking. Subtle DKMO-style
@@ -149,7 +148,6 @@ export default function CommitteeActivityReport() {
       recruited: (a, b) => b.membersRecruited - a.membersRecruited || a.name.localeCompare(b.name),
       fees: (a, b) => b.feesCollected - a.feesCollected || a.name.localeCompare(b.name),
       frf: (a, b) => b.frfReferred - a.frfReferred || a.name.localeCompare(b.name),
-      loans: (a, b) => b.loansProcessed - a.loansProcessed || a.name.localeCompare(b.name),
     };
     return [...list].sort(sorters[sortKey]);
   }, [entries, search, designation, sortKey, roleByName]);
@@ -178,7 +176,6 @@ export default function CommitteeActivityReport() {
       topPerformer: pickMax((e) => e.totalContributionScore),
       topFees: pickMax((e) => e.feesCollected),
       topFrf: pickMax((e) => e.frfReferred),
-      topLoans: pickMax((e) => e.loansProcessed),
     };
   }, [filtered]);
 
@@ -232,7 +229,6 @@ export default function CommitteeActivityReport() {
       recruited: e.membersRecruited,
       fees: e.feesCollected,
       frfReferred: e.frfReferred,
-      loans: e.loansProcessed,
       score: e.totalContributionScore,
     }));
 
@@ -266,8 +262,8 @@ export default function CommitteeActivityReport() {
     doc.text(`Period: ${rangeLabel}   •   Generated: ${new Date().toLocaleDateString()}   •   ${filtered.length} member(s)`, 14, 23);
     autoTable(doc, {
       startY: 28,
-      head: [["#", "Committee Member", "Designation", "Members Recruited", "Fees Collected (SAR)", "FRF Referred", "Loans", "Activity Score"]],
-      body: exportRows().map((r, i) => [i + 1, r.name, r.designation, r.recruited, r.fees.toFixed(2), r.frfReferred, r.loans, r.score]),
+      head: [["#", "Committee Member", "Designation", "Members Recruited", "Fees Collected (SAR)", "FRF Referred", "Activity Score"]],
+      body: exportRows().map((r, i) => [i + 1, r.name, r.designation, r.recruited, r.fees.toFixed(2), r.frfReferred, r.score]),
       styles: { fontSize: 8.5 },
       headStyles: { fillColor: [21, 128, 61] },
       alternateRowStyles: { fillColor: [240, 253, 244] },
@@ -285,7 +281,6 @@ export default function CommitteeActivityReport() {
       { header: "Members Recruited", key: "recruited", width: 18 },
       { header: "Fees Collected (SAR)", key: "fees", width: 20 },
       { header: "FRF Referred", key: "frfReferred", width: 14 },
-      { header: "Loans Processed", key: "loans", width: 16 },
       { header: "Activity Score", key: "score", width: 14 },
     ];
     ws.getRow(1).font = { bold: true };
@@ -438,7 +433,7 @@ export default function CommitteeActivityReport() {
       )}
 
       {/* Highlights strip (reflects current filters) */}
-      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 print:grid-cols-5">
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 print:grid-cols-4">
         <HighlightCard
           icon={Users}
           label="Active Committee Members"
@@ -473,15 +468,6 @@ export default function CommitteeActivityReport() {
           name={highlights.topFrf && highlights.topFrf.value > 0 ? highlights.topFrf.name : undefined}
           onSelect={highlights.topFrf && highlights.topFrf.value > 0 ? () => openByName(highlights.topFrf?.name) : undefined}
         />
-        <HighlightCard
-          icon={Landmark}
-          label="Top Loan Processor"
-          accent="text-purple-600 dark:text-purple-400"
-          loading={isLoading}
-          value={highlights.topLoans && highlights.topLoans.value > 0 ? highlights.topLoans.value : "—"}
-          name={highlights.topLoans && highlights.topLoans.value > 0 ? highlights.topLoans.name : undefined}
-          onSelect={highlights.topLoans && highlights.topLoans.value > 0 ? () => openByName(highlights.topLoans?.name) : undefined}
-        />
       </div>
 
       <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
@@ -515,7 +501,6 @@ export default function CommitteeActivityReport() {
                     <th className="py-2 px-2 font-medium text-right">Members Recruited</th>
                     <th className="py-2 px-2 font-medium text-right">Fees Collected</th>
                     <th className="py-2 px-2 font-medium text-right">FRF Referred</th>
-                    <th className="py-2 px-2 font-medium text-right">Loans</th>
                     <th className="py-2 pl-2 font-medium text-right">Activity Score</th>
                   </tr>
                 </thead>
@@ -585,11 +570,6 @@ export default function CommitteeActivityReport() {
                           label={(v) => `${v} referral${v === 1 ? "" : "s"}`}
                           tone="bg-rose-100 text-rose-900 dark:bg-rose-900/40 dark:text-rose-300"
                         />
-                        <BadgeCell
-                          value={e.loansProcessed}
-                          label={(v) => `${v} loan${v === 1 ? "" : "s"}`}
-                          tone="bg-purple-100 text-purple-900 dark:bg-purple-900/40 dark:text-purple-300"
-                        />
                         <td className="py-3 pl-2 text-right">
                           <span className={cn(
                             "inline-flex items-center px-2.5 py-1 rounded-full text-sm font-bold tabular-nums ring-1",
@@ -623,7 +603,6 @@ export default function CommitteeActivityReport() {
             if (selected.feesCollected > 0) activities.push(`Fee collection — collected ${formatSAR(selected.feesCollected)} in membership fees`);
             if (selected.frfReferred > 0) activities.push(`FRF verification — referred ${selected.frfReferred} member${selected.frfReferred === 1 ? "" : "s"} to the FRF program`);
             if (selected.frfCount > 0) activities.push(`FRF case handling — approved/disbursed ${selected.frfCount} claim${selected.frfCount === 1 ? "" : "s"} (${formatSAR(selected.frfAmount)})`);
-            if (selected.loansProcessed > 0) activities.push(`Loan processing — handled ${selected.loansProcessed} loan${selected.loansProcessed === 1 ? "" : "s"}`);
             if (selected.welfareHandled > 0) activities.push(`Welfare programs — handled ${selected.welfareHandled} case${selected.welfareHandled === 1 ? "" : "s"}`);
             return (
               <>
@@ -650,7 +629,6 @@ export default function CommitteeActivityReport() {
                   <StatBox label="Members Recruited" value={String(selected.membersRecruited)} />
                   <StatBox label="Fees Collected" value={selected.feesCollected > 0 ? formatSAR(selected.feesCollected) : "—"} />
                   <StatBox label="FRF Referred" value={String(selected.frfReferred)} />
-                  <StatBox label="Loans Processed" value={String(selected.loansProcessed)} />
                   <StatBox label="Welfare Cases" value={String(selected.welfareHandled)} />
                 </div>
                 <div>
