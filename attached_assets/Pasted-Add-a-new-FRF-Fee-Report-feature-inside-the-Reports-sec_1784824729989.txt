@@ -1,0 +1,80 @@
+Add a new FRF Fee Report feature inside the Reports section.
+
+1. Add a new report card:
+   - Title: FRF Fee Report
+   - Add a suitable icon related to FRF contribution/payment.
+   - Place it with the existing report cards.
+   - Keep the same DKMO executive dashboard style.
+
+2. When clicking "FRF Fee Report":
+   Open a dedicated FRF Fee tracking report page.
+
+3. Add Case Selector:
+   - Add a dropdown/filter at the top called:
+     "Select FRF Case"
+   - Create 7 unique sample FRF cases.
+   Example:
+      • Medical Emergency Support
+      • Family Relief Case 2026-001
+      • Education Assistance Case
+      • Accident Support Case
+      • Funeral Assistance Case
+      • Emergency Financial Aid Case
+      • Other Welfare Support Case
+
+4. For each selected FRF case, show:
+   - Total members eligible for FRF
+   - Number of members who paid FRF fee
+   - Number of members who have not paid
+   - Total FRF collection amount
+
+Important:
+- FRF Fee is fixed at 50 SAR per member.
+- Calculation:
+   Paid Members × 50 SAR = Total FRF Collection
+
+5. Add realistic sample data:
+   - Create 7 different FRF cases.
+   - Each case should have different:
+      • Total members
+      • Paid members
+      • Pending members
+      • Collection amount
+      • Case status
+      • Created date
+
+Example:
+Case: Medical Emergency Support
+Total Members: 120
+Paid: 85
+Pending: 35
+Collected: 4,250 SAR
+
+6. Add a detailed table below:
+Columns:
+- Member Name
+- Membership Number
+- FRF Case
+- FRF Fee Status (Paid / Pending)
+- Amount (50 SAR)
+- Payment Date
+- Receipt Number
+
+7. Add functionality:
+- Search members
+- Filter by case
+- Filter Paid/Pending
+- Export PDF
+- Export Excel
+- Print report
+
+8. Add summary cards at the top:
+- Total FRF Cases
+- Total FRF Fees Collected
+- Total Paid Members
+- Total Pending Members
+
+Make sure FRF Fee logic stays separate from Membership Fee.
+Membership Fee = 100 SAR one time.
+FRF Fee = 50 SAR based on FRF case participation.
+Do not mix the two systems.

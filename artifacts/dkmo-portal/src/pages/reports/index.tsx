@@ -5,6 +5,7 @@ import {
   CreditCard,
   HeartHandshake,
   Landmark,
+  HandCoins,
   Activity,
   BarChart3,
   ArrowRight,
@@ -38,6 +39,13 @@ const REPORTS = [
     description: "All loans — principal, EMIs paid, status, and disbursement dates.",
     icon: Landmark,
     tone: "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/30",
+  },
+  {
+    href: "/reports/loan-recovery",
+    title: "Top Loan Conveyors",
+    description: "Loan recovery leaderboard — loans assigned, recovered, amounts, and recovery rates.",
+    icon: HandCoins,
+    tone: "text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30",
   },
   {
     href: "/reports/committee-performance",
