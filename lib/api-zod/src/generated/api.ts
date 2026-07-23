@@ -1537,6 +1537,27 @@ export const CreateFrfClaimBody = zod.object({
 });
 
 /**
+ * @summary Pending FRF fee contributions across all cases
+ */
+export const ListPendingFrfFeesResponseItem = zod.object({
+  contributionId: zod.string(),
+  memberId: zod.string(),
+  fullName: zod.string(),
+  membershipId: zod.string(),
+  mobileNumber: zod.string(),
+  city: zod.string(),
+  claimId: zod.string(),
+  caseTitle: zod.string(),
+  amount: zod.number(),
+  balance: zod.number(),
+  status: zod.enum(["pending", "overdue", "partial"]),
+  approvedDate: zod.coerce.date().nullish(),
+});
+export const ListPendingFrfFeesResponse = zod.array(
+  ListPendingFrfFeesResponseItem,
+);
+
+/**
  * @summary Get FRF statistics
  */
 export const GetFrfStatsResponse = zod.object({

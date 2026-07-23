@@ -81,6 +81,7 @@ import type {
   Payment,
   PaymentInput,
   PaymentMethodBucket,
+  PendingFrfFee,
   PendingMember,
   ReceiptRecord,
   ReceiptRecordInput,
@@ -4845,6 +4846,81 @@ export const useCreateFrfClaim = <
 > => {
   return useMutation(getCreateFrfClaimMutationOptions(options));
 };
+
+/**
+ * @summary Pending FRF fee contributions across all cases
+ */
+export const getListPendingFrfFeesUrl = () => {
+  return `/api/frf/pending-fees`;
+};
+
+export const listPendingFrfFees = async (
+  options?: RequestInit,
+): Promise<PendingFrfFee[]> => {
+  return customFetch<PendingFrfFee[]>(getListPendingFrfFeesUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListPendingFrfFeesQueryKey = () => {
+  return [`/api/frf/pending-fees`] as const;
+};
+
+export const getListPendingFrfFeesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listPendingFrfFees>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listPendingFrfFees>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListPendingFrfFeesQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listPendingFrfFees>>
+  > = ({ signal }) => listPendingFrfFees({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listPendingFrfFees>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListPendingFrfFeesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listPendingFrfFees>>
+>;
+export type ListPendingFrfFeesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Pending FRF fee contributions across all cases
+ */
+
+export function useListPendingFrfFees<
+  TData = Awaited<ReturnType<typeof listPendingFrfFees>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listPendingFrfFees>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListPendingFrfFeesQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary Get FRF statistics

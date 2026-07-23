@@ -122,6 +122,47 @@ router.get("/frf/claims", async (req, res): Promise<void> => {
   }
 });
 
+// GET /frf/pending-fees — pending FRF fee contributions across all cases
+router.get("/frf/pending-fees", async (req, res): Promise<void> => {
+  try {
+    const rows = await db
+      .select({
+        contribution: frfContributionsTable,
+        claim: frfClaimsTable,
+        member: membersTable,
+      })
+      .from(frfContributionsTable)
+      .innerJoin(frfClaimsTable, eq(frfContributionsTable.claimId, frfClaimsTable.id))
+      .innerJoin(membersTable, eq(frfContributionsTable.memberId, membersTable.id))
+      .orderBy(desc(frfContributionsTable.createdAt));
+
+    const now = new Date();
+    const pending = rows.flatMap(({ contribution: c, claim, member: m }) => {
+      const status = deriveContributionStatus(c, claim.approvedDate, now);
+      if (status !== "pending" && status !== "overdue" && status !== "partial") return [];
+      return [{
+        contributionId: c.id,
+        memberId: m.id,
+        fullName: m.fullName,
+        membershipId: m.membershipId,
+        mobileNumber: m.mobileNumber,
+        city: m.city,
+        claimId: claim.id,
+        caseTitle: claim.title || claim.claimantName || "FRF Case",
+        amount: Number(c.amount),
+        balance: Math.max(Number(c.amount) - Number(c.amountPaid), 0),
+        status,
+        approvedDate: claim.approvedDate?.toISOString() ?? null,
+      }];
+    });
+
+    res.json(pending);
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Failed to list pending FRF fees" });
+  }
+});
+
 router.get("/frf/stats", async (req, res): Promise<void> => {
   try {
     const rows = await db.select().from(frfClaimsTable);

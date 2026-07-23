@@ -15,4 +15,5 @@
 - [Autoscale startup budget & credentialed CORS](deploy-startup-and-cors.md) — no sync bcrypt at module load (kills publish health probe); CORS allowlist only, seed passwords via EXEC_PASSWORD secrets.
 - [Receipt verification auth-only](receipt-verification.md) — receipt verify endpoint + QR stay behind login (user decision); certificate verify stays public. PDF header auto-shrinks around the QR zone.
 - [Portal module restructure](portal-module-restructure.md) — receipts hub with tabs; legacy redirects (/print-receipts?verify= QRs!) must stay; "Welfare Programs" naming; all reports live under a /reports hub (user decision), incl. committee report at /reports/committee-performance (old path redirects); rankings/leaderboards now OK per explicit user request.
+- [FRF fee views pattern](frf-fee-views.md) — Payments & Pending use a Membership/FRF segmented toggle; FRF data from per-claim collection endpoint + /frf/pending-fees; exports total the filtered rows only.
 - [Read access is role-open](read-access-model.md) — all list GETs are auth-only by design; every role can read every module, so global search parity adds no exposure. Mutations are role-gated.

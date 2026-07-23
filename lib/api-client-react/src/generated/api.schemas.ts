@@ -536,6 +536,30 @@ export interface DashboardSummary {
   membersPaidFrfCount: number;
 }
 
+export type PendingFrfFeeStatus =
+  (typeof PendingFrfFeeStatus)[keyof typeof PendingFrfFeeStatus];
+
+export const PendingFrfFeeStatus = {
+  pending: "pending",
+  overdue: "overdue",
+  partial: "partial",
+} as const;
+
+export interface PendingFrfFee {
+  contributionId: string;
+  memberId: string;
+  fullName: string;
+  membershipId: string;
+  mobileNumber: string;
+  city: string;
+  claimId: string;
+  caseTitle: string;
+  amount: number;
+  balance: number;
+  status: PendingFrfFeeStatus;
+  approvedDate?: string | null;
+}
+
 export type PendingMemberFeeStatus =
   (typeof PendingMemberFeeStatus)[keyof typeof PendingMemberFeeStatus];
 
