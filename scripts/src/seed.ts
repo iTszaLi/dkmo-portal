@@ -7,6 +7,7 @@ import {
   sponsorsTable,
   tasksTable,
   frfClaimsTable,
+  frfContributionsTable,
   loansTable,
   receiptsTable,
   eventSponsorsTable,
@@ -612,18 +613,21 @@ async function main() {
 
   // ── FRF Claims ────────────────────────────────────────────────────────────
   console.log("  ↳ inserting FRF claims…");
+  // One-active-case workflow: exactly ONE claim is "approved" (the active
+  // collection case). Completed cases are "disbursed" (history); the rest
+  // are in the review pipeline or rejected. 7 unique, realistic claims.
   const frfClaimInserts = [
-    { memberId: insertedMembers[6].id,  claimantName: insertedMembers[6].fullName,  membershipId: insertedMembers[6].membershipId,  claimType: "death_benefit", amountRequested: "50000", amountApproved: "50000", status: "approved",     claimDate: daysAgo(120), approvedDate: daysAgo(100), approvedBy: "Fazlurrahman Kolkar",      beneficiaryName: "Noor Salman",         beneficiaryRelation: "spouse", description: "Death benefit claim following the passing of member's father.", notes: "Verified by FRF Convenor. Disbursed in full." },
-    { memberId: insertedMembers[9].id,  claimantName: insertedMembers[9].fullName,  membershipId: insertedMembers[9].membershipId,  claimType: "medical",       amountRequested: "25000", amountApproved: "20000", status: "approved",     claimDate: daysAgo(60),  approvedDate: daysAgo(45),  approvedBy: "Abdul Rahiman Sulaiman",  beneficiaryName: "Ghani Ahmed Mulki",   beneficiaryRelation: "self",   description: "Cardiac surgery expenses – Al-Hamidi Hospital, Riyadh.", notes: "Partial approval; remaining from personal contribution." },
-    { memberId: insertedMembers[14].id, claimantName: insertedMembers[14].fullName, membershipId: insertedMembers[14].membershipId, claimType: "education",     amountRequested: "15000", amountApproved: "0",     status: "pending",      claimDate: daysAgo(10),                              approvedBy: "",                        beneficiaryName: "Shareef Thokur Jr.",  beneficiaryRelation: "son",    description: "Engineering college admission fee for son.", notes: "Awaiting academic documents." },
-    { memberId: insertedMembers[19].id, claimantName: insertedMembers[19].fullName, membershipId: insertedMembers[19].membershipId, claimType: "marriage",      amountRequested: "20000", amountApproved: "0",     status: "under_review", claimDate: daysAgo(20),                              approvedBy: "",                        beneficiaryName: "Ashraf Sheikh Koteshwar", beneficiaryRelation: "self",  description: "Marriage assistance grant.", notes: "Documents submitted; under committee review." },
-    { memberId: insertedMembers[2].id,  claimantName: insertedMembers[2].fullName,  membershipId: insertedMembers[2].membershipId,  claimType: "emergency",     amountRequested: "10000", amountApproved: "10000", status: "approved",     claimDate: daysAgo(80),  approvedDate: daysAgo(72),  approvedBy: "Fazlurrahman Kolkar",      beneficiaryName: "Irshad Bajpe",        beneficiaryRelation: "self",   description: "Emergency travel expenses – family bereavement in India.", notes: "Fast-tracked under emergency protocol." },
-    { memberId: insertedMembers[22].id, claimantName: insertedMembers[22].fullName, membershipId: insertedMembers[22].membershipId, claimType: "medical",       amountRequested: "8000",  amountApproved: "0",     status: "rejected",     claimDate: daysAgo(45),                              approvedBy: "Yousuf Addoor",           beneficiaryName: "Zia Ganjimutt",       beneficiaryRelation: "self",   description: "Dental treatment claim.", notes: "Rejected: dental treatment not covered under current FRF policy." },
-    { memberId: insertedMembers[4].id,  claimantName: insertedMembers[4].fullName,  membershipId: insertedMembers[4].membershipId,  claimType: "education",     amountRequested: "12000", amountApproved: "12000", status: "approved",     claimDate: daysAgo(150), approvedDate: daysAgo(135), approvedBy: "Abdul Rahiman Sulaiman",  beneficiaryName: "Sara Khan",           beneficiaryRelation: "daughter",description: "Nursing course fees at Wenlock Institute.", notes: "All documents verified." },
-    { memberId: insertedMembers[27].id, claimantName: insertedMembers[27].fullName, membershipId: insertedMembers[27].membershipId, claimType: "death_benefit", amountRequested: "50000", amountApproved: "0",     status: "under_review", claimDate: daysAgo(5),                               approvedBy: "",                        beneficiaryName: "Fatima Majeed",       beneficiaryRelation: "spouse", description: "Death benefit following member's hospitalisation and passing.", notes: "Death certificate submitted; final verification pending." },
-    { memberId: insertedMembers[11].id, claimantName: insertedMembers[11].fullName, membershipId: insertedMembers[11].membershipId, claimType: "medical",       amountRequested: "18000", amountApproved: "15000", status: "approved",     claimDate: daysAgo(200), approvedDate: daysAgo(185), approvedBy: "Fazlurrahman Kolkar",      beneficiaryName: "Yousuf Addoor",       beneficiaryRelation: "self",   description: "Kidney stone surgery – Al-Salama Hospital Jeddah.", notes: "Approved with deduction for non-covered items." },
-    { memberId: insertedMembers[17].id, claimantName: insertedMembers[17].fullName, membershipId: insertedMembers[17].membershipId, claimType: "marriage",      amountRequested: "15000", amountApproved: "15000", status: "approved",     claimDate: daysAgo(300), approvedDate: daysAgo(282), approvedBy: "Abdul Rahiman Sulaiman",  beneficiaryName: "Sadiq Ahmed Udupi",   beneficiaryRelation: "self",   description: "Marriage assistance for self.", notes: "Approved under standard marriage benefit." },
-    { memberId: insertedMembers[32].id, claimantName: insertedMembers[32].fullName, membershipId: insertedMembers[32].membershipId, claimType: "emergency",     amountRequested: "7000",  amountApproved: "7000",  status: "approved",     claimDate: daysAgo(35),  approvedDate: daysAgo(28),  approvedBy: "Fazlurrahman Kolkar",      beneficiaryName: "Junaid Rashid Kottara", beneficiaryRelation: "self", description: "Emergency funds for flood damage to house in Kottara.", notes: "Emergency approved. Relief disbursed." },
+    // ── History: completed & closed collection cases ──
+    { title: "Death Benefit — Late Hameed Nazeer's Family", memberId: insertedMembers[16].id, claimantName: insertedMembers[16].fullName, membershipId: insertedMembers[16].membershipId, claimType: "death_benefit", amountRequested: "50000", amountApproved: "50000", status: "disbursed", claimDate: daysAgo(320), approvedDate: daysAgo(300), disbursedAt: daysAgo(230), disbursedBy: "Fazlurrahman Kolkar", approvedBy: "Fazlurrahman Kolkar", beneficiaryName: "Ayesha Nazeer", beneficiaryRelation: "spouse", description: "Death benefit for the family following the member's passing in Dammam.", notes: "Collection target reached; SAR 50,000 handed over to the family. Case closed." },
+    { title: "Emergency Aid — Kolkar House Fire", memberId: insertedMembers[2].id, claimantName: insertedMembers[2].fullName, membershipId: insertedMembers[2].membershipId, claimType: "emergency", amountRequested: "12000", amountApproved: "12000", status: "disbursed", claimDate: daysAgo(210), approvedDate: daysAgo(200), disbursedAt: daysAgo(150), disbursedBy: "Abdul Rahiman Sulaiman", approvedBy: "Abdul Rahiman Sulaiman", beneficiaryName: "Irshad Bajpe", beneficiaryRelation: "self", description: "Emergency assistance after a kitchen fire damaged the member's family home in Kolkar.", notes: "Fast-tracked under emergency protocol. Fully collected and disbursed." },
+    { title: "Air Ticket — Medical Escort to Mangalore", memberId: insertedMembers[11].id, claimantName: insertedMembers[11].fullName, membershipId: insertedMembers[11].membershipId, claimType: "air_ticket", amountRequested: "3500", amountApproved: "3500", status: "disbursed", claimDate: daysAgo(140), approvedDate: daysAgo(130), disbursedAt: daysAgo(95), disbursedBy: "Fazlurrahman Kolkar", approvedBy: "Fazlurrahman Kolkar", beneficiaryName: "Yousuf Addoor", beneficiaryRelation: "self", description: "Return air ticket to escort ailing mother for treatment at Wenlock Hospital, Mangalore.", notes: "Ticket booked directly by the committee. Case closed." },
+    // ── The ONE active collection case ──
+    { title: "Death Benefit — Late Asif Kannur's Family", memberId: insertedMembers[1].id, claimantName: insertedMembers[1].fullName, membershipId: insertedMembers[1].membershipId, claimType: "death_benefit", amountRequested: "50000", amountApproved: "50000", status: "approved", claimDate: daysAgo(40), approvedDate: daysAgo(25), approvedBy: "Fazlurrahman Kolkar", beneficiaryName: "Fathima Begum", beneficiaryRelation: "spouse", description: "Death benefit collection for the family of the late member; SAR 50 per member until the target is reached.", notes: "Active collection case — SAR 50 per member. Collection in progress." },
+    // ── Review pipeline (no collection yet) ──
+    { title: "Medical Emergency — Cardiac Surgery Support", memberId: insertedMembers[9].id, claimantName: insertedMembers[9].fullName, membershipId: insertedMembers[9].membershipId, claimType: "emergency", amountRequested: "20000", amountApproved: "0", status: "under_review", claimDate: daysAgo(12), approvedBy: "", beneficiaryName: "Ghani Ahmed Mulki", beneficiaryRelation: "self", description: "Support towards cardiac surgery expenses at Al-Hamidi Hospital, Riyadh.", notes: "Hospital estimate submitted; committee review in progress. Collection can open only after the current active case closes." },
+    { title: "Air Ticket — Family Bereavement Travel", memberId: insertedMembers[19].id, claimantName: insertedMembers[19].fullName, membershipId: insertedMembers[19].membershipId, claimType: "air_ticket", amountRequested: "2800", amountApproved: "0", status: "pending", claimDate: daysAgo(4), approvedBy: "", beneficiaryName: "Ashraf Sheikh Koteshwar", beneficiaryRelation: "self", description: "Emergency air ticket to attend father's funeral in Udupi.", notes: "Submitted; awaiting initial screening by the FRF convenor." },
+    // ── Rejected (history) ──
+    { title: "Utility Dues Clearance Request", memberId: insertedMembers[22].id, claimantName: insertedMembers[22].fullName, membershipId: insertedMembers[22].membershipId, claimType: "other", amountRequested: "4500", amountApproved: "0", status: "rejected", claimDate: daysAgo(70), approvedBy: "", rejectedBy: "Yousuf Addoor", rejectedAt: daysAgo(60), beneficiaryName: "Zia Ganjimutt", beneficiaryRelation: "self", description: "Request to clear accumulated utility bill arrears.", notes: "Rejected: routine utility dues are not covered under FRF policy." },
   ];
   const insertedClaims = await db
     .insert(frfClaimsTable)
@@ -663,35 +667,58 @@ async function main() {
     }
   });
 
-  // FRF contributions: every active member is liable SAR 50 per approved claim
-  // event. For a clean demo we only generate contributions for the 2 most recent
-  // approved claims so the receipts list stays small and realistic.
+  // FRF contributions: only the ONE active (approved) collection case is
+  // collecting — SAR 50 per eligible member, mixed paid/pending for the demo.
+  // Completed (disbursed) cases keep a fully-paid ledger as history.
   let frfSeq = 1;
-  const approvedClaims = insertedClaims
-    .filter((c) => c.status === "approved")
-    .slice(0, 2);
-  approvedClaims.forEach((claim, ci) => {
-    insertedMembers.forEach((mem, mi) => {
-      if (mem.frfStatus !== "active") return;
-      const roll = (ci + mi) % 5;
-      const status = roll === 0 ? "overdue" : roll === 1 ? "pending" : "paid";
-      paymentInserts.push({
-        memberId: mem.id,
-        paymentType: "frf_contribution",
-        frfClaimId: claim.id,
-        amountDue: "50",
-        amountPaid: status === "paid" ? "50" : "0",
-        status,
-        paymentMethod: methods[mi % methods.length],
-        receiptNumber: `DKMO-FRF-${String(frfSeq++).padStart(5, "0")}`,
-        notes: `FRF contribution for claim ${claim.membershipId}`,
-        ...(status === "paid"
-          ? { paidAt: daysAgo((ci * 7 + mi) % 90) }
-          : { dueDate: daysFromNow(status === "overdue" ? -10 : 12) }),
-      });
+  const eligibleMembers = insertedMembers.filter(
+    (m) => m.frfStatus === "active" && m.feeStatus === "paid",
+  );
+  const contributionInserts: (typeof frfContributionsTable.$inferInsert)[] = [];
+
+  const activeClaim = insertedClaims.find((c) => c.status === "approved")!;
+  eligibleMembers.forEach((mem, mi) => {
+    const isPaid = mi % 4 !== 0; // ~75% have already paid the active case
+    contributionInserts.push({
+      claimId: activeClaim.id,
+      memberId: mem.id,
+      amount: "50",
+      amountPaid: isPaid ? "50" : "0",
+      status: isPaid ? "paid" : "pending",
+      ...(isPaid ? { paidAt: daysAgo((mi * 3) % 24) } : {}),
+    });
+    paymentInserts.push({
+      memberId: mem.id,
+      paymentType: "frf_contribution",
+      frfClaimId: activeClaim.id,
+      amountDue: "50",
+      amountPaid: isPaid ? "50" : "0",
+      status: isPaid ? "paid" : "pending",
+      paymentMethod: methods[mi % methods.length],
+      receiptNumber: `DKMO-FRF-${String(frfSeq++).padStart(5, "0")}`,
+      notes: `FRF contribution — ${activeClaim.title}`,
+      ...(isPaid ? { paidAt: daysAgo((mi * 3) % 24) } : { dueDate: daysFromNow(12) }),
     });
   });
+
+  // Historical ledgers for completed cases: everyone paid, case closed.
+  insertedClaims
+    .filter((c) => c.status === "disbursed")
+    .forEach((claim, ci) => {
+      eligibleMembers.forEach((mem, mi) => {
+        contributionInserts.push({
+          claimId: claim.id,
+          memberId: mem.id,
+          amount: "50",
+          amountPaid: "50",
+          status: "paid",
+          paidAt: daysAgo(240 - ci * 60 + (mi % 20)),
+        });
+      });
+    });
+
   await db.insert(paymentsTable).values(paymentInserts);
+  await db.insert(frfContributionsTable).values(contributionInserts);
 
   // ── Event Sponsors ────────────────────────────────────────────────────────
   console.log("  ↳ inserting event sponsors…");

@@ -581,6 +581,15 @@ async function main() {
     ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS user_agent TEXT;
   `);
 
+  // Business rule: only ONE FRF collection case may be active (approved) at
+  // a time — enforced at the database level so concurrent approvals cannot
+  // both succeed. The API maps this violation to HTTP 409.
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS frf_claims_single_active
+      ON frf_claims ((true))
+      WHERE status = 'approved';
+  `);
+
   console.log("✅  All tables created.");
   await pool.end();
 }

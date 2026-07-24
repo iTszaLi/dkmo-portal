@@ -49,6 +49,28 @@ function caseStatusOf(status: string): "open" | "closed" {
   return status === "disbursed" || status === "rejected" ? "closed" : "open";
 }
 
+/**
+ * Business rule: only ONE FRF collection case may be active at a time.
+ * A claim with status "approved" IS the active collection case. Returns the
+ * currently active claim, optionally excluding one id (for updates).
+ */
+async function findActiveCollectionCase(excludeId?: string) {
+  const rows = await db.select().from(frfClaimsTable).where(eq(frfClaimsTable.status, "approved"));
+  return rows.find((r) => r.id !== excludeId) ?? null;
+}
+
+function activeCaseConflict(active?: { title: string | null; claimantName: string } | null) {
+  const name = active ? active.title || active.claimantName || "another case" : "another case";
+  return `Only one FRF collection case can be active at a time. "${name}" is still collecting — close (mark Completed) or reject it before opening a new one.`;
+}
+
+/** True when the error is a violation of the frf_claims_single_active index. */
+function isSingleActiveViolation(err: unknown): boolean {
+  const e = err as { code?: string; constraint?: string; message?: string; cause?: any };
+  const flat = [e, e?.cause].filter(Boolean);
+  return flat.some((x) => x.code === "23505" && String(x.constraint ?? x.message ?? "").includes("frf_claims_single_active"));
+}
+
 function frfToApi(row: any) {
   return {
     id: row.id,
@@ -134,6 +156,9 @@ router.get("/frf/pending-fees", async (req, res): Promise<void> => {
       .from(frfContributionsTable)
       .innerJoin(frfClaimsTable, eq(frfContributionsTable.claimId, frfClaimsTable.id))
       .innerJoin(membersTable, eq(frfContributionsTable.memberId, membersTable.id))
+      // Only the active (approved) collection case still collects; closed
+      // cases keep their history but stop generating dues.
+      .where(eq(frfClaimsTable.status, "approved"))
       .orderBy(desc(frfContributionsTable.createdAt));
 
     const now = new Date();
@@ -202,6 +227,15 @@ router.post("/frf/claims", requireRole("admin", "finance"), async (req, res): Pr
   }
   try {
     const data = parsed.data;
+    // One-active-case rule: a claim created directly as "approved" opens a
+    // collection case, which is forbidden while another case is collecting.
+    if (data.status === "approved") {
+      const active = await findActiveCollectionCase();
+      if (active) {
+        res.status(409).json({ error: activeCaseConflict(active) });
+        return;
+      }
+    }
     const [created] = await db.insert(frfClaimsTable).values({
       title: data.title,
       photoUrl: data.photoUrl ?? null,
@@ -223,15 +257,19 @@ router.post("/frf/claims", requireRole("admin", "finance"), async (req, res): Pr
       description: data.description,
       notes: data.notes,
     }).returning();
-    // Auto-link: every new case immediately creates a pending contribution
-    // record for every active member (unless created directly as rejected).
-    if (created!.status !== "rejected") {
+    // Collection opens only when a claim is approved: contribution rows are
+    // generated for every eligible member at that moment, not at submission.
+    if (created!.status === "approved") {
       const generated = await generateContributionsForClaim(created!.id, Number(created!.contributionAmount));
-      req.log.info({ claimId: created!.id, generated }, "FRF contributions generated on case creation");
+      req.log.info({ claimId: created!.id, generated }, "FRF contributions generated on case approval");
     }
     logAudit(req, "claim_created", "frf", { entityId: created!.id, entityName: data.claimantName, details: `Type: ${data.claimType}, Status: ${data.status}` });
     res.status(201).json(frfToApi(created!));
   } catch (err) {
+    if (isSingleActiveViolation(err)) {
+      res.status(409).json({ error: activeCaseConflict(await findActiveCollectionCase()) });
+      return;
+    }
     req.log.error(err);
     res.status(500).json({ error: "Failed to create FRF claim" });
   }
@@ -289,6 +327,16 @@ router.put("/frf/claims/:id", requireRole("admin", "finance"), async (req, res):
     const [existing] = await db.select().from(frfClaimsTable).where(eq(frfClaimsTable.id, id));
     if (!existing) { res.status(404).json({ error: "Not found" }); return; }
 
+    // One-active-case rule: approving this claim opens its collection case,
+    // which is forbidden while a different case is still collecting.
+    if (data.status === "approved" && existing.status !== "approved") {
+      const active = await findActiveCollectionCase(id);
+      if (active) {
+        res.status(409).json({ error: activeCaseConflict(active) });
+        return;
+      }
+    }
+
     const [updated] = await db.update(frfClaimsTable).set(updateData).where(eq(frfClaimsTable.id, id)).returning();
     if (!updated) { res.status(404).json({ error: "Not found" }); return; }
 
@@ -301,10 +349,11 @@ router.put("/frf/claims/:id", requireRole("admin", "finance"), async (req, res):
     if (isRejected && !wasRejected) {
       const cancelled = await cancelPendingContributions(updated.id);
       req.log.info({ claimId: updated.id, cancelled }, "FRF pending contributions cancelled on rejection");
-    } else if (!isRejected && wasRejected) {
-      const reopened = await reopenCancelledContributions(updated.id);
+    } else if (updated.status === "approved" && existing.status !== "approved") {
+      // Approval opens the collection case: (re)generate the ledger rows.
+      const reopened = wasRejected ? await reopenCancelledContributions(updated.id) : 0;
       const generated = await generateContributionsForClaim(updated.id, Number(updated.contributionAmount));
-      req.log.info({ claimId: updated.id, generated, reopened }, "FRF contributions reopened");
+      req.log.info({ claimId: updated.id, generated, reopened }, "FRF contributions generated on approval");
     } else if (!isRejected && data.contributionAmount !== undefined && Number(existing.contributionAmount) !== data.contributionAmount) {
       // Amount changed on an open claim: update unpaid ledger rows only.
       await db.update(frfContributionsTable)
@@ -316,6 +365,10 @@ router.put("/frf/claims/:id", requireRole("admin", "finance"), async (req, res):
     logAudit(req, action, "frf", { entityId: updated.id, entityName: updated.claimantName, details: `Status: ${updated.status}` });
     res.json(frfToApi(updated));
   } catch (err) {
+    if (isSingleActiveViolation(err)) {
+      res.status(409).json({ error: activeCaseConflict(await findActiveCollectionCase(id)) });
+      return;
+    }
     req.log.error(err);
     res.status(500).json({ error: "Failed to update FRF claim" });
   }

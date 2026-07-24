@@ -334,6 +334,12 @@ export default function Frf() {
     claimType: typeFilter !== "all" ? typeFilter : undefined,
   });
 
+  // One-active-case rule: at most one claim may be "approved" (collecting).
+  // Fetched unfiltered so the banner and guards work regardless of filters.
+  const { data: allClaims = [] } = useListFrfClaims();
+  const activeCase = (allClaims as unknown as (FrfClaimFull & { collectedAmount?: number; targetProgress?: number })[])
+    .find((c) => c.status === "approved");
+
   const searched = (searchText.trim()
     ? rawClaims.filter((c) => {
         const q = searchText.toLowerCase();
@@ -400,11 +406,23 @@ export default function Frf() {
   };
 
   async function handleQuickStatus(claim: FrfClaimFull, status: ClaimStatus, notes?: string) {
+    // One-active-case rule (also enforced server-side): approving opens a
+    // collection case, which requires the current one to be closed first.
+    if (status === "approved" && activeCase && activeCase.id !== claim.id) {
+      toast({
+        title: "An FRF collection case is already active",
+        description: `"${activeCase.title || activeCase.claimantName}" is still collecting. Close it (mark Completed) before approving another claim.`,
+        variant: "destructive",
+      });
+      return;
+    }
     setIsSubmittingQuick(true);
     try {
       await updateMutation.mutateAsync({ id: claim.id, data: { status, ...(notes ? { reviewNotes: notes } : {}) } as any });
       toast({ title: `Status updated to ${status.replace("_", " ")}` });
       void refetch();
+    } catch {
+      // onError toast already shown by the mutation.
     } finally {
       setIsSubmittingQuick(false);
     }
@@ -434,6 +452,38 @@ export default function Frf() {
           )}
         </div>
       </div>
+
+      {/* One-active-case banner */}
+      {activeCase ? (
+        <div className="rounded-2xl border border-green-300 dark:border-green-900/60 bg-gradient-to-r from-green-50 via-emerald-50 to-white dark:from-green-950/40 dark:via-slate-900 dark:to-slate-900 p-4 sm:p-5" data-testid="banner-active-case">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-wide text-green-700 dark:text-green-400 flex items-center gap-1.5">
+                <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-60" /><span className="relative inline-flex rounded-full h-2 w-2 bg-green-600" /></span>
+                Active Collection Case
+              </p>
+              <p className="font-bold text-green-950 dark:text-green-100 truncate mt-1">{activeCase.title || activeCase.claimantName}</p>
+              <p className="text-xs text-green-800/70 dark:text-slate-400 mt-0.5">
+                Only one case collects at a time — new cases can open after this one is marked Completed.
+              </p>
+            </div>
+            <div className="sm:w-64 shrink-0">
+              <div className="flex justify-between text-xs font-medium text-green-800 dark:text-slate-300 mb-1">
+                <span>{formatSAR(activeCase.collectedAmount ?? 0)} collected</span>
+                <span>Target {formatSAR(activeCase.amountRequested)}</span>
+              </div>
+              <div className="h-2.5 rounded-full bg-green-100 dark:bg-slate-800 overflow-hidden">
+                <div className="h-full rounded-full bg-green-600 dark:bg-green-500 transition-all" style={{ width: `${Math.min(100, activeCase.targetProgress ?? 0)}%` }} />
+              </div>
+              <p className="text-right text-xs text-green-700 dark:text-green-400 font-semibold mt-1">{activeCase.targetProgress ?? 0}%</p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-emerald-200 dark:border-slate-800 bg-emerald-50/60 dark:bg-slate-900 p-4 text-sm text-emerald-800 dark:text-slate-300" data-testid="banner-no-active-case">
+          No collection case is currently active — approving a claim will open the next collection case (SAR 50 per member).
+        </div>
+      )}
 
       {/* Stats */}
       {stats && (
@@ -872,9 +922,19 @@ export default function Frf() {
                 <Select value={form.status} onValueChange={(v) => setForm((f) => ({ ...f, status: v as ClaimStatus }))}>
                   <SelectTrigger className="dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200"><SelectValue /></SelectTrigger>
                   <SelectContent className="dark:bg-slate-900 dark:border-slate-800">
-                    {CLAIM_STATUSES.map((s) => <SelectItem key={s} value={s} className="capitalize dark:text-slate-300">{s.replace("_", " ")}</SelectItem>)}
+                    {CLAIM_STATUSES.map((s) => {
+                      const blocked = s === "approved" && !!activeCase && activeCase.id !== editingClaim?.id;
+                      return (
+                        <SelectItem key={s} value={s} disabled={blocked} className="capitalize dark:text-slate-300">
+                          {s.replace("_", " ")}{blocked ? " — another case is active" : ""}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
+                {!!activeCase && activeCase.id !== editingClaim?.id && (
+                  <p className="text-[11px] text-amber-700 dark:text-amber-400">Approval is locked while "{activeCase.title || activeCase.claimantName}" is still collecting.</p>
+                )}
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-medium text-green-800 dark:text-slate-400">Closing Date</label>
