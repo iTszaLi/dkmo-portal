@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { partyPoppers } from "./confetti";
 
 export type Role = "admin" | "finance" | "event" | "viewer";
 
@@ -139,6 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const data = (await res.json()) as { user: AuthUser };
     setUser(data.user);
+    partyPoppers();
   }, []);
 
   const logout = useCallback(async () => {

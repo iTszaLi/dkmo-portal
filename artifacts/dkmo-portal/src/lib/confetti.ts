@@ -43,6 +43,34 @@ export function celebrate(): void {
   }, 180);
 }
 
+/** Party poppers firing from both left and right edges — used on login. */
+export function partyPoppers(): void {
+  if (prefersReducedMotion()) return;
+  const end = Date.now() + 1600;
+  const frame = () => {
+    confetti({
+      particleCount: 7,
+      angle: 60,
+      spread: 65,
+      startVelocity: 55,
+      origin: { x: 0, y: 0.75 },
+      colors: DKMO_COLORS,
+      disableForReducedMotion: true,
+    });
+    confetti({
+      particleCount: 7,
+      angle: 120,
+      spread: 65,
+      startVelocity: 55,
+      origin: { x: 1, y: 0.75 },
+      colors: DKMO_COLORS,
+      disableForReducedMotion: true,
+    });
+    if (Date.now() < end) requestAnimationFrame(frame);
+  };
+  frame();
+}
+
 /** A bigger, longer celebration for milestone moments. */
 export function celebrateMilestone(): void {
   if (prefersReducedMotion()) return;
