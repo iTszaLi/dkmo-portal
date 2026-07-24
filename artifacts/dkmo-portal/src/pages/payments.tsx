@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, UserCircle, MoreHorizontal, Search, Wallet, CheckCircle2, Clock, XCircle, MinusCircle, HeartHandshake, Send, MessageSquareWarning, Phone, MapPin } from "lucide-react";
+import { Plus, UserCircle, MoreHorizontal, Search, Wallet, CheckCircle2, XCircle, MinusCircle, HeartHandshake, Send, MessageSquareWarning, Phone, MapPin } from "lucide-react";
 import { formatSAR, formatDate, feeStatusLabel, feeStatusBadgeClass } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,27 +24,16 @@ import { normalizeWhatsAppNumber, buildWhatsAppLink, type WhatsAppTarget } from 
 import { WhatsAppBulkDialog } from "@/components/WhatsAppBulkDialog";
 
 type PaymentTab = "membership" | "frf";
-type StatusView = "all" | "paid" | "pending" | "unpaid" | "overdue";
+type StatusView = "all" | "paid" | "unpaid";
 
 const STATUS_VIEWS: { value: StatusView; label: string }[] = [
   { value: "all", label: "All" },
   { value: "paid", label: "Paid" },
-  { value: "pending", label: "Pending" },
   { value: "unpaid", label: "Unpaid" },
-  { value: "overdue", label: "Overdue" },
 ];
-
-/** A fee is considered overdue when it is still due 30+ days after the member was registered. */
-const OVERDUE_AFTER_DAYS = 30;
 
 function isDue(m: Member): boolean {
   return m.feeStatus !== "paid" && m.feeStatus !== "exempt";
-}
-
-function isOverdue(m: Member): boolean {
-  if (!isDue(m)) return false;
-  const created = new Date(m.createdAt).getTime();
-  return Date.now() - created > OVERDUE_AFTER_DAYS * 24 * 60 * 60 * 1000;
 }
 
 function buildReminderMessage(m: Member): string {
@@ -83,18 +72,15 @@ export default function Payments() {
     switch (view) {
       case "paid":
         return all.filter((m) => m.feeStatus === "paid");
-      case "pending":
-        return all.filter((m) => m.feeStatus === "pending" || m.feeStatus === "partial");
       case "unpaid":
-        return all.filter((m) => m.feeStatus === "unpaid");
-      case "overdue":
-        return all.filter(isOverdue);
+        // Everything still due — includes pending, partial and unpaid statuses.
+        return all.filter(isDue);
       default:
         return all;
     }
   }, [all, view]);
 
-  const reminderView = view === "pending" || view === "unpaid" || view === "overdue";
+  const reminderView = view === "unpaid";
 
   // KPI figures
   const totalCollected = all.filter((m) => m.feeStatus === "paid").reduce((acc, m) => acc + m.membershipFee, 0);
@@ -108,20 +94,10 @@ export default function Payments() {
           { label: "Paid Members", value: String(filtered.length) },
           { label: "Total Collected", value: formatSAR(viewAmount), tone: "green" },
         ];
-      case "pending":
-        return [
-          { label: "Pending Members", value: String(filtered.length) },
-          { label: "Pending Amount", value: formatSAR(viewAmount), tone: "red" },
-        ];
       case "unpaid":
         return [
           { label: "Unpaid Members", value: String(filtered.length) },
           { label: "Outstanding Amount", value: formatSAR(viewAmount), tone: "red" },
-        ];
-      case "overdue":
-        return [
-          { label: "Overdue Members", value: String(filtered.length) },
-          { label: "Total Overdue Amount", value: formatSAR(viewAmount), tone: "red" },
         ];
       default:
         return [
@@ -468,11 +444,8 @@ export default function Payments() {
                   </TableCell>
                   <TableCell>
                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${feeStatusBadgeClass(member.feeStatus)}`}>
-                      {member.feeStatus === "paid" ? <CheckCircle2 className="h-3 w-3" /> : member.feeStatus === "exempt" ? <MinusCircle className="h-3 w-3" /> : member.feeStatus === "pending" || member.feeStatus === "partial" ? <Clock className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-                      {feeStatusLabel(member.feeStatus)}
-                      {view !== "overdue" && isOverdue(member) && (
-                        <span className="ml-1 rounded-full bg-red-100 dark:bg-red-950/40 px-1.5 text-[10px] font-semibold text-red-700 dark:text-red-300">Overdue</span>
-                      )}
+                      {member.feeStatus === "paid" ? <CheckCircle2 className="h-3 w-3" /> : member.feeStatus === "exempt" ? <MinusCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                      {member.feeStatus === "paid" || member.feeStatus === "exempt" ? feeStatusLabel(member.feeStatus) : "Unpaid"}
                     </span>
                   </TableCell>
                   <TableCell className="text-sm text-emerald-700 dark:text-slate-400">
@@ -515,16 +488,6 @@ export default function Payments() {
                           {member.feeStatus !== "paid" && (
                             <DropdownMenuItem onClick={() => handleFeeStatus(member.id, "paid")} className="text-emerald-700 dark:text-emerald-400 dark:focus:bg-slate-800">
                               <CheckCircle2 className="mr-2 h-4 w-4" /> Mark Fee Paid
-                            </DropdownMenuItem>
-                          )}
-                          {member.feeStatus !== "partial" && (
-                            <DropdownMenuItem onClick={() => handleFeeStatus(member.id, "partial")} className="text-yellow-700 dark:text-yellow-400 dark:focus:bg-slate-800">
-                              <Clock className="mr-2 h-4 w-4" /> Mark Fee Partial
-                            </DropdownMenuItem>
-                          )}
-                          {member.feeStatus !== "pending" && (
-                            <DropdownMenuItem onClick={() => handleFeeStatus(member.id, "pending")} className="text-amber-700 dark:text-amber-400 dark:focus:bg-slate-800">
-                              <Clock className="mr-2 h-4 w-4" /> Mark Fee Pending
                             </DropdownMenuItem>
                           )}
                           {member.feeStatus !== "exempt" && (
