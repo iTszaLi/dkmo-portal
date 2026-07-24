@@ -42,7 +42,7 @@ async function loadImageAsBase64(url: string): Promise<string> {
 const STATUS_LABEL: Record<string, string> = {
   paid: "Paid",
   partial: "Partial",
-  pending: "Pending",
+  pending: "Unpaid",
   overdue: "Overdue",
   cancelled: "Cancelled",
   exempt: "Exempt",
@@ -216,12 +216,12 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
     doc.text("Dakshina Karnataka Muslim Ookota", pageW / 2, 11, { align: "center" });
     doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
-    doc.text(`FRF Fees — ${pendingView ? "Pending (All Cases)" : caseTitle}`, pageW / 2, 19, { align: "center" });
+    doc.text(`FRF Fees — ${pendingView ? "Unpaid (All Cases)" : caseTitle}`, pageW / 2, 19, { align: "center" });
 
     doc.setTextColor(80, 80, 80);
     doc.setFontSize(8);
     doc.text(
-      `Generated: ${generatedOn()}${hasFilters ? "   |   Filtered view" : ""}   |   Members Listed: ${exportStats.members}   |   Paid: ${exportStats.paid}   |   Pending: ${exportStats.pending}   |   Collected: ${formatSAR(exportStats.collected)}`,
+      `Generated: ${generatedOn()}${hasFilters ? "   |   Filtered view" : ""}   |   Members Listed: ${exportStats.members}   |   Paid: ${exportStats.paid}   |   Unpaid: ${exportStats.pending}   |   Collected: ${formatSAR(exportStats.collected)}`,
       pageW / 2, 35, { align: "center" },
     );
 
@@ -258,11 +258,11 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
     sheet.getCell("A1").font = { bold: true, size: 14 };
     sheet.getCell("A1").alignment = { horizontal: "center" };
     sheet.mergeCells("A2:I2");
-    sheet.getCell("A2").value = `FRF Fees — ${pendingView ? "Pending (All Cases)" : caseTitle}`;
+    sheet.getCell("A2").value = `FRF Fees — ${pendingView ? "Unpaid (All Cases)" : caseTitle}`;
     sheet.getCell("A2").font = { bold: true, size: 11, color: { argb: "FF059669" } };
     sheet.getCell("A2").alignment = { horizontal: "center" };
     sheet.mergeCells("A3:I3");
-    sheet.getCell("A3").value = `Generated: ${generatedOn()}${hasFilters ? "  |  Filtered view" : ""}  |  Members Listed: ${exportStats.members}  |  Paid: ${exportStats.paid}  |  Pending: ${exportStats.pending}  |  Collected: ${formatSAR(exportStats.collected)}`;
+    sheet.getCell("A3").value = `Generated: ${generatedOn()}${hasFilters ? "  |  Filtered view" : ""}  |  Members Listed: ${exportStats.members}  |  Paid: ${exportStats.paid}  |  Unpaid: ${exportStats.pending}  |  Collected: ${formatSAR(exportStats.collected)}`;
     sheet.getCell("A3").font = { size: 9, color: { argb: "FF6B7280" } };
     sheet.getCell("A3").alignment = { horizontal: "center" };
     sheet.addRow([]);
@@ -284,7 +284,7 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
         cell.border = { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } };
       });
     });
-    const totalsRow = sheet.addRow(["", "TOTALS", "", "", `${exportStats.paid} paid / ${exportStats.pending} pending`, "", Number(exportStats.collected.toFixed(2)), "", ""]);
+    const totalsRow = sheet.addRow(["", "TOTALS", "", "", `${exportStats.paid} paid / ${exportStats.pending} unpaid`, "", Number(exportStats.collected.toFixed(2)), "", ""]);
     totalsRow.eachCell((cell) => {
       cell.font = { bold: true };
       cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF0FDF4" } };
@@ -332,7 +332,7 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
             className="bg-[#25D366] hover:bg-[#128C7E] text-white"
             data-testid="button-frf-remind-all"
           >
-            <Send className="h-4 w-4 mr-1" /> Remind All Pending ({pendingFrf?.length ?? 0})
+            <Send className="h-4 w-4 mr-1" /> Remind All Unpaid ({pendingFrf?.length ?? 0})
           </Button>
           <Button variant="outline" size="sm" onClick={exportPDF} disabled={isLoading || filtered.length === 0} className="border-emerald-300 text-emerald-800 dark:border-slate-700 dark:text-emerald-300" data-testid="button-frf-export-pdf">
             <FileDown className="h-4 w-4 mr-1" /> PDF
@@ -360,7 +360,7 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
           <p className="text-xs text-emerald-700/70 dark:text-slate-500 mt-0.5">from {stats.paid} paid member{stats.paid === 1 ? "" : "s"}</p>
         </div>
         <div className="rounded-2xl border border-red-100 dark:border-red-900/40 dark:bg-slate-900 bg-white p-4 shadow-sm">
-          <p className="text-sm font-medium text-emerald-700 dark:text-slate-400">Pending FRF Fees — All Cases</p>
+          <p className="text-sm font-medium text-emerald-700 dark:text-slate-400">Unpaid FRF Fees — All Cases</p>
           {isLoading ? <Skeleton className="h-8 w-24 mt-1" /> : (
             <p className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1" data-testid="text-frf-pending">{formatSAR(pendingTotals.amount)}</p>
           )}
@@ -372,7 +372,7 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl border border-emerald-100 dark:border-slate-800 shadow-sm">
         <div className="space-y-1">
           <label className="text-xs font-medium text-emerald-700 dark:text-slate-400">
-            Select FRF Case{pendingView && <span className="ml-1 text-emerald-500 dark:text-slate-500">(Pending view shows all cases)</span>}
+            Select FRF Case{pendingView && <span className="ml-1 text-emerald-500 dark:text-slate-500">(Unpaid view shows all cases)</span>}
           </label>
           <Select value={caseId} onValueChange={setCaseId} disabled={pendingView}>
             <SelectTrigger className="border-emerald-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 h-10" data-testid="select-payments-frf-case">
@@ -407,7 +407,7 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
             <SelectContent className="dark:bg-slate-900 dark:border-slate-800">
               <SelectItem value="all" className="dark:text-slate-300 dark:focus:bg-slate-800">All Statuses</SelectItem>
               <SelectItem value="paid" className="dark:text-slate-300 dark:focus:bg-slate-800">Paid</SelectItem>
-              <SelectItem value="pending" className="dark:text-slate-300 dark:focus:bg-slate-800">Pending</SelectItem>
+              <SelectItem value="pending" className="dark:text-slate-300 dark:focus:bg-slate-800">Unpaid</SelectItem>
             </SelectContent>
           </Select>
         </div>
