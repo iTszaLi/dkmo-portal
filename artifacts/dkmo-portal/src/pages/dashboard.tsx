@@ -43,6 +43,10 @@ import { TrendsCharts } from "@/components/dashboard/TrendsCharts";
 import { QuickActionsMenu } from "@/components/dashboard/QuickActionsMenu";
 import { useAuth } from "@/lib/auth";
 import { celebrateMilestone } from "@/lib/confetti";
+import { useQuery } from "@tanstack/react-query";
+import { Sparkline, TrendChip } from "@/components/dashboard/Sparkline";
+
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 const TRANSFER_METHOD_LABELS: Record<string, string> = {
   bank_transfer: "Bank Transfer",
@@ -251,6 +255,44 @@ export default function Dashboard() {
   }, [members]);
 
   const monthlyCollection = financialSummary?.members.collectedThisMonth ?? 0;
+
+  // Last-6-months collection series for the Monthly Collections sparkline + trend.
+  const { data: monthlySeries } = useQuery({
+    queryKey: ["dashboard-monthly-collection", 6],
+    queryFn: async (): Promise<{ month: string; total: number }[]> => {
+      const res = await fetch(`${basePath}/api/dashboard/monthly-collection?months=6`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`${res.status}`);
+      return res.json();
+    },
+    staleTime: 60_000,
+  });
+  const collectionPoints = useMemo(() => (monthlySeries ?? []).map((r) => r.total), [monthlySeries]);
+  const collectionDelta = useMemo(() => {
+    if (!monthlySeries || monthlySeries.length < 2) return null;
+    const prev = monthlySeries[monthlySeries.length - 2]!.total;
+    const cur = monthlySeries[monthlySeries.length - 1]!.total;
+    if (prev <= 0) return null;
+    return ((cur - prev) / prev) * 100;
+  }, [monthlySeries]);
+
+  // Cumulative member growth over the last 6 months (from real join dates).
+  const memberGrowthPoints = useMemo(() => {
+    if (!members?.length) return [];
+    const now = new Date();
+    const monthEnds: Date[] = [];
+    for (let i = 5; i >= 0; i--) {
+      monthEnds.push(new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59));
+    }
+    return monthEnds.map((end) => members.filter((m) => new Date(m.createdAt) <= end).length);
+  }, [members]);
+  const joinedThisMonth = useMemo(() => {
+    if (memberGrowthPoints.length < 2) return null;
+    const prev = memberGrowthPoints[memberGrowthPoints.length - 2]!;
+    const cur = memberGrowthPoints[memberGrowthPoints.length - 1]!;
+    return cur - prev;
+  }, [memberGrowthPoints]);
 
   function renderRecruiters() {
     return (
@@ -639,7 +681,7 @@ export default function Dashboard() {
       <div className="grid gap-4 sm:grid-cols-2">
         <Link href="/pending" className="block group" data-testid="link-widget-membership-reminder">
           <Card className="glass rounded-2xl border-emerald-300/70 bg-gradient-to-br from-emerald-50 via-white to-green-100/70 dark:border-emerald-900/50 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-900 dark:to-emerald-950/50 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-emerald-400 dark:group-hover:border-emerald-700 group-active:scale-[0.98] cursor-pointer h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-medium text-emerald-900 dark:text-emerald-300 flex items-center gap-2">
                 <MessageSquareWarning className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> Membership Reminder
               </CardTitle>
@@ -670,7 +712,7 @@ export default function Dashboard() {
 
         <Link href="/frf/reminders" className="block group" data-testid="link-widget-frf-reminder">
           <Card className="glass rounded-2xl border-orange-300/70 bg-gradient-to-br from-orange-50 via-white to-amber-100/70 dark:border-orange-900/50 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-900 dark:to-orange-950/50 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-orange-400 dark:group-hover:border-orange-700 group-active:scale-[0.98] cursor-pointer h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-medium text-orange-900 dark:text-orange-300 flex items-center gap-2">
                 <MessageSquareWarning className="h-4 w-4 text-orange-600 dark:text-orange-400" /> FRF Reminder
               </CardTitle>
@@ -704,27 +746,41 @@ export default function Dashboard() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Link href="/members" className="block group" data-testid="link-summary-members">
           <Card className="glass rounded-2xl border-green-200/70 bg-gradient-to-br from-green-50/90 via-white to-emerald-100/60 dark:border-slate-800 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-900 dark:to-emerald-950/40 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-green-300 dark:group-hover:border-green-700 group-active:scale-[0.98] cursor-pointer h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-medium text-green-900 dark:text-slate-300">Total Members</CardTitle>
               <Users className="h-4 w-4 text-green-700 dark:text-green-400" />
             </CardHeader>
             <CardContent>
-              {isLoadingSummary ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <AnimatedNumber
-                  value={summary?.totalMembers || 0}
-                  className="text-2xl font-bold text-green-950 dark:text-white"
-                />
-              )}
-              <p className="text-xs text-green-700/80 dark:text-slate-500 mt-1">Registered members</p>
+              <div className="flex items-end justify-between gap-2">
+                <div>
+                  {isLoadingSummary ? (
+                    <Skeleton className="h-8 w-20" />
+                  ) : (
+                    <span className="inline-flex items-center gap-2">
+                      <AnimatedNumber
+                        value={summary?.totalMembers || 0}
+                        className="text-2xl font-bold text-green-950 dark:text-white"
+                      />
+                      {joinedThisMonth != null && joinedThisMonth > 0 && (
+                        <span className="rounded-full bg-green-100 px-1.5 py-0.5 text-[10px] font-semibold text-green-700 dark:bg-green-900/40 dark:text-green-300">
+                          +{joinedThisMonth} this month
+                        </span>
+                      )}
+                    </span>
+                  )}
+                  <p className="text-xs text-green-700/80 dark:text-slate-500 mt-1.5">Registered members</p>
+                </div>
+                {memberGrowthPoints.length > 1 && (
+                  <Sparkline points={memberGrowthPoints} className="shrink-0 mb-0.5" />
+                )}
+              </div>
             </CardContent>
           </Card>
         </Link>
 
         <Link href="/members" className="block group" data-testid="link-summary-active">
           <Card className="glass rounded-2xl border-green-200/70 bg-gradient-to-br from-green-50/90 via-white to-emerald-100/60 dark:border-slate-800 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-900 dark:to-emerald-950/40 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-green-300 dark:group-hover:border-green-700 group-active:scale-[0.98] cursor-pointer h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-medium text-green-900 dark:text-slate-300">Active Members</CardTitle>
               <UserCheck className="h-4 w-4 text-green-700 dark:text-green-400" />
             </CardHeader>
@@ -748,7 +804,7 @@ export default function Dashboard() {
 
         <Link href="/frf" className="block group" data-testid="link-summary-frf-claims">
           <Card className="glass rounded-2xl border-orange-200/70 bg-gradient-to-br from-orange-50/90 via-white to-amber-100/60 dark:border-orange-900/40 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-900 dark:to-orange-950/40 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-orange-300 group-active:scale-[0.98] cursor-pointer h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-medium text-orange-900 dark:text-orange-300">Pending FRF Claims</CardTitle>
               <HeartHandshake className="h-4 w-4 text-orange-600 dark:text-orange-400" />
             </CardHeader>
@@ -772,21 +828,31 @@ export default function Dashboard() {
 
         <Link href="/payments" className="block group" data-testid="link-summary-monthly">
           <Card className="glass rounded-2xl border-green-200/70 bg-gradient-to-br from-green-50/90 via-white to-emerald-100/60 dark:border-slate-800 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-900 dark:to-emerald-950/40 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-green-300 dark:group-hover:border-green-700 group-active:scale-[0.98] cursor-pointer h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-medium text-green-900 dark:text-slate-300">Monthly Collections</CardTitle>
               <TrendingUp className="h-4 w-4 text-green-700 dark:text-green-400" />
             </CardHeader>
             <CardContent>
-              {financialSummary == null ? (
-                <Skeleton className="h-8 w-28" />
-              ) : (
-                <AnimatedNumber
-                  value={monthlyCollection}
-                  format={(n) => formatSAR(n)}
-                  className="text-2xl font-bold text-green-950 dark:text-green-300"
-                />
-              )}
-              <p className="text-xs text-green-700/80 dark:text-slate-500 mt-1">Collected this month</p>
+              <div className="flex items-end justify-between gap-2">
+                <div>
+                  {financialSummary == null ? (
+                    <Skeleton className="h-8 w-28" />
+                  ) : (
+                    <span className="inline-flex items-center gap-2">
+                      <AnimatedNumber
+                        value={monthlyCollection}
+                        format={(n) => formatSAR(n)}
+                        className="text-2xl font-bold text-green-950 dark:text-green-300"
+                      />
+                      <TrendChip delta={collectionDelta} label="vs last month" />
+                    </span>
+                  )}
+                  <p className="text-xs text-green-700/80 dark:text-slate-500 mt-1.5">Collected this month</p>
+                </div>
+                {collectionPoints.length > 1 && (
+                  <Sparkline points={collectionPoints} className="shrink-0 mb-0.5" />
+                )}
+              </div>
             </CardContent>
           </Card>
         </Link>
@@ -796,7 +862,7 @@ export default function Dashboard() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Link href="/pending" className="block group" data-testid="link-summary-fees-pending">
           <Card className="glass rounded-2xl border-amber-200/70 bg-gradient-to-br from-amber-50/90 via-white to-yellow-100/60 dark:border-amber-900/40 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-900 dark:to-amber-950/40 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-amber-300 group-active:scale-[0.98] cursor-pointer h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-medium text-amber-900 dark:text-amber-300">Membership Fees Pending</CardTitle>
               <UserCheck className="h-4 w-4 text-amber-600 dark:text-amber-400" />
             </CardHeader>
@@ -818,7 +884,7 @@ export default function Dashboard() {
 
         <Link href="/frf" className="block group" data-testid="link-summary-active-frf-cases">
           <Card className="glass rounded-2xl border-green-200/70 bg-gradient-to-br from-green-50/90 via-white to-emerald-100/60 dark:border-slate-800 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-900 dark:to-emerald-950/40 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-green-300 dark:group-hover:border-green-700 group-active:scale-[0.98] cursor-pointer h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-medium text-green-900 dark:text-slate-300">Active FRF Cases</CardTitle>
               <HeartHandshake className="h-4 w-4 text-green-700 dark:text-green-400" />
             </CardHeader>
@@ -840,7 +906,7 @@ export default function Dashboard() {
 
         <Link href="/frf" className="block group" data-testid="link-summary-members-pending-frf">
           <Card className="glass rounded-2xl border-orange-200/70 bg-gradient-to-br from-orange-50/90 via-white to-amber-100/60 dark:border-orange-900/40 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-900 dark:to-orange-950/40 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-orange-300 group-active:scale-[0.98] cursor-pointer h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-medium text-orange-900 dark:text-orange-300">Members Pending FRF</CardTitle>
               <Users className="h-4 w-4 text-orange-600 dark:text-orange-400" />
             </CardHeader>
@@ -864,7 +930,7 @@ export default function Dashboard() {
 
         <Link href="/payments" className="block group" data-testid="link-summary-frf-collected">
           <Card className="glass rounded-2xl border-green-200/70 bg-gradient-to-br from-green-50/90 via-white to-emerald-100/60 dark:border-slate-800 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-900 dark:to-emerald-950/40 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-green-300 dark:group-hover:border-green-700 group-active:scale-[0.98] cursor-pointer h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-medium text-green-900 dark:text-slate-300">FRF Collected</CardTitle>
               <HandCoins className="h-4 w-4 text-green-700 dark:text-green-400" />
             </CardHeader>
@@ -885,7 +951,7 @@ export default function Dashboard() {
 
         <Link href="/frf" className="block group" data-testid="link-summary-frf-outstanding">
           <Card className="glass rounded-2xl border-red-200/70 bg-gradient-to-br from-red-50/90 via-white to-rose-100/60 dark:border-red-900/40 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-900 dark:to-red-950/40 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-red-300 group-active:scale-[0.98] cursor-pointer h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-medium text-red-900 dark:text-red-300">FRF Outstanding</CardTitle>
               <TrendingUp className="h-4 w-4 text-red-600 dark:text-red-400" />
             </CardHeader>
