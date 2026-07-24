@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "wouter";
-import { useListMembers } from "@workspace/api-client-react";
-import type { Member } from "@workspace/api-client-react";
+import { useListPendingFrfFees } from "@workspace/api-client-react";
+import type { PendingFrfFee } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -14,10 +14,15 @@ import { ArrowLeft, HandCoins, MessageSquareWarning, Phone, Send, UserCircle } f
 import { normalizeWhatsAppNumber, buildWhatsAppLink, type WhatsAppTarget } from "@/lib/whatsapp";
 import { WhatsAppBulkDialog } from "@/components/WhatsAppBulkDialog";
 
-type FrfMember = Member & {
-  frfOutstanding?: number;
-  frfOverdueCount?: number;
-  frfPendingCount?: number;
+/** One row per member, aggregated from the same pending-FRF-fees list the Payments → FRF tab uses. */
+type FrfMember = {
+  id: string;
+  fullName: string;
+  membershipId: string;
+  mobileNumber: string;
+  frfOutstanding: number;
+  frfOverdueCount: number;
+  frfPendingCount: number;
 };
 
 function buildFrfReminderMessage(member: FrfMember): string {
@@ -38,12 +43,30 @@ export default function FrfReminders() {
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkTargets, setBulkTargets] = useState<WhatsAppTarget[]>([]);
 
-  const { data: members, isLoading } = useListMembers({});
+  const { data: pendingFees, isLoading } = useListPendingFrfFees();
 
+  // Aggregate the same per-case pending list shown on Payments → FRF Fees,
+  // so both screens always show the same members with the same totals.
   const dueMembers = useMemo(() => {
-    const list = ((members ?? []) as FrfMember[]).filter((m) => (m.frfOutstanding ?? 0) > 0);
-    return list.sort((a, b) => (b.frfOutstanding ?? 0) - (a.frfOutstanding ?? 0));
-  }, [members]);
+    const byMember = new Map<string, FrfMember>();
+    for (const fee of (pendingFees ?? []) as PendingFrfFee[]) {
+      const existing = byMember.get(fee.memberId);
+      const entry: FrfMember = existing ?? {
+        id: fee.memberId,
+        fullName: fee.fullName,
+        membershipId: fee.membershipId,
+        mobileNumber: fee.mobileNumber,
+        frfOutstanding: 0,
+        frfOverdueCount: 0,
+        frfPendingCount: 0,
+      };
+      entry.frfOutstanding += fee.balance;
+      if (fee.status === "overdue") entry.frfOverdueCount += 1;
+      else entry.frfPendingCount += 1;
+      byMember.set(fee.memberId, entry);
+    }
+    return [...byMember.values()].sort((a, b) => b.frfOutstanding - a.frfOutstanding);
+  }, [pendingFees]);
 
   const totalOutstanding = dueMembers.reduce((sum, m) => sum + (m.frfOutstanding ?? 0), 0);
   const selectedMembers = dueMembers.filter((m) => selectedIds.has(m.id));
