@@ -10,3 +10,5 @@ description: How FRF (SAR 50/case) fee UIs are structured vs membership fee (SAR
 - Bulk WhatsApp dialog: lock title/targets at open time; clear row selection on tab switch.
 
 - **FRF pending parity (user rule, July 2026):** Every surface that lists pending FRF fees (Payments FRF tab Pending view, FRF Reminders page, any future UI) MUST derive from GET /frf/pending-fees so lists/names/totals are identical. Never derive pending FRF lists from member.frfOutstanding or per-case collection filters.
+
+**FRF reminders removed (user decision, Jul 2026):** The FRF Reminders page, its route, the "Send FRF Reminder" button on the FRF page, and the dashboard FRF Reminder widget were all removed — the director decided FRF contributors don't need reminders. Do not re-add FRF reminder surfaces unless explicitly asked. Membership-fee reminders (Payments page) remain.
