@@ -3,8 +3,14 @@ import { Link } from "wouter";
 import {
   useListFrfClaims,
   useGetFrfClaimCollection,
+  useListPendingFrfFees,
   type FrfContributor,
+  type PendingFrfFee,
 } from "@workspace/api-client-react";
+import { normalizeWhatsAppNumber, buildWhatsAppLink, type WhatsAppTarget } from "@/lib/whatsapp";
+import { WhatsAppBulkDialog } from "@/components/WhatsAppBulkDialog";
+import { useToast } from "@/hooks/use-toast";
+import { Send, MessageSquareWarning } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -66,10 +72,51 @@ function frfStatusBadge(status: string) {
 
 type FeeFilter = "all" | "paid" | "pending";
 
+function buildFrfReminderMessage(fee: PendingFrfFee): string {
+  return `Assalamu Alaikum ${fee.fullName},\n\nThis is a gentle reminder from DKMO (Dakshina Karnataka Muslim Ookota — Committed to the Community). Your FRF fee of ${formatSAR(fee.balance)} for the case "${fee.caseTitle}" is currently ${fee.status}.\n\nPlease complete the payment at your earliest convenience.\n\nJazakallah Khair.`;
+}
+
+function toFrfWhatsAppTargets(fees: PendingFrfFee[]): WhatsAppTarget[] {
+  return fees.flatMap((f) => {
+    const number = normalizeWhatsAppNumber(f.mobileNumber);
+    return number ? [{ id: f.contributionId, name: f.fullName, number, message: buildFrfReminderMessage(f) }] : [];
+  });
+}
+
 export default function FrfFeesPanel() {
   const [caseId, setCaseId] = useState("");
   const [search, setSearch] = useState("");
   const [feeFilter, setFeeFilter] = useState<FeeFilter>("all");
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkTargets, setBulkTargets] = useState<WhatsAppTarget[]>([]);
+  const { toast } = useToast();
+  const { data: pendingFrf } = useListPendingFrfFees();
+
+  const handleRemindAllPending = () => {
+    if (!pendingFrf || pendingFrf.length === 0) return;
+    const targets = toFrfWhatsAppTargets(pendingFrf);
+    if (targets.length === 0) {
+      toast({ title: "No valid mobile numbers", description: "None of these members have a WhatsApp-capable number.", variant: "destructive" });
+      return;
+    }
+    setBulkTargets(targets);
+    setBulkOpen(true);
+  };
+
+  const handleRemindOne = (fee: PendingFrfFee) => {
+    const number = normalizeWhatsAppNumber(fee.mobileNumber);
+    if (!number) {
+      toast({ title: "Cannot send reminder", description: "Member has no valid mobile number", variant: "destructive" });
+      return;
+    }
+    window.open(buildWhatsAppLink(number, buildFrfReminderMessage(fee)), "_blank", "noopener");
+  };
+  // Pending FRF fees keyed by contribution id so table rows can offer a Remind action.
+  const pendingByContribution = useMemo(() => {
+    const map = new Map<string, PendingFrfFee>();
+    for (const f of pendingFrf ?? []) map.set(f.contributionId, f);
+    return map;
+  }, [pendingFrf]);
 
   const { data: claimsData = [], isLoading: claimsLoading } = useListFrfClaims();
 
@@ -227,6 +274,12 @@ export default function FrfFeesPanel() {
 
   return (
     <div className="space-y-6">
+      <WhatsAppBulkDialog
+        open={bulkOpen}
+        onOpenChange={setBulkOpen}
+        targets={bulkTargets}
+        title="FRF Fee Reminders"
+      />
       {/* Info banner */}
       <div className="flex items-start gap-3 rounded-xl border border-emerald-100 dark:border-slate-800 bg-emerald-50/50 dark:bg-slate-900 p-4">
         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 shrink-0">
@@ -239,6 +292,15 @@ export default function FrfFeesPanel() {
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          <Button
+            size="sm"
+            onClick={handleRemindAllPending}
+            disabled={bulkOpen || !pendingFrf || pendingFrf.length === 0}
+            className="bg-[#25D366] hover:bg-[#128C7E] text-white"
+            data-testid="button-frf-remind-all"
+          >
+            <Send className="h-4 w-4 mr-1" /> Remind All Pending ({pendingFrf?.length ?? 0})
+          </Button>
           <Button variant="outline" size="sm" onClick={exportPDF} disabled={isLoading || filtered.length === 0} className="border-emerald-300 text-emerald-800 dark:border-slate-700 dark:text-emerald-300" data-testid="button-frf-export-pdf">
             <FileDown className="h-4 w-4 mr-1" /> PDF
           </Button>
@@ -327,6 +389,7 @@ export default function FrfFeesPanel() {
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Status</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Paid On</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">Receipt No.</TableHead>
+              <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -339,11 +402,12 @@ export default function FrfFeesPanel() {
                   <TableCell><Skeleton className="h-6 w-20" /></TableCell>
                   <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                   <TableCell className="text-right"><Skeleton className="h-5 w-20 ml-auto" /></TableCell>
+                  <TableCell className="text-right"><Skeleton className="h-8 w-24 ml-auto" /></TableCell>
                 </TableRow>
               ))
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-32 text-center text-emerald-600 dark:text-slate-500">
+                <TableCell colSpan={7} className="h-32 text-center text-emerald-600 dark:text-slate-500">
                   <div className="flex flex-col items-center justify-center">
                     <HeartHandshake className="h-8 w-8 text-emerald-200 dark:text-slate-700 mb-2" />
                     <p>{hasFilters ? "No FRF fee records match the selected filters." : "No FRF fee records for this case yet."}</p>
@@ -369,6 +433,21 @@ export default function FrfFeesPanel() {
                   <TableCell>{frfStatusBadge(c.status)}</TableCell>
                   <TableCell className="text-sm text-emerald-700 dark:text-slate-400">{c.paidAt ? formatDate(c.paidAt) : "—"}</TableCell>
                   <TableCell className="text-right text-sm text-emerald-700 dark:text-slate-400">{c.receiptNumber || "—"}</TableCell>
+                  <TableCell className="text-right">
+                    {pendingByContribution.has(c.contributionId) ? (
+                      <Button
+                        size="sm"
+                        className="bg-[#25D366] hover:bg-[#128C7E] text-white"
+                        onClick={() => handleRemindOne(pendingByContribution.get(c.contributionId)!)}
+                        data-testid={`button-frf-remind-${c.membershipId}`}
+                      >
+                        <MessageSquareWarning className="mr-1.5 h-4 w-4" />
+                        Remind
+                      </Button>
+                    ) : (
+                      <span className="text-sm text-emerald-600/60 dark:text-slate-500">—</span>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))
             )}

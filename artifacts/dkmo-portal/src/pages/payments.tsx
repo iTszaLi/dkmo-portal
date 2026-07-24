@@ -1,17 +1,18 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "wouter";
 import {
   useListMembers,
   useUpdateMemberFeeStatus,
   getListMembersQueryKey,
+  getGetPendingMembersQueryKey,
 } from "@workspace/api-client-react";
-import type { FeeStatusInputFeeStatus } from "@workspace/api-client-react";
+import type { FeeStatusInputFeeStatus, Member } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, UserCircle, MoreHorizontal, Search, Wallet, CheckCircle2, Clock, XCircle, MinusCircle, HeartHandshake } from "lucide-react";
+import { Plus, UserCircle, MoreHorizontal, Search, Wallet, CheckCircle2, Clock, XCircle, MinusCircle, HeartHandshake, Send, MessageSquareWarning, Phone, MapPin } from "lucide-react";
 import { formatSAR, formatDate, feeStatusLabel, feeStatusBadgeClass } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,38 +20,160 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { RefMemberCell, useMemberIndex } from "@/components/RefMemberCell";
 import FrfFeesPanel from "@/components/payments/FrfFeesPanel";
 import { cn } from "@/lib/utils";
-
-const FEE_STATUSES = [
-  { value: "all", label: "All Statuses" },
-  { value: "paid", label: "Paid" },
-  { value: "partial", label: "Partial" },
-  { value: "pending", label: "Pending" },
-  { value: "unpaid", label: "Unpaid" },
-  { value: "exempt", label: "Exempt" },
-];
+import { normalizeWhatsAppNumber, buildWhatsAppLink, type WhatsAppTarget } from "@/lib/whatsapp";
+import { WhatsAppBulkDialog } from "@/components/WhatsAppBulkDialog";
 
 type PaymentTab = "membership" | "frf";
+type StatusView = "all" | "paid" | "pending" | "unpaid" | "overdue";
+
+const STATUS_VIEWS: { value: StatusView; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "paid", label: "Paid" },
+  { value: "pending", label: "Pending" },
+  { value: "unpaid", label: "Unpaid" },
+  { value: "overdue", label: "Overdue" },
+];
+
+/** A fee is considered overdue when it is still due 30+ days after the member was registered. */
+const OVERDUE_AFTER_DAYS = 30;
+
+function isDue(m: Member): boolean {
+  return m.feeStatus !== "paid" && m.feeStatus !== "exempt";
+}
+
+function isOverdue(m: Member): boolean {
+  if (!isDue(m)) return false;
+  const created = new Date(m.createdAt).getTime();
+  return Date.now() - created > OVERDUE_AFTER_DAYS * 24 * 60 * 60 * 1000;
+}
+
+function buildReminderMessage(m: Member): string {
+  return `Assalamu Alaikum ${m.fullName},\n\nThis is a gentle reminder from DKMO (Dakshina Karnataka Muslim Ookota — Committed to the Community). Your one-time membership registration fee of ${formatSAR(m.membershipFee)} is currently ${feeStatusLabel(m.feeStatus).toLowerCase()}.\n\nPlease complete the payment at your earliest convenience to activate your membership.\n\nJazakallah Khair.`;
+}
+
+function toWhatsAppTargets(members: Member[]): WhatsAppTarget[] {
+  return members.flatMap((m) => {
+    const number = normalizeWhatsAppNumber(m.mobileNumber);
+    return number ? [{ id: m.id, name: m.fullName, number, message: buildReminderMessage(m) }] : [];
+  });
+}
 
 export default function Payments() {
   const [tab, setTab] = useState<PaymentTab>("membership");
+  const [view, setView] = useState<StatusView>("all");
   const memberIndex = useMemberIndex();
-  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [textSearch, setTextSearch] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkTargets, setBulkTargets] = useState<WhatsAppTarget[]>([]);
 
   const { data: members, isLoading } = useListMembers({ search: textSearch.length > 2 ? textSearch : undefined });
   const updateFeeStatus = useUpdateMemberFeeStatus();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const filtered = (members ?? []).filter((m) => statusFilter === "all" || m.feeStatus === statusFilter);
+  const all = members ?? [];
+  const filtered = useMemo(() => {
+    switch (view) {
+      case "paid":
+        return all.filter((m) => m.feeStatus === "paid");
+      case "pending":
+        return all.filter((m) => m.feeStatus === "pending" || m.feeStatus === "partial");
+      case "unpaid":
+        return all.filter((m) => m.feeStatus === "unpaid");
+      case "overdue":
+        return all.filter(isOverdue);
+      default:
+        return all;
+    }
+  }, [all, view]);
 
-  const totalCollected = (members ?? []).filter((m) => m.feeStatus === "paid").reduce((acc, m) => acc + m.membershipFee, 0);
-  const totalOutstanding = (members ?? []).filter((m) => m.feeStatus !== "paid" && m.feeStatus !== "exempt").reduce((acc, m) => acc + m.membershipFee, 0);
+  const reminderView = view === "pending" || view === "unpaid" || view === "overdue";
+
+  // KPI figures
+  const totalCollected = all.filter((m) => m.feeStatus === "paid").reduce((acc, m) => acc + m.membershipFee, 0);
+  const totalOutstanding = all.filter(isDue).reduce((acc, m) => acc + m.membershipFee, 0);
+  const viewAmount = filtered.reduce((acc, m) => acc + m.membershipFee, 0);
+
+  const kpis: { label: string; value: string; tone?: "green" | "red" }[] = useMemo(() => {
+    switch (view) {
+      case "paid":
+        return [
+          { label: "Paid Members", value: String(filtered.length) },
+          { label: "Total Collected", value: formatSAR(viewAmount), tone: "green" },
+        ];
+      case "pending":
+        return [
+          { label: "Pending Members", value: String(filtered.length) },
+          { label: "Pending Amount", value: formatSAR(viewAmount), tone: "red" },
+        ];
+      case "unpaid":
+        return [
+          { label: "Unpaid Members", value: String(filtered.length) },
+          { label: "Outstanding Amount", value: formatSAR(viewAmount), tone: "red" },
+        ];
+      case "overdue":
+        return [
+          { label: "Overdue Members", value: String(filtered.length) },
+          { label: "Total Overdue Amount", value: formatSAR(viewAmount), tone: "red" },
+        ];
+      default:
+        return [
+          { label: "Total Members", value: String(all.length) },
+          { label: "Fees Collected", value: formatSAR(totalCollected), tone: "green" },
+          { label: "Outstanding Fees", value: formatSAR(totalOutstanding), tone: "red" },
+        ];
+    }
+  }, [view, filtered.length, viewAmount, all.length, totalCollected, totalOutstanding]);
+
+  // Selection (reminder views only)
+  const allIds = useMemo(() => filtered.map((m) => m.id), [filtered]);
+  const allSelected = allIds.length > 0 && allIds.every((id) => selectedIds.has(id));
+  const someSelected = !allSelected && allIds.some((id) => selectedIds.has(id));
+  const selectedCount = allIds.filter((id) => selectedIds.has(id)).length;
+
+  const toggleAll = () => {
+    if (allSelected) setSelectedIds(new Set());
+    else setSelectedIds(new Set(allIds));
+  };
+  const toggleOne = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const switchView = (v: StatusView) => {
+    setView(v);
+    setSelectedIds(new Set());
+  };
+
+  const startBulk = (list: Member[]) => {
+    const targets = toWhatsAppTargets(list);
+    if (targets.length === 0) {
+      toast({ title: "No valid mobile numbers", description: "None of these members have a WhatsApp-capable number.", variant: "destructive" });
+      return;
+    }
+    setBulkTargets(targets);
+    setBulkOpen(true);
+  };
+
+  const handleWhatsAppReminder = (m: Member) => {
+    const number = normalizeWhatsAppNumber(m.mobileNumber);
+    if (!number) {
+      toast({ title: "Cannot send reminder", description: "Member has no valid mobile number", variant: "destructive" });
+      return;
+    }
+    window.open(buildWhatsAppLink(number, buildReminderMessage(m)), "_blank", "noopener");
+  };
 
   const handleFeeStatus = (id: string, feeStatus: FeeStatusInputFeeStatus) => {
     updateFeeStatus.mutate({ id, data: { feeStatus } }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListMembersQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetPendingMembersQueryKey() });
         toast({ title: "Fee status updated" });
       },
       onError: (err: any) => {
@@ -84,7 +207,7 @@ export default function Payments() {
                 key={value}
                 type="button"
                 aria-pressed={tab === value}
-                onClick={() => setTab(value)}
+                onClick={() => { setTab(value); setSelectedIds(new Set()); }}
                 data-testid={`tab-payments-${value}`}
                 className={cn(
                   "px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors",
@@ -97,6 +220,29 @@ export default function Payments() {
               </button>
             ))}
           </div>
+          {tab === "membership" && reminderView && selectedCount > 0 && (
+            <Button
+              onClick={() => startBulk(filtered.filter((m) => selectedIds.has(m.id)))}
+              disabled={bulkOpen}
+              variant="outline"
+              className="border-[#25D366] text-[#25D366] hover:bg-[#25D366]/10"
+              data-testid="button-remind-selected"
+            >
+              <Send className="mr-2 h-4 w-4" />
+              {`Remind Selected (${selectedCount})`}
+            </Button>
+          )}
+          {tab === "membership" && reminderView && (
+            <Button
+              onClick={() => startBulk(filtered)}
+              disabled={bulkOpen || filtered.length === 0}
+              className="bg-[#25D366] hover:bg-[#128C7E] text-white"
+              data-testid="button-remind-all"
+            >
+              <Send className="mr-2 h-4 w-4" />
+              {`Remind All (${filtered.length})`}
+            </Button>
+          )}
           <Link href="/members">
             <Button className="bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-700 text-white">
               <Plus className="mr-2 h-4 w-4" /> Add Member
@@ -104,6 +250,13 @@ export default function Payments() {
           </Link>
         </div>
       </div>
+
+      <WhatsAppBulkDialog
+        open={bulkOpen}
+        onOpenChange={(o) => { setBulkOpen(o); if (!o) setSelectedIds(new Set()); }}
+        targets={bulkTargets}
+        title="Membership Fee Reminders"
+      />
 
       {tab === "frf" ? (
         <FrfFeesPanel />
@@ -122,31 +275,63 @@ export default function Payments() {
         </div>
       </div>
 
-      {/* Summary cards */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-emerald-100 dark:border-slate-800 dark:bg-slate-900 bg-white p-4 shadow-sm">
-          <p className="text-sm font-medium text-emerald-700 dark:text-slate-400">Total Members</p>
-          {isLoading ? <Skeleton className="h-8 w-16 mt-1" /> : (
-            <p className="text-2xl font-bold text-emerald-950 dark:text-white mt-1">{members?.length || 0}</p>
-          )}
-        </div>
-        <div className="rounded-2xl border border-emerald-100 dark:border-slate-800 dark:bg-slate-900 bg-white p-4 shadow-sm">
-          <p className="text-sm font-medium text-emerald-700 dark:text-slate-400">Fees Collected</p>
-          {isLoading ? <Skeleton className="h-8 w-24 mt-1" /> : (
-            <p className="text-2xl font-bold text-emerald-700 dark:text-green-400 mt-1">{formatSAR(totalCollected)}</p>
-          )}
-        </div>
-        <div className="rounded-2xl border border-red-100 dark:border-red-900/40 dark:bg-slate-900 bg-white p-4 shadow-sm">
-          <p className="text-sm font-medium text-emerald-700 dark:text-slate-400">Outstanding Fees</p>
-          {isLoading ? <Skeleton className="h-8 w-24 mt-1" /> : (
-            <p className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">{formatSAR(totalOutstanding)}</p>
-          )}
-        </div>
+      {/* Status view switcher */}
+      <div
+        className="inline-flex flex-wrap rounded-xl border border-emerald-200 dark:border-slate-700 bg-emerald-50/60 dark:bg-slate-800/60 p-1"
+        role="group"
+        aria-label="Fee status view"
+      >
+        {STATUS_VIEWS.map((s) => (
+          <button
+            key={s.value}
+            type="button"
+            aria-pressed={view === s.value}
+            onClick={() => switchView(s.value)}
+            data-testid={`tab-payments-status-${s.value}`}
+            className={cn(
+              "px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors",
+              view === s.value
+                ? "bg-emerald-700 text-white shadow-sm dark:bg-emerald-600"
+                : "text-emerald-800 dark:text-slate-300 hover:bg-emerald-100/70 dark:hover:bg-slate-700/60",
+            )}
+          >
+            {s.label}
+          </button>
+        ))}
       </div>
 
-      {/* Filters */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl border border-emerald-100 dark:border-slate-800 shadow-sm">
-        <div className="space-y-1">
+      {/* Summary cards — change with the selected status view */}
+      <div className={cn("grid gap-4", kpis.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2")}>
+        {kpis.map((k) => (
+          <div
+            key={k.label}
+            className={cn(
+              "rounded-2xl border p-4 shadow-sm bg-white dark:bg-slate-900",
+              k.tone === "red"
+                ? "border-red-100 dark:border-red-900/40"
+                : "border-emerald-100 dark:border-slate-800",
+            )}
+          >
+            <p className="text-sm font-medium text-emerald-700 dark:text-slate-400">{k.label}</p>
+            {isLoading ? <Skeleton className="h-8 w-24 mt-1" /> : (
+              <p className={cn(
+                "text-2xl font-bold mt-1",
+                k.tone === "red"
+                  ? "text-red-600 dark:text-red-400"
+                  : k.tone === "green"
+                    ? "text-emerald-700 dark:text-green-400"
+                    : "text-emerald-950 dark:text-white",
+              )}>
+                {k.value}
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Search */}
+      <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-emerald-100 dark:border-slate-800 shadow-sm">
+        <div className="space-y-1 sm:max-w-sm">
           <label className="text-xs font-medium text-emerald-700 dark:text-slate-400">Search</label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-400 dark:text-slate-500" />
@@ -158,22 +343,6 @@ export default function Payments() {
             />
           </div>
         </div>
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-emerald-700 dark:text-slate-400">Filter by Status</label>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="border-emerald-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 h-10">
-              <div className="flex items-center gap-2">
-                <Wallet className="h-4 w-4 text-emerald-500 dark:text-slate-500" />
-                <SelectValue placeholder="All Statuses" />
-              </div>
-            </SelectTrigger>
-            <SelectContent className="dark:bg-slate-900 dark:border-slate-800">
-              {FEE_STATUSES.map(s => (
-                <SelectItem key={s.value} value={s.value} className="dark:text-slate-300 dark:focus:bg-slate-800">{s.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
       </div>
 
       {/* Table */}
@@ -181,7 +350,20 @@ export default function Payments() {
         <Table>
           <TableHeader className="bg-emerald-50/50 dark:bg-slate-800/60">
             <TableRow className="dark:border-slate-700">
+              {reminderView && (
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={allSelected}
+                    data-state={someSelected ? "indeterminate" : undefined}
+                    onCheckedChange={toggleAll}
+                    aria-label="Select all"
+                    className="border-emerald-300 dark:border-slate-600"
+                    disabled={isLoading || filtered.length === 0}
+                  />
+                </TableHead>
+              )}
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Member</TableHead>
+              {reminderView && <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Contact</TableHead>}
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Reference Member</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">Fee</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Status</TableHead>
@@ -193,7 +375,9 @@ export default function Payments() {
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i} className="dark:border-slate-800">
+                  {reminderView && <TableCell><Skeleton className="h-4 w-4" /></TableCell>}
                   <TableCell><Skeleton className="h-10 w-48" /></TableCell>
+                  {reminderView && <TableCell><Skeleton className="h-5 w-32" /></TableCell>}
                   <TableCell><Skeleton className="h-5 w-28" /></TableCell>
                   <TableCell className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
                   <TableCell><Skeleton className="h-6 w-20" /></TableCell>
@@ -203,18 +387,50 @@ export default function Payments() {
               ))
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-32 text-center text-emerald-600 dark:text-slate-500">
+                <TableCell colSpan={reminderView ? 8 : 6} className="h-32 text-center text-emerald-600 dark:text-slate-500">
                   <div className="flex flex-col items-center justify-center">
-                    <Wallet className="h-8 w-8 text-emerald-200 dark:text-slate-700 mb-2" />
-                    <p>No members found for the selected filters.</p>
+                    {reminderView ? (
+                      <>
+                        <div className="h-12 w-12 rounded-full bg-emerald-50 dark:bg-slate-800 flex items-center justify-center mb-3">
+                          <CheckCircle2 className="h-6 w-6 text-emerald-300 dark:text-slate-600" />
+                        </div>
+                        <p className="font-medium text-emerald-900 dark:text-slate-300">All caught up!</p>
+                        <p className="text-sm dark:text-slate-500">No members in this view.</p>
+                      </>
+                    ) : (
+                      <>
+                        <Wallet className="h-8 w-8 text-emerald-200 dark:text-slate-700 mb-2" />
+                        <p>No members found for the selected filters.</p>
+                      </>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((member) => (
-                <TableRow key={member.id} className="hover:bg-emerald-50/30 dark:hover:bg-slate-800/50 dark:border-slate-800 transition-colors">
+              filtered.map((member) => {
+                const isSelected = reminderView && selectedIds.has(member.id);
+                return (
+                <TableRow
+                  key={member.id}
+                  className={cn(
+                    "hover:bg-emerald-50/30 dark:hover:bg-slate-800/50 dark:border-slate-800 transition-colors",
+                    reminderView && "cursor-pointer",
+                    isSelected && "bg-[#25D366]/5 dark:bg-[#25D366]/10 hover:bg-[#25D366]/10 dark:hover:bg-[#25D366]/15",
+                  )}
+                  onClick={reminderView ? () => toggleOne(member.id) : undefined}
+                >
+                  {reminderView && (
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleOne(member.id)}
+                        aria-label={`Select ${member.fullName}`}
+                        className="border-emerald-300 dark:border-slate-600"
+                      />
+                    </TableCell>
+                  )}
                   <TableCell>
-                    <Link href={`/members/${member.id}`} className="flex items-center gap-3 group">
+                    <Link href={`/members/${member.id}`} className="flex items-center gap-3 group" onClick={(e) => e.stopPropagation()}>
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 group-hover:bg-emerald-200 dark:group-hover:bg-emerald-900/60 transition-colors shrink-0">
                         <UserCircle className="h-5 w-5" />
                       </div>
@@ -224,6 +440,20 @@ export default function Payments() {
                       </div>
                     </Link>
                   </TableCell>
+                  {reminderView && (
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className="flex items-center text-xs text-emerald-800 dark:text-slate-300">
+                          <Phone className="mr-1.5 h-3.5 w-3.5 text-emerald-500 dark:text-slate-500 shrink-0" />
+                          {member.mobileNumber}
+                        </div>
+                        <div className="flex items-center text-xs text-emerald-800 dark:text-slate-400">
+                          <MapPin className="mr-1.5 h-3.5 w-3.5 text-emerald-500 dark:text-slate-500 shrink-0" />
+                          {member.city}
+                        </div>
+                      </div>
+                    </TableCell>
+                  )}
                   <TableCell>
                     <RefMemberCell refId={member.refMemberId} refName={member.refMemberName} index={memberIndex} />
                   </TableCell>
@@ -234,50 +464,80 @@ export default function Payments() {
                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${feeStatusBadgeClass(member.feeStatus)}`}>
                       {member.feeStatus === "paid" ? <CheckCircle2 className="h-3 w-3" /> : member.feeStatus === "exempt" ? <MinusCircle className="h-3 w-3" /> : member.feeStatus === "pending" || member.feeStatus === "partial" ? <Clock className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
                       {feeStatusLabel(member.feeStatus)}
+                      {view !== "overdue" && isOverdue(member) && (
+                        <span className="ml-1 rounded-full bg-red-100 dark:bg-red-950/40 px-1.5 text-[10px] font-semibold text-red-700 dark:text-red-300">Overdue</span>
+                      )}
                     </span>
                   </TableCell>
                   <TableCell className="text-sm text-emerald-700 dark:text-slate-400">
                     {member.feePaidAt ? formatDate(member.feePaidAt) : "—"}
                   </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800">
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="dark:bg-slate-900 dark:border-slate-800">
-                        {member.feeStatus !== "paid" && (
-                          <DropdownMenuItem onClick={() => handleFeeStatus(member.id, "paid")} className="text-emerald-700 dark:text-emerald-400 dark:focus:bg-slate-800">
-                            <CheckCircle2 className="mr-2 h-4 w-4" /> Mark Fee Paid
-                          </DropdownMenuItem>
-                        )}
-                        {member.feeStatus !== "partial" && (
-                          <DropdownMenuItem onClick={() => handleFeeStatus(member.id, "partial")} className="text-yellow-700 dark:text-yellow-400 dark:focus:bg-slate-800">
-                            <Clock className="mr-2 h-4 w-4" /> Mark Fee Partial
-                          </DropdownMenuItem>
-                        )}
-                        {member.feeStatus !== "pending" && (
-                          <DropdownMenuItem onClick={() => handleFeeStatus(member.id, "pending")} className="text-amber-700 dark:text-amber-400 dark:focus:bg-slate-800">
-                            <Clock className="mr-2 h-4 w-4" /> Mark Fee Pending
-                          </DropdownMenuItem>
-                        )}
-                        {member.feeStatus !== "exempt" && (
-                          <DropdownMenuItem onClick={() => handleFeeStatus(member.id, "exempt")} className="text-slate-600 dark:text-slate-400 dark:focus:bg-slate-800">
-                            <MinusCircle className="mr-2 h-4 w-4" /> Mark Fee Exempt
-                          </DropdownMenuItem>
-                        )}
-                        {member.feeStatus !== "unpaid" && (
-                          <DropdownMenuItem onClick={() => handleFeeStatus(member.id, "unpaid")} className="dark:text-slate-300 dark:focus:bg-slate-800">
-                            <XCircle className="mr-2 h-4 w-4" /> Mark Fee Unpaid
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                  <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-end gap-1.5">
+                      {reminderView && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={updateFeeStatus.isPending}
+                            className="border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-slate-600 dark:text-emerald-400 dark:hover:bg-slate-800"
+                            onClick={() => handleFeeStatus(member.id, "paid")}
+                            data-testid={`button-mark-paid-${member.membershipId}`}
+                          >
+                            <CheckCircle2 className="mr-1.5 h-4 w-4" />
+                            Mark Paid
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="bg-[#25D366] hover:bg-[#128C7E] text-white"
+                            onClick={() => handleWhatsAppReminder(member)}
+                            data-testid={`button-remind-${member.membershipId}`}
+                          >
+                            <MessageSquareWarning className="mr-1.5 h-4 w-4" />
+                            Remind
+                          </Button>
+                        </>
+                      )}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="dark:bg-slate-900 dark:border-slate-800">
+                          {member.feeStatus !== "paid" && (
+                            <DropdownMenuItem onClick={() => handleFeeStatus(member.id, "paid")} className="text-emerald-700 dark:text-emerald-400 dark:focus:bg-slate-800">
+                              <CheckCircle2 className="mr-2 h-4 w-4" /> Mark Fee Paid
+                            </DropdownMenuItem>
+                          )}
+                          {member.feeStatus !== "partial" && (
+                            <DropdownMenuItem onClick={() => handleFeeStatus(member.id, "partial")} className="text-yellow-700 dark:text-yellow-400 dark:focus:bg-slate-800">
+                              <Clock className="mr-2 h-4 w-4" /> Mark Fee Partial
+                            </DropdownMenuItem>
+                          )}
+                          {member.feeStatus !== "pending" && (
+                            <DropdownMenuItem onClick={() => handleFeeStatus(member.id, "pending")} className="text-amber-700 dark:text-amber-400 dark:focus:bg-slate-800">
+                              <Clock className="mr-2 h-4 w-4" /> Mark Fee Pending
+                            </DropdownMenuItem>
+                          )}
+                          {member.feeStatus !== "exempt" && (
+                            <DropdownMenuItem onClick={() => handleFeeStatus(member.id, "exempt")} className="text-slate-600 dark:text-slate-400 dark:focus:bg-slate-800">
+                              <MinusCircle className="mr-2 h-4 w-4" /> Mark Fee Exempt
+                            </DropdownMenuItem>
+                          )}
+                          {member.feeStatus !== "unpaid" && (
+                            <DropdownMenuItem onClick={() => handleFeeStatus(member.id, "unpaid")} className="dark:text-slate-300 dark:focus:bg-slate-800">
+                              <XCircle className="mr-2 h-4 w-4" /> Mark Fee Unpaid
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </TableCell>
                 </TableRow>
-              ))
+                );
+              })
             )}
           </TableBody>
         </Table>

@@ -700,7 +700,7 @@ export default function Dashboard() {
 
       {/* Reminder widgets — quick access to WhatsApp reminder pages */}
       <div className="grid gap-4 sm:grid-cols-2">
-        <Link href="/pending" className="block group" data-testid="link-widget-membership-reminder">
+        <Link href="/payments" className="block group" data-testid="link-widget-membership-reminder">
           <Card className="glass rounded-2xl border-emerald-300/70 bg-gradient-to-br from-emerald-50 via-white to-green-100/70 dark:border-emerald-900/50 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-900 dark:to-emerald-950/50 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-emerald-400 dark:group-hover:border-emerald-700 group-active:scale-[0.98] cursor-pointer h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-medium text-emerald-900 dark:text-emerald-300 flex items-center gap-2">
@@ -881,7 +881,7 @@ export default function Dashboard() {
 
       {/* Fees & FRF KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <Link href="/pending" className="block group" data-testid="link-summary-fees-pending">
+        <Link href="/payments" className="block group" data-testid="link-summary-fees-pending">
           <Card className="glass rounded-2xl border-amber-200/70 bg-gradient-to-br from-amber-50/90 via-white to-yellow-100/60 dark:border-amber-900/40 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-900 dark:to-amber-950/40 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-amber-300 group-active:scale-[0.98] cursor-pointer h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-medium text-amber-900 dark:text-amber-300">Membership Fees Pending</CardTitle>

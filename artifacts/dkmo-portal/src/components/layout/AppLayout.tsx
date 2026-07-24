@@ -5,7 +5,6 @@ import {
   LayoutDashboard,
   Users,
   CreditCard,
-  AlertCircle,
   FileText,
   LogOut,
   Menu,
@@ -82,7 +81,6 @@ const navigation: NavSection[] = [
     title: "Finance",
     items: [
       { name: "Payments",       href: "/payments",       icon: CreditCard },
-      { name: "Pending",        href: "/pending",        icon: AlertCircle },
       { name: "Receipts",       href: "/receipts",       icon: Receipt },
       { name: "Loans",          href: "/loans",          icon: Landmark },
       { name: "Sponsors",       href: "/sponsors",       icon: Handshake },

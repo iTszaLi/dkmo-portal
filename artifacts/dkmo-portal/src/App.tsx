@@ -12,7 +12,6 @@ import CalendarPage from "@/pages/calendar";
 import Members from "@/pages/members";
 import MemberDetail from "@/pages/member-detail";
 import Payments from "@/pages/payments";
-import Pending from "@/pages/pending";
 import Reports from "@/pages/reports/index";
 import ReportMembership from "@/pages/reports/membership";
 import ReportFees from "@/pages/reports/fees";
@@ -140,7 +139,8 @@ function AppRoutes() {
       <Route path="/members" component={() => <AuthenticatedRoute component={Members} />} />
       <Route path="/members/:id" component={() => <AuthenticatedRoute component={MemberDetail} />} />
       <Route path="/payments" component={() => <AuthenticatedRoute component={Payments} />} />
-      <Route path="/pending" component={() => <AuthenticatedRoute component={Pending} />} />
+      {/* Pending module merged into Payments — keep the old URL working */}
+      <Route path="/pending" component={() => <LegacyRedirect to="/payments" />} />
       <Route path="/reports" component={() => <AuthenticatedRoute component={Reports} />} />
       <Route path="/reports/membership" component={() => <AuthenticatedRoute component={ReportMembership} />} />
       <Route path="/reports/fees" component={() => <AuthenticatedRoute component={ReportFees} />} />
