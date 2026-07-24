@@ -443,7 +443,7 @@ export default function Payments() {
                     {formatSAR(member.membershipFee)}
                   </TableCell>
                   <TableCell>
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${feeStatusBadgeClass(member.feeStatus)}`}>
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${feeStatusBadgeClass(member.feeStatus === "paid" || member.feeStatus === "exempt" ? member.feeStatus : "unpaid")}`}>
                       {member.feeStatus === "paid" ? <CheckCircle2 className="h-3 w-3" /> : member.feeStatus === "exempt" ? <MinusCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
                       {member.feeStatus === "paid" || member.feeStatus === "exempt" ? feeStatusLabel(member.feeStatus) : "Unpaid"}
                     </span>

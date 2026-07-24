@@ -41,9 +41,9 @@ async function loadImageAsBase64(url: string): Promise<string> {
 
 const STATUS_LABEL: Record<string, string> = {
   paid: "Paid",
-  partial: "Partial",
+  partial: "Unpaid",
   pending: "Unpaid",
-  overdue: "Overdue",
+  overdue: "Unpaid",
   cancelled: "Cancelled",
   exempt: "Exempt",
 };
@@ -51,9 +51,9 @@ const STATUS_LABEL: Record<string, string> = {
 function frfStatusBadge(status: string) {
   const styles: Record<string, string> = {
     paid: "bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-300",
-    partial: "bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300",
-    pending: "bg-orange-100 dark:bg-orange-950/40 text-orange-800 dark:text-orange-300",
-    overdue: "bg-red-100 dark:bg-red-950/40 text-red-800 dark:text-red-300",
+    partial: "bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300",
+    pending: "bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300",
+    overdue: "bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300",
     cancelled: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-400",
     exempt: "bg-blue-100 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300",
   };
