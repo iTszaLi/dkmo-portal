@@ -135,15 +135,42 @@ export default function FrfFeesPanel() {
   const caseTitle = cases.find((c) => c.id === caseId)?.title || "FRF Case";
   const contributors = useMemo<FrfContributor[]>(() => collection?.contributors ?? [], [collection]);
 
-  const filtered = useMemo(() => {
+  // The Pending status view always shows ALL cases (same list as FRF Reminders),
+  // so both modules stay identical. Other views show the selected case's ledger.
+  const pendingView = feeFilter === "pending";
+  type Row = FrfContributor & { caseTitle: string };
+
+  const filtered = useMemo<Row[]>(() => {
     const q = search.trim().toLowerCase();
-    return contributors.filter((c) => {
-      if (feeFilter === "paid" && !(c.status === "paid" || c.status === "partial")) return false;
-      if (feeFilter === "pending" && !(c.status === "pending" || c.status === "overdue")) return false;
-      if (q && !c.fullName.toLowerCase().includes(q) && !c.membershipId.toLowerCase().includes(q)) return false;
-      return true;
-    });
-  }, [contributors, search, feeFilter]);
+    const matches = (name: string, membershipId: string) =>
+      !q || name.toLowerCase().includes(q) || membershipId.toLowerCase().includes(q);
+    if (pendingView) {
+      return ((pendingFrf ?? []) as PendingFrfFee[])
+        .filter((f) => matches(f.fullName, f.membershipId))
+        .map((f) => ({
+          contributionId: f.contributionId,
+          memberId: f.memberId,
+          fullName: f.fullName,
+          membershipId: f.membershipId,
+          mobileNumber: f.mobileNumber,
+          photoUrl: null,
+          refMemberName: "",
+          amount: f.amount,
+          amountPaid: Math.max(f.amount - f.balance, 0),
+          balance: f.balance,
+          status: f.status,
+          paidAt: null,
+          receiptNumber: "",
+          caseTitle: f.caseTitle,
+        } as Row));
+    }
+    return contributors
+      .filter((c) => {
+        if (feeFilter === "paid" && !(c.status === "paid" || c.status === "partial")) return false;
+        return matches(c.fullName, c.membershipId);
+      })
+      .map((c) => ({ ...c, caseTitle }));
+  }, [contributors, search, feeFilter, pendingView, pendingFrf, caseTitle]);
 
   // Case-level stats (full ledger, cancelled/exempt excluded).
   const stats = useMemo(() => {
@@ -164,6 +191,12 @@ export default function FrfFeesPanel() {
 
   const hasFilters = search.trim() !== "" || feeFilter !== "all";
 
+  // All-cases pending totals — must match the FRF Reminders page.
+  const pendingTotals = useMemo(() => {
+    const fees = (pendingFrf ?? []) as PendingFrfFee[];
+    return { count: fees.length, amount: fees.reduce((a, f) => a + f.balance, 0) };
+  }, [pendingFrf]);
+
   const generatedOn = () =>
     new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" });
 
@@ -183,7 +216,7 @@ export default function FrfFeesPanel() {
     doc.text("Dakshina Karnataka Muslim Ookota", pageW / 2, 11, { align: "center" });
     doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
-    doc.text(`FRF Fees — ${caseTitle}`, pageW / 2, 19, { align: "center" });
+    doc.text(`FRF Fees — ${pendingView ? "Pending (All Cases)" : caseTitle}`, pageW / 2, 19, { align: "center" });
 
     doc.setTextColor(80, 80, 80);
     doc.setFontSize(8);
@@ -196,7 +229,7 @@ export default function FrfFeesPanel() {
       startY: 42,
       head: [["#", "Member Name", "Membership No.", "FRF Case", "Fee Status", "Amount (SAR)", "Paid (SAR)", "Payment Date", "Receipt No."]],
       body: filtered.map((c, i) => [
-        String(i + 1), c.fullName, c.membershipId, caseTitle,
+        String(i + 1), c.fullName, c.membershipId, c.caseTitle,
         STATUS_LABEL[c.status] ?? c.status, c.amount.toFixed(2), c.amountPaid.toFixed(2),
         c.paidAt ? formatDate(c.paidAt) : "—", c.receiptNumber || "—",
       ]),
@@ -225,7 +258,7 @@ export default function FrfFeesPanel() {
     sheet.getCell("A1").font = { bold: true, size: 14 };
     sheet.getCell("A1").alignment = { horizontal: "center" };
     sheet.mergeCells("A2:I2");
-    sheet.getCell("A2").value = `FRF Fees — ${caseTitle}`;
+    sheet.getCell("A2").value = `FRF Fees — ${pendingView ? "Pending (All Cases)" : caseTitle}`;
     sheet.getCell("A2").font = { bold: true, size: 11, color: { argb: "FF059669" } };
     sheet.getCell("A2").alignment = { horizontal: "center" };
     sheet.mergeCells("A3:I3");
@@ -243,7 +276,7 @@ export default function FrfFeesPanel() {
     });
     filtered.forEach((c, i) => {
       const row = sheet.addRow([
-        i + 1, c.fullName, c.membershipId, caseTitle,
+        i + 1, c.fullName, c.membershipId, c.caseTitle,
         STATUS_LABEL[c.status] ?? c.status, Number(c.amount.toFixed(2)), Number(c.amountPaid.toFixed(2)),
         c.paidAt ? formatDate(c.paidAt) : "—", c.receiptNumber || "—",
       ]);
@@ -327,19 +360,21 @@ export default function FrfFeesPanel() {
           <p className="text-xs text-emerald-700/70 dark:text-slate-500 mt-0.5">from {stats.paid} paid member{stats.paid === 1 ? "" : "s"}</p>
         </div>
         <div className="rounded-2xl border border-red-100 dark:border-red-900/40 dark:bg-slate-900 bg-white p-4 shadow-sm">
-          <p className="text-sm font-medium text-emerald-700 dark:text-slate-400">Pending FRF Fees</p>
+          <p className="text-sm font-medium text-emerald-700 dark:text-slate-400">Pending FRF Fees — All Cases</p>
           {isLoading ? <Skeleton className="h-8 w-24 mt-1" /> : (
-            <p className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1" data-testid="text-frf-pending">{formatSAR(stats.pendingAmount)}</p>
+            <p className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1" data-testid="text-frf-pending">{formatSAR(pendingTotals.amount)}</p>
           )}
-          <p className="text-xs text-emerald-700/70 dark:text-slate-500 mt-0.5">{stats.pending} member{stats.pending === 1 ? "" : "s"} pending × SAR 50</p>
+          <p className="text-xs text-emerald-700/70 dark:text-slate-500 mt-0.5">{pendingTotals.count} unpaid fee{pendingTotals.count === 1 ? "" : "s"} across all cases — same list as FRF Reminders</p>
         </div>
       </div>
 
       {/* Filters */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl border border-emerald-100 dark:border-slate-800 shadow-sm">
         <div className="space-y-1">
-          <label className="text-xs font-medium text-emerald-700 dark:text-slate-400">Select FRF Case</label>
-          <Select value={caseId} onValueChange={setCaseId}>
+          <label className="text-xs font-medium text-emerald-700 dark:text-slate-400">
+            Select FRF Case{pendingView && <span className="ml-1 text-emerald-500 dark:text-slate-500">(Pending view shows all cases)</span>}
+          </label>
+          <Select value={caseId} onValueChange={setCaseId} disabled={pendingView}>
             <SelectTrigger className="border-emerald-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 h-10" data-testid="select-payments-frf-case">
               <SelectValue placeholder={claimsLoading ? "Loading cases…" : "Select FRF Case"} />
             </SelectTrigger>
@@ -428,7 +463,7 @@ export default function FrfFeesPanel() {
                       </div>
                     </Link>
                   </TableCell>
-                  <TableCell className="text-sm text-emerald-800/80 dark:text-slate-400 max-w-[220px] truncate">{caseTitle}</TableCell>
+                  <TableCell className="text-sm text-emerald-800/80 dark:text-slate-400 max-w-[220px] truncate">{c.caseTitle}</TableCell>
                   <TableCell className="text-right font-bold text-emerald-900 dark:text-green-300">{formatSAR(c.amount)}</TableCell>
                   <TableCell>{frfStatusBadge(c.status)}</TableCell>
                   <TableCell className="text-sm text-emerald-700 dark:text-slate-400">{c.paidAt ? formatDate(c.paidAt) : "—"}</TableCell>
