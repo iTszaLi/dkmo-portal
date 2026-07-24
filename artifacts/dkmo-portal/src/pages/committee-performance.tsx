@@ -128,12 +128,15 @@ export default function CommitteeActivityReport() {
     );
 
     // Plus any active non-committee contributors (staff) not on the roster.
+    // Only real members are shown — portal login accounts (e.g. "Administrator") are excluded.
     const rosterNames = new Set(roster.map((c) => c.fullName.trim().toLowerCase()));
+    const memberNames = new Set((allMembers ?? []).map((m) => m.fullName.trim().toLowerCase()));
     for (const e of apiEntries) {
-      if (!rosterNames.has(e.name.trim().toLowerCase())) merged.push(e);
+      const key = e.name.trim().toLowerCase();
+      if (!rosterNames.has(key) && memberNames.has(key)) merged.push(e);
     }
     return merged;
-  }, [data, roster]);
+  }, [data, roster, allMembers]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();

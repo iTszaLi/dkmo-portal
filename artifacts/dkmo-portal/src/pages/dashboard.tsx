@@ -751,12 +751,12 @@ export default function Dashboard() {
               <Users className="h-4 w-4 text-green-700 dark:text-green-400" />
             </CardHeader>
             <CardContent>
-              <div className="flex items-end justify-between gap-2">
-                <div>
+              <div className="flex items-end justify-between gap-2 overflow-hidden">
+                <div className="min-w-0">
                   {isLoadingSummary ? (
                     <Skeleton className="h-8 w-20" />
                   ) : (
-                    <span className="inline-flex items-center gap-2">
+                    <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
                       <AnimatedNumber
                         value={summary?.totalMembers || 0}
                         className="text-2xl font-bold text-green-950 dark:text-white"
@@ -771,7 +771,7 @@ export default function Dashboard() {
                   <p className="text-xs text-green-700/80 dark:text-slate-500 mt-1.5">Registered members</p>
                 </div>
                 {memberGrowthPoints.length > 1 && (
-                  <Sparkline points={memberGrowthPoints} className="shrink-0 mb-0.5" />
+                  <Sparkline points={memberGrowthPoints} width={56} height={20} className="shrink-0 self-end mb-1 mr-1" />
                 )}
               </div>
             </CardContent>
@@ -833,12 +833,12 @@ export default function Dashboard() {
               <TrendingUp className="h-4 w-4 text-green-700 dark:text-green-400" />
             </CardHeader>
             <CardContent>
-              <div className="flex items-end justify-between gap-2">
-                <div>
+              <div className="flex items-end justify-between gap-2 overflow-hidden">
+                <div className="min-w-0">
                   {financialSummary == null ? (
                     <Skeleton className="h-8 w-28" />
                   ) : (
-                    <span className="inline-flex items-center gap-2">
+                    <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
                       <AnimatedNumber
                         value={monthlyCollection}
                         format={(n) => formatSAR(n)}
@@ -850,7 +850,7 @@ export default function Dashboard() {
                   <p className="text-xs text-green-700/80 dark:text-slate-500 mt-1.5">Collected this month</p>
                 </div>
                 {collectionPoints.length > 1 && (
-                  <Sparkline points={collectionPoints} className="shrink-0 mb-0.5" />
+                  <Sparkline points={collectionPoints} width={56} height={20} className="shrink-0 self-end mb-1 mr-1" />
                 )}
               </div>
             </CardContent>

@@ -42,9 +42,10 @@ export function CommitteeActivitySummary() {
     { recruited: 0, fees: 0, frfReferred: 0, loans: 0 },
   );
 
+  // Only real members appear on the leaderboard — portal login accounts (e.g. "Administrator") are excluded.
   const top5 = [...entries]
     .sort((a, b) => b.totalContributionScore - a.totalContributionScore)
-    .filter((e) => e.totalContributionScore > 0)
+    .filter((e) => e.totalContributionScore > 0 && memberByName.has(e.name.trim().toLowerCase()))
     .slice(0, 5);
 
   return (
