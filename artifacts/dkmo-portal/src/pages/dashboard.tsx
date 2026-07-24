@@ -731,6 +731,36 @@ export default function Dashboard() {
           </Card>
         </Link>
 
+        <Link href="/payments?tab=frf&frfStatus=pending" className="block group" data-testid="link-widget-frf-reminder">
+          <Card className="glass rounded-2xl border-orange-300/70 bg-gradient-to-br from-orange-50 via-white to-amber-100/70 dark:border-orange-900/50 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-900 dark:to-orange-950/50 shadow-sm transition-all duration-200 ease-in-out group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-orange-400 dark:group-hover:border-orange-700 group-active:scale-[0.98] cursor-pointer h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-sm font-medium text-orange-900 dark:text-orange-300 flex items-center gap-2">
+                <MessageSquareWarning className="h-4 w-4 text-orange-600 dark:text-orange-400" /> FRF Pending Fees
+              </CardTitle>
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-orange-700 dark:text-orange-400">
+                <ArrowRight className="h-3.5 w-3.5" /> View Pending
+              </span>
+            </CardHeader>
+            <CardContent>
+              {isLoadingSummary ? (
+                <Skeleton className="h-8 w-24" />
+              ) : (
+                <AnimatedNumber
+                  value={summary?.membersPendingFrfCount ?? 0}
+                  className="text-2xl font-bold text-orange-700 dark:text-orange-400"
+                />
+              )}
+              <p className="text-xs text-orange-700/80 dark:text-orange-500/80 mt-1">
+                {summary
+                  ? `Members with FRF dues · ${formatSAR(summary.frfOutstandingTotal)} outstanding`
+                  : "Members with unpaid FRF contributions"}
+              </p>
+              <p className="text-xs text-orange-600 dark:text-orange-400 mt-2 font-medium inline-flex items-center gap-1">
+                Open FRF fees — pending view <ArrowRight className="h-3 w-3" />
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* KPI Cards — only the metrics that matter */}

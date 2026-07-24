@@ -83,10 +83,10 @@ function toFrfWhatsAppTargets(fees: PendingFrfFee[]): WhatsAppTarget[] {
   });
 }
 
-export default function FrfFeesPanel() {
+export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: FeeFilter }) {
   const [caseId, setCaseId] = useState("");
   const [search, setSearch] = useState("");
-  const [feeFilter, setFeeFilter] = useState<FeeFilter>("all");
+  const [feeFilter, setFeeFilter] = useState<FeeFilter>(initialFeeFilter ?? "all");
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkTargets, setBulkTargets] = useState<WhatsAppTarget[]>([]);
   const { toast } = useToast();

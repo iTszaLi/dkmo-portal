@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Link } from "wouter";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useSearch } from "wouter";
 import {
   useListMembers,
   useUpdateMemberFeeStatus,
@@ -59,7 +59,13 @@ function toWhatsAppTargets(members: Member[]): WhatsAppTarget[] {
 }
 
 export default function Payments() {
-  const [tab, setTab] = useState<PaymentTab>("membership");
+  // Deep-link support: /payments?tab=frf&frfStatus=pending — stays in sync if the query string changes.
+  const searchString = useSearch();
+  const params = useMemo(() => new URLSearchParams(searchString), [searchString]);
+  const urlTab: PaymentTab = params.get("tab") === "frf" ? "frf" : "membership";
+  const initialFrfStatus = params.get("frfStatus");
+  const [tab, setTab] = useState<PaymentTab>(urlTab);
+  useEffect(() => setTab(urlTab), [urlTab]);
   const [view, setView] = useState<StatusView>("all");
   const memberIndex = useMemberIndex();
   const [textSearch, setTextSearch] = useState("");
@@ -259,7 +265,7 @@ export default function Payments() {
       />
 
       {tab === "frf" ? (
-        <FrfFeesPanel />
+        <FrfFeesPanel key={initialFrfStatus ?? "default"} initialFeeFilter={initialFrfStatus === "pending" ? "pending" : undefined} />
       ) : (
       <>
       {/* Membership fee banner */}
