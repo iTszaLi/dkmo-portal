@@ -55,7 +55,11 @@ export default function Payments() {
   const initialFrfStatus = params.get("frfStatus");
   const [tab, setTab] = useState<PaymentTab>(urlTab);
   useEffect(() => setTab(urlTab), [urlTab]);
-  const [view, setView] = useState<StatusView>("all");
+  // Deep-link: /payments?view=unpaid (membership tab status view)
+  const rawView = params.get("view");
+  const urlView: StatusView = rawView === "paid" || rawView === "unpaid" ? rawView : "all";
+  const [view, setView] = useState<StatusView>(urlView);
+  useEffect(() => setView(urlView), [urlView]);
   const memberIndex = useMemberIndex();
   const [textSearch, setTextSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
