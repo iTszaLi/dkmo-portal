@@ -403,6 +403,12 @@ paths:
           required: false
           schema:
             type: integer
+        - in: query
+          name: paymentType
+          required: false
+          schema:
+            type: string
+            enum: [membership, frf]
       responses:
         "200":
           description: Monthly buckets

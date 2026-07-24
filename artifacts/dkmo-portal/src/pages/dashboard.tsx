@@ -294,6 +294,27 @@ export default function Dashboard() {
     return cur - prev;
   }, [memberGrowthPoints]);
 
+  // FRF month-over-month collection trend.
+  const { data: frfSeries } = useQuery({
+    queryKey: ["dashboard-monthly-collection", 6, "frf"],
+    queryFn: async (): Promise<{ month: string; total: number }[]> => {
+      const res = await fetch(`${basePath}/api/dashboard/monthly-collection?months=6&paymentType=frf`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`${res.status}`);
+      return res.json();
+    },
+    staleTime: 60_000,
+  });
+  const frfPoints = useMemo(() => (frfSeries ?? []).map((r) => r.total), [frfSeries]);
+  const frfDelta = useMemo(() => {
+    if (!frfSeries || frfSeries.length < 2) return null;
+    const prev = frfSeries[frfSeries.length - 2]!.total;
+    const cur = frfSeries[frfSeries.length - 1]!.total;
+    if (prev <= 0) return null;
+    return ((cur - prev) / prev) * 100;
+  }, [frfSeries]);
+
   function renderRecruiters() {
     return (
       <Card className="rounded-2xl border-green-200/70 bg-gradient-to-br from-white via-green-50/40 to-emerald-50/60 dark:border-slate-800 dark:bg-slate-900 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-900 dark:to-emerald-950/30 shadow-sm">
@@ -763,7 +784,7 @@ export default function Dashboard() {
                       />
                       {joinedThisMonth != null && joinedThisMonth > 0 && (
                         <span className="rounded-full bg-green-100 px-1.5 py-0.5 text-[10px] font-semibold text-green-700 dark:bg-green-900/40 dark:text-green-300">
-                          +{joinedThisMonth} this month
+                          ↑ +{joinedThisMonth} this month
                         </span>
                       )}
                     </span>
@@ -935,16 +956,26 @@ export default function Dashboard() {
               <HandCoins className="h-4 w-4 text-green-700 dark:text-green-400" />
             </CardHeader>
             <CardContent>
-              {isLoadingSummary ? (
-                <Skeleton className="h-8 w-24" />
-              ) : (
-                <AnimatedNumber
-                  value={summary?.frfCollectedTotal ?? 0}
-                  format={(n) => formatSAR(n)}
-                  className="text-2xl font-bold text-green-950 dark:text-green-300"
-                />
-              )}
-              <p className="text-xs text-green-700/80 dark:text-slate-500 mt-1">Total FRF contributions received</p>
+              <div className="flex items-end justify-between gap-2 overflow-hidden">
+                <div className="min-w-0">
+                  {isLoadingSummary ? (
+                    <Skeleton className="h-8 w-24" />
+                  ) : (
+                    <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <AnimatedNumber
+                        value={summary?.frfCollectedTotal ?? 0}
+                        format={(n) => formatSAR(n)}
+                        className="text-2xl font-bold text-green-950 dark:text-green-300"
+                      />
+                      <TrendChip delta={frfDelta} label="vs last month" />
+                    </span>
+                  )}
+                  <p className="text-xs text-green-700/80 dark:text-slate-500 mt-1.5">Total FRF contributions received</p>
+                </div>
+                {frfPoints.length > 1 && (
+                  <Sparkline points={frfPoints} width={56} height={20} className="shrink-0 self-end mb-1 mr-1" />
+                )}
+              </div>
             </CardContent>
           </Card>
         </Link>

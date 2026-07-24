@@ -196,16 +196,20 @@ router.get("/dashboard/monthly-collection", async (req, res): Promise<void> => {
     return;
   }
   const months = Math.min(24, Math.max(1, parsed.data.months ?? 6));
+  const paymentType = parsed.data.paymentType;
 
   const monthExpr = sql<string>`to_char(${paymentsTable.paidAt}, 'YYYY-MM')`;
-  const rows = await db
+  const base = db
     .select({
       month: monthExpr,
       total: sum(paymentsTable.amountPaid),
       cnt: sql<number>`count(${paymentsTable.id})`,
     })
-    .from(paymentsTable)
-    .groupBy(monthExpr);
+    .from(paymentsTable);
+  const rows = await (paymentType
+    ? base.where(eq(paymentsTable.paymentType, paymentType))
+    : base
+  ).groupBy(monthExpr);
 
   const map = new Map<string, { total: number; count: number }>();
   for (const r of rows) {

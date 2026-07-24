@@ -656,6 +656,7 @@ export const GetRecentPaymentsResponse = zod.array(
  */
 export const GetMonthlyCollectionQueryParams = zod.object({
   months: zod.coerce.number().optional(),
+  paymentType: zod.enum(["membership", "frf"]).optional(),
 });
 
 export const GetMonthlyCollectionResponseItem = zod.object({

@@ -1781,7 +1781,16 @@ export type GetRecentPaymentsParams = {
 
 export type GetMonthlyCollectionParams = {
   months?: number;
+  paymentType?: GetMonthlyCollectionPaymentType;
 };
+
+export type GetMonthlyCollectionPaymentType =
+  (typeof GetMonthlyCollectionPaymentType)[keyof typeof GetMonthlyCollectionPaymentType];
+
+export const GetMonthlyCollectionPaymentType = {
+  membership: "membership",
+  frf: "frf",
+} as const;
 
 export type GetPaymentMethodBreakdownParams = {
   paymentType?: string;
