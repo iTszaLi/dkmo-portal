@@ -1,0 +1,70 @@
+The FRF Reminders page and the Payments → FRF Fees page are currently using different member lists. This is incorrect and will cause data inconsistencies over time.
+
+Both pages must use the exact same underlying data source and never maintain separate lists.
+
+Required changes
+Create a single source of truth for FRF payment records.
+The Payments → FRF Fees table is the master dataset.
+The FRF Reminders page must simply display a filtered view of that same dataset.
+Do not duplicate members, payment records, reminder records, or status records in another table.
+Synchronization rules
+
+Whenever any FRF payment is:
+
+marked as Paid
+marked as Pending
+marked as Overdue
+partially paid
+edited
+deleted
+a new FRF case is created
+an existing case is closed
+a member is added or removed from a case
+
+both pages must update automatically because they are reading from the same data.
+
+Data consistency
+
+For every member, the following values must always match on both pages:
+
+Outstanding Amount
+Number of unpaid cases
+Pending cases
+Overdue cases
+Paid status
+Reminder eligibility
+Total outstanding
+Member information
+Mobile number
+
+There should never be a situation where:
+
+Payments page shows a member as Paid while Reminders shows Pending.
+A member exists on one page but not the other.
+Outstanding amounts differ.
+Reminder counts differ.
+Total pending members differ.
+Reminder page behavior
+
+The FRF Reminders page should not have its own independent member list.
+
+It should simply display:
+
+Payments → FRF Fees
+→ filter where Outstanding Amount > 0
+→ group by Member
+→ calculate:
+
+Total Outstanding = sum of all unpaid/partially paid FRF cases
+Number of unpaid cases
+Number of overdue cases
+Latest due date
+Reminder status
+Future-proof requirement
+
+This synchronization must continue working automatically for all future FRF cases without requiring any code changes.
+
+Any future updates to FRF payments should instantly be reflected in both the Payments module and the FRF Reminders page because both are reading from the same underlying records.
+
+In short:
+There must be one database, one payment record, one source of truth, and two different views of the same data—not two separate lists that can drift out of sync.

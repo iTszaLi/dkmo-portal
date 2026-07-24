@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "wouter";
-import { useGetFrfClaimCollection, useUpdateFrfContributionStatus, useUpdateFrfClaimPhoto } from "@workspace/api-client-react";
+import { useGetFrfClaimCollection, useUpdateFrfContributionStatus, useUpdateFrfClaimPhoto, getListPendingFrfFeesQueryKey, getListMembersQueryKey } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import type { FrfContributor } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -157,9 +158,16 @@ export default function FrfClaimDetail() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
+  const queryClient = useQueryClient();
   const statusMutation = useUpdateFrfContributionStatus({
     mutation: {
-      onSuccess: () => { void refetch(); toast({ title: "Contribution status updated" }); },
+      onSuccess: () => {
+        void refetch();
+        // Keep every FRF pending view in sync (Payments → FRF Fees, FRF Reminders).
+        void queryClient.invalidateQueries({ queryKey: getListPendingFrfFeesQueryKey() });
+        void queryClient.invalidateQueries({ queryKey: getListMembersQueryKey() });
+        toast({ title: "Contribution status updated" });
+      },
       onError: (e) => toast({ title: "Error", description: String(e), variant: "destructive" }),
     },
   });
