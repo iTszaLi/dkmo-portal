@@ -166,7 +166,7 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
     }
     return contributors
       .filter((c) => {
-        if (feeFilter === "paid" && !(c.status === "paid" || c.status === "partial")) return false;
+        if (feeFilter === "paid" && c.status !== "paid") return false;
         return matches(c.fullName, c.membershipId);
       })
       .map((c) => ({ ...c, caseTitle }));
@@ -175,27 +175,23 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
   // Case-level stats (full ledger, cancelled/exempt excluded).
   const stats = useMemo(() => {
     const eligible = contributors.filter((c) => c.status !== "cancelled" && c.status !== "exempt");
-    const paid = eligible.filter((c) => c.status === "paid" || c.status === "partial").length;
+    const paid = eligible.filter((c) => c.status === "paid").length;
+    const overdue = eligible.filter((c) => c.status === "overdue").length;
+    const unpaid = eligible.length - paid - overdue; // pending / partial — not yet past due
     const collected = eligible.reduce((a, c) => a + c.amountPaid, 0);
     const pendingAmount = eligible.reduce((a, c) => a + Math.max(c.amount - c.amountPaid, 0), 0);
-    return { participants: eligible.length, paid, pending: eligible.length - paid, collected, pendingAmount };
+    return { participants: eligible.length, paid, unpaid, overdue, collected, pendingAmount };
   }, [contributors]);
 
   // Export scope: totals must match the exported (filtered) rows.
   const exportStats = useMemo(() => {
     const eligible = filtered.filter((c) => c.status !== "cancelled" && c.status !== "exempt");
-    const paid = eligible.filter((c) => c.status === "paid" || c.status === "partial").length;
+    const paid = eligible.filter((c) => c.status === "paid").length;
     const collected = eligible.reduce((a, c) => a + c.amountPaid, 0);
     return { members: filtered.length, paid, pending: eligible.length - paid, collected };
   }, [filtered]);
 
   const hasFilters = search.trim() !== "" || feeFilter !== "all";
-
-  // All-cases pending totals — must match the FRF Reminders page.
-  const pendingTotals = useMemo(() => {
-    const fees = (pendingFrf ?? []) as PendingFrfFee[];
-    return { count: fees.length, amount: fees.reduce((a, f) => a + f.balance, 0) };
-  }, [pendingFrf]);
 
   const generatedOn = () =>
     new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" });
@@ -343,28 +339,35 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
         </div>
       </div>
 
-      {/* Summary cards */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      {/* Summary cards — Paid / Unpaid / Overdue / Amount Due for the selected case */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-2xl border border-emerald-100 dark:border-slate-800 dark:bg-slate-900 bg-white p-4 shadow-sm">
-          <p className="text-sm font-medium text-emerald-700 dark:text-slate-400">Total FRF Participants</p>
+          <p className="text-sm font-medium text-emerald-700 dark:text-green-400">Paid</p>
           {isLoading ? <Skeleton className="h-8 w-16 mt-1" /> : (
-            <p className="text-2xl font-bold text-emerald-950 dark:text-white mt-1" data-testid="text-frf-participants">{stats.participants}</p>
+            <p className="text-2xl font-bold text-emerald-700 dark:text-green-400 mt-1" data-testid="text-frf-paid">{stats.paid}</p>
           )}
-          <p className="text-xs text-emerald-700/70 dark:text-slate-500 mt-0.5 truncate">{caseTitle}</p>
+          <p className="text-xs text-emerald-700/70 dark:text-slate-500 mt-0.5">{formatSAR(stats.collected)} collected in total · {caseTitle}</p>
         </div>
         <div className="rounded-2xl border border-emerald-100 dark:border-slate-800 dark:bg-slate-900 bg-white p-4 shadow-sm">
-          <p className="text-sm font-medium text-emerald-700 dark:text-slate-400">Total FRF Collected</p>
-          {isLoading ? <Skeleton className="h-8 w-24 mt-1" /> : (
-            <p className="text-2xl font-bold text-emerald-700 dark:text-green-400 mt-1" data-testid="text-frf-collected">{formatSAR(stats.collected)}</p>
+          <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Unpaid</p>
+          {isLoading ? <Skeleton className="h-8 w-16 mt-1" /> : (
+            <p className="text-2xl font-bold text-emerald-950 dark:text-white mt-1" data-testid="text-frf-unpaid">{stats.unpaid}</p>
           )}
-          <p className="text-xs text-emerald-700/70 dark:text-slate-500 mt-0.5">from {stats.paid} paid member{stats.paid === 1 ? "" : "s"}</p>
+          <p className="text-xs text-emerald-700/70 dark:text-slate-500 mt-0.5">Not yet paid (within 30 days of approval)</p>
         </div>
-        <div className="rounded-2xl border border-red-100 dark:border-red-900/40 dark:bg-slate-900 bg-white p-4 shadow-sm">
-          <p className="text-sm font-medium text-emerald-700 dark:text-slate-400">Unpaid FRF Fees — Active Case</p>
-          {isLoading ? <Skeleton className="h-8 w-24 mt-1" /> : (
-            <p className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1" data-testid="text-frf-pending">{formatSAR(pendingTotals.amount)}</p>
+        <div className="rounded-2xl border border-red-200 dark:border-red-900/40 dark:bg-slate-900 bg-white p-4 shadow-sm">
+          <p className="text-sm font-medium text-red-700 dark:text-red-400">Overdue</p>
+          {isLoading ? <Skeleton className="h-8 w-16 mt-1" /> : (
+            <p className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1" data-testid="text-frf-overdue">{stats.overdue}</p>
           )}
-          <p className="text-xs text-emerald-700/70 dark:text-slate-500 mt-0.5">{pendingTotals.count} unpaid fee{pendingTotals.count === 1 ? "" : "s"} for the active collection case</p>
+          <p className="text-xs text-emerald-700/70 dark:text-slate-500 mt-0.5">Still unpaid 30+ days after approval</p>
+        </div>
+        <div className="rounded-2xl border border-amber-200 dark:border-amber-900/40 dark:bg-slate-900 bg-white p-4 shadow-sm">
+          <p className="text-sm font-medium text-amber-700 dark:text-amber-400">Amount Due</p>
+          {isLoading ? <Skeleton className="h-8 w-24 mt-1" /> : (
+            <p className="text-2xl font-bold text-amber-700 dark:text-amber-400 mt-1" data-testid="text-frf-pending">{formatSAR(stats.pendingAmount)}</p>
+          )}
+          <p className="text-xs text-emerald-700/70 dark:text-slate-500 mt-0.5">{stats.unpaid + stats.overdue} member{stats.unpaid + stats.overdue === 1 ? "" : "s"} yet to pay this case</p>
         </div>
       </div>
 

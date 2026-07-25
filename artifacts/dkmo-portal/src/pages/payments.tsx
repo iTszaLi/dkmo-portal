@@ -36,6 +36,15 @@ function isDue(m: Member): boolean {
   return m.feeStatus !== "paid" && m.feeStatus !== "exempt";
 }
 
+/** A fee is overdue when it is still due 30+ days after the member was registered. */
+const OVERDUE_AFTER_DAYS = 30;
+
+function isOverdue(m: Member): boolean {
+  if (!isDue(m)) return false;
+  const created = new Date(m.createdAt).getTime();
+  return Date.now() - created > OVERDUE_AFTER_DAYS * 24 * 60 * 60 * 1000;
+}
+
 function buildReminderMessage(m: Member): string {
   return `Assalamu Alaikum ${m.fullName},\n\nThis is a gentle reminder from DKMO (Dakshina Karnataka Muslim Ookota — Committed to the Community). Your one-time membership registration fee of ${formatSAR(m.membershipFee)} is currently ${feeStatusLabel(m.feeStatus).toLowerCase()}.\n\nPlease complete the payment at your earliest convenience to activate your membership.\n\nJazakallah Khair.`;
 }
@@ -86,31 +95,19 @@ export default function Payments() {
 
   const reminderView = view === "unpaid";
 
-  // KPI figures
-  const totalCollected = all.filter((m) => m.feeStatus === "paid").reduce((acc, m) => acc + m.membershipFee, 0);
-  const totalOutstanding = all.filter(isDue).reduce((acc, m) => acc + m.membershipFee, 0);
-  const viewAmount = filtered.reduce((acc, m) => acc + m.membershipFee, 0);
-
-  const kpis: { label: string; value: string; tone?: "green" | "red" }[] = useMemo(() => {
-    switch (view) {
-      case "paid":
-        return [
-          { label: "Paid Members", value: String(filtered.length) },
-          { label: "Total Collected", value: formatSAR(viewAmount), tone: "green" },
-        ];
-      case "unpaid":
-        return [
-          { label: "Unpaid Members", value: String(filtered.length) },
-          { label: "Outstanding Amount", value: formatSAR(viewAmount), tone: "red" },
-        ];
-      default:
-        return [
-          { label: "Total Members", value: String(all.length) },
-          { label: "Fees Collected", value: formatSAR(totalCollected), tone: "green" },
-          { label: "Outstanding Fees", value: formatSAR(totalOutstanding), tone: "red" },
-        ];
-    }
-  }, [view, filtered.length, viewAmount, all.length, totalCollected, totalOutstanding]);
+  // KPI figures — four fixed cards: Paid, Unpaid (before due), Overdue, Amount Due.
+  const kpis = useMemo(() => {
+    const paidCount = all.filter((m) => m.feeStatus === "paid").length;
+    const overdueMembers = all.filter(isOverdue);
+    const unpaidCount = all.filter((m) => isDue(m) && !isOverdue(m)).length;
+    const amountDue = all.filter(isDue).reduce((acc, m) => acc + m.membershipFee, 0);
+    return [
+      { label: "Paid", value: String(paidCount), sub: "Members who have paid", tone: "green" as const },
+      { label: "Unpaid", value: String(unpaidCount), sub: `Not yet paid (within ${OVERDUE_AFTER_DAYS} days of joining)`, tone: "neutral" as const },
+      { label: "Overdue", value: String(overdueMembers.length), sub: `Still unpaid ${OVERDUE_AFTER_DAYS}+ days after joining`, tone: "red" as const },
+      { label: "Amount Due", value: formatSAR(amountDue), sub: "Total yet to be collected", tone: "amber" as const },
+    ];
+  }, [all]);
 
   // Selection (reminder views only)
   const allIds = useMemo(() => filtered.map((m) => m.id), [filtered]);
@@ -286,19 +283,29 @@ export default function Payments() {
         ))}
       </div>
 
-      {/* Summary cards — change with the selected status view */}
-      <div className={cn("grid gap-4", kpis.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2")}>
+      {/* Summary cards — Paid / Unpaid / Overdue / Amount Due */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((k) => (
           <div
             key={k.label}
+            data-testid={`card-fee-${k.label.toLowerCase().replace(/\s/g, "-")}`}
             className={cn(
               "rounded-2xl border p-4 shadow-sm bg-white dark:bg-slate-900",
               k.tone === "red"
-                ? "border-red-100 dark:border-red-900/40"
-                : "border-emerald-100 dark:border-slate-800",
+                ? "border-red-200 dark:border-red-900/40"
+                : k.tone === "amber"
+                  ? "border-amber-200 dark:border-amber-900/40"
+                  : "border-emerald-100 dark:border-slate-800",
             )}
           >
-            <p className="text-sm font-medium text-emerald-700 dark:text-slate-400">{k.label}</p>
+            <p className={cn(
+              "text-sm font-medium",
+              k.tone === "red"
+                ? "text-red-700 dark:text-red-400"
+                : k.tone === "amber"
+                  ? "text-amber-700 dark:text-amber-400"
+                  : "text-emerald-700 dark:text-slate-400",
+            )}>{k.label}</p>
             {isLoading ? <Skeleton className="h-8 w-24 mt-1" /> : (
               <p className={cn(
                 "text-2xl font-bold mt-1",
@@ -306,11 +313,14 @@ export default function Payments() {
                   ? "text-red-600 dark:text-red-400"
                   : k.tone === "green"
                     ? "text-emerald-700 dark:text-green-400"
-                    : "text-emerald-950 dark:text-white",
+                    : k.tone === "amber"
+                      ? "text-amber-700 dark:text-amber-400"
+                      : "text-emerald-950 dark:text-white",
               )}>
                 {k.value}
               </p>
             )}
+            <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">{k.sub}</p>
           </div>
         ))}
       </div>
