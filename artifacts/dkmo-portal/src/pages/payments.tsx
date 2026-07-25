@@ -215,15 +215,15 @@ export default function Payments() {
               {`Remind Selected (${selectedCount})`}
             </Button>
           )}
-          {tab === "membership" && reminderView && (
+          {tab === "membership" && (
             <Button
-              onClick={() => startBulk(filtered)}
-              disabled={bulkOpen || filtered.length === 0}
+              onClick={() => startBulk(reminderView ? filtered : all.filter(isDue))}
+              disabled={bulkOpen || (reminderView ? filtered.length === 0 : all.filter(isDue).length === 0)}
               className="bg-[#25D366] hover:bg-[#128C7E] text-white"
               data-testid="button-remind-all"
             >
               <Send className="mr-2 h-4 w-4" />
-              {`Remind All (${filtered.length})`}
+              {`Remind All Unpaid (${reminderView ? filtered.length : all.filter(isDue).length})`}
             </Button>
           )}
           <Link href="/members">
@@ -468,28 +468,28 @@ export default function Payments() {
                   <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-1.5">
                       {reminderView && (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={updateFeeStatus.isPending}
-                            className="border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-slate-600 dark:text-emerald-400 dark:hover:bg-slate-800"
-                            onClick={() => handleFeeStatus(member.id, "paid")}
-                            data-testid={`button-mark-paid-${member.membershipId}`}
-                          >
-                            <CheckCircle2 className="mr-1.5 h-4 w-4" />
-                            Mark Paid
-                          </Button>
-                          <Button
-                            size="sm"
-                            className="bg-[#25D366] hover:bg-[#128C7E] text-white"
-                            onClick={() => handleWhatsAppReminder(member)}
-                            data-testid={`button-remind-${member.membershipId}`}
-                          >
-                            <MessageSquareWarning className="mr-1.5 h-4 w-4" />
-                            Remind
-                          </Button>
-                        </>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={updateFeeStatus.isPending}
+                          className="border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-slate-600 dark:text-emerald-400 dark:hover:bg-slate-800"
+                          onClick={() => handleFeeStatus(member.id, "paid")}
+                          data-testid={`button-mark-paid-${member.membershipId}`}
+                        >
+                          <CheckCircle2 className="mr-1.5 h-4 w-4" />
+                          Mark Paid
+                        </Button>
+                      )}
+                      {isDue(member) && (
+                        <Button
+                          size="sm"
+                          className="bg-[#25D366] hover:bg-[#128C7E] text-white"
+                          onClick={() => handleWhatsAppReminder(member)}
+                          data-testid={`button-remind-${member.membershipId}`}
+                        >
+                          <MessageSquareWarning className="mr-1.5 h-4 w-4" />
+                          Remind
+                        </Button>
                       )}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -499,6 +499,11 @@ export default function Payments() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="dark:bg-slate-900 dark:border-slate-800">
+                          {isDue(member) && (
+                            <DropdownMenuItem onClick={() => handleWhatsAppReminder(member)} className="text-[#128C7E] dark:text-[#25D366] dark:focus:bg-slate-800" data-testid={`menu-remind-${member.membershipId}`}>
+                              <Send className="mr-2 h-4 w-4" /> Send WhatsApp Reminder
+                            </DropdownMenuItem>
+                          )}
                           {member.feeStatus !== "paid" && (
                             <DropdownMenuItem onClick={() => handleFeeStatus(member.id, "paid")} className="text-emerald-700 dark:text-emerald-400 dark:focus:bg-slate-800">
                               <CheckCircle2 className="mr-2 h-4 w-4" /> Mark Fee Paid

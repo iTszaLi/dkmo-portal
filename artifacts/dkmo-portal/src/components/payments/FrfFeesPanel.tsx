@@ -120,13 +120,22 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
 
   const { data: claimsData = [], isLoading: claimsLoading } = useListFrfClaims();
 
+  // Only collecting cases have fee ledgers: the active (approved) case and
+  // completed (disbursed) history. Claims still in review have no fees yet.
   const cases = useMemo(() => {
-    const list = claimsData.filter((c) => (c.title ?? "").trim() !== "");
-    return [...list].sort((a, b) => (a.title ?? "").localeCompare(b.title ?? ""));
+    const list = claimsData.filter(
+      (c) => (c.title ?? "").trim() !== "" && (c.status === "approved" || c.status === "disbursed"),
+    );
+    return [...list].sort((a, b) => {
+      if (a.status !== b.status) return a.status === "approved" ? -1 : 1; // active case first
+      return (a.title ?? "").localeCompare(b.title ?? "");
+    });
   }, [claimsData]);
 
   useEffect(() => {
-    if (!caseId && cases.length > 0) setCaseId(cases[0]!.id);
+    if (cases.length === 0) return;
+    // Default to the active case; also recover if a non-collecting case id was set.
+    if (!caseId || !cases.some((c) => c.id === caseId)) setCaseId(cases[0]!.id);
   }, [cases, caseId]);
 
   const { data: collection, isLoading: collectionLoading } = useGetFrfClaimCollection(caseId);
@@ -383,7 +392,9 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
             </SelectTrigger>
             <SelectContent className="dark:bg-slate-900 dark:border-slate-800">
               {cases.map((c) => (
-                <SelectItem key={c.id} value={c.id} className="dark:text-slate-300 dark:focus:bg-slate-800">{c.title}</SelectItem>
+                <SelectItem key={c.id} value={c.id} className="dark:text-slate-300 dark:focus:bg-slate-800">
+                  {c.title} {c.status === "approved" ? "· Active" : "· Closed"}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
