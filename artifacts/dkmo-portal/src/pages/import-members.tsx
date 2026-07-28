@@ -82,11 +82,29 @@ function parseDelimited(text: string, delim: string): string[][] {
   return rows;
 }
 
+function decodeText(buf: ArrayBuffer): string {
+  const bytes = new Uint8Array(buf);
+  // Detect UTF-16 (Excel "Unicode Text" export) via BOM or embedded NUL bytes
+  if (bytes.length >= 2 && bytes[0] === 0xff && bytes[1] === 0xfe) return new TextDecoder("utf-16le").decode(buf);
+  if (bytes.length >= 2 && bytes[0] === 0xfe && bytes[1] === 0xff) return new TextDecoder("utf-16be").decode(buf);
+  let nuls = 0;
+  const sample = Math.min(bytes.length, 2000);
+  for (let i = 0; i < sample; i++) if (bytes[i] === 0) nuls++;
+  if (nuls > sample / 10) return new TextDecoder("utf-16le").decode(buf);
+  return new TextDecoder("utf-8").decode(buf);
+}
+
 async function parseFile(file: File): Promise<string[][]> {
   if (/\.xlsx?$/i.test(file.name)) {
+    const buf = await file.arrayBuffer();
+    const head = new Uint8Array(buf.slice(0, 4));
+    // Old binary .xls files start with D0 CF 11 E0 — not supported by the xlsx reader
+    if (head[0] === 0xd0 && head[1] === 0xcf) {
+      throw new Error("This is an old-format Excel file (.xls). Please open it in Excel and save it as .xlsx or CSV, then upload again.");
+    }
     const ExcelJS = (await import("exceljs")).default;
     const wb = new ExcelJS.Workbook();
-    await wb.xlsx.load(await file.arrayBuffer());
+    await wb.xlsx.load(buf);
     const ws = wb.worksheets[0];
     if (!ws) return [];
     const rows: string[][] = [];
@@ -104,7 +122,7 @@ async function parseFile(file: File): Promise<string[][]> {
     });
     return rows;
   }
-  const text = await file.text();
+  const text = decodeText(await file.arrayBuffer());
   return parseDelimited(text, detectDelimiter(text));
 }
 
@@ -216,8 +234,12 @@ export default function ImportMembersPage() {
       setMapping(parsed[0]!.map((h) => autoDetect(h)));
       setAnalysis(null); setResolutions({}); setReport(null);
       setStep(1);
-    } catch {
-      toast({ title: "Could not read this file", variant: "destructive" });
+    } catch (err) {
+      toast({
+        title: "Could not read this file",
+        description: err instanceof Error && err.message ? err.message : "The file may be corrupted. Try re-saving it as CSV or XLSX and upload again.",
+        variant: "destructive",
+      });
     } finally { setBusy(false); }
   }
 
