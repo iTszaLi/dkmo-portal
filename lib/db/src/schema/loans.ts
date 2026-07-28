@@ -18,4 +18,16 @@ export const loansTable = pgTable("loans", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
 
+export const loanPaymentsTable = pgTable("loan_payments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  loanId: uuid("loan_id").notNull().references(() => loansTable.id, { onDelete: "cascade" }),
+  amount: numeric("amount", { precision: 14, scale: 2 }).notNull().default("0"),
+  paymentDate: date("payment_date").notNull(),
+  paymentMethod: text("payment_method").notNull().default("cash"),
+  notes: text("notes").notNull().default(""),
+  recordedBy: text("recorded_by").notNull().default(""),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export type Loan = typeof loansTable.$inferSelect;
+export type LoanPayment = typeof loanPaymentsTable.$inferSelect;

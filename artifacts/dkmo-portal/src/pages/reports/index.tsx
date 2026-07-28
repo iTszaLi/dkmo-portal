@@ -9,6 +9,7 @@ import {
   Wallet,
   Activity,
   BarChart3,
+  UserRoundPlus,
   ArrowRight,
 } from "lucide-react";
 
@@ -68,6 +69,13 @@ const REPORTS = [
     description: "Overall financial position — collections by type, period totals, and outstanding.",
     icon: BarChart3,
     tone: "text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/30",
+  },
+  {
+    href: "/membership-drive",
+    title: "Membership Drive Report",
+    description: "Referral tracking — top referrers, monthly growth, and downloadable referral reports.",
+    icon: UserRoundPlus,
+    tone: "text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/30",
   },
 ];
 

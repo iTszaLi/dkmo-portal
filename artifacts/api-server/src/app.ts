@@ -41,7 +41,10 @@ app.use(
   cors({
     credentials: true,
     origin: (origin, cb) => {
-      if (!origin || allowedOrigins.has(origin) || origin.startsWith("http://localhost")) {
+      // localhost is only trusted during local development, never in production.
+      const devLocalhost =
+        process.env.NODE_ENV !== "production" && origin?.startsWith("http://localhost");
+      if (!origin || allowedOrigins.has(origin) || devLocalhost) {
         cb(null, true);
       } else {
         cb(null, false);

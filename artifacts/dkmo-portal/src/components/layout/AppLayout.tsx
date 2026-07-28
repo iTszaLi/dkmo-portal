@@ -12,6 +12,7 @@ import {
   Handshake,
   CalendarDays,
   ListChecks,
+  UserPlus,
   Cog,
   HeartHandshake,
   HandHelping,
@@ -91,6 +92,7 @@ const navigation: NavSection[] = [
     title: "Community",
     items: [
       { name: "FRF Claims",         href: "/frf",      icon: HeartHandshake },
+      { name: "Membership Drive",   href: "/membership-drive", icon: UserPlus },
       { name: "Welfare Programs", href: "/services", icon: HandHelping },
       { name: "Events",             href: "/events",   icon: CalendarDays },
       { name: "Tasks",              href: "/tasks",    icon: ListChecks },

@@ -6,6 +6,10 @@ import { eq, and, isNull, desc, sql } from "drizzle-orm";
 import z from "zod";
 import { requireAuth, requireRole, type AuthedRequest } from "../middlewares/requireAuth";
 import { getUserById } from "../lib/users";
+import { publicRateLimit } from "../middlewares/rateLimit";
+
+// Throttle unauthenticated lookups to slow down scraping/enumeration.
+const publicLookupLimit = publicRateLimit(60, 60_000);
 import { signCertificatePdf } from "../lib/cert-signing";
 
 const router = Router();
@@ -172,7 +176,7 @@ function membershipToApi(r: typeof dkmoMembershipsTable.$inferSelect) {
 }
 
 // ── Public: apply without auth ────────────────────────────────────────────────
-router.post("/dkmo/memberships/apply", async (req, res): Promise<void> => {
+router.post("/dkmo/memberships/apply", publicLookupLimit, async (req, res): Promise<void> => {
   const parsed = DkmoMembershipInput.omit({ status: true }).safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -316,7 +320,7 @@ function isUniqueViolation(err: unknown): boolean {
   return typeof err === "object" && err !== null && (err as { code?: string }).code === "23505";
 }
 
-router.get("/dkmo/memberships/track", async (req, res): Promise<void> => {
+router.get("/dkmo/memberships/track", publicLookupLimit, async (req, res): Promise<void> => {
   const dkmoNumberRaw = typeof req.query.dkmoNumber === "string" ? req.query.dkmoNumber.trim() : "";
   const mobileRaw = typeof req.query.mobile === "string" ? req.query.mobile.trim() : "";
   if (!dkmoNumberRaw && !mobileRaw) {
@@ -368,7 +372,7 @@ function membershipToCertificate(r: typeof dkmoMembershipsTable.$inferSelect) {
 
 const isApprovedStatus = (s: string) => s === "approved" || s === "completed";
 
-router.get("/dkmo/memberships/certificate", async (req, res): Promise<void> => {
+router.get("/dkmo/memberships/certificate", publicLookupLimit, async (req, res): Promise<void> => {
   const dkmoNumberRaw = typeof req.query.dkmoNumber === "string" ? req.query.dkmoNumber.trim() : "";
   const mobileRaw = typeof req.query.mobile === "string" ? req.query.mobile.trim() : "";
   if (!dkmoNumberRaw && !mobileRaw) {
@@ -466,7 +470,7 @@ router.post("/dkmo/memberships/certificate/sign", async (req, res): Promise<void
 // ── Public: QR verification (approval-gated, minimal) ────────────────────────
 // Target of the QR code printed on the certificate. Returns a minimal, non-PII
 // verification record; reports an active membership only for approved records.
-router.get("/dkmo/memberships/verify", async (req, res): Promise<void> => {
+router.get("/dkmo/memberships/verify", publicLookupLimit, async (req, res): Promise<void> => {
   const dkmoNumberRaw = typeof req.query.dkmoNumber === "string" ? req.query.dkmoNumber.trim() : "";
   if (!dkmoNumberRaw) {
     res.status(400).json({ error: "Provide dkmoNumber" });
@@ -494,7 +498,7 @@ router.get("/dkmo/memberships/verify", async (req, res): Promise<void> => {
 
 // ── Public: duplicate pre-check for the application form ─────────────────────
 // Returns only booleans (no PII) so the form can warn the applicant instantly.
-router.get("/dkmo/memberships/check-duplicate", async (req, res): Promise<void> => {
+router.get("/dkmo/memberships/check-duplicate", publicLookupLimit, async (req, res): Promise<void> => {
   const mobile = typeof req.query.mobile === "string" ? req.query.mobile : "";
   const email = typeof req.query.email === "string" ? req.query.email : "";
   // Avoid enumeration via partial inputs: only check a full mobile / a real email.
@@ -505,7 +509,7 @@ router.get("/dkmo/memberships/check-duplicate", async (req, res): Promise<void> 
 });
 
 // ── Public: member lookup list for reference member dropdown ─────────────────
-router.get("/dkmo/members-list", async (_req, res): Promise<void> => {
+router.get("/dkmo/members-list", publicLookupLimit, async (_req, res): Promise<void> => {
   const rows = await db
     .select({ id: membersTable.id, fullName: membersTable.fullName, membershipId: membersTable.membershipId })
     .from(membersTable)

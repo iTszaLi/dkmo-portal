@@ -183,12 +183,25 @@ export default function Committee() {
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
             {departments.map((dept) => {
               const Icon = departmentIconFor(dept);
+              const isActive = deptFilter === dept;
               return (
-                <div key={dept} className="text-center p-2 rounded-xl bg-white dark:bg-slate-900 border border-green-100 dark:border-slate-800 shadow-sm">
+                <button
+                  key={dept}
+                  type="button"
+                  onClick={() => setDeptFilter(isActive ? "all" : dept)}
+                  aria-pressed={isActive}
+                  data-testid={`button-dept-${dept.toLowerCase()}`}
+                  className={cn(
+                    "text-center p-2 rounded-xl bg-white dark:bg-slate-900 border border-green-100 dark:border-slate-800 shadow-sm",
+                    "transition-all hover:shadow-md hover:border-green-300 dark:hover:border-green-700 hover:-translate-y-0.5",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500",
+                    isActive && "ring-2 ring-green-500 dark:ring-green-400 border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20",
+                  )}
+                >
                   <Icon className={cn("h-5 w-5 mx-auto mb-1", DEPARTMENT_COLOR[dept] ?? "text-green-600 dark:text-green-400")} />
                   <p className="text-xs font-semibold text-green-900 dark:text-slate-200">{deptCounts[dept]}</p>
                   <p className="text-[10px] text-green-700/70 dark:text-slate-500 leading-tight">{dept}</p>
-                </div>
+                </button>
               );
             })}
           </div>

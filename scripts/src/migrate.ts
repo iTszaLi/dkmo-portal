@@ -120,6 +120,17 @@ async function main() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
+    CREATE TABLE IF NOT EXISTS loan_payments (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      loan_id UUID NOT NULL REFERENCES loans(id) ON DELETE CASCADE,
+      amount NUMERIC(14,2) NOT NULL DEFAULT 0,
+      payment_date DATE NOT NULL,
+      payment_method TEXT NOT NULL DEFAULT 'cash',
+      notes TEXT NOT NULL DEFAULT '',
+      recorded_by TEXT NOT NULL DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
     CREATE TABLE IF NOT EXISTS receipts (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       receipt_number TEXT NOT NULL,
@@ -588,6 +599,33 @@ async function main() {
     CREATE UNIQUE INDEX IF NOT EXISTS frf_claims_single_active
       ON frf_claims ((true))
       WHERE status = 'approved';
+  `);
+
+  // Document Management System: visibility levels, download tracking,
+  // multi-file attachments, and a per-document activity/audit trail.
+  await pool.query(`
+    ALTER TABLE documents ADD COLUMN IF NOT EXISTS visibility TEXT NOT NULL DEFAULT 'members';
+    ALTER TABLE documents ADD COLUMN IF NOT EXISTS download_count INTEGER NOT NULL DEFAULT 0;
+    CREATE TABLE IF NOT EXISTS document_attachments (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+      file_url TEXT NOT NULL DEFAULT '',
+      file_name TEXT NOT NULL DEFAULT '',
+      file_size INTEGER NOT NULL DEFAULT 0,
+      mime_type TEXT NOT NULL DEFAULT '',
+      uploaded_by TEXT NOT NULL DEFAULT '',
+      created_at TIMESTAMP NOT NULL DEFAULT now()
+    );
+    CREATE TABLE IF NOT EXISTS document_activity (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+      action TEXT NOT NULL,
+      user_name TEXT NOT NULL DEFAULT '',
+      details TEXT NOT NULL DEFAULT '',
+      created_at TIMESTAMP NOT NULL DEFAULT now()
+    );
+    CREATE INDEX IF NOT EXISTS document_attachments_doc_idx ON document_attachments(document_id);
+    CREATE INDEX IF NOT EXISTS document_activity_doc_idx ON document_activity(document_id);
   `);
 
   console.log("✅  All tables created.");

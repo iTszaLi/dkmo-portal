@@ -5,6 +5,7 @@
 - [DKMO payments & recruitment model](dkmo-payments-model.md) — no monthly dues; FRF has a per-claim×member frf_contributions ledger synced atomically with payments rows; leaderboard keys on member UUID.
 - [Member reference / group FRF responsibility](member-reference-responsibility.md) — members.refMemberId is TEXT holding the referrer's UUID; group = refMemberId===X.id; FRF responsibility = count × SAR 50.
 - [Documents per-entity views](documents-per-entity-views.md) — /api/documents is paginated; per-member views must filter server-side by linkedEntityType+linkedEntityId, never client-filter page 1.
+- [Documents DMS access model](documents-dms.md) — file URLs must be permission-checked API endpoints, never raw storage URLs; visibility levels + public portal at /dkmo-documents.
 - [DKMO ID sequence](dkmo-id-sequence.md) — members + membership applications share one DKMO-XXXX namespace via next_dkmo_number()/dkmo_id_seq; setval in migrate must be advance-only or deleted IDs get reused.
 - [Committee membership is DB-driven & independent](committee-db-driven.md) — role (designation) + two independent booleans isExecutiveCommittee/isCoreCommittee; no nesting/subset; toggle via PATCH /members/:id/committee-status.
 - [Dashboard widget personalization](dashboard-personalization.md) — Reorder widgets persisted to localStorage (sanitized on load); pair drag with keyboard Move buttons; confetti/anim respect reduced-motion; Member-of-Month from refMemberId.
@@ -16,4 +17,6 @@
 - [Receipt verification auth-only](receipt-verification.md) — receipt verify endpoint + QR stay behind login (user decision); certificate verify stays public. PDF header auto-shrinks around the QR zone.
 - [Portal module restructure](portal-module-restructure.md) — receipts hub with tabs; legacy redirects (/print-receipts?verify= QRs!) must stay; "Welfare Programs" naming; all reports live under a /reports hub (user decision), incl. committee report at /reports/committee-performance (old path redirects); rankings/leaderboards now OK per explicit user request.
 - [FRF fee views pattern](frf-fee-views.md) — Payments & Pending use a Membership/FRF segmented toggle; FRF data from per-claim collection endpoint + /frf/pending-fees; exports total the filtered rows only.
+- [Loans derived-status model](loans-derived-model.md) — balances/status computed from loan_payments (legacy paidEmis as baseline); stored status re-synced after payments AND edits; convenor enforced server-side.
+- [Stale workspace lib types](workspace-lib-rebuild.md) — after editing lib/db or lib/api-client-react types, run `npx tsc -b` in that lib or consumers typecheck against stale dist .d.ts.
 - [Read access is role-open](read-access-model.md) — all list GETs are auth-only by design; every role can read every module, so global search parity adds no exposure. Mutations are role-gated.

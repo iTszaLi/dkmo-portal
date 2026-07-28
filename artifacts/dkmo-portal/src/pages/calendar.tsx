@@ -1,14 +1,21 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import {
   ChevronLeft, ChevronRight, CalendarDays, Users2, ListChecks, Handshake,
-  FolderOpen, Cake, Circle,
+  FolderOpen, Cake, Circle, Plus,
 } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose,
+} from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/lib/auth";
+import { useCreateEvent, useCreateMeeting } from "@workspace/api-client-react";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -37,6 +44,76 @@ export default function CalendarPage() {
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth() + 1); // 1-12
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const { toast } = useToast();
+  const { hasRole } = useAuth();
+  const canScheduleEvent = hasRole("admin", "event");
+  const queryClient = useQueryClient();
+
+  // ── schedule dialog ─────────────────────────────────────────────────────────
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [scheduleType, setScheduleType] = useState<"event" | "meeting">("event");
+  const [scheduleForm, setScheduleForm] = useState({ title: "", date: "", location: "", notes: "" });
+  const createEvent = useCreateEvent();
+  const createMeeting = useCreateMeeting();
+  const scheduling = createEvent.isPending || createMeeting.isPending;
+
+  const openSchedule = (presetDate?: string) => {
+    setScheduleType(canScheduleEvent ? "event" : "meeting");
+    setScheduleForm({
+      title: "",
+      date: presetDate ?? new Date().toISOString().split("T")[0]!,
+      location: "",
+      notes: "",
+    });
+    setScheduleOpen(true);
+  };
+
+  const afterScheduled = (label: string) => {
+    queryClient.invalidateQueries({ queryKey: ["calendar"] });
+    setScheduleOpen(false);
+    setSelectedDate(scheduleForm.date);
+    toast({ title: `${label} scheduled`, description: new Date(scheduleForm.date + "T00:00:00").toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" }) });
+  };
+
+  const submitSchedule = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!scheduleForm.title.trim() || !scheduleForm.date) {
+      toast({ title: "Missing details", description: "A title and date are required.", variant: "destructive" });
+      return;
+    }
+    if (scheduleType === "event") {
+      createEvent.mutate(
+        {
+          data: {
+            name: scheduleForm.title.trim(),
+            eventDate: new Date(scheduleForm.date + "T00:00:00").toISOString(),
+            location: scheduleForm.location.trim(),
+            description: scheduleForm.notes.trim(),
+            status: "upcoming",
+          },
+        },
+        {
+          onSuccess: () => afterScheduled("Event"),
+          onError: () => toast({ title: "Could not schedule the event", variant: "destructive" }),
+        },
+      );
+    } else {
+      createMeeting.mutate(
+        {
+          data: {
+            title: scheduleForm.title.trim(),
+            meetingDate: scheduleForm.date,
+            location: scheduleForm.location.trim() || undefined,
+            notes: scheduleForm.notes.trim() || undefined,
+          },
+        },
+        {
+          onSuccess: () => afterScheduled("Meeting"),
+          onError: () => toast({ title: "Could not schedule the meeting", variant: "destructive" }),
+        },
+      );
+    }
+  };
 
   const { data, isLoading } = useQuery({
     queryKey: ["calendar", year, month],
@@ -105,6 +182,13 @@ export default function CalendarPage() {
             >
               Today
             </Button>
+            <Button
+              onClick={() => openSchedule(selectedDate ?? undefined)}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
+              data-testid="button-schedule"
+            >
+              <Plus className="h-4 w-4" /> Schedule
+            </Button>
           </div>
         </div>
 
@@ -134,6 +218,7 @@ export default function CalendarPage() {
                       const items = byDate.get(key) ?? [];
                       const isToday = key === todayKey;
                       const isSelected = key === selectedDate;
+                      const hasItems = items.length > 0;
                       return (
                         <button
                           key={key}
@@ -142,8 +227,9 @@ export default function CalendarPage() {
                           className={cn(
                             "min-h-[72px] sm:min-h-[86px] rounded-lg border p-1.5 text-left align-top transition-colors",
                             "border-emerald-100/70 dark:border-slate-800 hover:bg-emerald-50 dark:hover:bg-slate-800/60",
+                            hasItems && "bg-emerald-50 border-emerald-300 dark:bg-emerald-900/25 dark:border-emerald-700",
                             isSelected && "ring-2 ring-emerald-500 dark:ring-emerald-400",
-                            isToday && "bg-emerald-50/80 dark:bg-emerald-900/20",
+                            isToday && "bg-emerald-100/80 dark:bg-emerald-900/40",
                           )}
                         >
                           <span className={cn(
@@ -208,6 +294,93 @@ export default function CalendarPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Schedule dialog */}
+        <Dialog open={scheduleOpen} onOpenChange={setScheduleOpen}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Schedule something</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={submitSchedule} className="space-y-4">
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => canScheduleEvent && setScheduleType("event")}
+                  disabled={!canScheduleEvent}
+                  title={canScheduleEvent ? undefined : "Only admins and event coordinators can schedule events"}
+                  aria-pressed={scheduleType === "event"}
+                  data-testid="button-schedule-type-event"
+                  className={cn(
+                    "flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
+                    scheduleType === "event"
+                      ? "border-emerald-500 bg-emerald-50 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300"
+                      : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800",
+                    !canScheduleEvent && "opacity-50 cursor-not-allowed",
+                  )}
+                >
+                  <CalendarDays className="h-4 w-4" /> Event
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setScheduleType("meeting")}
+                  aria-pressed={scheduleType === "meeting"}
+                  data-testid="button-schedule-type-meeting"
+                  className={cn(
+                    "flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
+                    scheduleType === "meeting"
+                      ? "border-emerald-500 bg-emerald-50 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300"
+                      : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800",
+                  )}
+                >
+                  <Users2 className="h-4 w-4" /> Meeting
+                </button>
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium">{scheduleType === "event" ? "Event name" : "Meeting title"}</label>
+                <Input
+                  value={scheduleForm.title}
+                  onChange={(e) => setScheduleForm((f) => ({ ...f, title: e.target.value }))}
+                  placeholder={scheduleType === "event" ? "e.g. Annual Family Gathering" : "e.g. Core Committee Meeting"}
+                  autoFocus
+                  data-testid="input-schedule-title"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Date</label>
+                <Input
+                  type="date"
+                  value={scheduleForm.date}
+                  onChange={(e) => setScheduleForm((f) => ({ ...f, date: e.target.value }))}
+                  data-testid="input-schedule-date"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Location (optional)</label>
+                <Input
+                  value={scheduleForm.location}
+                  onChange={(e) => setScheduleForm((f) => ({ ...f, location: e.target.value }))}
+                  data-testid="input-schedule-location"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Notes (optional)</label>
+                <Input
+                  value={scheduleForm.notes}
+                  onChange={(e) => setScheduleForm((f) => ({ ...f, notes: e.target.value }))}
+                  data-testid="input-schedule-notes"
+                />
+              </div>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button type="button" variant="outline">Cancel</Button>
+                </DialogClose>
+                <Button type="submit" disabled={scheduling} className="bg-emerald-600 hover:bg-emerald-700 text-white" data-testid="button-schedule-save">
+                  Schedule
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
   );
 }

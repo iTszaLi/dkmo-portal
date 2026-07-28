@@ -314,6 +314,10 @@ export default function Frf() {
     setTypeFilter((cur) => (cur === type ? "all" : type));
     registerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+  const showStatusClaims = (status: string) => {
+    setStatusFilter((cur) => (cur === status ? "all" : status));
+    registerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
   const [caseFilter, setCaseFilter] = useState("all");
   const [searchText, setSearchText] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -489,28 +493,44 @@ export default function Frf() {
       {stats && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { title: "Total Claims", value: stats.total, icon: Users, color: "text-green-700 dark:text-green-400", sub: "All time" },
-            { title: "Pending", value: stats.pendingCount, icon: Clock, color: "text-orange-600 dark:text-orange-400", sub: "Awaiting review", border: "border-orange-100 dark:border-orange-900/40" },
-            { title: "Approved", value: stats.approvedCount, icon: CheckCircle2, color: "text-green-700 dark:text-green-400", sub: "Approved & disbursed" },
-            { title: "Total Disbursed", value: formatSAR(stats.totalDisbursed), icon: DollarSign, color: "text-green-700 dark:text-green-400", sub: "Relief provided" },
-          ].map(({ title, value, icon: Icon, color, sub, border }) => (
-            <Card key={title} className={`rounded-2xl ${border ?? "border-green-100 dark:border-slate-800"} dark:bg-slate-900 shadow-sm`}>
-              <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-sm font-medium text-green-900 dark:text-slate-300">{title}</CardTitle>
-                <Icon className={`h-4 w-4 ${color}`} />
-              </CardHeader>
-              <CardContent>
-                <div className={`text-2xl font-bold ${color}`}>{value}</div>
-                <p className="text-xs text-green-700/70 dark:text-slate-500 mt-1">{sub}</p>
-              </CardContent>
-            </Card>
-          ))}
+            { title: "Total Claims", value: stats.total, icon: Users, color: "text-green-700 dark:text-green-400", sub: "All time", filter: "all" },
+            { title: "Pending", value: stats.pendingCount, icon: Clock, color: "text-orange-600 dark:text-orange-400", sub: "Awaiting review", border: "border-orange-100 dark:border-orange-900/40", filter: "pending" },
+            { title: "Approved", value: stats.approvedCount, icon: CheckCircle2, color: "text-green-700 dark:text-green-400", sub: "Approved & disbursed", filter: "approved" },
+            { title: "Total Disbursed", value: formatSAR(stats.totalDisbursed), icon: DollarSign, color: "text-green-700 dark:text-green-400", sub: "Relief provided", filter: "disbursed" },
+          ].map(({ title, value, icon: Icon, color, sub, border, filter }) => {
+            const isActive = filter === "all" ? statusFilter === "all" : statusFilter === filter;
+            return (
+              <button
+                key={title}
+                type="button"
+                onClick={() => (filter === "all" ? showStatusClaims("all") : showStatusClaims(filter))}
+                aria-pressed={isActive}
+                data-testid={`button-frf-stat-${filter}`}
+                className="text-left focus-visible:outline-none group"
+              >
+                <Card className={cn(
+                  `rounded-2xl ${border ?? "border-green-100 dark:border-slate-800"} dark:bg-slate-900 shadow-sm`,
+                  "transition-all group-hover:shadow-md group-hover:border-green-300 dark:group-hover:border-green-700 group-hover:-translate-y-0.5",
+                  isActive && filter !== "all" && "ring-2 ring-green-500 dark:ring-green-400",
+                )}>
+                  <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+                    <CardTitle className="text-sm font-medium text-green-900 dark:text-slate-300">{title}</CardTitle>
+                    <Icon className={`h-4 w-4 ${color}`} />
+                  </CardHeader>
+                  <CardContent>
+                    <div className={`text-2xl font-bold ${color}`}>{value}</div>
+                    <p className="text-xs text-green-700/70 dark:text-slate-500 mt-1">{sub}</p>
+                  </CardContent>
+                </Card>
+              </button>
+            );
+          })}
         </div>
       )}
 
       {/* Breakdown */}
       {(stats?.byType?.length ?? 0) > 0 && (
-        <div className="grid gap-3 sm:grid-cols-4">
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
           {(stats?.byType ?? []).map((t: any) => (
             <button
               key={t.type}

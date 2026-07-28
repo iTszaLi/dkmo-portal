@@ -1,0 +1,510 @@
+DKMO Portal – Complete Loan Module Redesign
+
+I want you to completely redesign the Loans module of my DKMO Portal to make it significantly simpler, cleaner, and easier for non-technical committee members and convenors to use.
+
+This is not a banking application or an ERP system. It is a community welfare portal where committee members provide loans to members and simply need to track repayments.
+
+The current interface has too many fields, requires unnecessary manual input, and makes users think too much. The system should instead automate calculations and reduce manual work wherever possible.
+
+The design should follow these principles:
+
+Simplicity over complexity.
+Minimal clicks.
+Large readable interface.
+Automatic calculations wherever possible.
+Clean, modern UI.
+Mobile friendly.
+Similar simplicity to modern apps like Stripe, Notion, Linear, or Apple—not an old banking dashboard.
+Overall Goal
+
+A convenor should be able to create a loan in under 30 seconds.
+
+The system should automatically calculate everything else.
+
+The user should never need to manually calculate EMIs, remaining balance, or loan status.
+
+Dashboard
+
+Keep only useful statistics.
+
+Top cards should display:
+
+Total Loans
+Active Loans
+Overdue Loans
+Closed Loans
+Total Amount Loaned
+Outstanding Balance
+
+Add two more useful cards:
+
+Payments Due This Month
+Members With Missed Payments
+
+These statistics are much more useful than unnecessary financial information.
+
+Loan List
+
+The table currently displays too much information.
+
+Simplify it.
+
+Each row should contain only:
+
+Member Name
+Loan Purpose
+Loan Amount
+Payment Progress (e.g. 6 / 12)
+Outstanding Balance
+Current Status
+Actions
+
+Do not display unnecessary details like EMI amount, convenor name, descriptions, etc., directly inside the table.
+
+Keep the table clean.
+
+Clicking a loan should open a dedicated Loan Details page.
+
+New Loan Form
+
+The current form asks for too many fields.
+
+Reduce it to only the information that users actually know.
+
+Required fields should be:
+
+Member
+
+Loan Amount (SAR)
+
+Purpose
+
+Dropdown options:
+
+Personal
+Medical
+Education
+Business
+Emergency
+Marriage
+Housing
+Other
+
+Monthly Payment Amount (SAR)
+
+Disbursement Date
+
+Convenor
+
+This should automatically default to the logged-in user but still allow administrators to change it if necessary.
+
+Notes (optional)
+
+Nothing else.
+
+Remove These Fields Completely
+
+Remove:
+
+Status
+Paid EMIs
+Total EMIs
+Manual Description field
+
+These should never require manual input.
+
+Automatic Calculations
+
+When a loan is created:
+
+The system should automatically calculate:
+
+Loan Duration
+
+Formula:
+
+Loan Amount ÷ Monthly Payment
+
+Example:
+
+Loan Amount:
+SAR 50,000
+
+Monthly Payment:
+SAR 2,500
+
+Automatically generate:
+
+20 instalments
+
+Status automatically becomes:
+
+Active
+
+Outstanding Balance automatically becomes:
+
+SAR 50,000
+
+Paid Instalments:
+
+0 / 20
+
+No manual calculations should ever be required.
+
+Loan Status
+
+Never ask the user to select the loan status.
+
+The system should automatically determine status.
+
+Rules:
+
+If Outstanding Balance = 0
+
+Status = Closed
+
+If Outstanding Balance > 0
+
+Status = Active
+
+If payment is overdue
+
+Status = Overdue
+
+This should happen automatically.
+
+Loan Details Page
+
+Clicking a loan should open a dedicated page.
+
+Example layout:
+
+Member Name
+
+Loan Purpose
+
+Original Loan Amount
+
+Outstanding Balance
+
+Monthly Payment
+
+Loan Duration
+
+Progress Bar
+
+Example:
+
+████████░░░░
+
+8 / 12 Payments Completed
+
+Payment Summary
+
+Paid
+
+Remaining
+
+Start Date
+
+Convenor
+
+Notes
+
+Below that display:
+
+Payment History
+
+Date
+
+Amount
+
+Payment Method
+
+Recorded By
+
+Receipt Number (if available)
+
+Status
+
+At the bottom provide a large:
+
+Record Payment button.
+
+Record Payment
+
+Instead of manually increasing Paid EMIs,
+
+the user simply records a payment.
+
+Required fields:
+
+Payment Amount
+
+Payment Date
+
+Payment Method
+
+Cash
+
+Bank Transfer
+
+UPI
+
+Card
+
+Cheque
+
+Notes (optional)
+
+Save Payment
+
+After saving:
+
+The system should automatically:
+
+Increase paid instalments
+
+Reduce outstanding balance
+
+Update progress bar
+
+Update loan status
+
+Update dashboard statistics
+
+No manual editing should be required.
+
+Payment History
+
+Every payment should automatically create a record.
+
+Example:
+
+01 Jan 2026
+
+SAR 2,500
+
+Cash
+
+Recorded by:
+
+Ghani Ahmed Mulki
+
+Paid
+
+Users should never manually edit payment history.
+
+Outstanding Balance
+
+Always calculate automatically.
+
+Formula:
+
+Loan Amount
+
+minus
+
+Total Payments Received
+
+Example:
+
+Loan:
+
+SAR 25,000
+
+Payments:
+
+SAR 10,000
+
+Outstanding:
+
+SAR 15,000
+
+Never ask users to calculate this.
+
+Progress Indicator
+
+Replace text-heavy information with a simple progress bar.
+
+Example:
+
+████████░░
+
+8 / 10 Payments
+
+This gives users instant understanding.
+
+Quick Actions
+
+Replace the floating "+" button with a Quick Actions menu.
+
+When clicked:
+
+New Loan
+
+Record Payment
+
+Print Loan Summary
+
+Export Loans
+
+This reduces navigation.
+
+Loan Search
+
+Improve search.
+
+Allow searching by:
+
+Member Name
+
+Member ID
+
+Phone Number
+
+Purpose
+
+Convenor
+
+Loan Status
+
+Outstanding Balance
+
+Filters
+
+Provide simple filters.
+
+All
+
+Active
+
+Overdue
+
+Closed
+
+Loan Purpose
+
+Convenor
+
+Date Range
+
+User Experience Improvements
+
+Whenever possible:
+
+Reduce typing.
+
+Use dropdowns.
+
+Use autocomplete.
+
+Remember previous selections.
+
+Automatically focus the next field.
+
+Show validation messages before saving.
+
+Prevent invalid numbers.
+
+Prevent negative amounts.
+
+Prevent monthly payment greater than loan amount.
+
+Prevent creating loans without selecting a member.
+
+Notifications
+
+After creating a loan:
+
+Show:
+
+Loan Created Successfully
+
+After recording payment:
+
+Show:
+
+Payment Recorded Successfully
+
+If loan becomes fully paid:
+
+Show:
+
+Loan Closed Successfully
+
+Reports
+
+Allow exporting:
+
+PDF
+
+Excel
+
+CSV
+
+Print-friendly Loan Summary
+
+Permissions
+
+Convenors:
+
+Can create loans
+
+Can record payments
+
+Can view loans assigned to them
+
+Administrators:
+
+Can edit any loan
+
+Can delete loans
+
+Can assign convenors
+
+Can export reports
+
+Visual Design
+
+Use a modern card-based layout.
+
+Large spacing.
+
+Rounded corners.
+
+Minimal colours.
+
+Only use colour where it provides meaning.
+
+Green = Paid
+
+Blue = Active
+
+Orange = Pending
+
+Red = Overdue
+
+Use icons only where helpful.
+
+Avoid clutter.
+
+The interface should feel closer to Stripe, Linear, Apple, or Notion than to traditional accounting software.
+
+Performance
+
+Optimise for speed.
+
+Lazy load long tables.
+
+Instant search.
+
+Pagination.
+
+Fast loading.
+
+Final Objective
+
+The entire Loans module should require as little manual work as possible. The software should perform calculations, update balances, track repayments, generate progress, determine statuses, and maintain payment history automatically.
+
+The end result should feel intuitive enough that even a first-time committee member can create a loan, record repayments, and monitor balances without any training. Every design decision should prioritise clarity, speed, and ease of use while maintaining a professional appearance suitable for the DKMO Executive Suite.

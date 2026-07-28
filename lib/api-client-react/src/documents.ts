@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { customFetch } from "./custom-fetch";
 
 export type DocumentStatus = "active" | "expired" | "archived";
+export type DocumentVisibility = "public" | "members" | "committee" | "admin";
 export type DocumentCategory =
   | "general"
   | "member_docs"
@@ -30,8 +31,31 @@ export interface DocumentRecord {
   linkedEntityId: string;
   linkedEntityType: string;
   notes: string;
+  visibility: DocumentVisibility;
+  downloadCount: number;
+  attachmentsCount: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface DocumentAttachment {
+  id: string;
+  documentId: string;
+  fileUrl: string;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+  uploadedBy: string;
+  createdAt: string;
+}
+
+export interface DocumentActivityEntry {
+  id: string;
+  documentId: string;
+  action: string;
+  userName: string;
+  details: string;
+  createdAt: string;
 }
 
 export interface DocumentVersion {
@@ -65,12 +89,14 @@ export interface DocumentInput {
   linkedEntityId?: string;
   linkedEntityType?: string;
   notes?: string;
+  visibility?: DocumentVisibility;
 }
 
 export interface ListDocumentsParams {
   search?: string;
   category?: string;
   status?: string;
+  visibility?: string;
   linkedEntityType?: string;
   linkedEntityId?: string;
   page?: number;
@@ -173,4 +199,100 @@ export function useAddDocumentVersion(documentId: string) {
       qc.invalidateQueries({ queryKey: ["documents"] });
     },
   });
+}
+
+// ── Attachments ──────────────────────────────────────────────────────────────
+
+export function useListDocumentAttachments(documentId: string) {
+  return useQuery<DocumentAttachment[]>({
+    queryKey: ["documents", documentId, "attachments"],
+    queryFn: () =>
+      customFetch<DocumentAttachment[]>(`/api/documents/${documentId}/attachments`),
+    enabled: Boolean(documentId),
+  });
+}
+
+export interface AttachmentInput {
+  fileUrl: string;
+  fileName: string;
+  fileSize?: number;
+  mimeType?: string;
+}
+
+export function useAddDocumentAttachment(documentId: string) {
+  const qc = useQueryClient();
+  return useMutation<DocumentAttachment, Error, AttachmentInput>({
+    mutationFn: (body) =>
+      customFetch<DocumentAttachment>(`/api/documents/${documentId}/attachments`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["documents"] });
+    },
+  });
+}
+
+export function useDeleteDocumentAttachment(documentId: string) {
+  const qc = useQueryClient();
+  return useMutation<void, Error, string>({
+    mutationFn: (attachmentId) =>
+      customFetch<void>(`/api/documents/${documentId}/attachments/${attachmentId}`, {
+        method: "DELETE",
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["documents"] });
+    },
+  });
+}
+
+// ── Activity log & tracking ──────────────────────────────────────────────────
+
+export function useDocumentActivity(documentId: string) {
+  return useQuery<DocumentActivityEntry[]>({
+    queryKey: ["documents", documentId, "activity"],
+    queryFn: () =>
+      customFetch<DocumentActivityEntry[]>(`/api/documents/${documentId}/activity`),
+    enabled: Boolean(documentId),
+  });
+}
+
+/** Fire-and-forget view/download tracking. */
+export function trackDocument(documentId: string, action: "viewed" | "downloaded", fileName = "") {
+  void customFetch<void>(`/api/documents/${documentId}/track`, {
+    method: "POST",
+    body: JSON.stringify({ action, fileName }),
+  }).catch(() => {});
+}
+
+// ── Public portal (no auth) ──────────────────────────────────────────────────
+
+export interface PublicDocument {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  tags: string;
+  fileUrl: string;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+  createdAt: string;
+}
+
+export function usePublicDocuments(search?: string) {
+  return useQuery<{ items: PublicDocument[] }>({
+    queryKey: ["public-documents", search ?? ""],
+    queryFn: () =>
+      customFetch<{ items: PublicDocument[] }>(
+        `/api/public/documents${search ? `?search=${encodeURIComponent(search)}` : ""}`,
+      ),
+  });
+}
+
+export function trackPublicDocument(documentId: string, action: "viewed" | "downloaded") {
+  void customFetch<void>(`/api/public/documents/${documentId}/track`, {
+    method: "POST",
+    body: JSON.stringify({ action }),
+  }).catch(() => {});
 }

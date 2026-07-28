@@ -18,12 +18,16 @@ const SALT_ROUNDS = 10;
 // production.
 const DEFAULT_DEV_PASSWORD = "dkmo@2026";
 
-function seedPassword(username: string): string {
-  return (
+function seedPassword(username: string): string | null {
+  const configured =
     process.env[`EXEC_PASSWORD_${username.toUpperCase()}`] ||
-    process.env.EXEC_PASSWORD ||
-    DEFAULT_DEV_PASSWORD
-  );
+    process.env.EXEC_PASSWORD;
+  if (configured) return configured;
+  // In production the hardcoded dev fallback is never accepted: accounts
+  // without a configured password secret are simply not seeded (login refused)
+  // rather than being reachable with a publicly known password.
+  if (process.env.NODE_ENV === "production") return null;
+  return DEFAULT_DEV_PASSWORD;
 }
 
 const SEED_USERS: ReadonlyArray<{
@@ -54,6 +58,13 @@ function ensureUsers(): Promise<void> {
     const hashCache = new Map<string, string>();
     for (const seed of SEED_USERS) {
       const password = seedPassword(seed.username);
+      if (!password) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          `[users] Account "${seed.username}" disabled: set EXEC_PASSWORD or EXEC_PASSWORD_${seed.username.toUpperCase()} in production secrets.`,
+        );
+        continue;
+      }
       let passwordHash = hashCache.get(password);
       if (!passwordHash) {
         passwordHash = await bcrypt.hash(password, SALT_ROUNDS);

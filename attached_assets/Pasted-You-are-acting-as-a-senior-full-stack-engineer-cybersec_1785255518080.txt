@@ -1,0 +1,212 @@
+You are acting as a senior full-stack engineer, cybersecurity auditor, DevOps engineer, and launch manager.
+
+I want you to fully inspect my DKMO Portal web application and prepare it for production launch.
+
+GitHub repository:
+https://github.com/iTszaLi/dkmo-portaland
+
+Your tasks:
+
+1. FULL APPLICATION AUDIT
+- Open and analyze the entire codebase.
+- Understand the complete architecture, frontend, backend, database, APIs, authentication, file handling, and admin systems.
+- Review every module and feature.
+- Identify bugs, broken flows, missing validations, performance issues, and poor user experience areas.
+- Test the application like a real user and administrator.
+
+2. SECURITY AUDIT (IMPORTANT)
+Perform a complete security review.
+
+Check and fix:
+
+Authentication:
+- Secure login system
+- Password hashing
+- Session security
+- JWT/token security (if used)
+- Prevent unauthorized access
+- Role-based permissions
+- Admin-only pages protection
+
+Database:
+- SQL injection protection
+- Data validation
+- Secure database queries
+- Prevent unauthorized data modification
+- Check sensitive information exposure
+
+API Security:
+- Secure all API endpoints
+- Validate every request
+- Prevent duplicate submissions
+- Prevent manipulation of payment values
+- Prevent users from accessing other users' data
+
+Forms:
+- Server-side validation for every form
+- Block negative values
+- Block zero payments where not allowed
+- Prevent fake member creation
+- Prevent duplicate member IDs
+
+File Uploads:
+- Check document/photo upload security
+- Restrict file types
+- Prevent malicious uploads
+- Add file size limits
+
+General:
+- Remove exposed secrets/API keys
+- Move environment variables properly
+- Add .env.example
+- Check CORS settings
+- Check security headers
+- Prevent XSS attacks
+- Prevent CSRF attacks
+- Add proper error handling without exposing system details
+
+3. DKMO PORTAL FUNCTIONAL TESTING
+
+Test all major modules:
+
+Members:
+- Add member
+- Edit member
+- Search member
+- View profile
+- Active/inactive status
+- Member ID generation
+
+Payments:
+- Membership fee tracking
+- FRF fee tracking
+- Paid/unpaid status
+- Payment methods
+- Partial payments
+- Payment history
+- Receipt generation
+
+FRF Module:
+- Create FRF cases
+- Link members
+- Track collected amount
+- Track pending amount
+- Close cases
+- Reminder system
+
+Documents:
+- Upload documents
+- View documents
+- Permission checking
+
+Dashboard:
+- Verify statistics
+- Verify calculations
+- Check charts and counters
+
+WhatsApp reminders:
+- Ensure bulk reminders work correctly
+- Avoid opening hundreds of browser tabs
+- Make it scalable for 1000+ members
+
+4. UI/UX REVIEW
+
+Improve:
+- Mobile responsiveness
+- Loading speed
+- Navigation
+- Error messages
+- Empty states
+- Buttons and forms
+- Professional appearance
+
+Make the portal feel like a production SaaS application.
+
+5. PERFORMANCE OPTIMIZATION
+
+Check:
+- Slow database queries
+- Large images/files
+- Unnecessary API calls
+- Frontend bundle size
+- Memory leaks
+
+Optimize for:
+- 1000+ members
+- Multiple admins using the system
+- Fast loading on mobile devices
+
+6. VERCEL DEPLOYMENT COMPATIBILITY
+
+Prepare the project to run properly on Vercel.
+
+Check:
+- Framework compatibility
+- Build process
+- Environment variables
+- API routes
+- Database connection
+- Static assets
+- Deployment configuration
+
+Create/fix:
+- vercel.json if required
+- Proper build scripts
+- Production environment configuration
+- README deployment instructions
+
+The final project should successfully run using:
+
+npm install
+npm run build
+npm start
+
+and deploy correctly on Vercel.
+
+7. CODE QUALITY
+
+Improve:
+- Folder structure
+- Remove unused code
+- Fix warnings
+- Add comments where needed
+- Follow best practices
+- Make code maintainable
+
+8. PRODUCTION CHECKLIST
+
+Before launch verify:
+
+✓ No critical bugs
+✓ No security vulnerabilities
+✓ Database works correctly
+✓ Authentication works
+✓ Admin permissions work
+✓ Mobile responsive
+✓ Production environment ready
+✓ Vercel deployment ready
+
+9. GITHUB PUSH
+
+After completing all improvements:
+
+- Commit all changes.
+- Use clear commit messages.
+- Push everything to:
+
+https://github.com/iTszaLi/dkmo-portaland
+
+Make sure the repository contains the final production-ready version.
+
+10. FINAL REPORT
+
+After finishing, provide:
+
+- Summary of changes made
+- Security issues fixed
+- Bugs fixed
+- Performance improvements
+- Deployment instructions
+- Remaining recommendations before public launch
+
+Do not just review the project. Actually modify, fix, test, and prepare it for launch.

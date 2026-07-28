@@ -12,6 +12,7 @@ import CalendarPage from "@/pages/calendar";
 import Members from "@/pages/members";
 import MemberDetail from "@/pages/member-detail";
 import Payments from "@/pages/payments";
+import MembershipDrive from "@/pages/membership-drive";
 import Reports from "@/pages/reports/index";
 import ReportMembership from "@/pages/reports/membership";
 import ReportFees from "@/pages/reports/fees";
@@ -35,12 +36,14 @@ import FrfClaimDetail from "@/pages/frf-claim-detail";
 import CommunityServices from "@/pages/community-services";
 import WelfareService from "@/pages/welfare-service";
 import DkmoApply from "@/pages/dkmo-apply";
+import PublicDocumentsPage from "@/pages/public-documents";
 import DkmoTrack from "@/pages/dkmo-track";
 import DkmoTerms from "@/pages/dkmo-terms";
 import DkmoVerify from "@/pages/dkmo-verify";
 import DkmoMemberships from "@/pages/dkmo-memberships";
 import DkmoDuplicates from "@/pages/dkmo-duplicates";
 import Loans from "@/pages/loans";
+import LoanDetail from "@/pages/loan-detail";
 import Receipts from "@/pages/receipts";
 import Documents from "@/pages/documents";
 import Audit from "@/pages/audit";
@@ -126,6 +129,7 @@ function AppRoutes() {
       <Route path="/login" component={LoginRoute} />
       {/* Public routes — no auth required */}
       <Route path="/dkmo-apply" component={DkmoApply} />
+      <Route path="/dkmo-documents" component={PublicDocumentsPage} />
       <Route path="/dkmo-track" component={DkmoTrack} />
       <Route path="/dkmo-terms" component={DkmoTerms} />
       <Route path="/dkmo-verify" component={DkmoVerify} />
@@ -140,6 +144,7 @@ function AppRoutes() {
       <Route path="/payments" component={() => <AuthenticatedRoute component={Payments} />} />
       {/* Pending module merged into Payments — keep the old URL working */}
       <Route path="/pending" component={() => <LegacyRedirect to="/payments" />} />
+      <Route path="/membership-drive" component={() => <AuthenticatedRoute component={MembershipDrive} />} />
       <Route path="/reports" component={() => <AuthenticatedRoute component={Reports} />} />
       <Route path="/reports/membership" component={() => <AuthenticatedRoute component={ReportMembership} />} />
       <Route path="/reports/fees" component={() => <AuthenticatedRoute component={ReportFees} />} />
@@ -169,6 +174,7 @@ function AppRoutes() {
       <Route path="/dkmo-memberships" component={() => <AuthenticatedRoute component={DkmoMemberships} />} />
       <Route path="/duplicates" component={() => <AuthenticatedRoute component={DkmoDuplicates} roles={["admin"]} />} />
       <Route path="/loans" component={() => <AuthenticatedRoute component={Loans} />} />
+      <Route path="/loans/:id" component={() => <AuthenticatedRoute component={LoanDetail} />} />
       <Route path="/receipts" component={() => <AuthenticatedRoute component={Receipts} />} />
       <Route path="/print-receipts" component={() => <LegacyRedirect to="/receipts" keepQuery />} />
       <Route path="/documents" component={() => <AuthenticatedRoute component={Documents} />} />

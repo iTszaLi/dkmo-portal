@@ -19,12 +19,15 @@ import searchRouter from "./search";
 import calendarRouter from "./calendar";
 import auditRouter from "./audit";
 import documentsRouter from "./documents";
+import publicDocumentsRouter from "./public-documents";
 import meetingsRouter from "./meetings";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(authRouter);
+// Public portal endpoints must mount BEFORE any router that applies requireAuth globally.
+router.use(publicDocumentsRouter);
 router.use(meRouter);
 router.use(dkmoMembershipRouter);
 router.use(membersRouter);

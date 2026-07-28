@@ -10,9 +10,11 @@ import {
   getGetFrfClaimCollectionQueryKey,
   getListPendingFrfFeesQueryKey,
   getListPaymentsQueryKey,
+  useGetMemberFrfSummary,
   type FrfContributor,
   type PendingFrfFee,
 } from "@workspace/api-client-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQueryClient, useQueries } from "@tanstack/react-query";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { normalizeWhatsAppNumber, buildWhatsAppLink, type WhatsAppTarget } from "@/lib/whatsapp";
@@ -24,7 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, UserCircle, HeartHandshake, FileDown, FileSpreadsheet, CheckCircle2, Clock, MinusCircle, XCircle, MoreHorizontal } from "lucide-react";
+import { Search, UserCircle, HeartHandshake, FileDown, FileSpreadsheet, CheckCircle2, Clock, MinusCircle, XCircle, MoreHorizontal, History, ExternalLink } from "lucide-react";
 import { formatSAR, formatDate, cn } from "@/lib/utils";
 import ExcelJS from "exceljs";
 import jsPDF from "jspdf";
@@ -80,6 +82,146 @@ function frfStatusBadge(status: string) {
 
 type FeeFilter = "all" | "paid" | "pending" | "overdue";
 
+/** Per-member FRF history dialog: one row per case, plus a logo-headed PDF statement. */
+function FrfMemberHistoryDialog({
+  memberId,
+  memberName,
+  membershipIdText,
+  onClose,
+}: {
+  memberId: string | null;
+  memberName: string;
+  membershipIdText: string;
+  onClose: () => void;
+}) {
+  // Generated hook already disables itself while the id is empty.
+  const { data: summary, isLoading } = useGetMemberFrfSummary(memberId ?? "");
+
+  const handlePdf = async () => {
+    if (!summary) return;
+    const logo = await loadImageAsBase64(`${basePath}/logo-circle.png`);
+    const doc = new jsPDF();
+    const pageW = doc.internal.pageSize.getWidth();
+    if (logo) doc.addImage(logo, "PNG", 14, 10, 22, 22);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(15);
+    doc.setTextColor(6, 78, 59);
+    doc.text("Dakshina Karnataka Muslim Okkoota (DKMO)", 40, 18);
+    doc.setFontSize(11);
+    doc.setTextColor(60, 60, 60);
+    doc.text("FRF Contribution Statement", 40, 25);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text(`Member: ${memberName}   ·   ID: ${membershipIdText}`, 14, 40);
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, pageW - 14, 40, { align: "right" });
+
+    autoTable(doc, {
+      startY: 46,
+      head: [["FRF Case", "Type", "Fee", "Paid", "Status", "Paid On", "Receipt"]],
+      body: summary.history.map((h) => [
+        h.title || h.claimantName,
+        h.claimType.replace(/_/g, " "),
+        formatSAR(h.amount),
+        formatSAR(h.amountPaid),
+        STATUS_LABEL[h.status] ?? h.status,
+        h.paidAt ? formatDate(h.paidAt) : "—",
+        h.receiptNumber || "—",
+      ]),
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [6, 95, 70] },
+    });
+
+    let endY = (doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? 60;
+    if (endY + 20 > doc.internal.pageSize.getHeight()) {
+      doc.addPage();
+      endY = 10;
+    }
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(6, 78, 59);
+    doc.text(
+      `Cases paid: ${summary.casesPaid} of ${summary.totalClaims}   ·   Total contributed: ${formatSAR(summary.totalPaid)}   ·   Outstanding: ${formatSAR(summary.totalOutstanding)}`,
+      14,
+      endY + 10,
+    );
+    doc.save(`FRF-Statement-${membershipIdText || memberName}.pdf`);
+  };
+
+  return (
+    <Dialog open={!!memberId} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto dark:bg-slate-900 dark:border-slate-800">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 dark:text-slate-100">
+            <History className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+            FRF History — {memberName}
+          </DialogTitle>
+        </DialogHeader>
+        {isLoading || !summary ? (
+          <div className="space-y-3 py-2">
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-2">
+              <div className="rounded-xl border border-emerald-100 dark:border-slate-800 bg-emerald-50/60 dark:bg-slate-800/60 p-3 text-center">
+                <p className="text-xl font-bold text-emerald-800 dark:text-emerald-300">{summary.casesPaid}<span className="text-sm font-medium text-emerald-600/70 dark:text-slate-400"> / {summary.totalClaims}</span></p>
+                <p className="text-[11px] text-emerald-700/70 dark:text-slate-400">Cases paid</p>
+              </div>
+              <div className="rounded-xl border border-emerald-100 dark:border-slate-800 bg-emerald-50/60 dark:bg-slate-800/60 p-3 text-center">
+                <p className="text-xl font-bold text-emerald-800 dark:text-emerald-300">{formatSAR(summary.totalPaid)}</p>
+                <p className="text-[11px] text-emerald-700/70 dark:text-slate-400">Total contributed</p>
+              </div>
+              <div className="rounded-xl border border-amber-200 dark:border-amber-900/40 bg-amber-50/60 dark:bg-slate-800/60 p-3 text-center">
+                <p className="text-xl font-bold text-amber-700 dark:text-amber-400">{formatSAR(summary.totalOutstanding)}</p>
+                <p className="text-[11px] text-amber-700/70 dark:text-slate-400">Outstanding</p>
+              </div>
+            </div>
+            {summary.history.length === 0 ? (
+              <p className="text-sm text-emerald-700/70 dark:text-slate-400 text-center py-6">No FRF cases recorded for this member yet.</p>
+            ) : (
+              <div className="rounded-xl border border-emerald-100 dark:border-slate-800 overflow-hidden">
+                <Table>
+                  <TableHeader className="bg-emerald-50/50 dark:bg-slate-800/60">
+                    <TableRow className="dark:border-slate-700">
+                      <TableHead className="text-emerald-900 dark:text-slate-300">FRF Case</TableHead>
+                      <TableHead className="text-emerald-900 dark:text-slate-300 text-right">Fee</TableHead>
+                      <TableHead className="text-emerald-900 dark:text-slate-300 text-right">Paid</TableHead>
+                      <TableHead className="text-emerald-900 dark:text-slate-300">Status</TableHead>
+                      <TableHead className="text-emerald-900 dark:text-slate-300">Paid On</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {summary.history.map((h) => (
+                      <TableRow key={h.contributionId} className="dark:border-slate-800">
+                        <TableCell className="text-sm text-emerald-950 dark:text-slate-200 max-w-[220px] truncate">{h.title || h.claimantName}</TableCell>
+                        <TableCell className="text-right text-sm font-semibold text-emerald-900 dark:text-green-300">{formatSAR(h.amount)}</TableCell>
+                        <TableCell className="text-right text-sm text-emerald-800 dark:text-slate-300">{formatSAR(h.amountPaid)}</TableCell>
+                        <TableCell>{frfStatusBadge(h.status)}</TableCell>
+                        <TableCell className="text-sm text-emerald-700 dark:text-slate-400">{h.paidAt ? formatDate(h.paidAt) : "—"}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+            <div className="flex flex-wrap justify-end gap-2">
+              <Button variant="outline" asChild className="dark:border-slate-700 dark:text-slate-300">
+                <Link href={`/members/${memberId}`}>
+                  <ExternalLink className="mr-1.5 h-4 w-4" /> Full Profile
+                </Link>
+              </Button>
+              <Button onClick={handlePdf} className="bg-emerald-600 hover:bg-emerald-700 text-white" data-testid="button-frf-history-pdf">
+                <FileDown className="mr-1.5 h-4 w-4" /> Download PDF
+              </Button>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function buildFrfReminderMessage(fee: PendingFrfFee): string {
   return `Assalamu Alaikum ${fee.fullName},\n\nThis is a gentle reminder from DKMO (Dakshina Karnataka Muslim Ookota — Committed to the Community). Your FRF fee of ${formatSAR(fee.balance)} for the case "${fee.caseTitle}" is currently ${fee.status}.\n\nPlease complete the payment at your earliest convenience.\n\nJazakallah Khair.`;
 }
@@ -97,6 +239,7 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
   const [feeFilter, setFeeFilter] = useState<FeeFilter>(initialFeeFilter ?? "all");
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkTargets, setBulkTargets] = useState<WhatsAppTarget[]>([]);
+  const [historyMember, setHistoryMember] = useState<{ id: string; name: string; membershipId: string } | null>(null);
   const { toast } = useToast();
   const { data: pendingFrf } = useListPendingFrfFees();
 
@@ -123,6 +266,10 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
   const refreshFees = () => {
     queryClient.invalidateQueries({ queryKey: getListPendingFrfFeesQueryKey() });
     queryClient.invalidateQueries({ queryKey: getListPaymentsQueryKey() });
+    // Keep the per-member FRF history dialog fresh after Mark Paid / Exempt.
+    queryClient.invalidateQueries({
+      predicate: (q) => q.queryKey.some((k) => typeof k === "string" && k.includes("/frf-summary")),
+    });
     // Refresh every case ledger so the "All FRF Cases" totals stay accurate too.
     queryClient.invalidateQueries({
       predicate: (q) => q.queryKey.some((k) => typeof k === "string" && k.includes("/frf/claims/") && k.endsWith("/collection")),
@@ -604,15 +751,20 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
               filtered.map((c) => (
                 <TableRow key={c.contributionId} className="hover:bg-emerald-50/30 dark:hover:bg-slate-800/50 dark:border-slate-800 transition-colors">
                   <TableCell>
-                    <Link href={`/members/${c.memberId}`} className="flex items-center gap-3 group">
+                    <button
+                      type="button"
+                      onClick={() => setHistoryMember({ id: c.memberId, name: c.fullName, membershipId: c.membershipId })}
+                      className="flex items-center gap-3 group text-left"
+                      data-testid={`button-frf-history-${c.membershipId}`}
+                    >
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 group-hover:bg-emerald-200 dark:group-hover:bg-emerald-900/60 transition-colors shrink-0">
                         <UserCircle className="h-5 w-5" />
                       </div>
                       <div>
                         <div className="font-medium text-emerald-950 dark:text-slate-200 group-hover:text-emerald-700 dark:group-hover:text-green-300 transition-colors">{c.fullName}</div>
-                        <div className="text-xs text-emerald-600 dark:text-slate-500">ID: {c.membershipId}</div>
+                        <div className="text-xs text-emerald-600 dark:text-slate-500">ID: {c.membershipId} · click for history</div>
                       </div>
-                    </Link>
+                    </button>
                   </TableCell>
                   <TableCell className="text-sm text-emerald-800 dark:text-slate-300" data-testid={`text-frf-responsible-${c.membershipId}`}>
                     {c.refMemberName || <span className="text-emerald-600/60 dark:text-slate-500">—</span>}
@@ -691,6 +843,13 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
           </TableBody>
         </Table>
       </div>
+
+      <FrfMemberHistoryDialog
+        memberId={historyMember?.id ?? null}
+        memberName={historyMember?.name ?? ""}
+        membershipIdText={historyMember?.membershipId ?? ""}
+        onClose={() => setHistoryMember(null)}
+      />
     </div>
   );
 }
