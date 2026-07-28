@@ -20,3 +20,4 @@
 - [Loans derived-status model](loans-derived-model.md) — balances/status computed from loan_payments (legacy paidEmis as baseline); stored status re-synced after payments AND edits; convenor enforced server-side.
 - [Stale workspace lib types](workspace-lib-rebuild.md) — after editing lib/db or lib/api-client-react types, run `npx tsc -b` in that lib or consumers typecheck against stale dist .d.ts.
 - [Read access is role-open](read-access-model.md) — all list GETs are auth-only by design; every role can read every module, so global search parity adds no exposure. Mutations are role-gated.
+- [Legacy member import](member-import-module.md) — server-authoritative validation; rollback check+delete must be one guarded transaction; update fills blanks only.

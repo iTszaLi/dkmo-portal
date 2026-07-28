@@ -1,0 +1,351 @@
+The attached legacy member file is **NOT a clean CSV**. It contains many missing fields, inconsistent formatting, blank values, and legacy data collected over many years. Build an intelligent import engine specifically for this type of data.
+
+Example record:
+
+```
+Id No	Application No	Old Application No	First Name	Last Name	Mobile No	Jamaath	Iqama no	Place home	WhatsApp No	Place Local	Date of Birth	Group	Passport No	Mobile Home	Nameall
+
+15680	11555		Abdul Salam		568799520	surthkal	2315315974	Surthkal			17-Sep-81	07101-Abdul Azeez Bajpe, 503271851			15680 - Abdul Salam 568799520 11555 surthkal 2315315974
+```
+
+## Import Rules
+
+### Member ID
+
+Never use the old "Id No" as the portal Member ID.
+
+Generate:
+
+DKMO-000001
+
+DKMO-000002
+
+...
+
+Store the old number inside:
+
+Legacy Member ID
+
+---
+
+### Full Name
+
+If Last Name is empty
+
+Full Name = First Name
+
+If both exist
+
+Full Name = First Name + Last Name
+
+Example
+
+First Name
+
+Abdul Salam
+
+Last Name
+
+(blank)
+
+Result
+
+Full Name
+
+Abdul Salam
+
+---
+
+### Mobile
+
+Convert
+
+568799520
+
+into
+
+0568799520
+
+if needed.
+
+Validate Saudi mobile format.
+
+If invalid
+
+mark the row.
+
+---
+
+### WhatsApp
+
+If WhatsApp is blank
+
+copy Mobile Number.
+
+If WhatsApp exists
+
+use it.
+
+---
+
+### Application Number
+
+Store as-is.
+
+If blank
+
+leave NULL.
+
+---
+
+### Old Application Number
+
+Store separately.
+
+Never overwrite Application Number.
+
+---
+
+### Jamaath
+
+Trim spaces.
+
+Convert
+
+surthkal
+
+SURTHKAL
+
+Surthkal
+
+into one value:
+
+Surthkal
+
+Create Jamaath automatically if it doesn't already exist.
+
+---
+
+### Iqama Number
+
+Store if valid.
+
+If blank
+
+leave NULL.
+
+---
+
+### Home Place
+
+Map to:
+
+Native Place
+
+---
+
+### Place Local
+
+Map to:
+
+Current Location
+
+---
+
+### Date of Birth
+
+Accept
+
+17-Sep-81
+
+11-Feb-70
+
+30-Nov-90
+
+Convert everything into
+
+1981-09-17
+
+1970-02-11
+
+1990-11-30
+
+---
+
+### Group Column
+
+Example
+
+07101-Abdul Azeez Bajpe, 503271851
+
+Split into:
+
+Committee Code
+
+07101
+
+Committee Name
+
+Abdul Azeez Bajpe
+
+Committee Mobile
+
+503271851
+
+Save these separately if your schema supports them. Otherwise keep the original value in a "Legacy Group" field.
+
+---
+
+### Passport Number
+
+If blank
+
+leave NULL.
+
+---
+
+### Mobile Home
+
+This is usually an Indian home contact.
+
+Store as:
+
+Home Contact Number
+
+Do NOT overwrite Saudi Mobile.
+
+---
+
+### NameAll
+
+Ignore this field completely.
+
+It is only a concatenated search string from the legacy software.
+
+Do NOT import it.
+
+---
+
+## Missing Data
+
+Many rows have:
+
+Missing Last Name
+
+Missing DOB
+
+Missing Passport
+
+Missing WhatsApp
+
+Missing Local Place
+
+Missing Iqama
+
+This is expected.
+
+Do NOT reject these records.
+
+Only Full Name and Mobile Number are required.
+
+---
+
+## Duplicate Detection
+
+Check duplicates using
+
+Mobile
+
+Iqama
+
+Application Number
+
+Legacy Member ID
+
+Show possible duplicate matches before importing.
+
+---
+
+## Import Preview
+
+Display
+
+Original Value
+
+↓
+
+New Value
+
+Example
+
+```
+Mobile
+
+568799520
+
+↓
+
+0568799520
+```
+
+```
+DOB
+
+17-Sep-81
+
+↓
+
+1981-09-17
+```
+
+```
+Name
+
+Abdul Salam
+
+↓
+
+Abdul Salam
+```
+
+---
+
+## Automatic Defaults
+
+Membership Status = Active
+
+Membership Fee = Paid
+
+FRF Status = Active
+
+Country = Saudi Arabia
+
+City = Riyadh
+
+Role = Member
+
+Created By = Data Import
+
+---
+
+## Final Verification
+
+After import verify:
+
+✓ Every member has a generated DKMO Member ID.
+
+✓ Legacy ID is stored.
+
+✓ NameAll was ignored.
+
+✓ DOB converted correctly.
+
+✓ Mobiles normalized.
+
+✓ Jamaaths created or matched.
+
+✓ Dashboard counts updated.
+
+✓ Imported members are immediately searchable.
+
+This importer should be reusable for future legacy member databases with the same structure and must be production-ready, secure, fault-tolerant, and optimized for importing thousands of records efficiently.

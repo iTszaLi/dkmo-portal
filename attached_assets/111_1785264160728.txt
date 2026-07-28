@@ -1,0 +1,1119 @@
+Id No	Application No	Old  Application No	First Name	Last Name	Mobile No	Jamaath	Iqama no	Place home	WhatsApp No	Place Local	Date of Birth	Group	Passport No	Mobile Home	Nameall
+15680	11555		Abdul Salam		568799520	surthkal	2315315974	Surthkal			17-Sep-81	07101-Abdul Azeez Bajpe, 503271851			15680 - Abdul Salam  568799520  11555  surthkal 2315315974
+15741	12272		Abusali		597311411	Belma	2076650874	Deralakatte		Batha		DKMO_Regroup		9448153956	15741 - Abusali  597311411  12272  Belma 2076650874
+211211			ALSAMRAN		596364244	SHIMOGA					30-Nov-90	07128-Abdul Hameed Nazeer  Kulur, 592114842			211211 - ALSAMRAN  596364244    SHIMOGA 
+16821	12039		Ibrahim		594842532							11288-Moahmmed Ali  Jokatte, 502149417			16821 - Ibrahim  594842532  12039   
+15673	11385		Mohammad Shameem		507405541	Bekal	2071379321	Kasaragod		Olaya	11-Feb-70	11313-Ghani Ahmed  , 509125443		04992238298	15673 - Mohammad Shameem  507405541  11385  Bekal 2071379321
+211212			SIRAJUDDIN		556668418	SAJIPANADU	2354166783	SAJIPANDU				07262-Salman Noor  Hasan, 500602458			211212 - SIRAJUDDIN  556668418    SAJIPANADU 2354166783
+11582	11310		B.K,Mohiyaddin	  	566096422	Pakshikere				Atiqa		DKMO_Regroup			11582 - B.K,Mohiyaddin    566096422  11310  Pakshikere 
+11450		1369	Basheer	  	551038821	Krishnapura		Krishnapura		Un Known		Imtiyaz ahmed kundapur			11450 - Basheer    551038821   1369 Krishnapura 
+11447		1366	Iddinabba	  	551038821	Kannangar		Udupi		Un Known		Imtiyaz ahmed kundapur			11447 - Iddinabba    551038821   1366 Kannangar 
+11383	678		Imran	  	532753966	Baithar		Arekala		Badea		Basheer			11383 - Imran    532753966  678  Baithar 
+11310	1005		Mohammed	  		Ajilamogaru		Bantwal		Jubail		11270-Ibrahim Kuntoor, 533936347			11310 - Mohammed      1005  Ajilamogaru 
+11449		1368	Mustafa	  	551038821	Katipalla		Katipalla		Un Known		Imtiyaz ahmed kundapur			11449 - Mustafa    551038821   1368 Katipalla 
+7164	11480		Nasir	  	552804946	Uppinangadi		Uppinangadi		Batha		DKMO_Regroup			7164 - Nasir    552804946  11480  Uppinangadi 
+7152	11484		Anwar	  Kandak	502331975	Mangaluru				Deerah		11404-Abdulrahman Sulaiman  , 559906048			7152 - Anwar   Kandak 502331975  11484  Mangaluru 
+7149		1873	Sadakathullah	  Mijar Abdulla	536750133	Thodar		Thodar		Un Known		11380-Shafe Thodar  , 541937996			7149 - Sadakathullah   Mijar Abdulla 536750133   1873 Thodar 
+17908	13526		Abubakkar	 Hamod Beary	503084643		2299608980	Belthangady		Shemeshi		11548-Abdul Razzak Machar, 593870965		94882250059	17908 - Abubakkar  Hamod Beary 503084643  13526   2299608980
+7262		6052	Salman Noor	 Hasan	500602458	Noor Masjid		Mangaluru		Malaz		07262-Salman Noor  Hasan, 500602458			7262 - Salman Noor  Hasan 500602458   6052 Noor Masjid 
+7251		6329	Yusuf Adoor	 Nadugudde	562906572	Mallur		Mallur		Malaz		07120-Mohammed Asif Kannur , 506991416			7251 - Yusuf Adoor  Nadugudde 562906572   6329 Mallur 
+15643	12008		Abdul Rahman 	(Asif) Sutta	566259836	Thotal		Kairangala		Malaz		07115-Haneef N.S, 542589564			15643 - Abdul Rahman  (Asif) Sutta 566259836  12008  Thotal 
+15692	11951		Hyder	A	500360371	Thumbay	2190070140	Thumbay		Naseem	10-Jun-74	11581 - Mansoor Ahmed   - 564779120			15692 - Hyder A 500360371  11951  Thumbay 2190070140
+17909	13401		Ramhathulla	a	580810942		2137289431	Madaka				11548-Abdul Razzak Machar, 593870965		9611924819	17909 - Ramhathulla a 580810942  13401   2137289431
+15647	12276	0	Hydar Ali	A.K	534936993	Mitthur	2330971348	Mithur		Batha	01-Jun-88	07113-Ismail Montepadavu, 509173592		9980770364	15647 - Hydar Ali A.K 534936993  12276 0 Mitthur 2330971348
+11585	2727		Zainuddin	A.R  	553335103	Un Known				Un Known		07129-Abubaker Bondel, 551578085			11585 - Zainuddin A.R   553335103  2727  Un Known 
+16823	12482		Mahammad Yaseer	abbas	552306746							18111-Basheer Sullia, 555082486		9448842729	16823 - Mahammad Yaseer abbas 552306746  12482   
+18089			Mohammad Sabeer	Abbas	536211843	Kunjathbail	2260726456			malaz	27-Jul-86	07124-G.K. Sheikabba  , 508102993			18089 - Mohammad Sabeer Abbas 536211843    Kunjathbail 2260726456
+11394	1386		Yahiya	Abbas  	546665786	Puttur		Puttur		Jeddah		11380-Shafe Thodar  , 541937996			11394 - Yahiya Abbas   546665786  1386  Puttur 
+19015	19015		Chennavara Isubu	Abbas Haji	559643346	Chennar	2455969366	Kaiyur	559643346	Al Warood	15-Jun-79	11313-Ghani Ahmed  , 509125443		16-Mar-19	19015 - Chennavara Isubu Abbas Haji 559643346  19015  Chennar 2455969366
+18002	12047		Abdul salam	Abbas Haleangadi	535042917	Kadike	2295316372				01-Jul-81	11288-Moahmmed Ali  Jokatte, 502149417			18002 - Abdul salam Abbas Haleangadi 535042917  12047  Kadike 2295316372
+11294	258		Katipalla	Abbas Krishnapura 	556156747	Krishnapura		Surathkal		Batha		Kana Abdul Hameed			11294 - Katipalla Abbas Krishnapura  556156747  258  Krishnapura 
+16805	1636		Shamsuddin	Abbas paniyoor	593518574	Yermal	2184156947				20-Jan-73	11403 - Eliyas Moideen Yermal  - 502112459	l9839780	9880880312	16805 - Shamsuddin Abbas paniyoor 593518574  1636  Yermal 2184156947
+11454	597		Moideen	Abbas Uchila 	554158125	Shanthi Nagar		K.C. Road		Alkhobar		07105-Abbas Uchil  , 502124007			11454 - Moideen Abbas Uchila  554158125  597  Shanthi Nagar 
+11317	357		Mohammad(ibrahim Mani)	Abbas Ummar 	562960216	Kodaje		Mani		Haraj		07117-Abbas Mani, 530789678			11317 - Mohammad(ibrahim Mani) Abbas Ummar  562960216  357  Kodaje 
+7207	916		Muneer	Abbon  	502876904	Venoor				Un Known		DKMO_Regroup			7207 - Muneer Abbon   502876904  916  Venoor 
+11405	1434		Hakeem	Abdul  	533604982	Uppinangadi		Uppinangadi		Un Known		11404-Abdulrahman Sulaiman  , 559906048			11405 - Hakeem Abdul   533604982  1434  Uppinangadi 
+19040	12678		Mohammed Irfan	Abdul	543254874	Tallur Kundapur	2402266718	Tallur Post	543254874	Batha	15-Apr-74	07112-Fazlu Rahman  , 502260256	T1911441	9632247833	19040 - Mohammed Irfan Abdul 543254874  12678  Tallur Kundapur 2402266718
+211101			RASHEED MOHAMMED	ABDUL	565671786		2162739730					16846-Abdbaker Irfan sheikhmale, 560690644			211101 - RASHEED MOHAMMED ABDUL 565671786     2162739730
+11379	27		Bollai	Abdul Aziz 	533912096	Sajipa		Bantwal		Mursalath		DKMO_Regroup			11379 - Bollai Abdul Aziz  533912096  27  Sajipa 
+11351	1015		Saleem	Abdul Beary 	565743624	Kanyadi		Belthangady		Ind'L Area		07117-Abbas Mani, 530789678			11351 - Saleem Abdul Beary  565743624  1015  Kanyadi 
+7217		1709	V.H.	Abdul Falul 	502102457	Kumpala		Ullal		Un Known		DKMO_Regroup			7217 - V.H. Abdul Falul  502102457   1709 Kumpala 
+11494	979		M.H.	Abdul Fattha 	541907955	Gangulli		Kundapura		Un Known		07112-Fazlu Rahman  , 502260256			11494 - M.H. Abdul Fattha  541907955  979  Gangulli 
+7194	392		Kalenjibail	Abdul Hameed 	501947023	Kelengibail		Belthangady		Batha		M. Abbas			7194 - Kalenjibail Abdul Hameed  501947023  392  Kelengibail 
+11387	261		Kana	Abdul Hameed 	541062538	Chokkabettu		Surathkal		Batha		Kana Abdul Hameed			11387 - Kana Abdul Hameed  541062538  261  Chokkabettu 
+19057	11620		Mithoor	Abdul Hameed	506279366	Mithoor	2470609419	Mithoor	551939514		01-Nov-74	11350-Yusuf Kalanjibail, 536581427		8722299886	19057 - Mithoor Abdul Hameed 506279366  11620  Mithoor 2470609419
+11285	333		Mithur	Abdul Hameed 	506279366	Idkidu		Bantwal		Dhakal Mahdood		DKMO_Regroup			11285 - Mithur Abdul Hameed  506279366  333  Idkidu 
+17998	10258		Mohammed sharif	abdul hameed	576692969				576692969			07122 - Shamshudin Addor - 541204731			17998 - Mohammed sharif abdul hameed 576692969  10258   
+19042	19042		Riyaz	Abdul Jabbar	509278197	Kandak Bandar		Kandak	509278197	Riyadh		11404-Abdulrahman Sulaiman  , 559906048		9535009482	19042 - Riyaz Abdul Jabbar 509278197  19042  Kandak Bandar 
+11562	10385		Shaik	Abdul Jaleel Babajan	557343028	Madoor		Mangaluru		Old Sanayya		SAMIULLAH KHAN			11562 - Shaik Abdul Jaleel Babajan 557343028  10385  Madoor 
+16868	11817		Dawood	Abdul Kadar	507814621	Saralikatte	2113900365		507814621		11-Nov-66	11307-Haider Sarali Katte, 597622507			16868 - Dawood Abdul Kadar 507814621  11817  Saralikatte 2113900365
+15729	11574		Mohammed Sadik	Abdul Karim	566183384	uchila udupi		uchila udupi		Malaz	07-Feb-70	11404-Abdulrahman Sulaiman  , 559906048		9900407727	15729 - Mohammed Sadik Abdul Karim 566183384  11574  uchila udupi 
+16803	12252		Ashraf	Abdul khadar	504417622	Bajal		bajal		batha		11598 - Mohammed Imran   - 560492809		9844221755	16803 - Ashraf Abdul khadar 504417622  12252  Bajal 
+11291	255		Badruddin	Abdul Khadar 	569067221	Krishnapura		Surathkal		Marqab		Kana Abdul Hameed			11291 - Badruddin Abdul Khadar  569067221  255  Krishnapura 
+15744	996		Tanveer	Abdul khadar	501009576	Katipalla	2072027085	KATPALLA			06-Apr-59	11404-Abdulrahman Sulaiman  , 559906048	J5519041	9844358686	15744 - Tanveer Abdul khadar 501009576  996  Katipalla 2072027085
+18068	10269		ABSALI	ABDUL KHADER	564921985	ADDOOR	2245314154	ADDOOR		BATHA	05-Jun-81	07122 - Shamshudin Addor - 541204731		9448548892	18068 - ABSALI ABDUL KHADER 564921985  10269  ADDOOR 2245314154
+15664	10139		Abubakkar	Abdul Khader	535983263	Nittana puttur	2345789024	Nittana		Shifa	01-Jan-65	11553 - Muzaffar Ali Mohammed Shareef - 508967545		9901977064	15664 - Abubakkar Abdul Khader 535983263  10139  Nittana puttur 2345789024
+18036	10259		ADDOOR	ABDUL KHADER	571240575	MALLUR	2383937212	MALLUR	571240575	BATHA	24-May-73	07122 - Shamshudin Addor - 541204731			18036 - ADDOOR ABDUL KHADER 571240575  10259  MALLUR 2383937212
+7235		3106	Hassan	Abdul Khader 	503219726	Doddangudde		Udupi		Un Known		11281-Abdul Irshad Moidin , 502026155			7235 - Hassan Abdul Khader  503219726   3106 Doddangudde 
+11370	361		Ibrahim	Abdul Khader 	502894117	Savanoor		Puttur		Badea		M. Abbas			11370 - Ibrahim Abdul Khader  502894117  361  Savanoor 
+19063			Mandiyoor Abbas	Abdul Khader	536477969	Kukkaje	2288420116	Kanyana	536477969	Murooj	01-Oct-85	11435-Abdul Basheer  T.K. Talapadi, 566384950	H9933454	9606436439	19063 - Mandiyoor Abbas Abdul Khader 536477969    Kukkaje 2288420116
+11326	1009		Perabe	Abdul Khader 	563971229	Kuntoor		Perabe		Batha		11270-Ibrahim Kuntoor, 533936347			11326 - Perabe Abdul Khader  563971229  1009  Kuntoor 
+7145	11435		Mohammed	Abdul Khader Ibrahim	561153382	Bunder		Mangaluru		Kubera		11313-Ghani Ahmed  , 509125443			7145 - Mohammed Abdul Khader Ibrahim 561153382  11435  Bunder 
+11322	365		Koppala	Abdul Khader Yusuf	568849567	Mata		Uppinangadi		Badea		07117-Abbas Mani, 530789678			11322 - Koppala Abdul Khader Yusuf 568849567  365  Mata 
+19061			Mohammed Sihaj	Abdul Khaer Suhail	544864080	Moodshedde	2403859511	Moodshedde	544864080	Manfooha		07120-Mohammed Asif Kannur , 506991416			19061 - Mohammed Sihaj Abdul Khaer Suhail 544864080    Moodshedde 2403859511
+201025			Adnan	Abdul Latheef	503678848	Bajpe	2476866724	Bajpe	917411415000	Dammam	03-Nov-96	17952-Nayaz ahammad, 509862283		917411415000	201025 - Adnan Abdul Latheef 503678848    Bajpe 2476866724
+201026			Affan	Abdul Latheef	540201488	Bajpe	2205757558	Bajpe	540201488	Dammam		17952-Nayaz ahammad, 509862283			201026 - Affan Abdul Latheef 540201488    Bajpe 2205757558
+7163		4953	H.P.	Abdul Lathief 	500942351	Katipalla		Katipalla		Un Known		Abdussalam Taiba			7163 - H.P. Abdul Lathief  500942351   4953 Katipalla 
+7188		6055	Bandady	Abdul Latif 	508347545	Athoor		Gollithadi		Malaz		11350-Yusuf Kalanjibail, 536581427			7188 - Bandady Abdul Latif  508347545   6055 Athoor 
+11376	1032		Darkas	Abdul Muneer 	570052218	Saralikatte		Thekkar		Haraj		11307-Haider Sarali Katte, 597622507			11376 - Darkas Abdul Muneer  570052218  1032  Saralikatte 
+18072	12836		Bedradi	Abdul Rafiq	532414624	Kalanjibail	2339923431	Belthangadi	532414624	Atheeqa		11350-Yusuf Kalanjibail, 536581427			18072 - Bedradi Abdul Rafiq 532414624  12836  Kalanjibail 2339923431
+11334	382	3552	Madapura	Abdul Raheem Ebrahim	591844209	Gudugalale		Shaniwarasante		Un Known		11267-Abdulla Dawood Kodlipet, 503027405			11334 - Madapura Abdul Raheem Ebrahim 591844209  382 3552 Gudugalale 
+11392	1384	1814	Bellechar	Abdul Rahiman 	545931283	Moodabidri		Moodabidri		Jeddah		11380-Shafe Thodar  , 541937996			11392 - Bellechar Abdul Rahiman  545931283  1384 1814 Moodabidri 
+7225		2450	Ahmad	Abdul Rahiman Koila	504194216	Mangaluru		Mangaluru		Un Known		DKMO_Regroup			7225 - Ahmad Abdul Rahiman Koila 504194216   2450 Mangaluru 
+15660	11380		Abdul Azeez	Abdul Rahman	566791253	Kukkundoor	2226185425	Kukkundoor		batha	18-Mar-74	07101-Abdul Azeez Bajpe, 503271851		8105653626	15660 - Abdul Azeez Abdul Rahman 566791253  11380  Kukkundoor 2226185425
+15661	12001		Mohammed	Abdul Rahman	544818235	Kandak	2372744041	Kandak		Derah	19-Dec-91	07105-Abbas Uchil  , 502124007	K7159692	8242420700	15661 - Mohammed Abdul Rahman 544818235  12001  Kandak 2372744041
+17906	11661		Muhammad Hassan	Abdul Rahman	560584382	Mangalapadavu	2309145189	vittla	577293854		05-Aug-71	11380-Shafe Thodar  , 541937996			17906 - Muhammad Hassan Abdul Rahman 560584382  11661  Mangalapadavu 2309145189
+7202		2860	Moodukare	Abdul Rahman Ibrahim	504173486	Bailpete		Kaikamba		Un Known		11281-Abdul Irshad Moidin , 502026155			7202 - Moodukare Abdul Rahman Ibrahim 504173486   2860 Bailpete 
+201005			Ansar	Abdul Razak	577383695	Mallur	240287893	Mallur	577383695	Buraidah	15-Dec-92	07122 - Shamshudin Addor - 541204731		8861642371	201005 - Ansar Abdul Razak 577383695    Mallur 240287893
+201001			Mohammed Irshad	Abdul Razak	539219275	Mallur	2481401350		539219275	Buraida	24-Jan-97	07122 - Shamshudin Addor - 541204731		8861642371	201001 - Mohammed Irshad Abdul Razak 539219275    Mallur 2481401350
+11512	650		Shareef	Abdul Razak 	541571472	Kotekar				Alkhobar		15731-Abubakkar Siddiq, 544435133			11512 - Shareef Abdul Razak  541571472  650  Kotekar 
+7249		4602	Ahmed	Abdul Rehman Belma		Belma		Deralakatte		Un Known		DKMO_Regroup			7249 - Ahmed Abdul Rehman Belma    4602 Belma 
+17926	12459		Mohammed Ullal	Abdul Samad	558695513		2244442188	Bunder		Khobar	18-Oct-67	15681-Mohammed Ashraf Kozi Khan, 564671735			17926 - Mohammed Ullal Abdul Samad 558695513  12459   2244442188
+11324	352		Karaya	Abdul Satthar 		Karaya		Belthangady		Shifa		07117-Abbas Mani, 530789678			11324 - Karaya Abdul Satthar    352  Karaya 
+19090			Akram Sheik	Abdul Sheik	543578767	Basrur	2328630567	Pankad Katte Basrur	543578767	Batha	31-May-90	07112-Fazlu Rahman  , 502260256	J8436203	543578767	19090 - Akram Sheik Abdul Sheik 543578767    Basrur 2328630567
+17895	11440		Shaik	Abdulla	531680538	salmar	2210210593	Jarigudde karakala				11313-Ghani Ahmed  , 509125443			17895 - Shaik Abdulla 531680538  11440  salmar 2210210593
+18035	10263		HUSAIN RIZWAN	ABDULLAH	578828540	PANEMANGALORE	2407313598		578828540	BATHA	06-Nov-93	07122 - Shamshudin Addor - 541204731			18035 - HUSAIN RIZWAN ABDULLAH 578828540  10263  PANEMANGALORE 2407313598
+11354	1042		Ebrahim	Abdullah Beary 	565581265	Bengila		Belthangady		Haraj		07117-Abbas Mani, 530789678			11354 - Ebrahim Abdullah Beary  565581265  1042  Bengila 
+17911	11616		Sayyed	Abobakkar	508005785		2119015416	Mithoor			01-Jan-68	11548-Abdul Razzak Machar, 593870965		9535218902	17911 - Sayyed Abobakkar 508005785  11616   2119015416
+17955	13201		Shareef Ahmed	Aboobakar	501459334	Bundar	2190982104	Mangalore			24-Oct-75	07120-Mohammed Asif Kannur , 506991416			17955 - Shareef Ahmed Aboobakar 501459334  13201  Bundar 2190982104
+17937	13389		Umar	Aboobaker	507861852	Kadeshwalya	2156717833	9741702543			02-Jul-67	11307-Haider Sarali Katte, 597622507			17937 - Umar Aboobaker 507861852  13389  Kadeshwalya 2156717833
+15690	11756		Mohammad Iqbal	aboobakkar	533202166		2327753550			Badiya	01-Sep-75	11598 - Mohammed Imran   - 560492809			15690 - Mohammad Iqbal aboobakkar 533202166  11756   2327753550
+11342	783		Katipalla	Aboobakkar Siddik 	560367696	Katipalla		Katipalla		Euromarche		Hameed Nazeer			11342 - Katipalla Aboobakkar Siddik  560367696  783  Katipalla 
+17903	299		Mohammed	Aboobakker	594035097		2165405495					07252-Abdullah K.P, 503614377			17903 - Mohammed Aboobakker 594035097  299   2165405495
+7229		2720	Kunhimon	Abu  	500701595	K.C. Road		Talapady		Un Known		DKMO_Regroup			7229 - Kunhimon Abu   500701595   2720 K.C. Road 
+11493	978		Maulana	Abu Mohammed 	502250849	Gangulli		Kundapura		Un Known		07112-Fazlu Rahman  , 502260256			11493 - Maulana Abu Mohammed  502250849  978  Gangulli 
+11464		2959	G.M.	Abu Saliha 	507234437	Hassan				Un Known		Nazeer Ahmed			11464 - G.M. Abu Saliha  507234437   2959 Hassan 
+16812	12057		Irfan	Abubaccker	532890593	Nandavar						11404-Abdulrahman Sulaiman  , 559906048			16812 - Irfan Abubaccker 532890593  12057  Nandavar 
+18012	1346		MOHAMMAD SHAREEF	ABUBAKKAR	501913415	Shivamogga	2306764032		501913415	SECOND INDUSTRIAL CITY	23-Dec-87	07120-Mohammed Asif Kannur , 506991416			18012 - MOHAMMAD SHAREEF ABUBAKKAR 501913415  1346  Shivamogga 2306764032
+18091	12873		Mansoor Ullya	Adam	539509427	Ullal	2303335653	Ullal	539509427	Ateeqa	10-Apr-62	11307-Haider Sarali Katte, 597622507			18091 - Mansoor Ullya Adam 539509427  12873  Ullal 2303335653
+16870	11818		Yusuf	Adam Kolpe	530875046	nellyadi	2293209181	Nellyadi			17-Sep-71	11307-Haider Sarali Katte, 597622507		9741009336	16870 - Yusuf Adam Kolpe 530875046  11818  nellyadi 2293209181
+16801	10148		Abdul Sattar	Adam saheb	500663640	Kotabaagil	2389126026	modabidiri		batha	01-Jun-81	11598 - Mohammed Imran   - 560492809		9845684203	16801 - Abdul Sattar Adam saheb 500663640  10148  Kotabaagil 2389126026
+17891	12954		Aslam Hamad	Addagadde	555786716	Jayapur	2270455864	Koppa				11548-Abdul Razzak Machar, 593870965	J4229922	9197760402020	17891 - Aslam Hamad Addagadde 555786716  12954  Jayapur 2270455864
+19066	13004		Sayyad Hakeem	Addoor	545955190	Mallur	2285757718	545955190	545955190	Buraida	01-Jun-86	07122 - Shamshudin Addor - 541204731		545955190	19066 - Sayyad Hakeem Addoor 545955190  13004  Mallur 2285757718
+18042	10268		ABDUL RAZAK	ADDOOR KELAGINAKERE	536125236	ADDOOR	2327590739			BATHA	05-Jul-80	07122 - Shamshudin Addor - 541204731		7090202090	18042 - ABDUL RAZAK ADDOOR KELAGINAKERE 536125236  10268  ADDOOR 2327590739
+7122		6331	Shamshuddin	Addor	541204731	Mallur		Mallur		Un Known		07122 - Shamshudin Addor - 541204731			7122 - Shamshuddin Addor 541204731   6331 Mallur 
+11420	1458		Samsheer	Addu Hussain 	559752976	Yermal				Un Known		11403 - Eliyas Moideen Yermal  - 502112459			11420 - Samsheer Addu Hussain  559752976  1458  Yermal 
+7208	9876		Zainuddin	Adoor Gudde 	542006998	Addoor		Addoor		Un Known		DKMO_Regroup			7208 - Zainuddin Adoor Gudde  542006998  9876  Addoor 
+17898	11444		Adam	Adubaker Siddiq	557730617		2198956662	Kodipet				11313-Ghani Ahmed  , 509125443		8197883378	17898 - Adam Adubaker Siddiq 557730617  11444   2198956662
+19060	13005		Abdul Lathif	Adyapadi Aboobakkar	568289282	Addoor	2268982788	Addoor		Batha	03-Jan-76	07122 - Shamshudin Addor - 541204731		9845900744	19060 - Abdul Lathif Adyapadi Aboobakkar 568289282  13005  Addoor 2268982788
+11463		2953	Iddya	Afreen Ahmed 	582061777	Vaslane		Mangaluru	582061777	Un Known		Nazeer Ahmed			11463 - Iddya Afreen Ahmed  582061777   2953 Vaslane 
+18107	13111		Sayed Mohammed	Afzal	507380758	Bolar	2132513793	Jeppu	507380758	Hara	14-Mar-70	7176-Mohammed Altaf  , 507560706		8242414043	18107 - Sayed Mohammed Afzal 507380758  13111  Bolar 2132513793
+11340	384		Ahthaf	Ahaman Pasha 	568576058	Yeslur		Hassan	505967328	Un Known		11267-Abdulla Dawood Kodlipet, 503027405			11340 - Ahthaf Ahaman Pasha  568576058  384  Yeslur 
+17947	13384		Iqbal	Ahamed	571373642		2366264139	Guruvayanakere			01-Jun-76	07117-Abbas Mani, 530789678		9741484713	17947 - Iqbal Ahamed 571373642  13384   2366264139
+20303			Sarfaraz	Ahamed	530375074	Gurukambla	2302338427	Kaikamba Gurukambla		Riyadh		17952-Nayaz ahammad, 509862283			20303 - Sarfaraz Ahamed 530375074    Gurukambla 2302338427
+17966	13207		Towfeeq	Ahamed	504253643	Ganjimutta	2381607429	Ganjimutta	504253643	Malaz		07251-Yusuf Adoor  Nadugudde, 562906572		9164593308	17966 - Towfeeq Ahamed 504253643  13207  Ganjimutta 2381607429
+7203		2888	M.	Ahamed Aboobakker 		Bailpete		Kaikamba		Un Known		07130-Ahmed Usman  Kaikamba, 508290998			7203 - M. Ahamed Aboobakker     2888 Bailpete 
+17952	10328		Nayaz	ahammad	597042136		2310505215	Belvai		Old kharj road	14-Sep-85	07120-Mohammed Asif Kannur , 506991416	H1920553	9900033888	17952 - Nayaz ahammad 597042136  10328   2310505215
+11341	386	3580	Ashfaq	Ahmad  	551294462	Kushal Nagar		Kodagu		Haraj		11267-Abdulla Dawood Kodlipet, 503027405			11341 - Ashfaq Ahmad   551294462  386 3580 Kushal Nagar 
+19045	19045		Ismail Suleman	Ahmad	578311083	Yermal		Yermal	578311083	Riyadh		11404-Abdulrahman Sulaiman  , 559906048		9008570742	19045 - Ismail Suleman Ahmad 578311083  19045  Yermal 
+11515	1066	1775	Shiek	Ahmad Ismail 	567685917	Jokatte		Mangaluru		Malaz		11380-Shafe Thodar  , 541937996			11515 - Shiek Ahmad Ismail  567685917  1066 1775 Jokatte 
+17975	13235		Ashik pervez	Ahmed	508176193	Bolar	2184072554	Mangalore				07262-Salman Noor  Hasan, 500602458		0824-2426441	17975 - Ashik pervez Ahmed 508176193  13235  Bolar 2184072554
+18059	12809		Asif	Ahmed	505113980	Kundapura	2396017275	Kundapura		Batha	13-Jan-84	07112-Fazlu Rahman  , 502260256			18059 - Asif Ahmed 505113980  12809  Kundapura 2396017275
+19089			Asim	Ahmed	592138749	Mysore		Mysore	592138749	Hara	20-Nov-96	07101-Abdul Azeez Bajpe, 503271851	P2782236	8123303288	19089 - Asim Ahmed 592138749    Mysore 
+11313	223		Ghani	Ahmed  	509125443	Valencia		Mulky		Hara		11313-Ghani Ahmed  , 509125443			11313 - Ghani Ahmed   509125443  223  Valencia 
+16874	998		Ibrahim	Ahmed	538068970	Katipalla	2321670289			Olaya	26-Jun-81	11404-Abdulrahman Sulaiman  , 559906048		9845417229	16874 - Ibrahim Ahmed 538068970  998  Katipalla 2321670289
+19012			Ismail Khalil	Ahmed	563774517	KC Road	2211136250	KC Road	563774517		03-Jul-63	07262-Salman Noor  Hasan, 500602458		9448726773	19012 - Ismail Khalil Ahmed 563774517    KC Road 2211136250
+11581	11311		Mansoor	Ahmed	564779120	Falnir		Mangaluru		Malaz		11581 - Mansoor Ahmed   - 564779120			11581 - Mansoor Ahmed 564779120  11311  Falnir 
+15637	11528		Mansoor	Ahmed	501768253	Athoor		Uppinangady		Batha		07101-Abdul Azeez Bajpe, 503271851			15637 - Mansoor Ahmed 501768253  11528  Athoor 
+17930	11448		Manzoor	Ahmed	508892635	Puttige	2257255311			Al Hasa	16-Jan-73	11313-Ghani Ahmed  , 509125443	K7407643	98800929886	17930 - Manzoor Ahmed 508892635  11448  Puttige 2257255311
+15638	12004		Mustaq	Ahmed	543253286	Bajpe		Bajpe		Shifa		07101-Abdul Azeez Bajpe, 503271851			15638 - Mustaq Ahmed 543253286  12004  Bajpe 
+7106		1008	Nazeer	Ahmed  	554392527	Hassan		Haasan		Un Known		Nazeer Ahmed			7106 - Nazeer Ahmed   554392527   1008 Hassan 
+11572	10378		Nazeer	Ahmed  		Pillya, Aladangadi				Batha		SAMIULLAH KHAN			11572 - Nazeer Ahmed     10378  Pillya, Aladangadi 
+11500	772		Nazim	Ahmed  		Un Known		Mangaluru		Hara		Irshad			11500 - Nazim Ahmed     772  Un Known 
+11276	383	3551	Nisar	Ahmed  	559145995	Somvarpet		Kodagu		Manfooha		DKMO_Regroup			11276 - Nisar Ahmed   559145995  383 3551 Somvarpet 
+11589	2079		Rafeeq	Ahmed  	564053711	Kaup		Kaup		Un Known		DKMO_Regroup			11589 - Rafeeq Ahmed   564053711  2079  Kaup 
+18020	1334		Rafi Hameed	Ahmed	506519614	Uchila	2094603129		506519614	Batha	06-Jul-67	15681-Mohammed Ashraf Kozi Khan, 564671735			18020 - Rafi Hameed Ahmed 506519614  1334  Uchila 2094603129
+15685	11557		Shaikh Ayaz	Ahmed	502806306		2109204889	mangalor		Hara	17-Dec-63	DKMO_Regroup		8242422887	15685 - Shaikh Ayaz Ahmed 502806306  11557   2109204889
+18005	10331		Sheikh Faizan	Ahmed	504134741	Gunjimut	2409892854				24-Apr-90	07120-Mohammed Asif Kannur , 506991416	L2720710		18005 - Sheikh Faizan Ahmed 504134741  10331  Gunjimut 2409892854
+15732	12270		Thoseef	Ahmed	530813341	Krishanapu	2269217598	chokkabettu				07101-Abdul Azeez Bajpe, 503271851			15732 - Thoseef Ahmed 530813341  12270  Krishanapu 2269217598
+19021			Tonse Mukthar	Ahmed	502101353	Tonse	2158585253	Apna Ghar Near River Tonse Hoode	553457372	Shifa	05-Jun-78	11350-Yusuf Kalanjibail, 536581427		9741510516	19021 - Tonse Mukthar Ahmed 502101353    Tonse 2158585253
+211206			ZAKIR	AHMED	569236757	BASAVANGUDI	2322997814			EXIT 7	22-Dec-81	07262-Salman Noor  Hasan, 500602458			211206 - ZAKIR AHMED 569236757    BASAVANGUDI 2322997814
+7211		1109	Nafees	Ahmed Abdul Gafoor	502890258	Mangaluru		Mangaluru		Un Known		DKMO_Regroup			7211 - Nafees Ahmed Abdul Gafoor 502890258   1109 Mangaluru 
+11506	302		Nazeer	Ahmed Bantwal 	544644237	Navoor		Bantwal		Batha		DKMO_Regroup			11506 - Nazeer Ahmed Bantwal  544644237  302  Navoor 
+7239		3254	Abubakar	Ahmed Bava 	503154655	Padubidri		Udupi		Un Known		DKMO_Regroup			7239 - Abubakar Ahmed Bava  503154655   3254 Padubidri 
+7212		1303	Mohidin	Ahmed Bava 	560802793	Soorinje		Soorinje		Un Known		DKMO_Regroup			7212 - Mohidin Ahmed Bava  560802793   1303 Soorinje 
+7260			Ejaz	Ahmed Borther Ayaz	55	Un Known				Un Known		07262-Salman Noor  Hasan, 500602458			7260 - Ejaz Ahmed Borther Ayaz 55    Un Known 
+11592	11802		Maqbool	Ahmed Haroon 		Indrali		Udupi		Buraida, Qassim		07124-G.K. Sheikabba  , 508102993			11592 - Maqbool Ahmed Haroon    11802  Indrali 
+11536	10110		Fayz	Ahmed Ibrahim 	592252089	Aldangadi Aruva		Aruva		Souk Makkah		DKMO_Regroup			11536 - Fayz Ahmed Ibrahim  592252089  10110  Aldangadi Aruva 
+11542	10177		B.K.	Ahmed Iliyas 	502552102	Un Known				Batha		DKMO_Regroup			11542 - B.K. Ahmed Iliyas  502552102  10177  Un Known 
+11556	10381		Musthaq	Ahmed Ismail 	502913511	Bunder		Mangaluru		Batha		SAMIULLAH KHAN			11556 - Musthaq Ahmed Ismail  502913511  10381  Bunder 
+15641	12005		Riyaz	Ahmed Kader	534778200	Mulur		Mulur		Batha		DKMO_Regroup			15641 - Riyaz Ahmed Kader 534778200  12005  Mulur 
+201017			Naushad Khan	Ahmed Khan	506757806	Gurukambla	2386082156	Kaikamba Gurukambla	506757806	Dammam		17952-Nayaz ahammad, 509862283			201017 - Naushad Khan Ahmed Khan 506757806    Gurukambla 2386082156
+11465		2961	Rameez	Ahmed Kulur 	530495996	Kulur				Un Known		Nazeer Ahmed			11465 - Rameez Ahmed Kulur  530495996   2961 Kulur 
+11434		1359	Imtiyaz	Ahmed Mangalore 	551038821	Kundapur		Kundapura		Un Known		11434 - Imtiyaz Ahmed Mangalore  - 551038821			11434 - Imtiyaz Ahmed Mangalore  551038821   1359 Kundapur 
+7213		1360	Maqsood	Ahmed Mohd. Hassan	503671511	Kundapur		Kundapura		Souk Makkah		Imtiyaz ahmed kundapur			7213 - Maqsood Ahmed Mohd. Hassan 503671511   1360 Kundapur 
+11308	1004		Uppinangadi	Ahmed Moosa 	533936347	Kaikamba		Kinnikambla		Alkhobar		Haneef Panambur			11308 - Uppinangadi Ahmed Moosa  533936347  1004  Kaikamba 
+7234	984	3905	Nayaz	Ahmed Moulana 	554165224	Gangulli		Kundapura		Un Known		07112-Fazlu Rahman  , 502260256			7234 - Nayaz Ahmed Moulana  554165224  984 3905 Gangulli 
+11497	985		Dastagir	Ahmed Saheb 	501790586	Gangulli		Kundapura		Un Known		07112-Fazlu Rahman  , 502260256			11497 - Dastagir Ahmed Saheb  501790586  985  Gangulli 
+19072			Mukhtar	Ahmed Shukoor	506688148			506688148	506688148			11313-Ghani Ahmed  , 509125443		506688148	19072 - Mukhtar Ahmed Shukoor 506688148     
+7169	11477		Riyaz	Ahmed Sulaiman Gurpur	543391701	Gurupura Kaikamba		Gurupura Kaikamba		Olaya		DKMO_Regroup			7169 - Riyaz Ahmed Sulaiman Gurpur 543391701  11477  Gurupura Kaikamba 
+11501	604		Kunhi	Ahmed U. 	505368103	Un Known				Tabuk		07105-Abbas Uchil  , 502124007			11501 - Kunhi Ahmed U.  505368103  604  Un Known 
+11321	1024		Sayyad	Ahmed Uppinangady 	559836507	Uppinangadi		Uppinangadi		Jubail		11270-Ibrahim Kuntoor, 533936347			11321 - Sayyad Ahmed Uppinangady  559836507  1024  Uppinangadi 
+220202			SHAHEED	AKBAR	0563966171		2196247551			AL OLAYA		15681-Mohammed Ashraf Kozi Khan, 564671735		94480145093	220202 - SHAHEED AKBAR 0563966171     2196247551
+7168	11476		Mohammed	Akhil  	500129623	Ganjimutt				Olaya		07120-Mohammed Asif Kannur , 506991416			7168 - Mohammed Akhil   500129623  11476  Ganjimutt 
+18010	13126		wasim	akram	503011473	belvai	2425104862	belvai		malaz	30-Jul-91	17952-Nayaz ahammad, 509862283		8970311211	18010 - wasim akram 503011473  13126  belvai 2425104862
+18048	13056		SAYYAD	AL AYSH	547836074	KATIPALLA	2325705768	KATIPALLA		HARADH	08-May-90	15681-Mohammed Ashraf Kozi Khan, 564671735		9141763425	18048 - SAYYAD AL AYSH 547836074  13056  KATIPALLA 2325705768
+11590	11801		Aboobakker	Al Badr 	507034971	Karaya		Belthangady		Shifa		07124-G.K. Sheikabba  , 508102993			11590 - Aboobakker Al Badr  507034971  11801  Karaya 
+11535	10111		Sirajuddin	Aladangadi  	596161625	Aldangadi Aruva		Aruva		Souk Makkah		DKMO_Regroup			11535 - Sirajuddin Aladangadi   596161625  10111  Aldangadi Aruva 
+19013			Ummar	Alakemajal	532828197	Alakemajal	2302185463	Alakemajal	532828197	Riyadh Badia	01-Aug-67	11350-Yusuf Kalanjibail, 536581427			19013 - Ummar Alakemajal 532828197    Alakemajal 2302185463
+201009			Azeem	Alam	569583891	Belvai	2227771355	Azad Nagar Belvai,Karyanangadi	569583891	Dammam	11-Dec-86	17952-Nayaz ahammad, 509862283			201009 - Azeem Alam 569583891    Belvai 2227771355
+19069			Syed	Aleem	530182686				530182686			07112-Fazlu Rahman  , 502260256		530182686	19069 - Syed Aleem 530182686     
+11538	10131		Akbar	Ali  	552948112	Un Known				Un Known		ISMAIL BANTWAL			11538 - Akbar Ali   552948112  10131  Un Known 
+17905	11675		Hassain	Ali	557609556	Gantalkatte					01-Jun-86	11380-Shafe Thodar  , 541937996			17905 - Hassain Ali 557609556  11675  Gantalkatte 
+11499	128		Imraz	Ali  	558196875	Bajpe		Bajpe		Malaz		Khader Suralpady			11499 - Imraz Ali   558196875  128  Bajpe 
+18110	12842		Mangalore Mohammed	Ali	503415869	Attavar	2011473622	Attavar	503415869	Riyadh	17-Jan-56	7176-Mohammed Altaf  , 507560706		8123407070	18110 - Mangalore Mohammed Ali 503415869  12842  Attavar 2011473622
+11399	679		Mansoor	Ali  	508893864	Krishnapura		Surathkal		Un Known		Hameed Nazeer			11399 - Mansoor Ali   508893864  679  Krishnapura 
+11485	632		Mohammed	Ali  	544803821	Krishnapura		Surathkal		Un Known		Abubakar Padubidri			11485 - Mohammed Ali   544803821  632  Krishnapura 
+18051	12803		Mubarak	Ali	540262707	Belapu		Belapu		Batha		07112-Fazlu Rahman  , 502260256			18051 - Mubarak Ali 540262707  12803  Belapu 
+11452	1391	1852	Musthak	Ali  	557151281	Thodar		Yedapadavu		Shifa		11380-Shafe Thodar  , 541937996			11452 - Musthak Ali   557151281  1391 1852 Thodar 
+7158	11483		Nayaz	Ali  	567522086	B.C. Road				Sulai		DKMO_Regroup			7158 - Nayaz Ali   567522086  11483  B.C. Road 
+15635	11527		Parvez	Ali  	508993839	Katipalla		Mangaluru		Katipalla		07124-G.K. Sheikabba  , 508102993			15635 - Parvez Ali   508993839  11527  Katipalla 
+211208			SHAMSHUDDIN AHMED	ALI	558456803	BANTWAL					17-Jun-78	07262-Salman Noor  Hasan, 500602458			211208 - SHAMSHUDDIN AHMED ALI 558456803    BANTWAL 
+18078	13167		MULKI	ALI ABBA	500918127	Mulki	2430402129	Mulki		Malaz	25-Sep-73	11313-Ghani Ahmed  , 509125443			18078 - MULKI ALI ABBA 500918127  13167  Mulki 2430402129
+7231		2807	Hyder	Ali Abdul Majeed		Bantwal		Bantwal		Un Known		DKMO_Regroup			7231 - Hyder Ali Abdul Majeed    2807 Bantwal 
+11558	1398		Akbar	Ali Ahmed Bellechar	544944266	Thodar		Thodar		Jubail		11380-Shafe Thodar  , 541937996			11558 - Akbar Ali Ahmed Bellechar 544944266  1398  Thodar 
+7196		1594	Hasan	Ali Beary 	502899670	Uchila		Mulour		Un Known		DKMO_Regroup			7196 - Hasan Ali Beary  502899670   1594 Uchila 
+7147	11434		Muzafar	Ali Khader Muneer	582925575	Bantwal				Batha		07262-Salman Noor  Hasan, 500602458			7147 - Muzafar Ali Khader Muneer 582925575  11434  Bantwal 
+11553			Muzaffar	Ali Mohammed Shareef	508967545	Mukka				Un Known		11313-Ghani Ahmed  , 509125443			11553 - Muzaffar Ali Mohammed Shareef 508967545    Mukka 
+211213			ZAHID AHMED	ALI SAHEB	558127595	GANJIMUTT		GANJIMUTT				07120-Mohammed Asif Kannur , 506991416			211213 - ZAHID AHMED ALI SAHEB 558127595    GANJIMUTT 
+11520		4994	Hyder	Ali Sidiabba 	502844438	Pandeshwara		Mangaluru		Un Known		Nawaz Gurpur			11520 - Hyder Ali Sidiabba  502844438   4994 Pandeshwara 
+11612	10005		Riyaz	Ali Thodar 	535241534	Thodar		Thodar		Un Known		11380-Shafe Thodar  , 541937996			11612 - Riyaz Ali Thodar  535241534  10005  Thodar 
+11448		1367	Hyder	Ali Thokoor 	551038821	Jokatte		Jokatte		Un Known		Imtiyaz ahmed kundapur			11448 - Hyder Ali Thokoor  551038821   1367 Jokatte 
+7176	11452		Mohammed	Altaf  	507560706	Ganjimut				Hara		07120-Mohammed Asif Kannur , 506991416			7176 - Mohammed Altaf   507560706  11452  Ganjimut 
+11445	10179	1358	Shaik	Althaf Hussain 	551038821	Kundapur		Kundapura		Un Known		Imtiyaz ahmed kundapur			11445 - Shaik Althaf Hussain  551038821  10179 1358 Kundapur 
+15631	11508		Mohammed	Althaf Nanhe 	509214518	Gangulli		Gangulli		Un Known		07112-Fazlu Rahman  , 502260256			15631 - Mohammed Althaf Nanhe  509214518  11508  Gangulli 
+18086			MOHAMED	AMEEN	539009054	Mysore	2380329454			SULAI	29-May-78	07101-Abdul Azeez Bajpe, 503271851			18086 - MOHAMED AMEEN 539009054    Mysore 2380329454
+11366	380		Pannathur	Ameer Shareef 	502142289	Kudige		Kodagu		Manfooha		11267-Abdulla Dawood Kodlipet, 503027405			11366 - Pannathur Ameer Shareef  502142289  380  Kudige 
+18066	10273		BANTEAL	AMSA	504513149	BANTWAL	2215292745	BANTWAL		BATHA	15-May-67	07122 - Shamshudin Addor - 541204731		9980725062	18066 - BANTEAL AMSA 504513149  10273  BANTWAL 2215292745
+18025	1332		Abdul Latheef	Anaje	507271175	Kudipady	2279803445	Kudipady	507271175		02-Jul-75	07117-Abbas Mani, 530789678			18025 - Abdul Latheef Anaje 507271175  1332  Kudipady 2279803445
+11534	10112		Mohammad	Angara Kanda 	535048255	Machar		Belthangady	535048255	Batha		07101-Abdul Azeez Bajpe, 503271851			11534 - Mohammad Angara Kanda  535048255  10112  Machar 
+16844	11853		Ameer Hassan	Angargundi	504180203	Baikampady	2175360078	Baikampady				11288-Moahmmed Ali  Jokatte, 502149417		9008195247	16844 - Ameer Hassan Angargundi 504180203  11853  Baikampady 2175360078
+7183		1353	Sheik	Anis Ahmed 	55	Kundapur		Kundapura		Un Known		Imtiyaz ahmed kundapur			7183 - Sheik Anis Ahmed  55   1353 Kundapur 
+11475	1397		Mohammad	Anis Ibrahim M.	542728105	Thodar		Mijaru		Jubail		11380-Shafe Thodar  , 541937996			11475 - Mohammad Anis Ibrahim M. 542728105  1397  Thodar 
+16867	12537		Ahmed	Ansar	580610750	Padikkal	2331361366	Padikkal				07113-Ismail Montepadavu, 509173592			16867 - Ahmed Ansar 580610750  12537  Padikkal 2331361366
+11459	1394		Mohammed	Ansar  	567956372	Thodar		Mijaru		Exit 10		11380-Shafe Thodar  , 541937996			11459 - Mohammed Ansar   567956372  1394  Thodar 
+11444		1357	Shaik	Ansar Ahmed 	506729415	Kundapur		Kundapura		Un Known		Imtiyaz ahmed kundapur			11444 - Shaik Ansar Ahmed  506729415   1357 Kundapur 
+7232		2896	Mohammed	Anwar  	541683997	Karnire		Mangaluru		Un Known		07101-Abdul Azeez Bajpe, 503271851			7232 - Mohammed Anwar   541683997   2896 Karnire 
+11611	1075		Saleel	Arabi	580270647	Katipalla		Katipalla		Un Known		11380-Shafe Thodar  , 541937996			11611 - Saleel Arabi 580270647  1075  Katipalla 
+7205	550		Shanthiangady	Areef  	500981572	Shanthi Angady		Bantwal		Un Known		DKMO_Regroup			7205 - Shanthiangady Areef   500981572  550  Shanthi Angady 
+19029	19029		B.H. Abdul Khader	Arikere	507483976	Jokatte	2188670935	Jokatte	507483976	Jubail		11288-Moahmmed Ali  Jokatte, 502149417		9731498978	19029 - B.H. Abdul Khader Arikere 507483976  19029  Jokatte 2188670935
+19031	19031		Hakeem Jokatte	Arikere	535513364	Jokattea	2264680840	Jokatte	535513364	Jubail		11288-Moahmmed Ali  Jokatte, 502149417		7411594228	19031 - Hakeem Jokatte Arikere 535513364  19031  Jokattea 2264680840
+19035	19035		Mohammed Sharief Jokatte	Arikere	505351441	Jokatte	2403545862	Jokatte	505351441			11288-Moahmmed Ali  Jokatte, 502149417		8792114314	19035 - Mohammed Sharief Jokatte Arikere 505351441  19035  Jokatte 2403545862
+11433	1429		Kamil	Asfak  	559906048	Uppinangadi		Uppinangadi	9632656784	Un Known		11404-Abdulrahman Sulaiman  , 559906048			11433 - Kamil Asfak   559906048  1429  Uppinangadi 
+7140	11456		Mohammed	Ashfaq Mangalore 	507747453	Mangaluru				Manfooha		07112-Fazlu Rahman  , 502260256			7140 - Mohammed Ashfaq Mangalore  507747453  11456  Mangaluru 
+7171	902		Mohammed	Ashful Ashraf 		Farangipete		Kumpanabajal		Un Known		Imtiyaz ahmed kundapur			7171 - Mohammed Ashful Ashraf    902  Farangipete 
+17945	13396		Mohammad	Ashiq	553241370	Puttur	2422110581		919743520789		08-Sep-92	11307-Haider Sarali Katte, 597622507	J8456485	9743520789	17945 - Mohammad Ashiq 553241370  13396  Puttur 2422110581
+17940	298		Mohammed	Ashpak Ibrahim	547625177	Moolur	2188472720	Udupi uchila	547625177		23-Aug-76	07252-Abdullah K.P, 503614377		918310613615	17940 - Mohammed Ashpak Ibrahim 547625177  298  Moolur 2188472720
+17978	13237		A Mohammed	Ashraf	501085147	Krishnapura	2181106341	Krishnapura		Batha	12-May-81	07122 - Shamshudin Addor - 541204731			17978 - A Mohammed Ashraf 501085147  13237  Krishnapura 2181106341
+220204			BANTWAL MOHAMMAD	ASHRAF	0567289333	Kushal Nagar	2114307701			JEDDAH	17-Aug-72	15681-Mohammed Ashraf Kozi Khan, 564671735	L-1198951	8147920021	220204 - BANTWAL MOHAMMAD ASHRAF 0567289333    Kushal Nagar 2114307701
+18083	12830		K	ASHRAF	538664314	SARALIKATTE	2238693496			OLAYA	01-Jun-79	07110-Haneef Mohammed Fakhruddin , 559948573			18083 - K ASHRAF 538664314  12830  SARALIKATTE 2238693496
+11618	11787		Mohammed	Ashraf  	530466843	Bantwal		Bantwal		Un Known		11313-Ghani Ahmed  , 509125443			11618 - Mohammed Ashraf   530466843  11787  Bantwal 
+11345	370		Muhammed	Ashraf  		Moodabidri		Moodabidri		Ind'L Area		07117-Abbas Mani, 530789678			11345 - Muhammed Ashraf     370  Moodabidri 
+11517	404		Riyadh	Ashraf  	530251138	Ullal		Ullal		Batha		B. M. Ismail			11517 - Riyadh Ashraf   530251138  404  Ullal 
+7199		1847	Mohammed	Ashraf Ali 	562841760	Puchamogaru		Siddakatte		Un Known		11380-Shafe Thodar  , 541937996			7199 - Mohammed Ashraf Ali  562841760   1847 Puchamogaru 
+11272	206		Mohammed	Ashraf Fakruddin 	551105134	Kinnigoli		Punarur		Rawdah		Rafi A. Ali			11272 - Mohammed Ashraf Fakruddin  551105134  206  Kinnigoli 
+15630	11505		Mohammed	Ashraf Gangulli 	567660915	Shiroor		Gangulli		Un Known		07112-Fazlu Rahman  , 502260256			15630 - Mohammed Ashraf Gangulli  567660915  11505  Shiroor 
+11290	254		Bailur	Ashraf Hussain Krishnapura	563571747	Krishnapura		Surathkal		Hara		Kana Abdul Hameed			11290 - Bailur Ashraf Hussain Krishnapura 563571747  254  Krishnapura 
+7156	11453		Mohammed	Ashraf Sayyed 	509492720	Mukka				Suwaidi		11281-Abdul Irshad Moidin , 502026155			7156 - Mohammed Ashraf Sayyed  509492720  11453  Mukka 
+17995	13355		Muhammad	Ashraf U	571109266	Ujirebettu	2416100341		571109266	New Sanayyia	07-Jul-88	11307-Haider Sarali Katte, 597622507	R8342370	919535629223	17995 - Muhammad Ashraf U 571109266  13355  Ujirebettu 2416100341
+15648	12291	0	Ibrahim	Asif	535313774	Montugoli	2275208607	Montugoli		Hara	05-Jan-87	07113-Ismail Montepadavu, 509173592		948155138	15648 - Ibrahim Asif 535313774  12291 0 Montugoli 2275208607
+11550	13753		P.K.Mohammad	Asif  	509677931	Urwal Padav		Urwal Padav		Batha		DKMO_Regroup			11550 - P.K.Mohammad Asif   509677931  13753  Urwal Padav 
+11476	1056		Mohammad	Asif Iqbal 	531576505	Talapady		Talapady		Un Known		11380-Shafe Thodar  , 541937996			11476 - Mohammad Asif Iqbal  531576505  1056  Talapady 
+7120		6334	Mohammed	Asif Kannur 	506991416	Kannur	2267104293	Kannur	506991416	Batha	29-Aug-86	07120-Mohammed Asif Kannur , 506991416		9611798699	7120 - Mohammed Asif Kannur  506991416   6334 Kannur 2267104293
+7137	11436		Mohammed	Asif Yakoob Valachil	596690248	Kuttar		Kuttar		Olaya		07262-Salman Noor  Hasan, 500602458			7137 - Mohammed Asif Yakoob Valachil 596690248  11436  Kuttar 
+19101	13125		Mohammed	Aslam	536338647	Hoode	2129691438	Hoode Udupi	536338647		18-Apr-71	07112-Fazlu Rahman  , 502260256		8197527006	19101 - Mohammed Aslam 536338647  13125  Hoode 2129691438
+18033	13161		Sayyad	Aslam	509399611	Ganjimutt	2186352346			Batha	09-Apr-80	11313-Ghani Ahmed  , 509125443			18033 - Sayyad Aslam 509399611  13161  Ganjimutt 2186352346
+18053	12802		Sheikh	Aslam	5425751368	Bailur	2251939407	Bailur			15-Aug-77	07112-Fazlu Rahman  , 502260256			18053 - Sheikh Aslam 5425751368  12802  Bailur 2251939407
+11391	1383		Seyyed	Aslam Seyyed Usman	541191220	Sakleshpura				Jeddah		11380-Shafe Thodar  , 541937996			11391 - Seyyed Aslam Seyyed Usman 541191220  1383  Sakleshpura 
+11610	10001		Mohammed	Aslam.A.Rahim  	553951465	Kinnigoli		Kinnogoli		Un Known		11380-Shafe Thodar  , 541937996			11610 - Mohammed Aslam.A.Rahim   553951465  10001  Kinnigoli 
+11431	1472		Mohamed	Asnar Kader 	508850908	Moolur Uchila				Un Known		11403 - Eliyas Moideen Yermal  - 502112459			11431 - Mohamed Asnar Kader  508850908  1472  Moolur Uchila 
+200901			Mohammad	Aspak	504788728	Sajipanadu	2475341752	Sajipanadu	504788728	Batha	21-Apr-96	11307-Haider Sarali Katte, 597622507	T5743382	9844355901	200901 - Mohammad Aspak 504788728    Sajipanadu 2475341752
+201024			Mohammed	Athique	558469186	Alangar Marnad		Alangar Moodibidiri	919036499353	Dammam		17952-Nayaz ahammad, 509862283	L6254889	9036499353	201024 - Mohammed Athique 558469186    Alangar Marnad 
+211011			MOHAMMED	ATIQ	540410529	Bambila				Thakhasusi		11404-Abdulrahman Sulaiman  , 559906048			211011 - MOHAMMED ATIQ 540410529    Bambila 
+17892	12955		Mahammed Beary	Audrama Beary	570179490		2273324695	Belal				11548-Abdul Razzak Machar, 593870965		9945424110	17892 - Mahammed Beary Audrama Beary 570179490  12955   2273324695
+7141		4964	Shaikh	Ayaz Ahmed 	502806306	Mumbai		Mumbai		Un Known		Haneef Panambur			7141 - Shaikh Ayaz Ahmed  502806306   4964 Mumbai 
+11518	127		Abdul	Azeez Cheyyabba 	507140869	Suralpady		Kinnikambla		Malaz		Khader Suralpady			11518 - Abdul Azeez Cheyyabba  507140869  127  Suralpady 
+11275	378	3594	Abdul	Azeez K.U. 	501646255	Kollally		Sakaleshpura	501646255	Badea		11267-Abdulla Dawood Kodlipet, 503027405			11275 - Abdul Azeez K.U.  501646255  378 3594 Kollally 
+17951	10327		Muhammed	Azzam	500581104		2310507047	Ammunje	500581104	Batha Gurabi		07120-Mohammed Asif Kannur , 506991416	H2365351	7259069084	17951 - Muhammed Azzam 500581104  10327   2310507047
+18073	13163		Shaik Hassan	Badanje	507747402	Vitlla	2047427220	Vitlla		Sulai	05-May-65	11313-Ghani Ahmed  , 509125443			18073 - Shaik Hassan Badanje 507747402  13163  Vitlla 2047427220
+11504	408		C.H.	Badrudddin  	55	Krishnapura		Katipalla		Batha		B. M. Ismail			11504 - C.H. Badrudddin   55  408  Krishnapura 
+7261			Mohammed	Badruddin  	532127659	Kannangar		Kannangar		Un Known		07112-Fazlu Rahman  , 502260256			7261 - Mohammed Badruddin   532127659    Kannangar 
+18011	13127		shamsuddin	bailur mohammad	532202153	bailur	2337617639	bailur			16-Dec-71	07124-G.K. Sheikabba  , 508102993			18011 - shamsuddin bailur mohammad 532202153  13127  bailur 2337617639
+201011			Mohammed Saleem	Baji	509200274	Gurukambla	2304068063	Gurukambla	509200274			17952-Nayaz ahammad, 509862283			201011 - Mohammed Saleem Baji 509200274    Gurukambla 2304068063
+201018			Mohammed Yasin	Baji	593016999	Gurukambla		Kaikamba	593106999			17952-Nayaz ahammad, 509862283			201018 - Mohammed Yasin Baji 593016999    Gurukambla 
+7101	1283	1003	Abdul Azeez	Bajpe	503271851	Bajpe		Bajpe		Batha		07101-Abdul Azeez Bajpe, 503271851			7101 - Abdul Azeez Bajpe 503271851  1283 1003 Bajpe 
+15682	11565		Mohammad Asif	Bajpe	583450167	Bajpe	2279765941	Bajpe				DKMO_Regroup		9844135620	15682 - Mohammad Asif Bajpe 583450167  11565  Bajpe 2279765941
+17982	12551		Amanulla	Bala	571137820	shiruru	2312471796			new sanayia	01-Jun-74	07112-Fazlu Rahman  , 502260256		919742047130	17982 - Amanulla Bala 571137820  12551  shiruru 2312471796
+201020			Mohammed Suhail	Bangadi	544031710	Gurukambla	2472407630	Kaikamba	544031710	Dammam	25-Sep-85	17952-Nayaz ahammad, 509862283		9008270618	201020 - Mohammed Suhail Bangadi 544031710    Gurukambla 2472407630
+18040	10265		ABDUL RAHAMAN	BANGADI SAMAD	502242743	KILLUR	2409892359			ROWDA	06-Apr-18	07122 - Shamshudin Addor - 541204731			18040 - ABDUL RAHAMAN BANGADI SAMAD 502242743  10265  KILLUR 2409892359
+7121			Ibrahim	Bangila	507278019	Un Known				Un Known		07101-Abdul Azeez Bajpe, 503271851			7121 - Ibrahim Bangila 507278019    Un Known 
+15625	11502		Ismail Haji	Banglagudde Bava	508906975	Pane Mangalore		Bantwal		Un Known		07122 - Shamshudin Addor - 541204731			15625 - Ismail Haji Banglagudde Bava 508906975  11502  Pane Mangalore 
+7257			Ismail	Bantwal	594110372	Un Known				Un Known		ISMAIL BANTWAL			7257 - Ismail Bantwal 594110372    Un Known 
+11408	957		Mohasin	Baseer Addu 	543091558	Yermal				Al-Nasser Mossasa		11403 - Eliyas Moideen Yermal  - 502112459			11408 - Mohasin Baseer Addu  543091558  957  Yermal 
+210703			Abdul Khadar	Basheer	556575195	Panemanglore	2484581521	Panemanglore		Batha	03-Feb-97	07122 - Shamshudin Addor - 541204731		9008967204	210703 - Abdul Khadar Basheer 556575195    Panemanglore 2484581521
+7191		6346	M.K.	Basheer  	509250914	Mata		Uppinangadi		Un Known		Abubakar Padubidri			7191 - M.K. Basheer   509250914   6346 Mata 
+210801			Moorugoli	Basheer	581448050	Moorugoli	2409426588	Moorugoli Belthangadi	581448050	Atheeqa	04-Oct-80	11350-Yusuf Kalanjibail, 536581427		9008975679	210801 - Moorugoli Basheer 581448050    Moorugoli 2409426588
+11382	677		Mohammed	Basheer Abdul Khader	504123337	Baithar		Arekala		Shifa		Basheer			11382 - Mohammed Basheer Abdul Khader 504123337  677  Baithar 
+11489		5737	Abdul	Basheer Ahmad 	559953353	Handel		Handel		Un Known		11403 - Eliyas Moideen Yermal  - 502112459			11489 - Abdul Basheer Ahmad  559953353   5737 Handel 
+7109		1013	Abdul	Basheer Beary 	504463532	Jokatte		Jokatte		Malaz		Basheer			7109 - Abdul Basheer Beary  504463532   1013 Jokatte 
+11356	401		Mohammad	Basheer Ismail 	501076784	Krishnapura		Katipalla		Batha		Basheer			11356 - Mohammad Basheer Ismail  501076784  401  Krishnapura 
+11586	10076		Ahmed	Basheer Mijar 		Mijar		Mijaru		Ind'L Area		07129-Abubaker Bondel, 551578085			11586 - Ahmed Basheer Mijar    10076  Mijar 
+18014	13129		Asif Sulaiman	Bava	569939929	Kuloor	2228735425				01-Sep-80	07124-G.K. Sheikabba  , 508102993			18014 - Asif Sulaiman Bava 569939929  13129  Kuloor 2228735425
+16802	12262		Ibrahim Ahmed	Bava	568594989	Bambila						11404-Abdulrahman Sulaiman  , 559906048			16802 - Ibrahim Ahmed Bava 568594989  12262  Bambila 
+11481	630		Mohideen	Bava  	502438554	Kaup		Kaup		Un Known		11435 - Abdul Basheer  T.K. Talapadi - 566384950			11481 - Mohideen Bava   502438554  630  Kaup 
+11593	1059		Shamshu	Bava	558872736	Karnire		Mangaluru		Un Known		11380-Shafe Thodar  , 541937996			11593 - Shamshu Bava 558872736  1059  Karnire 
+11530	10257		Ahmed	Bava Addoor Addapady	0556156736	Addoor				Souk Majid		07124-G.K. Sheikabba  , 508102993			11530 - Ahmed Bava Addoor Addapady 0556156736  10257  Addoor 
+11462		2952	Ahmed	Bava Iddinabba N.	506052823	Vaslane		Mangaluru		Un Known		Nazeer Ahmed			11462 - Ahmed Bava Iddinabba N. 506052823   2952 Vaslane 
+11529	10256		Sayyad	Bava Riyaz P.C.	507935455	Addoor				Souk Majid		07124-G.K. Sheikabba  , 508102993			11529 - Sayyad Bava Riyaz P.C. 507935455  10256  Addoor 
+15657	10009		Abbas Hamsa	Beary	560235372	Belthangady						11380-Shafe Thodar  , 541937996			15657 - Abbas Hamsa Beary 560235372  10009  Belthangady 
+11544	1462	5459	Aziz	Beary	553018549	Manipura		Udupi		Un Known		11403 - Eliyas Moideen Yermal  - 502112459			11544 - Aziz Beary 553018549  1462 5459 Manipura 
+15653	11628		Bava	Beary	580827105		2179991746	Sacheripeti		Exit-10	01-Jun-63	11350-Yusuf Kalanjibail, 536581427	K9637346		15653 - Bava Beary 580827105  11628   2179991746
+11335	354		Bavu	Beary  		Sacheri Pete		Karkala		Exit 10		07117-Abbas Mani, 530789678			11335 - Bavu Beary     354  Sacheri Pete 
+11469	1628		Hasan	Beary  	502899670	Moolur Uchila		Moolur Uchila		Batha		11403 - Eliyas Moideen Yermal  - 502112459			11469 - Hasan Beary   502899670  1628  Moolur Uchila 
+210701	2803		Hyderali Hassin	Beary	535004027				535004027			07122 - Shamshudin Addor - 541204731			210701 - Hyderali Hassin Beary 535004027  2803   
+211214			ISMAIL GUDDE AHMED	BEARY	545687445	ADDOR	22939241				06-Jan-89	07122 - Shamshudin Addor - 541204731			211214 - ISMAIL GUDDE AHMED BEARY 545687445    ADDOR 22939241
+19107			Kedila Haseem	Beary	531562033							11548-Abdul Razzak Machar, 593870965			19107 - Kedila Haseem Beary 531562033     
+210901			Razak Bava	Beary	507259464	Yermal			507259464			11404-Abdulrahman Sulaiman  , 559906048			210901 - Razak Bava Beary 507259464    Yermal 
+19106			Saneer Ibrahim	Beary	563352054							16846-Abdbaker Irfan sheikhmale, 560690644			19106 - Saneer Ibrahim Beary 563352054     
+11483			Shaban	Beary  	502956282	Kaup		Kaup		Un Known		Abubakar Padubidri			11483 - Shaban Beary   502956282    Kaup 
+7210		1105	Ibrahim	Bedre  	552399799	Hangloor		Udupi		Un Known		07112-Fazlu Rahman  , 502260256			7210 - Ibrahim Bedre   552399799   1105 Hangloor 
+16848	11798		Sheik Ashfaq	Bekal	534700614		2387326446	Kinnikambal		Badiya		11313-Ghani Ahmed  , 509125443		964894385	16848 - Sheik Ashfaq Bekal 534700614  11798   2387326446
+17910	12959		Shaull Hameed	Bellare Mohammad	570227091		2069772704	Puttor				11548-Abdul Razzak Machar, 593870965	T538202		17910 - Shaull Hameed Bellare Mohammad 570227091  12959   2069772704
+16861	10014		Ismail	Belma	550740851		2326477540					11380-Shafe Thodar  , 541937996			16861 - Ismail Belma 550740851  10014   2326477540
+19070			Abbas	Bengre	557863690	Bengre		Bengre	557863690			07124-G.K. Sheikabba  , 508102993		557863690	19070 - Abbas Bengre 557863690    Bengre 
+19067	13006		Mohammed Shoaib	Bolar	563806018	Bolar	2427341793	Bolar	563806018	Batha		07122 - Shamshudin Addor - 541204731		563806018	19067 - Mohammed Shoaib Bolar 563806018  13006  Bolar 2427341793
+201006			Mohammed Zahoor	Bolar	564372829	Gurukambla	2068453647	Kaikamba Gurukambla	564372829	Dammam		17952-Nayaz ahammad, 509862283			201006 - Mohammed Zahoor Bolar 564372829    Gurukambla 2068453647
+15713	11570		Abdul Raheem	Bolar Mangalore	568506501	Jeppu		Malloor			12-Apr-69	07101-Abdul Azeez Bajpe, 503271851			15713 - Abdul Raheem Bolar Mangalore 568506501  11570  Jeppu 
+7129			Abubaker	Bondel	551578085	Un Known				Ind'L Area		07129-Abubaker Bondel, 551578085			7129 - Abubaker Bondel 551578085    Un Known 
+17990	13217		Ilyas	Buddu	509985715	Shiruru	2125561585	Shiruru		Iskan		07112-Fazlu Rahman  , 502260256			17990 - Ilyas Buddu 509985715  13217  Shiruru 2125561585
+11470	1629		Ahmed	Chaya Beary 	569166979	Moolur Uchila		Moolur Uchila		Batha		11403 - Eliyas Moideen Yermal  - 502112459			11470 - Ahmed Chaya Beary  569166979  1629  Moolur Uchila 
+7219		1577	Abdulla	Chayabba Beri 	501959738	Korantikatte		Udupi		Un Known		11403 - Eliyas Moideen Yermal  - 502112459			7219 - Abdulla Chayabba Beri  501959738   1577 Korantikatte 
+7254			Hyder	Cheyya  	580123602	Un Known				Un Known		DKMO_Regroup			7254 - Hyder Cheyya   580123602    Un Known 
+7104		1001	Mohammed	Cheyyabba (Nawaz) 	504627663	Chokkabettu		Surathkal		Malaz		Nawaz Gurpur			7104 - Mohammed Cheyyabba (Nawaz)  504627663   1001 Chokkabettu 
+11277	385	3553	Mohammed	Chikkakolathur  	502051217	Gudugalale		Shaniwarasante		Manfooha		11267-Abdulla Dawood Kodlipet, 503027405			11277 - Mohammed Chikkakolathur   502051217  385 3553 Gudugalale 
+11337		3563	Ashraf	Chowdlu Ahamad Bava	503257536	Somvarpet		Kodagu		Un Known		11267-Abdulla Dawood Kodlipet, 503027405			11337 - Ashraf Chowdlu Ahamad Bava 503257536   3563 Somvarpet 
+19077	10025		Abdul Hameed	Darul Falah hosangady	509384490	Hosangady	2332337969	Hosangady			01-May-71	07101-Abdul Azeez Bajpe, 503271851		9742465885	19077 - Abdul Hameed Darul Falah hosangady 509384490  10025  Hosangady 2332337969
+19023	11608		Jabeer	Dasalike	554116514	Kalanjibail	2417623564	Dasalike House Kalanjibail	536377552	yamamah	10-Jan-93	11350-Yusuf Kalanjibail, 536581427		8792534986	19023 - Jabeer Dasalike 554116514  11608  Kalanjibail 2417623564
+16878	12951		Amanulla	Dastagir	538774857			Guruvenkere				11313-Ghani Ahmed  , 509125443			16878 - Amanulla Dastagir 538774857  12951   
+9264		6054	Nazir	Dawood  	504778297	Kulai		Kulai		Un Known		Nazeer Ahmed			9264 - Nazir Dawood   504778297   6054 Kulai 
+11314	1040		Aboobakkar	Dirmbila  	509034817	Ajilamogaru		Bantwal		Haraj		07117-Abbas Mani, 530789678			11314 - Aboobakkar Dirmbila   509034817  1040  Ajilamogaru 
+11514	1463		Ibrahim	Edinabba Byari 	502142102	Yermal		Uchila		Hara		11403 - Eliyas Moideen Yermal  - 502112459			11514 - Ibrahim Edinabba Byari  502142102  1463  Yermal 
+7197		5089	Sheik	Ehjaz Ahmed 	540415079	Kankanady		Mangaluru		Malaz		DKMO_Regroup			7197 - Sheik Ehjaz Ahmed  540415079   5089 Kankanady 
+11423	1461		Samsheer	Eijjaba Beary 	552344745	Yermal				Al-Jubail		11403 - Eliyas Moideen Yermal  - 502112459			11423 - Samsheer Eijjaba Beary  552344745  1461  Yermal 
+7160	11428		Mohammed	Fahad  	558043786	Krishnapura				Un Known		DKMO_Regroup			7160 - Mohammed Fahad   558043786  11428  Krishnapura 
+17890	12227		Mohammed	Faisal	557449923	udyawar	2400919573				29-May-92	07101-Abdul Azeez Bajpe, 503271851		9995743648	17890 - Mohammed Faisal 557449923  12227  udyawar 2400919573
+7190		2101	Jafar	Faizi Kemmara 	536850025	Uppinangadi		Uppinangadi		Un Known		07101-Abdul Azeez Bajpe, 503271851			7190 - Jafar Faizi Kemmara  536850025   2101 Uppinangadi 
+211008			SHEIK MOHAMMED	FARMAN	593810374		2465628903		918904751484		22-Jul-97	07120-Mohammed Asif Kannur , 506991416		8904751484	211008 - SHEIK MOHAMMED FARMAN 593810374     2465628903
+16815	12453		Abdul Hameed	Farngipete	508280010		217069327			Riyadh		15681-Mohammed Ashraf Kozi Khan, 564671735			16815 - Abdul Hameed Farngipete 508280010  12453   217069327
+11510	156		Ummar	Farook  	594544757	Jogibettu		Uppinangadi		Olaya		DKMO_Regroup			11510 - Ummar Farook   594544757  156  Jogibettu 
+16884	12957		Ummar	Farook	536804657	ujire	2379746569	ujire	536804657			11548-Abdul Razzak Machar, 593870965		00917022560589	16884 - Ummar Farook 536804657  12957  ujire 2379746569
+11441	9351		Ummer	Farook  	55	Jokatte		Jokatte		Un Known		Imtiyaz ahmed kundapur			11441 - Ummer Farook   55  9351  Jokatte 
+17941	11858		Umar	Farook Ibrahim	591601231	Muloor	2338494483	Udupi uchila		Batha	08-Aug-74	07252-Abdullah K.P, 503614377		917760609566	17941 - Umar Farook Ibrahim 591601231  11858  Muloor 2338494483
+16859	10013		Mahammad	Farooq	590366199		2307846879					11380-Shafe Thodar  , 541937996	K6617138	9742980986	16859 - Mahammad Farooq 590366199  10013   2307846879
+11608	12028		Ummar	Farooq  	541393798	Jokatte		Jokatte		Batha		11288-Moahmmed Ali  Jokatte, 502149417			11608 - Ummar Farooq   541393798  12028  Jokatte 
+16875	12041	3417	Ummar	Farooq	552963505	Jokatte	2105582510			Olaya	13-Dec-71	11288-Moahmmed Ali  Jokatte, 502149417		9019767264	16875 - Ummar Farooq 552963505  12041 3417 Jokatte 2105582510
+16825	12327		Mohammed	Farooq Ahmed	551189605		2176338545					07124-G.K. Sheikabba  , 508102993			16825 - Mohammed Farooq Ahmed 551189605  12327   2176338545
+11609	1072		Ummer	Farooq Krishnapur	544298652	Chokkabettu		Surathkal				11380-Shafe Thodar  , 541937996			11609 - Ummer Farooq Krishnapur 544298652  1072  Chokkabettu 
+7173	903		Ummer	Farooq Mangalore 		Gurupura Kaikamba		Gurupura Kaikamba		Un Known		Imtiyaz ahmed kundapur			7173 - Ummer Farooq Mangalore    903  Gurupura Kaikamba 
+7228		2718	Umarul	Farooqui Anwar 	509425966	Pakshikere		Kemral		Un Known		07101-Abdul Azeez Bajpe, 503271851			7228 - Umarul Farooqui Anwar  509425966   2718 Pakshikere 
+19084			Mohammed	Fauzan	537359766	Kaikamba	2366980981	Kaikamba	537359766	Riyadh	15-May-88	17952-Nayaz ahammad, 509862283		537359766	19084 - Mohammed Fauzan 537359766    Kaikamba 2366980981
+16836	12332		Yakub	Firoz	599861525							07101-Abdul Azeez Bajpe, 503271851			16836 - Yakub Firoz 599861525  12332   
+16863	12486		Irfan Perlap	Gadiyar	508173325							07101-Abdul Azeez Bajpe, 503271851		8904797707	16863 - Irfan Perlap Gadiyar 508173325  12486   
+201101			Abdul Gafoor	Gafoor	506343107		2472680459		506343107	Riyadh	24-Jan-91	11267-Abdulla Dawood Kodlipet, 503027405		506343107	201101 - Abdul Gafoor Gafoor 506343107     2472680459
+11595	11255		Abdul	Gafoor Nagoor 	502905644	Gangulli		Udupi		Batha		07112-Fazlu Rahman  , 502260256			11595 - Abdul Gafoor Nagoor  502905644  11255  Gangulli 
+15634	11551		Abdul	Gafoor Shaikh 	540309369	Basroor		Basoor		Un Known		07112-Fazlu Rahman  , 502260256			15634 - Abdul Gafoor Shaikh  540309369  11551  Basroor 
+211010			MOHAMMED SHAVOOR	GANGAWALI	539172448		2446073625			MANFUA		07120-Mohammed Asif Kannur , 506991416			211010 - MOHAMMED SHAVOOR GANGAWALI 539172448     2446073625
+11390	1382		Nazeer	Gani Shaikh 	592572452	Parari				Jeddah		11380-Shafe Thodar  , 541937996			11390 - Nazeer Gani Shaikh  592572452  1382  Parari 
+15702	11467		Mohammed Rizwan	Ganjimutt	535264392	Ganjimutt	2310507302	Ganjimutt		Malaz	07-Mar-83	07120-Mohammed Asif Kannur , 506991416		8242250895	15702 - Mohammed Rizwan Ganjimutt 535264392  11467  Ganjimutt 2310507302
+19082			Mohammad	Gazali	564406068	Karkala	2246236448	Karkala	564406068		20-Jun-84	11313-Ghani Ahmed  , 509125443		564406068	19082 - Mohammad Gazali 564406068    Karkala 2246236448
+15671	11381		Sheik Mohammad	Gazali	542823946	Padubidri	2375210859	Padubdri		Malaz	20-Apr-90	11313-Ghani Ahmed  , 509125443		9901659875	15671 - Sheik Mohammad Gazali 542823946  11381  Padubidri 2375210859
+15722	12253		Muzaffer Malpe	Ghulam	568477126	Nejar	2274637038	Nejar		Malaz	31-Dec-81	07112-Fazlu Rahman  , 502260256		9741510518	15722 - Muzaffer Malpe Ghulam 568477126  12253  Nejar 2274637038
+17939	291		Hasan Kunji	GM Ashraf	501986696	Monte Padav	2077808489	Monte Padav	577302602	Shimeshi		07252-Abdullah K.P, 503614377			17939 - Hasan Kunji GM Ashraf 501986696  291  Monte Padav 2077808489
+19032	19032		Moidin Hasan	Golidadi Jokatte	548827879	Jokatte	2288862531	Jokatte	548827879	Jubail		11288-Moahmmed Ali  Jokatte, 502149417			19032 - Moidin Hasan Golidadi Jokatte 548827879  19032  Jokatte 2288862531
+11418	1456	9189	Ahmad	Gulam Beary 	502951781	Moolur Uchila				Alkhobar		11403 - Eliyas Moideen Yermal  - 502112459			11418 - Ahmad Gulam Beary  502951781  1456 9189 Moolur Uchila 
+18084	12833		MAHAMMAD SHAREEF	GUMPAKALLU	566982009	SARALIKATTE		SARALIKATTE		SUWEIDI	01-Jun-86	07117-Abbas Mani, 530789678			18084 - MAHAMMAD SHAREEF GUMPAKALLU 566982009  12833  SARALIKATTE 
+17950	10326		Abdul Latheef	Gurpur	531962567	Bajpe	2311626366			Malaz	18-Jul-82	07120-Mohammed Asif Kannur , 506991416	G4737629	9483910682	17950 - Abdul Latheef Gurpur 531962567  10326  Bajpe 2311626366
+18043	10262		MOHAMMED ASHRAF	GURUPURA	537568953	BAJPE				JUBAIL	05-May-87	17950-Abdul Latheef Gurpur, 531962567	H8030436		18043 - MOHAMMED ASHRAF GURUPURA 537568953  10262  BAJPE 
+15696	8780		Muhammad	H Ashraf	571781086	Bedrodi	2339681576	Valal		Batha		11307-Haider Sarali Katte, 597622507	L3822044	9945745586	15696 - Muhammad H Ashraf 571781086  8780  Bedrodi 2339681576
+15721	10150		Iqbal	Haikadi	567353018	haikadi	2165638194	Haikadi		Shifa	19-Nov-77	07112-Fazlu Rahman  , 502260256	6001073	9945375309	15721 - Iqbal Haikadi 567353018  10150  haikadi 2165638194
+15693	11952		Iqbal Ibrahim	Haji	535048695	Muloor Uchila	2312571579	Muloor		Rowdah	17-Apr-80	11581 - Mansoor Ahmed   - 564779120			15693 - Iqbal Ibrahim Haji 535048695  11952  Muloor Uchila 2312571579
+17886	11652		Mahammad P	Hakeem	572915092	Saralikatte	2417198252		919686109287			11307-Haider Sarali Katte, 597622507	P0489465	918105858524	17886 - Mahammad P Hakeem 572915092  11652  Saralikatte 2417198252
+11309	1003		Mohammed	Hakeem Hassan 		Uppinangadi		Uppinangadi		Jubail		11270-Ibrahim Kuntoor, 533936347			11309 - Mohammed Hakeem Hassan    1003  Uppinangadi 
+15695	11954		Mohammad Ibrahim	Haleyangady	505513378	Mulki	2126099296	Mulki		Rawadh	09-Sep-75	11313-Ghani Ahmed  , 509125443		72559894065	15695 - Mohammad Ibrahim Haleyangady 505513378  11954  Mulki 2126099296
+11349	379		Ashfaq	Hamad  	551294462	Kushal Nagar		Kodagu		Haraj		11267-Abdulla Dawood Kodlipet, 503027405			11349 - Ashfaq Hamad   551294462  379  Kushal Nagar 
+11413	968		Yermal	Hamad Badruddin 	591931828	Moolur Uchila			507606470	Un Known		11403 - Eliyas Moideen Yermal  - 502112459			11413 - Yermal Hamad Badruddin  591931828  968  Moolur Uchila 
+11613	11791		Abdul	Hameed  	552425822	Venoor		Venoor		Un Known		11313-Ghani Ahmed  , 509125443			11613 - Abdul Hameed   552425822  11791  Venoor 
+17938	293		Abdul	Hameed	534991579	Monte Padav	2182322889	Monte Padav		Badiya	21-May-74	07252-Abdullah K.P, 503614377		9449104950	17938 - Abdul Hameed 534991579  293  Monte Padav 2182322889
+201201			Khalid	Hameed	501920746					Riyadh		11267-Abdulla Dawood Kodlipet, 503027405			201201 - Khalid Hameed 501920746     
+19054	13143		Musthafa	Hameed	504495695	Kudroli	2284581887	Kudroli	504495695			07101-Abdul Azeez Bajpe, 503271851	P1747663	9742621196	19054 - Musthafa Hameed 504495695  13143  Kudroli 2284581887
+18013	13128		NIZAMUDDIN	HAMEED	580990606	BAJPE	2265591673	SUNKADA KATTE	580990606	BATHA RIYADH	01-Jan-84	07124-G.K. Sheikabba  , 508102993			18013 - NIZAMUDDIN HAMEED 580990606  13128  BAJPE 2265591673
+19043	19043		Rafik Suleman	Hameed	542587371	Yermal			542587371			11404-Abdulrahman Sulaiman  , 559906048		9880176001	19043 - Rafik Suleman Hameed 542587371  19043  Yermal 
+11528	10127		Sahul	Hameed  	596993345	Ujire		Ujire		Un Known		ISMAIL BANTWAL			11528 - Sahul Hameed   596993345  10127  Ujire 
+18090			Shahul	Hameed	591020966	Uchchil	2209011911			Batha	30-Jan-82	11281-Abdul Irshad Moidin , 502026155			18090 - Shahul Hameed 591020966    Uchchil 2209011911
+210702			Abdul Rahiman	Hameed Abdul	538989196		2399929484			Batha	03-Mar-94	07122 - Shamshudin Addor - 541204731		9535402036	210702 - Abdul Rahiman Hameed Abdul 538989196     2399929484
+9265		6056	Abdul	Hameed Bondel 	500924200	Bondel		Mangaluru		Old Sanayya		07101-Abdul Azeez Bajpe, 503271851			9265 - Abdul Hameed Bondel  500924200   6056 Bondel 
+15649	15129	0	Sahul	Hameed G	501259113	Montepadavu	2227834046	Montepadavu		Thakassui	01-Jul-80	07113-Ismail Montepadavu, 509173592			15649 - Sahul Hameed G 501259113  15129 0 Montepadavu 2227834046
+11569	2		Sahul	Hameed Golikatte 		Gangulli		Gangulli		Un Known		07112-Fazlu Rahman  , 502260256			11569 - Sahul Hameed Golikatte    2  Gangulli 
+11374	676		Abdul	Hameed Jafar Parladka	507400600	Parladka		Puttur		Naseem		Basheer			11374 - Abdul Hameed Jafar Parladka 507400600  676  Parladka 
+11303	260		Shahul	Hameed Jokatte 	500287570	Jokatte		Jokatte		Hara		Kana Abdul Hameed			11303 - Shahul Hameed Jokatte  500287570  260  Jokatte 
+11289	253		Abdul	Hameed Karnad Mukka	503365974	Mukka 		Surathkal		Hara		Kana Abdul Hameed			11289 - Abdul Hameed Karnad Mukka 503365974  253  Mukka  
+7193	10176		Abdul	Hameed Mohammed 	567369011	Bajal		Mangaluru		Rawdah		Abubakar Padubidri			7193 - Abdul Hameed Mohammed  567369011  10176  Bajal 
+7107		1011	Abdul	Hameed Wenz 	504166679	Kandavara		Kaikamba	504166679	Malaz		07101-Abdul Azeez Bajpe, 503271851			7107 - Abdul Hameed Wenz  504166679   1011 Kandavara 
+210103			Bikrimar	Hamid	572081086	Thurkalike	2207276904	Kalleri	572081086	Masana		11307-Haider Sarali Katte, 597622507		9632563168	210103 - Bikrimar Hamid 572081086    Thurkalike 2207276904
+201002			Abdul Razak	Hammabba	541676931	Mallur	2321750743	Mallur	541676931	Buraida	18-Jul-88	07122 - Shamshudin Addor - 541204731		9844803561	201002 - Abdul Razak Hammabba 541676931    Mallur 2321750743
+201021			Ikram Ahmed	Hammaji	559421537	Gurukambla	2276143035	Gurukambla		Dammam	12-Mar-87	17952-Nayaz ahammad, 509862283			201021 - Ikram Ahmed Hammaji 559421537    Gurukambla 2276143035
+201010			Shahid Ahmed	Hammaji	539218896	Gurukamla	2417613805	Gurukambla	539218896	Dammam	30-Oct-90	17952-Nayaz ahammad, 509862283			201010 - Shahid Ahmed Hammaji 539218896    Gurukamla 2417613805
+17899	11443		Nazeer	Hamza Kelaginahithlu	572133066	Amlsmonar	2265680732	Kuttar-madaka		deera		11313-Ghani Ahmed  , 509125443			17899 - Nazeer Hamza Kelaginahithlu 572133066  11443  Amlsmonar 2265680732
+201013			Mohammed	Hanaif	502132731	Gurukambla	2060804388	Kaikamba Gurukambla	502132731	Dammam		17952-Nayaz ahammad, 509862283			201013 - Mohammed Hanaif 502132731    Gurukambla 2060804388
+11344	785		Badurddin	Handel Hasanabba 	532905742	Handel		Mijaru		Almaather St.		11404-Abdulrahman Sulaiman  , 559906048			11344 - Badurddin Handel Hasanabba  532905742  785  Handel 
+18031	1340		Kannangar Sitar	Haneef	563082358	Kannangar	2125626800		563082358	Riyadh	06-Jul-73	07101-Abdul Azeez Bajpe, 503271851			18031 - Kannangar Sitar Haneef 563082358  1340  Kannangar 2125626800
+11473		4754	Mohammed	Haneef  	509699875	Bikarnakatte		Mangaluru		Hara		11281-Abdul Irshad Moidin , 502026155			11473 - Mohammed Haneef   509699875   4754 Bikarnakatte 
+11594	11277		Mohammed	Haneef  	534607158	Achil House 		Badaga Bellur		Alkhobar		15731-Abubakkar Siddiq, 544435133			11594 - Mohammed Haneef   534607158  11277  Achil House  
+11567	801		Mohammed	Haneef Bk 	560927477	Mangaluru		Mangaluru		Deerah		Abdullathif Idris			11567 - Mohammed Haneef Bk  560927477  801  Mangaluru 
+7133		2001	Mohd.	Haneef Mahin Kunhi	562867025	Uchila		Uchil		Un Known		11435-Abdul Basheer  T.K. Talapadi, 566384950			7133 - Mohd. Haneef Mahin Kunhi 562867025   2001 Uchila 
+7244		3913	Mohamed	Haneef Mohiddin 		Honawar		Honawar		Un Known		DKMO_Regroup			7244 - Mohamed Haneef Mohiddin     3913 Honawar 
+7108		1012	Mohammed	Haneef Panambur 	502939086	Katipalla		Krishnapura		Hara		Haneef Panambur			7108 - Mohammed Haneef Panambur  502939086   1012 Katipalla 
+7240	627		Mohammed	Haneef Qasim 	501099165	Un Known				Un Known		07124-G.K. Sheikabba  , 508102993			7240 - Mohammed Haneef Qasim  501099165  627  Un Known 
+11545	10178		M.R.	Hanif  	500736418	Panemangalore				Un Known		07117-Abbas Mani, 530789678			11545 - M.R. Hanif   500736418  10178  Panemangalore 
+7157		1510	Mohammad	Hanif  	502004362	Deralakatte		Deralakatte		Un Known		Abdussalam Taiba			7157 - Mohammad Hanif   502004362   1510 Deralakatte 
+9266		9430	Muhamed	Hanif Jifrisab Muktesar		Gersappa		Honnavara		Olaya		07112-Fazlu Rahman  , 502260256			9266 - Muhamed Hanif Jifrisab Muktesar    9430 Gersappa 
+15665	8779		Mahammad	Hanifa	536370365	Thekkar	2281507414	Thekkar		shifa	03-Jun-70	11307-Haider Sarali Katte, 597622507		9591724562	15665 - Mahammad Hanifa 536370365  8779  Thekkar 2281507414
+18076	13166		Mahammad	Harif	536545321	Hejmady	2335041816		536545321		15-Jan-85	17950-Abdul Latheef Gurpur, 531962567	G7584645		18076 - Mahammad Harif 536545321  13166  Hejmady 2335041816
+16872	11727		Moulana	Haroon	571966574	Gangolly				Sulay		15622-Abdussalaam Moulana  , 564511791			16872 - Moulana Haroon 571966574  11727  Gangolly 
+210802			Siddik Talapady	Hasainar	533696932	Talapady	2292906415	Talapady	533696932	Yamama	29-Jan-80	11350-Yusuf Kalanjibail, 536581427		9901503878	210802 - Siddik Talapady Hasainar 533696932    Talapady 2292906415
+19049			Ibrahim Basheer	Hasan	507921326	Jokatte	2186116634	Jokatte	507921326	Batha	07-Jun-77	15698-Moideen Jokatte, 503604969		9844664092	19049 - Ibrahim Basheer Hasan 507921326    Jokatte 2186116634
+15742	12274		Mohammed Hanif	Hasan	551429706	Jokatte	2110872690	Jokatte		Batha		11288-Moahmmed Ali  Jokatte, 502149417		9448893336	15742 - Mohammed Hanif Hasan 551429706  12274  Jokatte 2110872690
+18049	1336		MUHAMMED ALTHAF	HASAN	560260318	KARNAD	2196996553	KARNAD	560260318	HARA	06-Aug-80	15681-Mohammed Ashraf Kozi Khan, 564671735			18049 - MUHAMMED ALTHAF HASAN 560260318  1336  KARNAD 2196996553
+15709	12035		Fazul Rahaman	Hasan Bapu	504425166	Honnavar	2095274227			Batha	01-Jan-68	11288-Moahmmed Ali  Jokatte, 502149417			15709 - Fazul Rahaman Hasan Bapu 504425166  12035  Honnavar 2095274227
+11343	784		Handel	Hasan Farooq 	556393976	Handel		Mijaru		Euromarche		Hameed Nazeer			11343 - Handel Hasan Farooq  556393976  784  Handel 
+18104	11644		Hasan Ismail	Hasan Sagar	532489672	Sagar	2293602617	Shivmogga	532489672	Old Sanaya	29-May-78	11548-Abdul Razzak Machar, 593870965	G6171131	9845470463	18104 - Hasan Ismail Hasan Sagar 532489672  11644  Sagar 2293602617
+11381		1522	Mohd.	Hasan Saheb 	507078848	Karkala		Udupi		Un Known		Mohammed Haneef			11381 - Mohd. Hasan Saheb  507078848   1522 Karkala 
+7230		2725	Bondel	Hasanaba  	557867587	Bondel		Mangaluru		Un Known		DKMO_Regroup			7230 - Bondel Hasanaba   557867587   2725 Bondel 
+17946	13606		Abdul Samad	Hasanabba	553676956		2384105355				01-Jun-80	07117-Abbas Mani, 530789678	H6254224	8105028524	17946 - Abdul Samad Hasanabba 553676956  13606   2384105355
+7180	1068		Badruddin	Hasanabba  	569300563	Puchamogaru		Bantwal		Taif		11380-Shafe Thodar  , 541937996			7180 - Badruddin Hasanabba   569300563  1068  Puchamogaru 
+7184		1812	Ahmed	Hasanabba Mijar 	507821273	Thodar		Thodar		Batha		11380-Shafe Thodar  , 541937996			7184 - Ahmed Hasanabba Mijar  507821273   1812 Thodar 
+11393	1385	1832	Eliyas	Hasanabba Mijar 	506877074	Yedapadavu		Thodar		Batha		11380-Shafe Thodar  , 541937996			11393 - Eliyas Hasanabba Mijar  506877074  1385 1832 Yedapadavu 
+11479		6101	Faruk	Hasanabba Thokur 		Jokatte		Jokatte		Batha		DKMO_Regroup			11479 - Faruk Hasanabba Thokur     6101 Jokatte 
+18032	10018		Saleem	Hasanegady	530662487	Moodbidri	2214577062		530662487	Batha	18-Apr-63	11380-Shafe Thodar  , 541937996			18032 - Saleem Hasanegady 530662487  10018  Moodbidri 2214577062
+211204			KAUP ISMAIL	HASEER	545038339	KAPU	2481979389	KAPU		MALAZ	01-Jan-75	07122 - Shamshudin Addor - 541204731			211204 - KAUP ISMAIL HASEER 545038339    KAPU 2481979389
+11406	951		Mohammed	Hassaina Padubidri 	508126649	K.C. Road		Kotekar		Un Known		11403 - Eliyas Moideen Yermal  - 502112459			11406 - Mohammed Hassaina Padubidri  508126649  951  K.C. Road 
+17915	11844		Abdul Aziz	Hassan	593961410		2401617374	Gadiyar			20-May-63	07117-Abbas Mani, 530789678		8904403070	17915 - Abdul Aziz Hassan 593961410  11844   2401617374
+15716	11792		Sharipulla	Hassan	597138860	Mithabail	2244373623	Talapady		Malaz	22-Apr-76	11313-Ghani Ahmed  , 509125443	H0464898	9741468469	15716 - Sharipulla Hassan 597138860  11792  Mithabail 2244373623
+17914	13528		Sharulla Saheb	Hassan	509846711		2039387002	Tonse			01-Jul-62	07112-Fazlu Rahman  , 502260256		9945486392	17914 - Sharulla Saheb Hassan 509846711  13528   2039387002
+15706	11471		Syed	Hassan	509869584		2162775007				10-Dec-77	DKMO_Regroup		8861294039	15706 - Syed Hassan 509869584  11471   2162775007
+15669	11563		Thousif Khan	Hassan	502892462	Beeri	2264933033	Kotekar		Al warood	18-Apr-86	11313-Ghani Ahmed  , 509125443		7259609507	15669 - Thousif Khan Hassan 502892462  11563  Beeri 2264933033
+11318	359		Yoosuf	Hassan Beary 		Ujire		Belthangady		Haraj		07117-Abbas Mani, 530789678			11318 - Yoosuf Hassan Beary    359  Ujire 
+7248		4079	Azmatullah	Hassan Khan 	530392551	Bunder		Mangaluru	530392551	malaz		07251-Yusuf Adoor  Nadugudde, 562906572			7248 - Azmatullah Hassan Khan  530392551   4079 Bunder 
+11599	11778		Shaik	Hassan Raheem 	502102877	Kudroli		Kudroli		Batha		11313-Ghani Ahmed  , 509125443			11599 - Shaik Hassan Raheem  502102877  11778  Kudroli 
+17897	11442		Sayyed	Hassan Venoor	501456618	Venur					10-Aug-80	11313-Ghani Ahmed  , 509125443		9902950509	17897 - Sayyed Hassan Venoor 501456618  11442  Venur 
+11451		1370	Shamiulla	Hateem Beary 	551038821	Karkala		Udupi		Un Known		Imtiyaz ahmed kundapur			11451 - Shamiulla Hateem Beary  551038821   1370 Karkala 
+16837	12330		Mansoor	Hayath	504838100		2220079301	Mysore		Hara	23-May-81	07112-Fazlu Rahman  , 502260256		9845791081	16837 - Mansoor Hayath 504838100  12330   2220079301
+18087			SYED	HIDAYATULLA	550780797	Mangalore				AL ROWDAH	31-Mar-82	07112-Fazlu Rahman  , 502260256			18087 - SYED HIDAYATULLA 550780797    Mangalore 
+19058			Razak	Hosamane	507173262	B C Road	2109796520	B C Road			01-Jan-60	07120-Mohammed Asif Kannur , 506991416			19058 - Razak Hosamane 507173262    B C Road 2109796520
+11312	769		Hameed	Hosangadi Yousuf 		Kinnikambla		Kaikamba		Jeddah		Irshad			11312 - Hameed Hosangadi Yousuf    769  Kinnikambla 
+211002			ABU	HUDAIFA	541564344	Parliya	2332110655			Riyadh	06-Oct-84	11548-Abdul Razzak Machar, 593870965		919632926015	211002 - ABU HUDAIFA 541564344    Parliya 2332110655
+11474	1551		Adam	Hussain  	549068117	Hassan		Hassan	549068117	Old Sanayya		Nazeer Ahmed			11474 - Adam Hussain   549068117  1551  Hassan 
+18003	10332		Althaf	Hussain	507253564	Ganjimut	2233623319					07120-Mohammed Asif Kannur , 506991416	e5277257		18003 - Althaf Hussain 507253564  10332  Ganjimut 2233623319
+7135			Anwar	Hussain  	55	Un Known				Un Known		07101-Abdul Azeez Bajpe, 503271851			7135 - Anwar Hussain   55    Un Known 
+15683	11377		Anwar	Hussain	503473825	Krishnapur		krishnapur		Malaz	20-Oct-70	DKMO_Regroup		9008903154	15683 - Anwar Hussain 503473825  11377  Krishnapur 
+16830	12328		Anwar	Hussain	566365577				+917411445577			DKMO_Regroup		7411445577	16830 - Anwar Hussain 566365577  12328   
+19076	10024		Asif	Hussain	509708953	Hoode	2208194460	Udupi Hoode	509708953		25-Dec-79	07112-Fazlu Rahman  , 502260256		8951815840	19076 - Asif Hussain 509708953  10024  Hoode 2208194460
+16879	12457		Athoof Hassan	Hussain	543284132	Kallapu	2340207899			Jubail	25-Apr-91	15681-Mohammed Ashraf Kozi Khan, 564671735			16879 - Athoof Hassan Hussain 543284132  12457  Kallapu 2340207899
+16818	12043		Mohammad	Hussain	500349905							11288-Moahmmed Ali  Jokatte, 502149417			16818 - Mohammad Hussain 500349905  12043   
+11378	653		Mohammed	Hussain  	556319305	Venoor		Karkala		Un Known		Hameed Nazeer			11378 - Mohammed Hussain   556319305  653  Venoor 
+201014			Mohammed Ashfaq	Hussain	500301127	Gurukambla	2162609768	Gurukambla	500301127	Dammam		17952-Nayaz ahammad, 509862283			201014 - Mohammed Ashfaq Hussain 500301127    Gurukambla 2162609768
+15724	12256		Mohammed Ilyas	Hussain	505665259		2011536402				23-Mar-63	07112-Fazlu Rahman  , 502260256			15724 - Mohammed Ilyas Hussain 505665259  12256   2011536402
+11302	1282		Moinudeen	Hussain  	506730787	Mangalpete		Katipalla		Batha		07101-Abdul Azeez Bajpe, 503271851			11302 - Moinudeen Hussain   506730787  1282  Mangalpete 
+15712	10143		Tajammal	Hussain	556673165	uchila udupi	2111447682	Udupi		Hara	05-Aug-58	11313-Ghani Ahmed  , 509125443		9980752157	15712 - Tajammal Hussain 556673165  10143  uchila udupi 2111447682
+11409	958		Kunhi	Hussain (Hyundai) 	504477693	Yermal				Un Known		11403 - Eliyas Moideen Yermal  - 502112459			11409 - Kunhi Hussain (Hyundai)  504477693  958  Yermal 
+11300	1284		Naveed	Hussain Aboobakar 	567758157	Mangalpete		Katipalla		Batha		07101-Abdul Azeez Bajpe, 503271851			11300 - Naveed Hussain Aboobakar  567758157  1284  Mangalpete 
+11492	976		Mohammed	Hussain Ali Saheb	557247158	Gangulli		Kundapura		Un Known		07112-Fazlu Rahman  , 502260256			11492 - Mohammed Hussain Ali Saheb 557247158  976  Gangulli 
+15628	11504		Mohammed	Hussain Arihole 	502821180	Gangulli		Gangulli		Un Known		07112-Fazlu Rahman  , 502260256			15628 - Mohammed Hussain Arihole  502821180  11504  Gangulli 
+11587	11309		Althaf	Hussain Basroor 	507676288	Basroor		Kundapura		Batha		07112-Fazlu Rahman  , 502260256			11587 - Althaf Hussain Basroor  507676288  11309  Basroor 
+15624	28		Mohiddin	Hussain Farook 	546352411	Ullal		Ullal		Un Known		11281-Abdul Irshad Moidin , 502026155			15624 - Mohiddin Hussain Farook  546352411  28  Ullal 
+16831	12329		Nazeer	Hussain Handel	554457619	Handel	2230814218			Olaya	18-Mar-75	11380-Shafe Thodar  , 541937996			16831 - Nazeer Hussain Handel 554457619  12329  Handel 2230814218
+11355	1031		Eliyas	Hussain Thekkar 	500851874	Thekkar		Uppinangadi		Thekkar		11307-Haider Sarali Katte, 597622507			11355 - Eliyas Hussain Thekkar  500851874  1031  Thekkar 
+11578	10376		Zakir	Hussan Mohammad 		Hosmar		Udupi		Un Known		SAMIULLAH KHAN			11578 - Zakir Hussan Mohammad    10376  Hosmar 
+16814	12452		Abbas Ahmed	Huzaifa	508893291					Riyadh		15681-Mohammed Ashraf Kozi Khan, 564671735			16814 - Abbas Ahmed Huzaifa 508893291  12452   
+7102	10181	1004	Yusuf	Hyder (Saqafi Baithar) 	500326356	Baithar		Harekala		Batha		07102-Yusuf Hyder (Saqafi Baithar) , 500326356			7102 - Yusuf Hyder (Saqafi Baithar)  500326356  10181 1004 Baithar 
+11375	762		Muhammad	Ibraheem Kallur 	533459681	Kosakote		Kodagu		Badea		11267-Abdulla Dawood Kodlipet, 503027405			11375 - Muhammad Ibraheem Kallur  533459681  762  Kosakote 
+11274	377	3558	L.A.	Ibraheem Kareem 	507349056	Kodlipet		Kodagu		Manfooha		11267-Abdulla Dawood Kodlipet, 503027405			11274 - L.A. Ibraheem Kareem  507349056  377 3558 Kodlipet 
+220201			ABBAS KALLAKATTA	IBRAHIM	0502574275		2332943832			MALAZ	04-Jan-85	07252-Abdullah K.P, 503614377		9663427002	220201 - ABBAS KALLAKATTA IBRAHIM 0502574275     2332943832
+19059			Abdul Khader	Ibrahim	543182625	Pane Mangalore	2244525248	Pane Mangalore	543182625		27-Nov-65	07120-Mohammed Asif Kannur , 506991416			19059 - Abdul Khader Ibrahim 543182625    Pane Mangalore 2244525248
+19096			Fayaz	Ibrahim	549582159	Uppinangadi	2306321916	Uppinangadi	549582159	Riyadh	03-Apr-79	11598-Mohammed Imran, 580241655		549582159	19096 - Fayaz Ibrahim 549582159    Uppinangadi 2306321916
+18065	13001		IRFAN DERLAP	IBRAHIM	508193325	GADIYAR	2346948819	MAANI KODAJE		BATHA	14-May-89	07122 - Shamshudin Addor - 541204731		8904797707	18065 - IRFAN DERLAP IBRAHIM 508193325  13001  GADIYAR 2346948819
+17974	13212		Ismail	Ibrahim	531820982				531820982	Ummal Hammam	20-Jul-80	07251-Yusuf Adoor  Nadugudde, 562906572			17974 - Ismail Ibrahim 531820982  13212   
+18052	12963		T Ismail	Ibrahim	532062966	B C Road	2448347662	B C Road			05-Aug-70	11548-Abdul Razzak Machar, 593870965			18052 - T Ismail Ibrahim 532062966  12963  B C Road 2448347662
+19094			Abdul Hakim	Ibrahim Addoor	561292672	Addoor	2333130207	Addoor	561292672		01-Jan-88	07122 - Shamshudin Addor - 541204731		8197575613	19094 - Abdul Hakim Ibrahim Addoor 561292672    Addoor 2333130207
+17985	13576		Mohammad  Iqbal	Ibrahim Beary	542952617	Manchi	2284603707	Manchi		Batha		16846-Abdbaker Irfan sheikhmale, 560690644	J5985631	919449468839	17985 - Mohammad  Iqbal Ibrahim Beary 542952617  13576  Manchi 2284603707
+11521	10151		Samiulla	Ibrahim Dadu Zakriya	592887621	Virajpete		Coorg		Batha		Rahim Airport			11521 - Samiulla Ibrahim Dadu Zakriya 592887621  10151  Virajpete 
+11353	1041		Kanaraje	Ibrahim Hussain 	541328307	Thekkar		Uppinangadi		Haraj		11307-Haider Sarali Katte, 597622507			11353 - Kanaraje Ibrahim Hussain  541328307  1041  Thekkar 
+7216		1521	Mohammad	Ibrahim Kalandar 	501016932	Shirva		Udupi		Un Known		DKMO_Regroup			7216 - Mohammad Ibrahim Kalandar  501016932   1521 Shirva 
+11315	355		Palike	Ibrahim Ummar 	546491066	Kodaje		Mani	509369561	Haraj		07117-Abbas Mani, 530789678			11315 - Palike Ibrahim Ummar  546491066  355  Kodaje 
+11271	406		Thanneerbavi	Ibrahim Ummar 	541667371	Krishnapura		Katipalla		Batha		Ismail Katipalla			11271 - Thanneerbavi Ibrahim Ummar  541667371  406  Krishnapura 
+11362	1013		Elenthila	Iddinabba  	551396852	Jogibettu		Belthangady		Batha		11350-Yusuf Kalanjibail, 536581427			11362 - Elenthila Iddinabba   551396852  1013  Jogibettu 
+17976	13210		Ibrahim Panemangalore	Iddinabba	551352760	Panemangalore		Panemangalore			20-Jul-71	11380-Shafe Thodar  , 541937996			17976 - Ibrahim Panemangalore Iddinabba 551352760  13210  Panemangalore 
+7243		3775	Naringana	Iddinabba Ibrahim 	561603446	Manjanady		Manjanady		Un Known		07101-Abdul Azeez Bajpe, 503271851			7243 - Naringana Iddinabba Ibrahim  561603446   3775 Manjanady 
+18047	13130		abdul khader	iddya	506202481	Surathkal	2170798157			batha	11-Feb-60	15681-Mohammed Ashraf Kozi Khan, 564671735			18047 - abdul khader iddya 506202481  13130  Surathkal 2170798157
+18081	13169		MAHAMMED ASHRAF	IDINABBA	543638618	KANNANGAR	2399104955	HEJAMADY		JAZAN	11-Jan-89	17950-Abdul Latheef Gurpur, 531962567		9972093567	18081 - MAHAMMED ASHRAF IDINABBA 543638618  13169  KANNANGAR 2399104955
+16813	12451		Hassan	Idrees	562351251					Madina		15681-Mohammed Ashraf Kozi Khan, 564671735			16813 - Hassan Idrees 562351251  12451   
+11522	10152		Dadmiyan	Idris Ayub 		Virajpete		Coorg		Batha		Rahim Airport			11522 - Dadmiyan Idris Ayub    10152  Virajpete 
+19034	19034		Mohammed Iqbal	Ikku Jokatte	594055724	Jokatte	2281997383			Jubail		11288-Moahmmed Ali  Jokatte, 502149417			19034 - Mohammed Iqbal Ikku Jokatte 594055724  19034  Jokatte 2281997383
+19095			Mohammad	Ilyas Addoor	559709320	Addoor	2470860012	Addoor	559709320	Batha	25-Jun-89	07122 - Shamshudin Addor - 541204731		9481023446	19095 - Mohammad Ilyas Addoor 559709320    Addoor 2470860012
+7175	904		Mohammed	Ilyas Gulwadi 	590620548	Un Known				Un Known		Imtiyaz ahmed kundapur			7175 - Mohammed Ilyas Gulwadi  590620548  904  Un Known 
+16829	12476		Arif	Imran	53437789		2339668226					DKMO_Regroup			16829 - Arif Imran 53437789  12476   2339668226
+11554	10126		Mohammed	Imran  	562804476	Krishnapura		7Th Block Krishnapura		Un Known		ISMAIL BANTWAL			11554 - Mohammed Imran   562804476  10126  Krishnapura 
+11598	11779		Mohammed	Imran	580241655	Aldur		Chikkamagalore		Batha		11313-Ghani Ahmed  , 509125443			11598 - Mohammed Imran 580241655  11779  Aldur 
+19085			Mohammed	Imran	559231584	Tumkur	2294624255	Tumkur	559231584	Olaya	14-Jul-84	17952-Nayaz ahammad, 509862283	M6260618	7022195240	19085 - Mohammed Imran 559231584    Tumkur 2294624255
+211004			MOHAMMED HANEEF	IMRAN	556987042	MADOOR	2395610898			MALAZ	25-Jul-91	07252-Abdullah K.P, 503614377		9611160870	211004 - MOHAMMED HANEEF IMRAN 556987042    MADOOR 2395610898
+18071	13055		Fabeen	Imthiyaz	564975498	Chokabettu	2232369146	Krishnapura	564975498	Malaz		07262-Salman Noor  Hasan, 500602458			18071 - Fabeen Imthiyaz 564975498  13055  Chokabettu 2232369146
+11299	1281		Mohammed	Imthiyaz  	542453857	Mangalpete		Katipalla		Un Known		07101-Abdul Azeez Bajpe, 503271851			11299 - Mohammed Imthiyaz   542453857  1281  Mangalpete 
+7131			Kothoor	Imtiyaz	55	Un Known				Un Known		07131-Kothoor Imtiyaz, 55			7131 - Kothoor Imtiyaz 55    Un Known 
+19030			Abdul Hameed	Inthi Jokatte	537423003	Jokatte	2325037295	Jokatte	537423003	Jubail		11288-Moahmmed Ali  Jokatte, 502149417		9964162652	19030 - Abdul Hameed Inthi Jokatte 537423003    Jokatte 2325037295
+211007			KOPPALA MOHAMMED	INTHIYAZ	509052687	FARANGIPETE						07120-Mohammed Asif Kannur , 506991416			211007 - KOPPALA MOHAMMED INTHIYAZ 509052687    FARANGIPETE 
+17948	11611		Mohammed Asif	Iqbal	537466005	Bambila	2329131359	Vogga	537466005	Durma	22-May-81	11548-Abdul Razzak Machar, 593870965	R23662329	9900548245	17948 - Mohammed Asif Iqbal 537466005  11611  Bambila 2329131359
+7166	11479		Mahammed	Iqbal Addur 	508030788	Addoor				Batha		DKMO_Regroup			7166 - Mahammed Iqbal Addur  508030788  11479  Addoor 
+11292	753		Mohammed	Iqbal Ahmed 	501820872	Attawar		Mangaluru		Rabwa		Irshad			11292 - Mohammed Iqbal Ahmed  501820872  753  Attawar 
+11466		2966	Mohammed	Iqbal Ahmed 	501820872	Attawar		Mangaluru	501820872	Un Known		Nazeer Ahmed			11466 - Mohammed Iqbal Ahmed  501820872   2966 Attawar 
+15701	11463		Asif 	Iqbal K	5066492683		2150752646				28-Jan-76	DKMO_Regroup			15701 - Asif  Iqbal K 5066492683  11463   2150752646
+11480		5051	Mohammad	Iqbal Malali Aboobakker	556660795	Malali		Mangaluru		Malaz		11281-Abdul Irshad Moidin , 502026155			11480 - Mohammad Iqbal Malali Aboobakker 556660795   5051 Malali 
+11339	214		Parvez	Iqbal Mohammed 	564149605	Jeppu		Mangaluru		Malaz		Rafi A. Ali			11339 - Parvez Iqbal Mohammed  564149605  214  Jeppu 
+7192	1073	1816	Hasith	Iqbal Razak 	559354786	Chokkabettu		Surathkal		Un Known		11380-Shafe Thodar  , 541937996			7192 - Hasith Iqbal Razak  559354786  1073 1816 Chokkabettu 
+11316	356		Mohammed	Iqbal Ummer 	567647602	Kodaje		Mani		Badea		07117-Abbas Mani, 530789678			11316 - Mohammed Iqbal Ummer  567647602  356  Kodaje 
+17967	13228		Mohammed	Irfan	5933335144	Alangar	2437032523	Moodadidri	5933335144	Sulay	26-May-91	07251-Yusuf Adoor  Nadugudde, 562906572		9945404426	17967 - Mohammed Irfan 5933335144  13228  Alangar 2437032523
+19048			Mohammed	Irfan	545932284	Aldur	2435777392	Chickmagalur	545932284	Gurabi	17-Oct-89	07112-Fazlu Rahman  , 502260256		998628550	19048 - Mohammed Irfan 545932284    Aldur 2435777392
+19075			Kalandar	Irshad	550250467							11435-Abdul Basheer  T.K. Talapadi, 566384950			19075 - Kalandar Irshad 550250467     
+16857	288		Mohammas	Irshad Abdulla	554717997		2323406658				30-Dec-89	07252-Abdullah K.P, 503614377		9945229413	16857 - Mohammas Irshad Abdulla 554717997  288   2323406658
+11281	751		Abdul	Irshad Moidin 	502026155	Bajpe		Bajpe		Rabwa					11281 - Abdul Irshad Moidin  502026155  751  Bajpe 
+11455	1728		Mohammed	Isak Musthafa 	550321243	Ullal		Kumpala		Alkhobar		15731-Abubakkar Siddiq, 544435133			11455 - Mohammed Isak Musthafa  550321243  1728  Ullal 
+19020	19020		MITHUR ADAM	ISHAK	566569978	Mithur	2236185068	Mithur	566569978	BATHA	02-Mar-66	11350-Yusuf Kalanjibail, 536581427	M8515817	566569978	19020 - MITHUR ADAM ISHAK 566569978  19020  Mithur 2236185068
+18046	12465		ABDUL HAMEED	ISMAIL	548883714	Kankanady	2031212307		540309095	AZIZIYA	06-Jul-1948	15681-Mohammed Ashraf Kozi Khan, 564671735	H3122658	7338318743	18046 - ABDUL HAMEED ISMAIL 548883714  12465  Kankanady 2031212307
+7221		2410	Hasanabba	Ismail  	502165293	Kaup		Udupi	553587566	Un Known		DKMO_Regroup			7221 - Hasanabba Ismail   502165293   2410 Kaup 
+19073			Junaid	Ismail	547234090			547234090	547234090			07101-Abdul Azeez Bajpe, 503271851		547234090	19073 - Junaid Ismail 547234090     
+15672	11561		Mohammad	Ismail	534847913	bander	2118075197	Bundar		Hara	05-Aug-63	11313-Ghani Ahmed  , 509125443			15672 - Mohammad Ismail 534847913  11561  bander 2118075197
+16826	12477		Mohammad	Ismail	509407464							07262-Salman Noor  Hasan, 500602458			16826 - Mohammad Ismail 509407464  12477   
+19064			Moideen Kunhi	Ismail	507282366	Bantwal		Mithnadka	507282366	Exit 10	14-Jul-90	11435-Abdul Basheer  T.K. Talapadi, 566384950		9483286574	19064 - Moideen Kunhi Ismail 507282366    Bantwal 
+11557	10382		Rahmathullah	Ismail  	566802100	Ullal		Mangaluru		Batha		SAMIULLAH KHAN			11557 - Rahmathullah Ismail   566802100  10382  Ullal 
+7233		3004	K.A.	Ismail Aboobakkar Kannangar	502259312	Kannangar		Kannangar		Un Known		07112-Fazlu Rahman  , 502260256			7233 - K.A. Ismail Aboobakkar Kannangar 502259312   3004 Kannangar 
+11386	1379	1813	Mohammed	Ismail Hasanabba 	536564159	Thodar	2392985947	Mijaru		Buraida, Qassim		11380-Shafe Thodar  , 541937996			11386 - Mohammed Ismail Hasanabba  536564159  1379 1813 Thodar 2392985947
+11540	10179		Mohammed	Ismail Kudel 	592362131	Puttila				Un Known		DKMO_Regroup			11540 - Mohammed Ismail Kudel  592362131  10179  Puttila 
+7209	9951	12279	Abbas	Ismail Mohammad 	503987231	Montepadavu	2200635312	Montepadavu		Batha		07113-Ismail Montepadavu, 509173592			7209 - Abbas Ismail Mohammad  503987231  9951 12279 Montepadavu 2200635312
+7146	1063	1854	Mohammed	Ismail Shirva 	500868359	Shirva		Udupi		Un Known		DKMO_Regroup			7146 - Mohammed Ismail Shirva  500868359  1063 1854 Shirva 
+17988	13218		Riyaz	Ismail Zaigadkar	502641120	Shiruru	2301107228	Shiruru				07112-Fazlu Rahman  , 502260256			17988 - Riyaz Ismail Zaigadkar 502641120  13218  Shiruru 2301107228
+18017	13057		Izaz Ismail	Izaz	556413719	Katipalla	2308575535	Katipalla	556413719		19-May-90	15681-Mohammed Ashraf Kozi Khan, 564671735	H1097118		18017 - Izaz Ismail Izaz 556413719  13057  Katipalla 2308575535
+11503	283		Mohammad	Jafar  	508175375	Ullal		Ullal		Batha		07252-Abdullah K.P, 503614377			11503 - Mohammad Jafar   508175375  283  Ullal 
+19087			Nasir Hussain	Jailer Gurukambla	502267584	Kaikamba Gurukambla	2337943126	Gurukambla	502267584			17952-Nayaz ahammad, 509862283		502267584	19087 - Nasir Hussain Jailer Gurukambla 502267584    Kaikamba Gurukambla 2337943126
+201019			Imtiyaz Ahmed	Jailor	502520982	Gurukambla	2332632518	Gurukambla	502520982			17952-Nayaz ahammad, 509862283			201019 - Imtiyaz Ahmed Jailor 502520982    Gurukambla 2332632518
+17928	13378		Abdul	Jalaeel	572720346		2289703924	Yedapadavu			01-Jul-88	11307-Haider Sarali Katte, 597622507		9900418131	17928 - Abdul Jalaeel 572720346  13378   2289703924
+11438	1436		Athoor	Jaleel  	559906048	Uppinangadi		Uppinangadi		Un Known		11404-Abdulrahman Sulaiman  , 559906048			11438 - Athoor Jaleel   559906048  1436  Uppinangadi 
+210803			Kalanjibail Puthila	Jaleel	506170386	Kalanjibail	2330584372	Puthila	506170386	Athika	06-Oct-86	11350-Yusuf Kalanjibail, 536581427		8971600442	210803 - Kalanjibail Puthila Jaleel 506170386    Kalanjibail 2330584372
+18092	13170		Mohammad Fahad	Jaleel	595162750	Kinni Kambla			595162750			11313-Ghani Ahmed  , 509125443			18092 - Mohammad Fahad Jaleel 595162750  13170  Kinni Kambla 
+11604	12031		Ibrahim	Jaleel  (Malabar)	500287501	Jokatte		Jokatte		Batha		11288-Moahmmed Ali  Jokatte, 502149417			11604 - Ibrahim Jaleel  (Malabar) 500287501  12031  Jokatte 
+11461		2951	Abdul	Jaleel Pejavar 	509463324	Karkala				Un Known		Nazeer Ahmed			11461 - Abdul Jaleel Pejavar  509463324   2951 Karkala 
+11396	1388	1822	Thodar	Jamal Hussain 	509773975	Thodar		Mijaru		Bukhariya, Altaif		11380-Shafe Thodar  , 541937996			11396 - Thodar Jamal Hussain  509773975  1388 1822 Thodar 
+16860	10015		Mohammad	Jamaluddin	501080405		2155404029					11380-Shafe Thodar  , 541937996			16860 - Mohammad Jamaluddin 501080405  10015   2155404029
+201007			Mohammed	Jameer	594945199	Balehonnur	2417320468	Balehonnur	594945199	Dammam	24-May-77	17952-Nayaz ahammad, 509862283			201007 - Mohammed Jameer 594945199    Balehonnur 2417320468
+220203			MOHAMMED ADEEB	JARRAR	0566299269		2480859855			BATHA	01-Dec-95	15681-Mohammed Ashraf Kozi Khan, 564671735			220203 - MOHAMMED ADEEB JARRAR 0566299269     2480859855
+7182		1351	Mohammed	Jawad Sheikh 	502461915	Kundapur		Kundapura		Un Known		Imtiyaz ahmed kundapur			7182 - Mohammed Jawad Sheikh  502461915   1351 Kundapur 
+18069	13107		Mohammed	Jawhad	580407537	Basrur	2204042010		580407537	Sanayya	01-Jan-79	07112-Fazlu Rahman  , 502260256			18069 - Mohammed Jawhad 580407537  13107  Basrur 2204042010
+11364	1017		Shekabba	Jogibettu  	564289118	Jogibettu		Belthangady		Olaya		11350-Yusuf Kalanjibail, 536581427			11364 - Shekabba Jogibettu   564289118  1017  Jogibettu 
+16841	10012		Hassanba	Jokakkate	537336786	Jokatte	2306641727	jokatte		Batha	01-Jun-77	11380-Shafe Thodar  , 541937996		8050759480	16841 - Hassanba Jokakkate 537336786  10012  Jokatte 2306641727
+11288	251		Moahmmed Ali 	Jokatte	502149417	Jokatte		Jokatte		Batha		11288-Moahmmed Ali  Jokatte, 502149417			11288 - Moahmmed Ali  Jokatte 502149417  251  Jokatte 
+19033	19033		Mohammed Salahuddin	Jokatte	555941425	Jokate	2230682037	Jokatte	555941425	Jubail		11288-Moahmmed Ali  Jokatte, 502149417		9535628805	19033 - Mohammed Salahuddin Jokatte 555941425  19033  Jokate 2230682037
+19027	19027		Mohammed Sharafullah	Jokatte	554936165	Jokatte	2301832842		554936165	Jubail	01-Jun-72	11288-Moahmmed Ali  Jokatte, 502149417		7204303055	19027 - Mohammed Sharafullah Jokatte 554936165  19027  Jokatte 2301832842
+15698	11460	5773	Moideen	Jokatte	503604969	Jokatte	2101710958		-	Batha	18-Jul-66	DKMO_Regroup			15698 - Moideen Jokatte 503604969  11460 5773 Jokatte 2101710958
+17958	13227		Mohammed Shihab	K	587935458	Poice line	2422005872	Pandeshwara		Hara		07262-Salman Noor  Hasan, 500602458		9844517948	17958 - Mohammed Shihab K 587935458  13227  Poice line 2422005872
+210903			Badrul Muneer	K. S.	537887384	Kotekar	2319904161	Kotekar	537887384	Sara  Rail	04-Sep-88	07252-Abdullah K.P, 503614377		8971489435	210903 - Badrul Muneer K. S. 537887384    Kotekar 2319904161
+7252		8526	Abdullah	K.P	503614377	Mairikkala		Montepadavu		Batha		07252-Abdullah K.P, 503614377			7252 - Abdullah K.P 503614377   8526 Mairikkala 
+11371	129		Hatim	K.T. Hassan 	509115879	Suralpady		Suralpady		Iskan Dabbab		Khader Suralpady			11371 - Hatim K.T. Hassan  509115879  129  Suralpady 
+17907	11445		Zubair	Kabaka	506252257		2377795097		506252257		28-Feb-80	11313-Ghani Ahmed  , 509125443	G3686581		17907 - Zubair Kabaka 506252257  11445   2377795097
+11564	10133		Ahmed	Kabeer  	544679186	Kotepura		Ullal		Un Known		ISMAIL BANTWAL			11564 - Ahmed Kabeer   544679186  10133  Kotepura 
+7154	11485		Athoor	Kabeer Ismail 	509055712	Puttur				Deerah		DKMO_Regroup			7154 - Athoor Kabeer Ismail  509055712  11485  Puttur 
+11348	252		Usman	Kademane  	548015797	Jokatte		Jokatte		Batha		11288-Moahmmed Ali  Jokatte, 502149417			11348 - Usman Kademane   548015797  252  Jokatte 
+15707	11473		Liyakath Bengre	Kadirmiran	556578560		2234737779			Malaz	14-Mar-83	DKMO_Regroup		9900404607	15707 - Liyakath Bengre Kadirmiran 556578560  11473   2234737779
+16883	12956		Ashraf	Kadlemakki	507862069	ujire	2306629359	ujire	507862069		26-Jan-74	11548-Abdul Razzak Machar, 593870965		9980044290	16883 - Ashraf Kadlemakki 507862069  12956  ujire 2306629359
+7130		2858	Ahmed Usman 	Kaikamba	508290998	Bailpete		Kinnikambla		Batha		07130-Ahmed Usman  Kaikamba, 508290998			7130 - Ahmed Usman  Kaikamba 508290998   2858 Bailpete 
+18023	1329		Naushad	Kaikamba	539389663	Bailpete	2398232534				04-May-94	07122 - Shamshudin Addor - 541204731			18023 - Naushad Kaikamba 539389663  1329  Bailpete 2398232534
+15621	11510		Dawood	Kajamaar	502389677	Uppinangadi		Moorgoli		Shifa		11350-Yusuf Kalanjibail, 536581427			15621 - Dawood Kajamaar 502389677  11510  Uppinangadi 
+11620	6095		Abdulla	Kakadan	545824637	Kudagu		Perambali		Un Known		11350-Yusuf Kalanjibail, 536581427			11620 - Abdulla Kakadan 545824637  6095  Kudagu 
+17923	11884		Dr.Zaheer	Kala	564729012		2319481947				25-Apr-79	07112-Fazlu Rahman  , 502260256		9535750321	17923 - Dr.Zaheer Kala 564729012  11884   2319481947
+18064	10274		MOHAMED SHAMEER	KALAI	570182039	KALAI	2275739213	TALIPADI KALAI		BATHA	16-Dec-76	07122 - Shamshudin Addor - 541204731		9591442172	18064 - MOHAMED SHAMEER KALAI 570182039  10274  KALAI 2275739213
+11432	1390	1853	Nazeer	Kalai  	558871142	Thodar		Mijaru		Shifa		11380-Shafe Thodar  , 541937996			11432 - Nazeer Kalai   558871142  1390 1853 Thodar 
+11596			Mohammed	Kalandar  	532611858	Panemangalore		Pane Mangalore		Un Known		07102-Yusuf Hyder (Saqafi Baithar) , 500326356			11596 - Mohammed Kalandar   532611858    Panemangalore 
+19022	11610		Mohammad Muneer	Kalanjibail	502273689	Putthila		Kalanjibail	592137948	Yamama		11350-Yusuf Kalanjibail, 536581427			19022 - Mohammad Muneer Kalanjibail 502273689  11610  Putthila 
+210603	210603		Siddiq	Kalanjibail	551913384	Kalanjibail	2267962245	Kalanjibail	551913384		01-Mar-86	07120-Mohammed Asif Kannur , 506991416	S7743236	7760491362	210603 - Siddiq Kalanjibail 551913384  210603  Kalanjibail 2267962245
+11350	1014		Yusuf	Kalanjibail	536581427	Kalangibail		Belthangady		Shifa		11350-Yusuf Kalanjibail, 536581427			11350 - Yusuf Kalanjibail 536581427  1014  Kalangibail 
+15717	11793		Mohammad Aswad	Kaleem	530809166	Chikkamagalore	2271231272	Chikka mangalore		Hara	09-May-77	11313-Ghani Ahmed  , 509125443		9901435681	15717 - Mohammad Aswad Kaleem 530809166  11793  Chikkamagalore 2271231272
+200802			Mohammed Shabeer Hameed	Kamaje	557463401	Kamae Bantwal	2475953960	Mooda Bantwal	557463401	Exit 2 Hittin	18-Aug-94	11313-Ghani Ahmed  , 509125443	M3254003	9663630559	200802 - Mohammed Shabeer Hameed Kamaje 557463401    Kamae Bantwal 2475953960
+210904			Musthafa	Kamal	505622114	Mangalore	2025390242		505622114	Jeddah	27-Oct-79	15681-Mohammed Ashraf Kozi Khan, 564671735	U0998869	9845082161	210904 - Musthafa Kamal 505622114    Mangalore 2025390242
+11460	1395	4752	Siraj	Kamal Badruddin 	559766043	Bardila Jamath		Attawar		Batha		11380-Shafe Thodar  , 541937996			11460 - Siraj Kamal Badruddin  559766043  1395 4752 Bardila Jamath 
+11502	282		Aboobakar	Kamaluddin Ullal 	500239404	Ullal		Ullal		Batha		07252-Abdullah K.P, 503614377			11502 - Aboobakar Kamaluddin Ullal  500239404  282  Ullal 
+16839	12334		Mohammad	Kana	532793386							07101-Abdul Azeez Bajpe, 503271851		7899495637	16839 - Mohammad Kana 532793386  12334   
+11377	1050		Thekkar	Kanaraj Abubakkar Siddiq	544107971	Saralikatte		Thekkar	532648856	Haraj		11307-Haider Sarali Katte, 597622507			11377 - Thekkar Kanaraj Abubakkar Siddiq 544107971  1050  Saralikatte 
+11282	601	3359	Habib	Kandak  	534401301	Un Known				Jeddah		07105-Abbas Uchil  , 502124007			11282 - Habib Kandak   534401301  601 3359 Un Known 
+15715	11572		Nasrulla	Kandlur	571623256	Kandulur	2363798741	Kandulur		Old Sannaya		07112-Fazlu Rahman  , 502260256		9632957134	15715 - Nasrulla Kandlur 571623256  11572  Kandulur 2363798741
+15738	12258		Aboobakkar	Kannangar	556115083	Kannangar	2314633104	Kannangar			29-Aug-85	DKMO_Regroup			15738 - Aboobakkar Kannangar 556115083  12258  Kannangar 2314633104
+18009	13202		Haroon Rashhed	Kannur	556491864		2203716820				02-Feb-76	07120-Mohammed Asif Kannur , 506991416	P0056286		18009 - Haroon Rashhed Kannur 556491864  13202   2203716820
+18034	13232		Jahfar Sadik	kannur	562594112	Kannur	2319506644		562594112			07120-Mohammed Asif Kannur , 506991416			18034 - Jahfar Sadik kannur 562594112  13232  Kannur 2319506644
+19108			Mohammed Soofi	Kanyadi	539235728				539235728			11548-Abdul Razzak Machar, 593870965			19108 - Mohammed Soofi Kanyadi 539235728     
+17885	11656		Abdul	Kareem	505487368		2425204266				01-Aug-78	11307-Haider Sarali Katte, 597622507	4688995	9902336823	17885 - Abdul Kareem 505487368  11656   2425204266
+11427	1467		Abdul	Karim Abdul Khader	507806136	Moolur Uchila				Dammam		11403 - Eliyas Moideen Yermal  - 502112459			11427 - Abdul Karim Abdul Khader 507806136  1467  Moolur Uchila 
+11400	786		Rahiman	Karnad  	559903469	Kandathpalli		Mangaluru		Euromarche		11404-Abdulrahman Sulaiman  , 559906048			11400 - Rahiman Karnad   559903469  786  Kandathpalli 
+19093			Abdul Aziz	Katipalla	543470627	Katipalla	2221219757	Katipalla	593106050	Riyadh		07101-Abdul Azeez Bajpe, 503271851		543470627	19093 - Abdul Aziz Katipalla 543470627    Katipalla 2221219757
+18030	1344		B Mohammed Shareef	Katipalla	592862419	Krishnapura	2175256508	Katipalla	592862419	Batha		15681-Mohammed Ashraf Kozi Khan, 564671735		9880365293	18030 - B Mohammed Shareef Katipalla 592862419  1344  Krishnapura 2175256508
+15743			Shabbir	Katipalla	502870313	Katipalla		Katipalla				DKMO_Regroup			15743 - Shabbir Katipalla 502870313    Katipalla 
+18102	13142		Shabir Ahmed	Katipalla	536840688	Katipalla	2237458597	Katipalla	536840688	Sulay	01-Jun-69	07251-Yusuf Adoor  Nadugudde, 562906572			18102 - Shabir Ahmed Katipalla 536840688  13142  Katipalla 2237458597
+19100			Sulaiman	Katipalla	594983343	Katipalla	233761183	Katipalla	594983343		19-Feb-74	07251-Yusuf Adoor  Nadugudde, 562906572			19100 - Sulaiman Katipalla 594983343    Katipalla 233761183
+18044	13610		ABDUL RAVOOF	KATTATHILA MOHAMMAD	551211311	BELMA	2377985417			BADIA	06-Apr-88	07117-Abbas Mani, 530789678			18044 - ABDUL RAVOOF KATTATHILA MOHAMMAD 551211311  13610  BELMA 2377985417
+11519	256		Aslam	Kausar  	543017274	Katipalla		Katipalla		Malaz		Khader Suralpady			11519 - Aslam Kausar   543017274  256  Katipalla 
+16819	12044		Hasanbba Bawa	Kavoor	509066681	kavoor	2111764813			Jeddha	23-Apr-68	11288-Moahmmed Ali  Jokatte, 502149417	E3969476	9538192373	16819 - Hasanbba Bawa Kavoor 509066681  12044  kavoor 2111764813
+7242		3583	Abdul	Kayum Kallumanti 	506190323	Hosakate		Kodagu		Un Known		DKMO_Regroup			7242 - Abdul Kayum Kallumanti  506190323   3583 Hosakate 
+18063	10271		KELAGIN MANSOOR	KE MOHAMMED	571894443	ADDOOR	2290994546	ADDOOR		BATHA	01-Dec-86	07122 - Shamshudin Addor - 541204731		9743470348	18063 - KELAGIN MANSOOR KE MOHAMMED 571894443  10271  ADDOOR 2290994546
+17970	13231		Miideen Kunhi	Kedakar	530340256	Poyyathabail	2252780347	Darmanagar		Batha	03-Apr-77	07101-Abdul Azeez Bajpe, 503271851		9447491424	17970 - Miideen Kunhi Kedakar 530340256  13231  Poyyathabail 2252780347
+7206	907		Mustafa	Kelanjibail  	598253313	Un Known				Un Known		DKMO_Regroup			7206 - Mustafa Kelanjibail   598253313  907  Un Known 
+11332	1036		Haneef	Kemmara  	536365453	Kemmara		Puttur		Haraj		07117-Abbas Mani, 530789678			11332 - Haneef Kemmara   536365453  1036  Kemmara 
+11389	1381		Ismail	Kerem Ulaah Moidinabba	567104407	Salmara		Puttur		Jeddah		11380-Shafe Thodar  , 541937996			11389 - Ismail Kerem Ulaah Moidinabba 567104407  1381  Salmara 
+17992	13221		Mohammed Shafi	Kewka	504737954	Shiruru	2291084479				01-Jun-71	07112-Fazlu Rahman  , 502260256	R2371669	918095755279	17992 - Mohammed Shafi Kewka 504737954  13221  Shiruru 2291084479
+11320	1026		Abdul	Khader  	507904210	Permude		Permude		Manfooha		11307-Haider Sarali Katte, 597622507			11320 - Abdul Khader   507904210  1026  Permude 
+11372	130	2259	Abdul	Khader  	556429686	Suralpady		Suralpady		Un Known		DKMO_Regroup			11372 - Abdul Khader   556429686  130 2259 Suralpady 
+201003			Mohammad Naufal	Khader Chettygudde	594957871	Mallur	2442554156	Mallur	594957871	Buraida	01-Jun-86	07122 - Shamshudin Addor - 541204731		8050824791	201003 - Mohammad Naufal Khader Chettygudde 594957871    Mallur 2442554156
+7215		1519	Abdul	Khader Hydrose 	502259493	Baithar		Harekala	542837186	Un Known		DKMO_Regroup			7215 - Abdul Khader Hydrose  502259493   1519 Baithar 
+11603	10002	1830	Abdul	Khader Iddya 	545290330	Surathkal		Surathkal		Un Known		11380-Shafe Thodar  , 541937996			11603 - Abdul Khader Iddya  545290330  10002 1830 Surathkal 
+11576	10251		Abdul	Khader Ismail 	507650423	krishnapura  7th block		krishnapura  7th block		Batha		07122 - Shamshudin Addor - 541204731			11576 - Abdul Khader Ismail  507650423  10251  krishnapura  7th block 
+11505	906		Abdul	Khader Mangalore 		Hejamady		Hejamady		Un Known		Imtiyaz ahmed kundapur			11505 - Abdul Khader Mangalore    906  Hejamady 
+11426	1466		Abdul	Khader Shaban 	502896420	Moolur Uchila				Al-Jubail		11403 - Eliyas Moideen Yermal  - 502112459			11426 - Abdul Khader Shaban  502896420  1466  Moolur Uchila 
+7255			Mohammed	Khalander  	537280159	Un Known				Un Known		DKMO_Regroup			7255 - Mohammed Khalander   537280159    Un Known 
+201023			Mohammed	Khaleel	571935723	Karkala Bailoor	2120814054	Karkala Bailoor	571935723			17952-Nayaz ahammad, 509862283			201023 - Mohammed Khaleel 571935723    Karkala Bailoor 2120814054
+210805			Kanchi Mohammed	Khalid	504403109	Bajpe	2126983531	Bajpe	504403109	Ummul Hammam	03-Nov-77	11281-Abdul Irshad Moidin , 502026155			210805 - Kanchi Mohammed Khalid 504403109    Bajpe 2126983531
+17894	11659		Ahmed	Khalid MK	534540938	Somawarapet	2374955033		918277424373			11307-Haider Sarali Katte, 597622507	K2097858		17894 - Ahmed Khalid MK 534540938  11659  Somawarapet 2374955033
+201008			Mubeen Ummer	Khan	559461331	Gurukambal	2486326784	Kaikamba	559461331	Dammam	05-Dec-82	17952-Nayaz ahammad, 509862283			201008 - Mubeen Ummer Khan 559461331    Gurukambal 2486326784
+16838	12331		Rasheed	Khan	530046458							07112-Fazlu Rahman  , 502260256			16838 - Rasheed Khan 530046458  12331   
+7245		3922	Samiullah	Khan  	536605631	Belthangady		Belthangady		exit 5		07112-Fazlu Rahman  , 502260256			7245 - Samiullah Khan   536605631   3922 Belthangady 
+19098			Mohammed Akbar	Khan Bangalore	503426107	Bangalore	2180113603	Bangalore	503426107	Riyadh	03-Oct-176	07101-Abdul Azeez Bajpe, 503271851			19098 - Mohammed Akbar Khan Bangalore 503426107    Bangalore 2180113603
+11532	1438		Amjad	Khan Polya 	501243758	Kabaka		Puttur		Dammam		11404-Abdulrahman Sulaiman  , 559906048			11532 - Amjad Khan Polya  501243758  1438  Kabaka 
+16871	11815		Basith	Khasim	509732852	Thekkar				Dhira	08-Feb-88	11307-Haider Sarali Katte, 597622507			16871 - Basith Khasim 509732852  11815  Thekkar 
+201027			Shawkath Hussain	Khazi	509365871	Brahmavar	2117255899	Honnala Brahmavar	509365871	Riyadh	01-Jul-69	17952-Nayaz ahammad, 509862283			201027 - Shawkath Hussain Khazi 509365871    Brahmavar 2117255899
+11588	11315		Saifuddin	Kirimanjeshwar  	508989225	Gangulli		Gangulli		Batha		07112-Fazlu Rahman  , 502260256			11588 - Saifuddin Kirimanjeshwar   508989225  11315  Gangulli 
+15652	11626		Abdul Razzak	KJ	593534786	jarige bail	2174398590	nala		sanayia	01-Jul-67	11350-Yusuf Kalanjibail, 536581427	J5518303	9449471433	15652 - Abdul Razzak KJ 593534786  11626  jarige bail 2174398590
+15674	11382		Abdul Basith	KM	583523999		2363165123					07101-Abdul Azeez Bajpe, 503271851			15674 - Abdul Basith KM 583523999  11382   2363165123
+16817	12038		Tajuddin	Kodaje (Malabar)	549755120				549755120			11288-Moahmmed Ali  Jokatte, 502149417			16817 - Tajuddin Kodaje (Malabar) 549755120  12038   
+11267	376	3581	Abdulla Dawood	Kodlipet	503027405	Kodlipet		Kodagu		Manfooha		11267-Abdulla Dawood Kodlipet, 503027405			11267 - Abdulla Dawood Kodlipet 503027405  376 3581 Kodlipet 
+211005			ILIYAS	KOLANGARE	554127746	TALAPADY	2276063100	TALAPADY			23-Jul-82	07252-Abdullah K.P, 503614377			211005 - ILIYAS KOLANGARE 554127746    TALAPADY 2276063100
+19088			Mohammed Siraz	Kolkar	553166221	Haikadi kundapur	2222240661	Haikadi Kundapur	553166221	Riyadh	01-Dec-78	07112-Fazlu Rahman  , 502260256		8494944630	19088 - Mohammed Siraz Kolkar 553166221    Haikadi kundapur 2222240661
+15640	1529		Mohammed Shaid 	Kolker	532767961	Udupi		Udupi		Deerah		07112-Fazlu Rahman  , 502260256			15640 - Mohammed Shaid  Kolker 532767961  1529  Udupi 
+17935	8784		Davood Beary	Korinja	559338418	Uruval Padav	2300076193	Uruval Padav		Hayyal Wadi	01-Jun-79	11307-Haider Sarali Katte, 597622507	K9714776	9740126018	17935 - Davood Beary Korinja 559338418  8784  Uruval Padav 2300076193
+17972	13233		Abdul Malik	Koteshwara	502541805		210740803		502541805		07-Jan-74	07112-Fazlu Rahman  , 502260256			17972 - Abdul Malik Koteshwara 502541805  13233   210740803
+15681	11514		Mohammed Ashraf	Kozi Khan	564671735	Bundar	2107646529	Bundar		Malaz	08-Mar-67	15681-Mohammed Ashraf Kozi Khan, 564671735			15681 - Mohammed Ashraf Kozi Khan 564671735  11514  Bundar 2107646529
+15747	12054		Basheer	Krishnapura	555314250	Chokkabettu			501009468			11404-Abdulrahman Sulaiman  , 559906048			15747 - Basheer Krishnapura 555314250  12054  Chokkabettu 
+7198			Ansar	Kudroli  	55	Kudroli		Mangaluru		Un Known		B. M. Ismail			7198 - Ansar Kudroli   55    Kudroli 
+19041	19041		Irshad Ahmed	Kudroli	504489949	Kudroli Jumma	2045108582	Kudroli	504489949	Nasriya		11313-Ghani Ahmed  , 509125443		9611805108	19041 - Irshad Ahmed Kudroli 504489949  19041  Kudroli Jumma 2045108582
+7128		1602	Abdul Hameed Nazeer 	Kulur	592114842	Kulur		Mangaluru		Un Known		07101-Abdul Azeez Bajpe, 503271851			7128 - Abdul Hameed Nazeer  Kulur 592114842   1602 Kulur 
+7126			Mohammed Haneef 	Kundapur	55	Un Known				Un Known		07126-Mohammed Haneef  Kundapur, 55			7126 - Mohammed Haneef  Kundapur 55    Un Known 
+15677	11554		Syed Imttiyaz	Kundapura	545195805	kannakere	2166588273	Kannakere			13-Jun-78	DKMO_Regroup		9986282318	15677 - Syed Imttiyaz Kundapura 545195805  11554  kannakere 2166588273
+15629	11553		Mohammed	Kundipa  		Adyandka		Bantwal		Un Known		07117-Abbas Mani, 530789678			15629 - Mohammed Kundipa     11553  Adyandka 
+17918	13403		Haris Ahmed	Kunhi	599044279		2324881552	Mudipu			10-Feb-91	07113-Ismail Montepadavu, 509173592		73306056	17918 - Haris Ahmed Kunhi 599044279  13403   2324881552
+15703	11465	4967	Ummar Guthige	Kunhippa	559902953	Yenmoor	2114758028	Yenmoor		Riyadh	30-Sep-70	DKMO_Regroup		8257275013	15703 - Ummar Guthige Kunhippa 559902953  11465 4967 Yenmoor 2114758028
+7247		3968	Raheem	Kunthoor  	564965266	Kuntoor		Kunthoor		Un Known		11270-Ibrahim Kuntoor, 533936347			7247 - Raheem Kunthoor   564965266   3968 Kuntoor 
+7246		3957	Siddik	Kunthoor  	563710991	Kuntoor		Kunthoor		Un Known		11270-Ibrahim Kuntoor, 533936347			7246 - Siddik Kunthoor   563710991   3957 Kuntoor 
+11270	1006		Ibrahim	Kuntoor	533936347	Kuntoor		Perabe		Shifa		07117-Abbas Mani, 530789678			11270 - Ibrahim Kuntoor 533936347  1006  Kuntoor 
+210102	13363		Abdul Salam	Kuttikala	542983016	Saralikatte	2312720598	Saralikatte	542983016	Dammam	01-Jun-77	11307-Haider Sarali Katte, 597622507	J3475936	991088635	210102 - Abdul Salam Kuttikala 542983016  13363  Saralikatte 2312720598
+17933	13392		Abdulla	Kuzi	534610961	Neerkaje	2346029390	Neerkaje		Burahida		07117-Abbas Mani, 530789678			17933 - Abdulla Kuzi 534610961  13392  Neerkaje 2346029390
+19104			Abdul hameed	Latheef	0500000000							11435-Abdul Basheer  T.K. Talapadi, 566384950			19104 - Abdul hameed Latheef 0500000000     
+7144	11486		Abdul	Latheef Dorme 	540495786	Jeppu				Batha		DKMO_Regroup			7144 - Abdul Latheef Dorme  540495786  11486  Jeppu 
+7111		1015	Abdul	Lathif Hassan Idris	506407396	Mangaluru		Mangaluru		Hara		Abdullathif Idris			7111 - Abdul Lathif Hassan Idris 506407396   1015 Mangaluru 
+11411	960		Shaikh	Latif Mohammed 	502291460	Yermal				Batha		11403 - Eliyas Moideen Yermal  - 502112459			11411 - Shaikh Latif Mohammed  502291460  960  Yermal 
+17929	11447		Iqbal	M	503269176	Ujire	2325861983	Ujire	573244795		01-Jul-82	11313-Ghani Ahmed  , 509125443		9964519539	17929 - Iqbal M 503269176  11447  Ujire 2325861983
+11468		2975	Kutti	M. Shamsuddin 	554686496	Hassan				Un Known		Nazeer Ahmed			11468 - Kutti M. Shamsuddin  554686496   2975 Hassan 
+11548	1425		Abdul Razzak	Machar	593870965	Machar		Belthangady		Batha		11307-Haider Sarali Katte, 597622507			11548 - Abdul Razzak Machar 593870965  1425  Machar 
+11333	381	8851	Ashraf	Madapur Ebrahim 	5033977921	Gudugalale		Shaniwarasante		Un Known		11267-Abdulla Dawood Kodlipet, 503027405			11333 - Ashraf Madapur Ebrahim  5033977921  381 8851 Gudugalale 
+18038	10266		MAHAMMAD	MAHAMMAD ABDUL	545611000	MELKAR	2388713832		545611000	BATHA	01-Jun-88	07122 - Shamshudin Addor - 541204731			18038 - MAHAMMAD MAHAMMAD ABDUL 545611000  10266  MELKAR 2388713832
+11402	788		Mallikatte	Mahammad Iqbal 	541274314	Pariyathadka				Un Known		Hameed Nazeer			11402 - Mallikatte Mahammad Iqbal  541274314  788  Pariyathadka 
+7159		1515	Thokur	Mahammad Shareef 	509650658	Thokur		Kunjathbail		Un Known		07124-G.K. Sheikabba  , 508102993			7159 - Thokur Mahammad Shareef  509650658   1515 Thokur 
+18080	13164		MOHAMMED	MAHER	569275672	MANGALORE	2433887979	HIGHLAND		MANFUHA	26-Sep-90	11313-Ghani Ahmed  , 509125443		9591892521	18080 - MOHAMMED MAHER 569275672  13164  MANGALORE 2433887979
+7138		1967	Mangalore	Mahfooz Ur Rahman	507405486	Mastikatte 		Ullal		Un Known		Haneef Panambur			7138 - Mangalore Mahfooz Ur Rahman 507405486   1967 Mastikatte  
+7226		2551	Mallige	Majal Ebrahim 	551060267	Kokkada		Puttur		Un Known		DKMO_Regroup			7226 - Mallige Majal Ebrahim  551060267   2551 Kokkada 
+17989	13216		Abdul	Majeed	557550523		2135561732	udupi		malaz	18-Jun-73	07112-Fazlu Rahman  , 502260256		917829109709	17989 - Abdul Majeed 557550523  13216   2135561732
+11412	962		Abdul	Majeed Padubidri Keri	509975209	Padubidri				Un Known		11403 - Eliyas Moideen Yermal  - 502112459			11412 - Abdul Majeed Padubidri Keri 509975209  962  Padubidri 
+16824	12481		Mohammad Ayaz	Majoor	535101069							07101-Abdul Azeez Bajpe, 503271851		9844076084	16824 - Mohammad Ayaz Majoor 535101069  12481   
+11422	1460		Meinuddin	Malik Hussein (Sameer)	543316962	Yermal				Un Known		11403 - Eliyas Moideen Yermal  - 502112459			11422 - Meinuddin Malik Hussein (Sameer) 543316962  1460  Yermal 
+16843	12059		Abdul Jaleel	Mallur	559906048							11404-Abdulrahman Sulaiman  , 559906048			16843 - Abdul Jaleel Mallur 559906048  12059   
+17913	13402		Zafrulla	Malpe	502291615			Tonse	502291615			07112-Fazlu Rahman  , 502260256		9972965913	17913 - Zafrulla Malpe 502291615  13402   
+18061	13101		Mohammed Noufal	Manal	597704310	Manal	2274743166	Manal		Batha	01-Jul-84	07101-Abdul Azeez Bajpe, 503271851			18061 - Mohammed Noufal Manal 597704310  13101  Manal 2274743166
+17996	12464		Hameed	Manaz	571139125	Kankanady	2141999439	Kankanady			27-Mar-92	15681-Mohammed Ashraf Kozi Khan, 564671735	G7641833	917338318743	17996 - Hameed Manaz 571139125  12464  Kankanady 2141999439
+201015			Gafoor Khan	Mangalore	509541483	Gurukambal	2083373957	Gurukambal	509541483	Dammam		17952-Nayaz ahammad, 509862283			201015 - Gafoor Khan Mangalore 509541483    Gurukambal 2083373957
+7117			Abbas	Mani	530789678	Un Known				Un Known		07117-Abbas Mani, 530789678			7117 - Abbas Mani 530789678    Un Known 
+17901	12063		Jubair Mohammed	Manipura	595737074		2092517669			batha	01-Jun-69	11404-Abdulrahman Sulaiman  , 559906048	J5987516	918296559144	17901 - Jubair Mohammed Manipura 595737074  12063   2092517669
+19081			Jahid Hussain	Manna	545918088	Karkala	2319613044	Karkala	545918088	Riyadh		11313-Ghani Ahmed  , 509125443		545918088	19081 - Jahid Hussain Manna 545918088    Karkala 2319613044
+15627	11503		Nasiruddin	Manna  	556339137	Brahmavar		Brahmavar		Un Known		07112-Fazlu Rahman  , 502260256			15627 - Nasiruddin Manna   556339137  11503  Brahmavar 
+11279	26		K.M.	Mansoor  	596775040	Kannadikatte		Belthangady		Thaiba Market		Mohammed Haneef			11279 - K.M. Mansoor   596775040  26  Kannadikatte 
+18027	1338		Mohammad	Mansoor	540705316	Krishnapura	2203926841	Surathkal	540705316	Batha	06-Jun-81	15681-Mohammed Ashraf Kozi Khan, 564671735			18027 - Mohammad Mansoor 540705316  1338  Krishnapura 2203926841
+19052	12402		Nishad Ahamed	Mansoor Ahamed	583953000	Kaup	239818222	Kaup	583953000	Batha	01-Jul-78	07112-Fazlu Rahman  , 502260256		9900267600	19052 - Nishad Ahamed Mansoor Ahamed 583953000  12402  Kaup 239818222
+16850	11638		Abdul	Mansoor B	556052551	Urladka						07101-Abdul Azeez Bajpe, 503271851			16850 - Abdul Mansoor B 556052551  11638  Urladka 
+7142	11455		Shaikh	Mansoor Kudroli 	568763438	Mangaluru				Sulaimania		DKMO_Regroup			7142 - Shaikh Mansoor Kudroli  568763438  11455  Mangaluru 
+7179	1052		Mohammad	Masood  	508181648	Moodabidri		Moodabidri		Jubail		11380-Shafe Thodar  , 541937996			7179 - Mohammad Masood   508181648  1052  Moodabidri 
+7185		1361	Abdul	Matheen Siddique 	568631051	Shimoga		Shimoga		Un Known		Imtiyaz ahmed kundapur			7185 - Abdul Matheen Siddique  568631051   1361 Shimoga 
+17994	12863		M salih	Mathifi	533048676	thekkar		Thekkar	533048676			11307-Haider Sarali Katte, 597622507			17994 - M salih Mathifi 533048676  12863  thekkar 
+211205			SHOHIB IBRAHIM GOLINOLE	MATTA	578167229		2421387289	GOLINOLE				07112-Fazlu Rahman  , 502260256			211205 - SHOHIB IBRAHIM GOLINOLE MATTA 578167229     2421387289
+15746	12053		Basheer	Mayyadi	557681610	Kana, Suratkal						11404-Abdulrahman Sulaiman  , 559906048			15746 - Basheer Mayyadi 557681610  12053  Kana, Suratkal 
+15708	11474		Arif	Meeran Mohammad	533945951	Kodi Bengare		Kodi Bengare		Naseem	08-Apr-81	DKMO_Regroup		9900404607	15708 - Arif Meeran Mohammad 533945951  11474  Kodi Bengare 
+17896	11441		Rafeek	MI	538825358	Mulki		Hejamadi			27-Jan-70	11313-Ghani Ahmed  , 509125443		7026745359	17896 - Rafeek MI 538825358  11441  Mulki 
+15655	10007		Muhammad shareef	Mijar	5086998269	Thodar						11380-Shafe Thodar  , 541937996			15655 - Muhammad shareef Mijar 5086998269  10007  Thodar 
+7200		1819	Hidayathulla	Mijar Abdulla 	508322404	Thodar		Thodar	506922855	Un Known		11380-Shafe Thodar  , 541937996			7200 - Hidayathulla Mijar Abdulla  508322404   1819 Thodar 
+11601	1074		Thousif	Mijar Abusalih 	597078248	Thodar		Mijaru		Un Known		11380-Shafe Thodar  , 541937996			11601 - Thousif Mijar Abusalih  597078248  1074  Thodar 
+19056	11621		Mohammed Hasainar	Mithoor	506223760	Mithoor		Mithoor	506279366		12-Jun-69	11350-Yusuf Kalanjibail, 536581427			19056 - Mohammed Hasainar Mithoor 506223760  11621  Mithoor 
+19055			Siddik Poker Beary	Mithoor House	547199311	Mithoor	2144380769	Mithoor	547199311	Shifa	01-Jan-72	11350-Yusuf Kalanjibail, 536581427			19055 - Siddik Poker Beary Mithoor House 547199311    Mithoor 2144380769
+19019	19019		ABDUL KHADAR	MITHUR	561418622	Mithur	2250473820		561418622	BATHA	02-Mar-66	11350-Yusuf Kalanjibail, 536581427	R669095		19019 - ABDUL KHADAR MITHUR 561418622  19019  Mithur 2250473820
+11482	636		Rafeeq	Mithur  	532737884	Mitthur		Bantwal		Un Known		DKMO_Regroup			11482 - Rafeeq Mithur   532737884  636  Mitthur 
+11488	633		Jamaluddin	Mittur  	561894282	Mitthur		Mittur		Un Known		DKMO_Regroup			11488 - Jamaluddin Mittur   561894282  633  Mitthur 
+200902			Assadi Abdul Khader	Mohamed	503339418		2100262621		503339418	Madina	12-May-65	11313-Ghani Ahmed  , 509125443	K8807927	9844375328	200902 - Assadi Abdul Khader Mohamed 503339418     2100262621
+7134	11376		Ibrahim	Mohamed Ilyas 	530857101	Un Known		Uchil		Un Known		11404-Abdulrahman Sulaiman  , 559906048			7134 - Ibrahim Mohamed Ilyas  530857101  11376  Un Known 
+11268	201		Saeed	Mohamed Jahangir 	599084107	Bolar		Mangaluru		Aziziyah		11598 - Mohammed Imran   - 560492809			11268 - Saeed Mohamed Jahangir  599084107  201  Bolar 
+16834	12479		Akthar	Mohammad	542836737		2335949133				14-Aug-91	11380-Shafe Thodar  , 541937996		9343764686	16834 - Akthar Mohammad 542836737  12479   2335949133
+15734	12275		Mansoor Soofi	Mohammad	567691285	thodar	2195261520	Thodar		batha	10-Mar-75	11380-Shafe Thodar  , 541937996		9731920630	15734 - Mansoor Soofi Mohammad 567691285  12275  thodar 2195261520
+15700	11539		Noor	Mohammad	503257308	Malali	2182343067	Kinnikambala		Gubera	01-Jul-70	DKMO_Regroup	J5353973	64303506	15700 - Noor Mohammad 503257308  11539  Malali 2182343067
+11543	10106		P.B.	Mohammad  	55	Padumunja				Un Known		DKMO_Regroup			11543 - P.B. Mohammad   55  10106  Padumunja 
+11311	1008		Razik	Mohammad  	566708534	Kuntoor		Perabe		Batha		11270-Ibrahim Kuntoor, 533936347			11311 - Razik Mohammad   566708534  1008  Kuntoor 
+11478	1061		Kasim	Mohammad Aliyas Shaikh	556079249	Godally				Un Known		11380-Shafe Thodar  , 541937996			11478 - Kasim Mohammad Aliyas Shaikh 556079249  1061  Godally 
+7263		6104	Bollai	Mohammad Ishaq 	559720084	Bollai		Bantwal		Naseem		DKMO_Regroup			7263 - Bollai Mohammad Ishaq  559720084   6104 Bollai 
+11546	10180		Hamza	Mohammad Kandak 	556310424	Ullal		Ullal		Batha		DKMO_Regroup			11546 - Hamza Mohammad Kandak  556310424  10180  Ullal 
+11414	1451		Shaikh	Mohammad Kasim 	555011176	Katapadi				Jeddah		11403 - Eliyas Moideen Yermal  - 502112459			11414 - Shaikh Mohammad Kasim  555011176  1451  Katapadi 
+11577	10252		Surathkal	Mohammad Mustaq 	500181975	Surathkal				Un Known		07124-G.K. Sheikabba  , 508102993			11577 - Surathkal Mohammad Mustaq  500181975  10252  Surathkal 
+11539	1412		U.K.	Mohammad Rapeq 	502637313	Urwal Padav				Un Known		11350-Yusuf Kalanjibail, 536581427			11539 - U.K. Mohammad Rapeq  502637313  1412  Urwal Padav 
+11397	1389	1829	Noor	Mohammad Siddiq Yedapadavu	502864774	Thodar		Mijaru		Almathna, Altaif		11380-Shafe Thodar  , 541937996			11397 - Noor Mohammad Siddiq Yedapadavu 502864774  1389 1829 Thodar 
+18085			Aashik Siddakatte	Mohammed	537168047	Thodar	2429799220			Riyadh	03-Aug-89	11380-Shafe Thodar  , 541937996			18085 - Aashik Siddakatte Mohammed 537168047    Thodar 2429799220
+201103	13013		Aboobakkar Siddiq	Mohammed	538897220	Mallur	223894566	Mallur	538897220		01-May-75	07122 - Shamshudin Addor - 541204731			201103 - Aboobakkar Siddiq Mohammed 538897220  13013  Mallur 223894566
+11401	787		Farooq	Mohammed  	593875602	Hoode		Udupi		Un Known		Hameed Nazeer			11401 - Farooq Mohammed   593875602  787  Hoode 
+19025			Fayaz Badakere	Mohammed	546736282	Navunda	2328677493	Navunda Badakere	546736282	Al Aziziya	01-Jul-86	11350-Yusuf Kalanjibail, 536581427	H6055726	9945734476	19025 - Fayaz Badakere Mohammed 546736282    Navunda 2328677493
+17889	12228		Hyder ali	mohammed	595654039		2402070425					07101-Abdul Azeez Bajpe, 503271851	Z2806007	919845724600	17889 - Hyder ali mohammed 595654039  12228   2402070425
+16806	8565		Ibrahim	Mohammed	5308557101	Yermal	2161806431	yermal				11403 - Eliyas Moideen Yermal  - 502112459		9164295202	16806 - Ibrahim Mohammed 5308557101  8565  Yermal 2161806431
+18016	13132		Kalandar	Mohammed	545353896	Kaikamba	2252571597	Kaikamba	545353896	Riyadh	23-Dec-83	07124-G.K. Sheikabba  , 508102993			18016 - Kalandar Mohammed 545353896  13132  Kaikamba 2252571597
+18024	1331		Khalid	Mohammed	502577635	Krishnapura	2108667615	Krishnapura			01-Jul-74	07124-G.K. Sheikabba  , 508102993			18024 - Khalid Mohammed 502577635  1331  Krishnapura 2108667615
+16880	12456		Marzukh Ismail	Mohammed	540309095		2141999413				29-Jun-81	15681-Mohammed Ashraf Kozi Khan, 564671735		00917338318743	16880 - Marzukh Ismail Mohammed 540309095  12456   2141999413
+19102			Matheen	Mohammed	509295874							15681-Mohammed Ashraf Kozi Khan, 564671735			19102 - Matheen Mohammed 509295874     
+201004			Mohammed Miuneer	Mohammed	561819836	Mallur	2331081907	8861642371	561819836	Buraida	01-Jun-91	07122 - Shamshudin Addor - 541204731		8861642371	201004 - Mohammed Miuneer Mohammed 561819836    Mallur 2331081907
+17902	300		Mohammed Noushad	Mohammed	545211506	Halekote		Ullal				07252-Abdullah K.P, 503614377			17902 - Mohammed Noushad Mohammed 545211506  300  Halekote 
+11571	10132		Moomin	Mohammed  	568523650	Udupi		Udupi		Un Known		ISMAIL BANTWAL			11571 - Moomin Mohammed   568523650  10132  Udupi 
+7222		1666	Muloor	Mohammed  	590727939	Moolur Uchila		 		Un Known		11403 - Eliyas Moideen Yermal  - 502112459			7222 - Muloor Mohammed   590727939   1666 Moolur Uchila 
+17931	11770		Musthaq	Mohammed	500302546	Kundapura	2263670404	Kundapura				11313-Ghani Ahmed  , 509125443		9901547221	17931 - Musthaq Mohammed 500302546  11770  Kundapura 2263670404
+11614	12027		Noor	Mohammed  	533549311	Jokatte		Jokatte		Un Known		11288-Moahmmed Ali  Jokatte, 502149417			11614 - Noor Mohammed   533549311  12027  Jokatte 
+11319	204		Shareef	Mohammed  	532858937	Talapady		Talapady		Malaz		07101-Abdul Azeez Bajpe, 503271851			11319 - Shareef Mohammed   532858937  204  Talapady 
+15658	12033		Yusuf Faizal	Mohammed	551971327	Thotaal	2326398589	Kairangala			24-Feb-85	11288-Moahmmed Ali  Jokatte, 502149417		988638751	15658 - Yusuf Faizal Mohammed 551971327  12033  Thotaal 2326398589
+11369	360		Nazir	Mohammed Abbonu Beary	535803404	Nelyadi		Puttur		Badea		M. Abbas			11369 - Nazir Mohammed Abbonu Beary 535803404  360  Nelyadi 
+11456	1729		Bajpe	Mohammed Ashruf 	569241047	Kotekar		Ullal		Alkhobar		11281-Abdul Irshad Moidin , 502026155			11456 - Bajpe Mohammed Ashruf  569241047  1729  Kotekar 
+11605	12032		Jokatte	Mohammed Asif 	590761264	Jokatte		Jokatte		Batha		11288-Moahmmed Ali  Jokatte, 502149417			11605 - Jokatte Mohammed Asif  590761264  12032  Jokatte 
+11579	1426		Kamalthadda	Mohammed Audrama 	558164947	Malabettu		Belthangady		Dammam		11404-Abdulrahman Sulaiman  , 559906048			11579 - Kamalthadda Mohammed Audrama  558164947  1426  Malabettu 
+11591	11326		Nazeer	Mohammed Bantwal 		Bantwal		Belthangady		Al Oruba		07124-G.K. Sheikabba  , 508102993			11591 - Nazeer Mohammed Bantwal    11326  Bantwal 
+11616	10004		Thodar	Mohammed Basheer 	548649060	Thodar		Thodar		Un Known		11380-Shafe Thodar  , 541937996			11616 - Thodar Mohammed Basheer  548649060  10004  Thodar 
+7220		2256	Kodagu	Mohammed Bashir 	547687955	Mithabail		Bantwal		Un Known		DKMO_Regroup			7220 - Kodagu Mohammed Bashir  547687955   2256 Mithabail 
+18041	10267		ASIF ALI	MOHAMMED BAVA	557668636	KOLNAD	2343526873		557668636	SULAY	01-Aug-90	07122 - Shamshudin Addor - 541204731		7760443617	18041 - ASIF ALI MOHAMMED BAVA 557668636  10267  KOLNAD 2343526873
+7110		1014	Haneef	Mohammed Fakhruddin 	559948573	Jokatte		Jokatte		Un Known		07262-Salman Noor  Hasan, 500602458			7110 - Haneef Mohammed Fakhruddin  559948573   1014 Jokatte 
+16828	11493		Nawaz	Mohammed Gouse	540800345		2266479001					DKMO_Regroup			16828 - Nawaz Mohammed Gouse 540800345  11493   2266479001
+11508	1062	1806	Mijar	Mohammed Hakeem 	569288702	Thodar		Thodar		Un Known		11380-Shafe Thodar  , 541937996			11508 - Mijar Mohammed Hakeem  569288702  1062 1806 Thodar 
+11486	635		Ebrahim	Mohammed Hamza 	507867860	Un Known		Belthangady		Un Known		11350-Yusuf Kalanjibail, 536581427			11486 - Ebrahim Mohammed Hamza  507867860  635  Un Known 
+11443		1356	Sheik	Mohammed Haneef	542148826	Kundapur		Kundapura		Un Known		07112-Fazlu Rahman  , 502260256			11443 - Sheik Mohammed Haneef 542148826   1356 Kundapur 
+18039	10261		AZARUDDIN	MOHAMMED IBRAHIM	580198703	MANAL	241004910		580198703	AL KHARJ	01-Jun-87	07122 - Shamshudin Addor - 541204731		9964944955	18039 - AZARUDDIN MOHAMMED IBRAHIM 580198703  10261  MANAL 241004910
+7237		3132	Bantwal	Mohammed Ismail 		Bantwal		Bantwal		Un Known		DKMO_Regroup			7237 - Bantwal Mohammed Ismail     3132 Bantwal 
+201012			Mohammed Nasfar	Mohammed Ismail	501938360	Gurukambla	2379206374	Gurukambla	501938360	Dammam		17952-Nayaz ahammad, 509862283	M365020		201012 - Mohammed Nasfar Mohammed Ismail 501938360    Gurukambla 2379206374
+11491	68		Kolkar	Mohammed Jafar 	556930091	Gangulli		Kundapura		Un Known		07112-Fazlu Rahman  , 502260256			11491 - Kolkar Mohammed Jafar  556930091  68  Gangulli 
+11496	983		Sheikh	Mohammed Jafar 	535066719	Gangulli		Kundapura		Un Known		07112-Fazlu Rahman  , 502260256			11496 - Sheikh Mohammed Jafar  535066719  983  Gangulli 
+211009			MOHAMMED JAWALUDDIN	MOHAMMED JAMAL	505362734		2324358536				02-Jan-91	07120-Mohammed Asif Kannur , 506991416			211009 - MOHAMMED JAWALUDDIN MOHAMMED JAMAL 505362734     2324358536
+15745	12052		Rafik	Mohammed kunchi	593773787	Kelengibail						11404-Abdulrahman Sulaiman  , 559906048			15745 - Rafik Mohammed kunchi 593773787  12052  Kelengibail 
+11541	1071		Siraj	Mohammed Mijar 	508183695	Thodar		Thodar		Un Known		11380-Shafe Thodar  , 541937996			11541 - Siraj Mohammed Mijar  508183695  1071  Thodar 
+11584	258		Kodikere	Mohammed Mustafa 	557195670	Kana		Surathkal		Un Known		DKMO_Regroup			11584 - Kodikere Mohammed Mustafa  557195670  258  Kana 
+15632	11512		Shanu	Mohammed Shabbir 	507385436	Shiroor		Gangulli		Un Known		07112-Fazlu Rahman  , 502260256			15632 - Shanu Mohammed Shabbir  507385436  11512  Shiroor 
+11458	1393	1810	Mijar	Mohammed Shabeer 	500760052	Thodar		Mijaru		Garnatha, Exit 8		11380-Shafe Thodar  , 541937996			11458 - Mijar Mohammed Shabeer  500760052  1393 1810 Thodar 
+7201		2857	Kandavara	Mohammed Sharief 		Paddai Padau		Kinnikambla		Un Known		07130-Ahmed Usman  Kaikamba, 508290998			7201 - Kandavara Mohammed Sharief     2857 Paddai Padau 
+7139	11487		Kenjar	Mohammed Sharief 	501522161	Thokur				Manfooha		07124-G.K. Sheikabba  , 508102993			7139 - Kenjar Mohammed Sharief  501522161  11487  Thokur 
+11424	1464		Ramzan	Mohammed Uchila 	504486540	Moolur Uchila				Un Known		11403 - Eliyas Moideen Yermal  - 502112459			11424 - Ramzan Mohammed Uchila  504486540  1464  Moolur Uchila 
+11283	602	2006	Sheikh	Mohideen  	548120635	Uchila		Talapady		Alkhobar		07105-Abbas Uchil  , 502124007			11283 - Sheikh Mohideen   548120635  602 2006 Uchila 
+11417	1455	1583	Shakeel	Mohideen Yermal 	552173209	Yermal			552173209	Un Known		11403 - Eliyas Moideen Yermal  - 502112459			11417 - Shakeel Mohideen Yermal  552173209  1455 1583 Yermal 
+19011			Abdul Jaleel	Mohiuddin	572335294	Katipalla		Katipalla		Exit 16		07101-Abdul Azeez Bajpe, 503271851		9481737016	19011 - Abdul Jaleel Mohiuddin 572335294    Katipalla 
+18101	13141		Kodi	Moiddin	509827898	Kodi	2172539997	Kodi Kundapura		Sulay	10-Jun-56	07101-Abdul Azeez Bajpe, 503271851		9632967538	18101 - Kodi Moiddin 509827898  13141  Kodi 2172539997
+11428	1468		Ibrahim	Moideen  	504469483	Moolur Uchila			569746942	Jeddah		11403 - Eliyas Moideen Yermal  - 502112459			11428 - Ibrahim Moideen   504469483  1468  Moolur Uchila 
+11410	959		Ahmad	Moideen Beary 	544225507	Yermal				Fahad Al-Duwais		11404-Abdulrahman Sulaiman  , 559906048			11410 - Ahmad Moideen Beary  544225507  959  Yermal 
+15662	11808		Aliyabba	Moideen Sharief	507288108	Surthkal	2176343040	Surathkal		Badiya	01-Jun-61	11307-Haider Sarali Katte, 597622507	K0760987	9980355940	15662 - Aliyabba Moideen Sharief 507288108  11808  Surthkal 2176343040
+11403	1454	1582	Eliyas	Moideen Yermal 	502112459	Yermal				Un Known		11403 - Eliyas Moideen Yermal  - 502112459			11403 - Eliyas Moideen Yermal  502112459  1454 1582 Yermal 
+11416	1453	1579	Saleem	Moideen Yermal 	507506491	Yermal				Al-Jubail		11403 - Eliyas Moideen Yermal  - 502112459			11416 - Saleem Moideen Yermal  507506491  1453 1579 Yermal 
+7250		4954	Cheyya	Moiden Shareef 	502855228	Bunder			543492374	Un Known		07251-Yusuf Adoor  Nadugudde, 562906572			7250 - Cheyya Moiden Shareef  502855228   4954 Bunder 
+15644	12278	0	Abdul Aziz	Moidin	595305701	Montepadavu	2367113269	Montepadavu		Khurais Road	01-Dec-73	07113-Ismail Montepadavu, 509173592		827705001	15644 - Abdul Aziz Moidin 595305701  12278 0 Montepadavu 2367113269
+15718	11794		Shameem Ahamad	Moidin	593336236	Mukka	2199032471	Mukka		Fahad Road		11313-Ghani Ahmed  , 509125443	L1155786	00918951403789	15718 - Shameem Ahamad Moidin 593336236  11794  Mukka 2199032471
+11358	403		Nazeer	Moidin Abbas 	564025631	Mukkaccheri		Ullal		Batha		Ismail Katipalla			11358 - Nazeer Moidin Abbas  564025631  403  Mukkaccheri 
+11384	1377		Bannur	Moidin Kunhi 	580745573	Bannur		Puttur		Batha		11380-Shafe Thodar  , 541937996			11384 - Bannur Moidin Kunhi  580745573  1377  Bannur 
+11446		1365	Ismail	Moidin Padubidri 	551038821	Kannangar		Udupi		Un Known		Imtiyaz ahmed kundapur			11446 - Ismail Moidin Padubidri  551038821   1365 Kannangar 
+7195		1573	Perliya	Moidin Shareef 	569849148	Mithabail		Bantwal		Un Known		DKMO_Regroup			7195 - Perliya Moidin Shareef  569849148   1573 Mithabail 
+7177	10136		Ibrahim	Moidu Kunhi 	549712474	Kinya		Kinya		Un Known		ISMAIL BANTWAL			7177 - Ibrahim Moidu Kunhi  549712474  10136  Kinya 
+18077	13002		Muhammed	Moneer	568418366	Kudroli	2175308333	kudroli	548418366	Batha	01-Jan-74	07122 - Shamshudin Addor - 541204731		8904765506	18077 - Muhammed Moneer 568418366  13002  Kudroli 2175308333
+7113		4072	Ismail	Montepadavu	509173592	Montepadavu		Montepadavu		Hara		07113-Ismail Montepadavu, 509173592			7113 - Ismail Montepadavu 509173592   4072 Montepadavu 
+15646	12280	0	Yeshir	Montepadavu	532907441	Montepadavu	2342030646	Montepadavu		Batha	01-Dec-89	07113-Ismail Montepadavu, 509173592		9164273610	15646 - Yeshir Montepadavu 532907441  12280 0 Montepadavu 2342030646
+11566	10137		Ansaf	Moosa  	561601003	Deralakatte		Deralakatte		Un Known		ISMAIL BANTWAL			11566 - Ansaf Moosa   561601003  10137  Deralakatte 
+19037	19037		Mohammed Harsad	Moosa	580113005	Talapady	2120877721	Talapady	580113005	Malaz	26-Sep-91	07112-Fazlu Rahman  , 502260256	R2443238	8105491946	19037 - Mohammed Harsad Moosa 580113005  19037  Talapady 2120877721
+17984	13220		Mohammed Akeel	Moosa Bailurker	537796897	Shiruru	2424438113			batha	01-Aug-93	07112-Fazlu Rahman  , 502260256	P3897461	919916777471	17984 - Mohammed Akeel Moosa Bailurker 537796897  13220  Shiruru 2424438113
+11269	202		Ashraf	Moosa Kunhi Kotekar		K.C. Road		Talapady		Malaz		Rafi A. Ali			11269 - Ashraf Moosa Kunhi Kotekar   202  K.C. Road 
+11453	596		Sayyad	Moosa Nazeer 	566993128	Jodu Palli		Kudroli		Alkhobar		15731-Abubakkar Siddiq, 544435133			11453 - Sayyad Moosa Nazeer  566993128  596  Jodu Palli 
+18088			Mohammad	Moosabba	568131122	HEJAMADY	2239871847			Shifa	03-Jan-82	07112-Fazlu Rahman  , 502260256			18088 - Mohammad Moosabba 568131122    HEJAMADY 2239871847
+15622	11513		Abdussalaam	Moulana  	564511791	Gangulli		Gangulli		Sulai		07112-Fazlu Rahman  , 502260256			15622 - Abdussalaam Moulana   564511791  11513  Gangulli 
+11600	11258		Mohammed	Mubeen Abdul Gaffar	505804032	Sullia		Sullia		Un Known		07105-Abbas Uchil  , 502124007			11600 - Mohammed Mubeen Abdul Gaffar 505804032  11258  Sullia 
+7119			Ashraf 	Mudabidri	55	Un Known				Un Known		07119-Ashraf  Mudabidri, 55			7119 - Ashraf  Mudabidri 55    Un Known 
+17922	11883		Mohammad	Mudassir	536804804			8904559548			13-Jan-95	07112-Fazlu Rahman  , 502260256		Hoode	17922 - Mohammad Mudassir 536804804  11883   
+15725	12259		Khalid	Mudigere	553676109	Mudigere	2132097854	Mudigere		Deera	29-Apr-78	11313-Ghani Ahmed  , 509125443		9448555356	15725 - Khalid Mudigere 553676109  12259  Mudigere 2132097854
+16845	11854		Ashraf	Muhammad Bava (Dahchu)	508309479	Baikampady	2113067462	Baikampady				11288-Moahmmed Ali  Jokatte, 502149417			16845 - Ashraf Muhammad Bava (Dahchu) 508309479  11854  Baikampady 2113067462
+11516	1067	1801	Abdul Khadar	Muhammad Mijar	565131680	Thodar		Thodar		Malaz		11380-Shafe Thodar  , 541937996			11516 - Abdul Khadar Muhammad Mijar 565131680  1067 1801 Thodar 
+11440	280		Karim	Muhammed Moideen 		Uchila				Malaz		07252-Abdullah K.P, 503614377			11440 - Karim Muhammed Moideen    280  Uchila 
+17893	11856		Abdul Hafiz	Mukhtesar	571317247	Honnawar					01-Feb-81	07112-Fazlu Rahman  , 502260256			17893 - Abdul Hafiz Mukhtesar 571317247  11856  Honnawar 
+16851	11851		Abdul Hameed	Muktesar	508060519		2107995207					DKMO_Regroup			16851 - Abdul Hameed Muktesar 508060519  11851   2107995207
+16856	11876		Adil	Muktesar	530567724			Gerosoppa		Hail	24-Dec-91	07112-Fazlu Rahman  , 502260256			16856 - Adil Muktesar 530567724  11876   
+11555	10380		Sheik	Mukthar  	507890335	Kana		Surathkall		Batha		SAMIULLAH KHAN			11555 - Sheik Mukthar   507890335  10380  Kana 
+15726	12269		Mansoor 	Mulki	556585225	mulki	2194959561	Mulki		Hara	24-Jul-81	11313-Ghani Ahmed  , 509125443		9844929565	15726 - Mansoor  Mulki 556585225  12269  mulki 2194959561
+15736	12255		Shamsuddin	Mulki	557592804	mulki	2218355523	mulki			15-Aug-72	11313-Ghani Ahmed  , 509125443			15736 - Shamsuddin Mulki 557592804  12255  mulki 2218355523
+200903	200903		Sheik Mukthar	Mulki	551905603	Mulki	2460420454	Mulki	551905603	Malaz	05-Jul-59	11313-Ghani Ahmed  , 509125443	L2713285	7353543808	200903 - Sheik Mukthar Mulki 551905603  200903  Mulki 2460420454
+19099			Abdul Hameed	Mulky	593529596					Riyadh		11435-Abdul Basheer  T.K. Talapadi, 566384950			19099 - Abdul Hameed Mulky 593529596     
+15686	11562		Basheer	Mulky	543848058	Mulki	2184155766	Pandeshwara		Hara		DKMO_Regroup		08242412388	15686 - Basheer Mulky 543848058  11562  Mulki 2184155766
+19016	296		Sharif	Mulky	558151070	Mulky	2336892522		558151070	Batha	14-Mar-86	07252-Abdullah K.P, 503614377		9845822784	19016 - Sharif Mulky 558151070  296  Mulky 2336892522
+17983	13219		Basheer	Mulla	554749786	SHIRURU	2198553105			olaya	06-Feb-82	07112-Fazlu Rahman  , 502260256	K3660813	919986169583	17983 - Basheer Mulla 554749786  13219  SHIRURU 2198553105
+17953	10329		Imdad Hussain	Mulla	502729613	Mallar	2306850492	Kaup		New Ind city	30-Nov-85	07120-Mohammed Asif Kannur , 506991416			17953 - Imdad Hussain Mulla 502729613  10329  Mallar 2306850492
+19018			Abbas Mudigal	Mundiya	540749899	Ishwara Mangala	2416448856	Puttur	540749899	Batha		07252-Abdullah K.P, 503614377		8971603916	19018 - Abbas Mudigal Mundiya 540749899    Ishwara Mangala 2416448856
+15633	11515		K.A.	Muneer  	567700545	Sullia		Sullia		Un Known		07101-Abdul Azeez Bajpe, 503271851			15633 - K.A. Muneer   567700545  11515  Sullia 
+16811	992		Siraj	Muneer	506573212	Kuppepadavu	2280993805	Kuppepadavu		Olaya	10-Jun-83	11404-Abdulrahman Sulaiman  , 559906048	M6107580	9686144914	16811 - Siraj Muneer 506573212  992  Kuppepadavu 2280993805
+17997	12466		Ismail Hassan	Munthasir	541097757	Kankanady	2141999421	Kankanady	541097757	Aziziyah	17-Jun-87	15681-Mohammed Ashraf Kozi Khan, 564671735		917338318743	17997 - Ismail Hassan Munthasir 541097757  12466  Kankanady 2141999421
+18060	12810		Ziyaullah Khan Basrur	Murthuda Ali Khan	567125769	Basrur	2317787667	Basrur		Sanaya	24-Oct-86	07112-Fazlu Rahman  , 502260256			18060 - Ziyaullah Khan Basrur Murthuda Ali Khan 567125769  12810  Basrur 2317787667
+11365	404		Ullal	Mushtaq Ahamed 	593724092	Ullal		Ullal		Batha		B. M. Ismail			11365 - Ullal Mushtaq Ahamed  593724092  404  Ullal 
+11477	1058		Mohammad	Mustafa T.A. 	541937996	Thodar		Thodar		Un Known		11380-Shafe Thodar  , 541937996			11477 - Mohammad Mustafa T.A.  541937996  1058  Thodar 
+15626	11506		Mohammed	Mustafa Ullal 	550248010	Ullal	2344357005	Ullal			19-May-67	07252-Abdullah K.P, 503614377			15626 - Mohammed Mustafa Ullal  550248010  11506  Ullal 2344357005
+11549	1413		Mohammad	Mustahafa Karaya Hyder	595102768	Karaya		Belthangady		Batha		DKMO_Regroup			11549 - Mohammad Mustahafa Karaya Hyder 595102768  1413  Karaya 
+11407	952		Kadar	Mustaque Kasam 	504302832	Yermal				Un Known		11403 - Eliyas Moideen Yermal  - 502112459			11407 - Kadar Mustaque Kasam  504302832  952  Yermal 
+17888	11654		Mahammad	Musthafa	566792181	Kukkaje	2404892354					11307-Haider Sarali Katte, 597622507	N4185191	919343354453	17888 - Mahammad Musthafa 566792181  11654  Kukkaje 2404892354
+17942	10016		Mohammad	Musthafa	509791850		2264492188	Pane mangalore			01-May-80	11380-Shafe Thodar  , 541937996		9980313484	17942 - Mohammad Musthafa 509791850  10016   2264492188
+17956	13226		MOHAMMAD	MUSTHAFA	565359154	GOLTAMAJAL	2443046699			EXIT 9		07122 - Shamshudin Addor - 541204731			17956 - MOHAMMAD MUSTHAFA 565359154  13226  GOLTAMAJAL 2443046699
+11328	1012		Abdul	Muthali Perabe 	534191762	Kuntoor		Perabe		Batha		11270-Ibrahim Kuntoor, 533936347			11328 - Abdul Muthali Perabe  534191762  1012  Kuntoor 
+17943	10017		Abdul	Muthalif	550593398		2344701582	Ullal			21-Jan-87	11380-Shafe Thodar  , 541937996		9916221222	17943 - Abdul Muthalif 550593398  10017   2344701582
+7223		2433	Abdul	Muttalib  	532559432	B.C. Road		Bantwal		Un Known		DKMO_Regroup			7223 - Abdul Muttalib   532559432   2433 B.C. Road 
+210704			Mahamad	Muzahid	538195632	Marakada	2235126154			Batha	24-Jul-82	07122 - Shamshudin Addor - 541204731		9686494224	210704 - Mahamad Muzahid 538195632    Marakada 2235126154
+15636	11511		Zubedar Irfan	N.	551686746	Kirimanjeshwar		Gangulli		Un Known		07112-Fazlu Rahman  , 502260256			15636 - Zubedar Irfan N. 551686746  11511  Kirimanjeshwar 
+7115			Haneef	N.S	542589564	Un Known				Rawdah		07115-Haneef N.S, 542589564			7115 - Haneef N.S 542589564    Un Known 
+15720	10145		Rahmathullah Saheb	Nakwa	555535873	Malpe		malpe		Malaz	15-Jun-78	07112-Fazlu Rahman  , 502260256			15720 - Rahmathullah Saheb Nakwa 555535873  10145  Malpe 
+17936	13391		Yusuf Hyder	Nandar	554607191	Konaje	2357607676	Konaje	554607191		01-Jun-88	11307-Haider Sarali Katte, 597622507	K2135085		17936 - Yusuf Hyder Nandar 554607191  13391  Konaje 2357607676
+210601	210601	210601	Nawaz Sharief	Nandarabettu	571682743	Bantwal	2289783355	Nandara bettu	571682743	Hara	22-Jan-2988	07124-G.K. Sheikabba  , 508102993	H9517695	8497873831	210601 - Nawaz Sharief Nandarabettu 571682743  210601 210601 Bantwal 2289783355
+210902			Abdul Jabbar	Nandavara	505751813	Nandavra			505751813			11404-Abdulrahman Sulaiman  , 559906048		8722442467	210902 - Abdul Jabbar Nandavara 505751813    Nandavra 
+19079			Thashreef	Nandavara	500491894	Nandavara	2331669354	Nandavara	500491894	Riyadh		11404-Abdulrahman Sulaiman  , 559906048			19079 - Thashreef Nandavara 500491894    Nandavara 2331669354
+17986	13222		Abdul Wahid	Nannu	502750316	Shiruru	2009208998	Shiruru			30-Dec-57	07112-Fazlu Rahman  , 502260256		919742216579	17986 - Abdul Wahid Nannu 502750316  13222  Shiruru 2009208998
+19050			Thahir	Naquash	561069556	Jokatte	2246940528	Jokatte	564340176	Olaya	17-Nov-83	15698-Moideen Jokatte, 503604969	L1406007	9342252950	19050 - Thahir Naquash 561069556    Jokatte 2246940528
+15705	11472		Samiulla	Naqwa	555513905		2305602522				10-May-82	DKMO_Regroup		9945565905	15705 - Samiulla Naqwa 555513905  11472   2305602522
+19086			Fakruddin	Nasir Kinnigoli	543106127	Kinnigoli	2311784991	Kinnigoli	543106127	Rowdah	01-Jan-87	07101-Abdul Azeez Bajpe, 503271851			19086 - Fakruddin Nasir Kinnigoli 543106127    Kinnigoli 2311784991
+17912	13527		Mohammad	Nasir Mohidin	531968417		2402808105	Krishanapura	531968417		02-Mar-68	07262-Salman Noor  Hasan, 500602458		7899466386	17912 - Mohammad Nasir Mohidin 531968417  13527   2402808105
+16855	11439		Tanveer Ahmed	Nasir Muktesar	568744486	Gerosoppa				NEW Sanayiya	01-Jul-89	07112-Fazlu Rahman  , 502260256			16855 - Tanveer Ahmed Nasir Muktesar 568744486  11439  Gerosoppa 
+15678	11560		Shikh Mohammad	Nasrullah	568286246	krimanjeswara	2165222684	kirimanjeshwara		Batha	20-May-79	DKMO_Regroup		8254255282	15678 - Shikh Mohammad Nasrullah 568286246  11560  krimanjeswara 2165222684
+11602	11451		Abdul	Nassir  	541052660	Kaikamba		Bantwal		Un Known		DKMO_Regroup			11602 - Abdul Nassir   541052660  11451  Kaikamba 
+11273	209		Abu	Naushad Abdul Rasheed	508084159	Katipalla		Katipalla		Malaz		Rafi A. Ali			11273 - Abu Naushad Abdul Rasheed 508084159  209  Katipalla 
+16833	12333		Mohammad	Nawa Abbas	594433990							DKMO_Regroup			16833 - Mohammad Nawa Abbas 594433990  12333   
+15735	10149		Mohammad	Nawaz	534801937	Surthkal		Surthkal		batha	03-Nov-87	DKMO_Regroup	g961668		15735 - Mohammad Nawaz 534801937  10149  Surthkal 
+18015	13054		Mohammed	Nawaz	550621721	Uppalli	2278098690	Chikmagaluru		Riyadh	19-Jun-85	07101-Abdul Azeez Bajpe, 503271851			18015 - Mohammed Nawaz 550621721  13054  Uppalli 2278098690
+7181	1069	1809	Sarfaraz	Nawaz Mohammed 	533907370	Moodabidri		Moodabidri		Moodabidri		11380-Shafe Thodar  , 541937996			7181 - Sarfaraz Nawaz Mohammed  533907370  1069 1809 Moodabidri 
+18004	10333		Abdul Hameed	Nayaz Ahamed	576930975	chikkamangaloor	2305850575					07120-Mohammed Asif Kannur , 506991416			18004 - Abdul Hameed Nayaz Ahamed 576930975  10333  chikkamangaloor 2305850575
+18070	13108		Mohammed	Nayeem	545751657	Basrur	2307924791	Basrur		Malaz	25-Apr-90	07112-Fazlu Rahman  , 502260256			18070 - Mohammed Nayeem 545751657  13108  Basrur 2307924791
+11368	1603		Abdul	Nazeer  	559060397	Soorinje		Soorinje		Batha		07101-Abdul Azeez Bajpe, 503271851			11368 - Abdul Nazeer   559060397  1603  Soorinje 
+18067	10270		MOHAIDEEN	NAZEER	570093035	JOKATTE	2253655159	JOKATTE		DAMMAM	01-Jan-81	07122 - Shamshudin Addor - 541204731		9964134727	18067 - MOHAIDEEN NAZEER 570093035  10270  JOKATTE 2253655159
+17960	13208		Mohammed Ismail	Nazeer	582528808	Kuloor		Kuloor				07101-Abdul Azeez Bajpe, 503271851			17960 - Mohammed Ismail Nazeer 582528808  13208  Kuloor 
+18075	13165		Sheik	Nazeer	571047438	Ganjimutt	2266559299		571047438	Industrial City	12-Apr-74	07120-Mohammed Asif Kannur , 506991416			18075 - Sheik Nazeer 571047438  13165  Ganjimutt 2266559299
+11552	10253		Addoor	Nazeer Ahmed 	0570160858	Addoor				Batha		07124-G.K. Sheikabba  , 508102993			11552 - Addoor Nazeer Ahmed  0570160858  10253  Addoor 
+15656	10008		Muhammad	Nazimuddin	549443642	Akkarangadi						11380-Shafe Thodar  , 541937996			15656 - Muhammad Nazimuddin 549443642  10008  Akkarangadi 
+15697	5302		Abdul Shukoor	Nazir Ahmed	567717038							11313-Ghani Ahmed  , 509125443			15697 - Abdul Shukoor Nazir Ahmed 567717038  5302   
+18028	1341		Mohammed	Nerlakatte	506453147	Kodaje	2125776548	Kodaje	506453147		21-Jan-65	07101-Abdul Azeez Bajpe, 503271851			18028 - Mohammed Nerlakatte 506453147  1341  Kodaje 2125776548
+11606	12029		Abdul	Nissar  	544478673	Kudradka		Thanniru Pantha		Batha		11288-Moahmmed Ali  Jokatte, 502149417			11606 - Abdul Nissar   544478673  12029  Kudradka 
+11436	1432		Bowar	Nizam  	557320525	Uppinangadi		Uppinangadi		Un Known		11404-Abdulrahman Sulaiman  , 559906048			11436 - Bowar Nizam   557320525  1432  Uppinangadi 
+11360	301		Mohammed	Nizar Khader 	502968847	Bantwal		Bantwal		Batha		11350-Yusuf Kalanjibail, 536581427			11360 - Mohammed Nizar Khader  502968847  301  Bantwal 
+11398	652		K.	Noorisha Shaikh 	508732328	Katipalla		Katipalla		Euromarche		Hameed Nazeer			11398 - K. Noorisha Shaikh  508732328  652  Katipalla 
+7155		1509	Mohammad	Noorulla Parari 	557448423	Kuttar		Ullal		Un Known		Abdussalam Taiba			7155 - Mohammad Noorulla Parari  557448423   1509 Kuttar 
+17887	11653		Mahammad	Noufal	536110662	Panjikkal	2380632006					11307-Haider Sarali Katte, 597622507	M2518899	919164400927	17887 - Mahammad Noufal 536110662  11653  Panjikkal 2380632006
+17944	11824		Nouman	Nouman	536844196		2425372253	Saralikatte			15-Jun-90	11307-Haider Sarali Katte, 597622507		9611543145	17944 - Nouman Nouman 536844196  11824   2425372253
+211207			BASHEER	OMER	500537825	KANKANADI	2475835274				05-May-76	07262-Salman Noor  Hasan, 500602458			211207 - BASHEER OMER 500537825    KANKANADI 2475835274
+7172	11378		Faisal	P Kundoor 	531295889	Amblamaguru				Un Known		DKMO_Regroup			7172 - Faisal P Kundoor  531295889  11378  Amblamaguru 
+16866	12490		Aboobakker	P.H	598339878	Bajpe	2275615488	Bajpe				07101-Abdul Azeez Bajpe, 503271851		08242252786	16866 - Aboobakker P.H 598339878  12490  Bajpe 2275615488
+15694	11953		Abdul Hameed	Padubidri	501506843	Padubidri	2205861442	Padubidri		Rowadh	01-Jun-69	11581 - Mansoor Ahmed   - 564779120		2555773	15694 - Abdul Hameed Padubidri 501506843  11953  Padubidri 2205861442
+16809	10010		Mohammad Arif	Paivalike	552496170	Hosamajalu	2278070103	Nellayadi		batha	08-Mar-83	11380-Shafe Thodar  , 541937996		9741481020	16809 - Mohammad Arif Paivalike 552496170  10010  Hosamajalu 2278070103
+11511		2716	Kemral	Pakruddin Mohammed 	506871310	Pakshikere		Kemral		Un Known		DKMO_Regroup			11511 - Kemral Pakruddin Mohammed  506871310   2716 Pakshikere 
+11352	1034		Rafeek	Pandawarakallu  	590795433	Pandawarakallu		Bantwal		Ind'L Area		07117-Abbas Mani, 530789678			11352 - Rafeek Pandawarakallu   590795433  1034  Pandawarakallu 
+11568	1		Majid	Parampally  	502260256	Gangulli		Gangulli		Un Known		07112-Fazlu Rahman  , 502260256			11568 - Majid Parampally   502260256  1  Gangulli 
+15651	10138		Harris	Parvaz	532953729							DKMO_Regroup			15651 - Harris Parvaz 532953729  10138   
+15689	11758		Mohammed	Parvez	598658682	Kudroli	2228418915	Kudroli		Batha	31-Dec-77	11313-Ghani Ahmed  , 509125443	F6121112	9448854179	15689 - Mohammed Parvez 598658682  11758  Kudroli 2228418915
+11523	10154		Akram	Pasha  		Virajpete		Coorg		Batha		Rahim Airport			11523 - Akram Pasha     10154  Virajpete 
+16854	11852		Altaf	Patel	500389806	Kaikamba	2149834646					11313-Ghani Ahmed  , 509125443			16854 - Altaf Patel 500389806  11852  Kaikamba 2149834646
+201022			Mohammeed Nadeem	Patel	593066314	Gurukambla	2363882412	Kaikamba	919632598192		30-May-90	17952-Nayaz ahammad, 509862283		9632598192	201022 - Mohammeed Nadeem Patel 593066314    Gurukambla 2363882412
+15675	11384		Shareef	PC	533222786	Addoor		Addoor		Batha		07101-Abdul Azeez Bajpe, 503271851		7411123111	15675 - Shareef PC 533222786  11384  Addoor 
+15737	12257		Siddiq	PC	530307707	Krishanapur	2064555481	Krishanapur			02-Sep-72	DKMO_Regroup		9820574343	15737 - Siddiq PC 530307707  12257  Krishanapur 2064555481
+11513	395		Haneef	Pennathur Ameer 	501025378	Kudige		Kodagu		Haraj		11267-Abdulla Dawood Kodlipet, 503027405			11513 - Haneef Pennathur Ameer  501025378  395  Kudige 
+11331	1002		Elyas	Perabe  	562594173	Kuntoor				Aziziyah		11270-Ibrahim Kuntoor, 533936347			11331 - Elyas Perabe   562594173  1002  Kuntoor 
+11373	1010		Iqbal	Perabe  	567029742	Kuntoor		Perabe		Batha		11270-Ibrahim Kuntoor, 533936347			11373 - Iqbal Perabe   567029742  1010  Kuntoor 
+15699	11461		Abdul Rashid	Pillar			2010317432				15-Mar-55	DKMO_Regroup			15699 - Abdul Rashid Pillar   11461   2010317432
+7253			A1	Plastic  	55	Un Known				Un Known		Imtiyaz ahmed kundapur			7253 - A1 Plastic   55    Un Known 
+11284	331		Siddiq	Poker Beary 	562192464	Idkidu		Bantwal		Badea		DKMO_Regroup			11284 - Siddiq Poker Beary  562192464  331  Idkidu 
+11526	10255		Mohammad	Polali  	541815210	Addoor				Batha		07124-G.K. Sheikabba  , 508102993			11526 - Mohammad Polali   541815210  10255  Addoor 
+17932	13611		Abdul Khadar	Ponnot	580187944	Vittal	2294343286	Vittal		Sanayiyah	02-Feb-86	07117-Abbas Mani, 530789678	P8194844	8861219127	17932 - Abdul Khadar Ponnot 580187944  13611  Vittal 2294343286
+18022	1328		Rasheed	Poonjalkatte	565700567	Poonjalkatte	2176891006		565700567			07101-Abdul Azeez Bajpe, 503271851			18022 - Rasheed Poonjalkatte 565700567  1328  Poonjalkatte 2176891006
+17964	13252		BASHEER	POYYAL	545819860	Pandeshwar	2144542590		545819860	BATHA	05-Jun-75	07122 - Shamshudin Addor - 541204731		545819860	17964 - BASHEER POYYAL 545819860  13252  Pandeshwar 2144542590
+18109	12841		Irshad	PS	549818534	B C Road	2285304768	B C Road	549818534	Riyadh	25-Sep-87	18061-Mohammed Noufal Manal, 597704310			18109 - Irshad PS 549818534  12841  B C Road 2285304768
+17927	13383		Mohammed Askar	Puilala	557489778		2371603420	Thekkar	Nasim		24-Aug-88	11307-Haider Sarali Katte, 597622507	G6889115	917026263312	17927 - Mohammed Askar Puilala 557489778  13383   2371603420
+211202			ABDUL MAJID	PUNJALKATTE	536012105	PUNJALKATTE		PUNJALKATTE		AQIQ	05-Jan-85	07124-G.K. Sheikabba  , 508102993			211202 - ABDUL MAJID PUNJALKATTE 536012105    PUNJALKATTE 
+11487		3704	Kalenjibail	Puthila Shareef 	560717996	Kalangibail		Belthangady		Un Known		11350-Yusuf Kalanjibail, 536581427			11487 - Kalenjibail Puthila Shareef  560717996   3704 Kalangibail 
+18037	10260		UBAIDULLAH	PYARA CHAKABBA	544517298	ADDOOR	2330626074		544517298	BATHA	08-Dec-85	07122 - Shamshudin Addor - 541204731		8050511524	18037 - UBAIDULLAH PYARA CHAKABBA 544517298  10260  ADDOOR 2330626074
+17957	10019		Muhammad	Rabiyath	564622109	Thodar	2419918731	thodar		Batha		11380-Shafe Thodar  , 541937996		9620114484	17957 - Muhammad Rabiyath 564622109  10019  Thodar 2419918731
+16869	11816		Muhammed	Rafeek	536992204	thekkar	2359702756			Exit 10	01-Jun-79	11307-Haider Sarali Katte, 597622507		00917760784412	16869 - Muhammed Rafeek 536992204  11816  thekkar 2359702756
+16835	12478		Mahammad	Rafeeq	500877414	Bannur						11380-Shafe Thodar  , 541937996			16835 - Mahammad Rafeeq 500877414  12478  Bannur 
+7241		3260	Mohammed	Rafeeq  	543778168	Padubidri		Padubidri		Un Known		DKMO_Regroup			7241 - Mohammed Rafeeq   543778168   3260 Padubidri 
+11527	10128		Mohammed	Rafeeq  	535018611	Charmady		Charmady		Un Known		ISMAIL BANTWAL			11527 - Mohammed Rafeeq   535018611  10128  Charmady 
+11305	152		Mohammed	Rafeeq / Mangalore	509427780	Mulky		Mulky		Jeddah		07101-Abdul Azeez Bajpe, 503271851			11305 - Mohammed Rafeeq / Mangalore 509427780  152  Mulky 
+15733	12267		Abdul	Rafiq	506984645		2071690891			Dammam	08-Mar-66	07124-G.K. Sheikabba  , 508102993		9845421662	15733 - Abdul Rafiq 506984645  12267   2071690891
+11346	277		Mohammad	Rafiq  	501496865	Madoor				Un Known		DKMO_Regroup			11346 - Mohammad Rafiq   501496865  277  Madoor 
+15727	10147		Sheikh Mohammed	Rafiq	501355653	Soorinje	2157834983	Kinnigoli			10-Dec-77	11404-Abdulrahman Sulaiman  , 559906048		824225752	15727 - Sheikh Mohammed Rafiq 501355653  10147  Soorinje 2157834983
+7161		1520	Ahmad	Rafiq Ismail 	502047727	Thokottu		Ullal		Un Known		Abdussalam Taiba			7161 - Ahmad Rafiq Ismail  502047727   1520 Thokottu 
+7136	11488		Ahmed	Rafiq Ismail 		Un Known				Thaiba Market		07115-Haneef N.S, 542589564			7136 - Ahmed Rafiq Ismail    11488  Un Known 
+11336	225		Abdul	Rafiq Kudroli 	501402670	Bunder		Mangaluru		Batha		11313-Ghani Ahmed  , 509125443			11336 - Abdul Rafiq Kudroli  501402670  225  Bunder 
+11419	1457		Mohammed	Rafiq Sulaiman Ismail	545686501	Yermal				Batha		11403 - Eliyas Moideen Yermal  - 502112459			11419 - Mohammed Rafiq Sulaiman Ismail 545686501  1457  Yermal 
+11574	10386		M.Mohammed	Rafique  	580438137	Bolar		Mangaluru		Old Sanayya		SAMIULLAH KHAN			11574 - M.Mohammed Rafique   580438137  10386  Bolar 
+15719	10144		Mohammad	Rafique	507620567	Nejar	2257464368	Nejar		Shifa		07112-Fazlu Rahman  , 502260256		9945991403	15719 - Mohammad Rafique 507620567  10144  Nejar 2257464368
+15659	12034		Abdul	Rahaman	571090694	Jokatte	2373499116	Jokatte			08-Apr-85	11288-Moahmmed Ali  Jokatte, 502149417		91664394694	15659 - Abdul Rahaman 571090694  12034  Jokatte 2373499116
+16858	12056		Shoukath Ali	Rahat	559787917							11404-Abdulrahman Sulaiman  , 559906048		9845207739	16858 - Shoukath Ali Rahat 559787917  12056   
+11430	1471		Abdul	Raheem Abdulla Beary	593550383	Puttige		Udupi		Batha		11403 - Eliyas Moideen Yermal  - 502112459			11430 - Abdul Raheem Abdulla Beary 593550383  1471  Puttige 
+11484			Abdul	Raheem Kilpady 	567544671	Mulky		Mulky		Un Known		Abubakar Padubidri			11484 - Abdul Raheem Kilpady  567544671    Mulky 
+11575	905		Abdul	Rahim Kodi 	551038821	Un Known				Un Known		Imtiyaz ahmed kundapur			11575 - Abdul Rahim Kodi  551038821  905  Un Known 
+11559	1399	1870	Saifulla	Rahiman  	0540010490	Thodar		Thodar		Jubail		11380-Shafe Thodar  , 541937996			11559 - Saifulla Rahiman   0540010490  1399 1870 Thodar 
+11347	279		Abdul	Rahiman Talapady 	541858752	Talapady		Ullal		Batha		11435 - Abdul Basheer  T.K. Talapadi - 566384950			11347 - Abdul Rahiman Talapady  541858752  279  Talapady 
+7151		1506	Abdul	Rahiman Valachil 	544203009	Kannur		Kannur		Un Known		07120-Mohammed Asif Kannur , 506991416			7151 - Abdul Rahiman Valachil  544203009   1506 Kannur 
+18029	1342		Abdul	Rahman	501420567	Katipalla	2165011434		501420567			07101-Abdul Azeez Bajpe, 503271851			18029 - Abdul Rahman 501420567  1342  Katipalla 2165011434
+7112		3923	Fazlu	Rahman  	502260256	Gangulli		Kundapura		Malaz		07112-Fazlu Rahman  , 502260256			7112 - Fazlu Rahman   502260256   3923 Gangulli 
+7204	527		Abdul	Rahman Bannur 	565845413	Bannur		Puttur		Badea		DKMO_Regroup			7204 - Abdul Rahman Bannur  565845413  527  Bannur 
+7227		1081	Fazlur	Rahman Ghouse 	504103137	Nejar		Udupi		Un Known		07112-Fazlu Rahman  , 502260256			7227 - Fazlur Rahman Ghouse  504103137   1081 Nejar 
+7214		1374	Abdul	Rahman Kassif 	551038821	Un Known				Un Known		Imtiyaz ahmed kundapur			7214 - Abdul Rahman Kassif  551038821   1374 Un Known 
+15623	11501		Abdul	Rahman Santhiangadi 	533113942	kakinje				Un Known		11307-Haider Sarali Katte, 597622507			15623 - Abdul Rahman Santhiangadi  533113942  11501  kakinje 
+11329	1025		Mohammad	Raizal Sanjari 		Kuntoor		Perabe		Olaya		11270-Ibrahim Kuntoor, 533936347			11329 - Mohammad Raizal Sanjari    1025  Kuntoor 
+17921	12539		Abdul	Rakib	595039196		2426862468	Smeshwara Uchil			24-Jun-92	07113-Ismail Montepadavu, 509173592		9743700570	17921 - Abdul Rakib 595039196  12539   2426862468
+16810	10011		Muhammad	Ramiz	546135482	Thodar	2380843520				05-Sep-91	11380-Shafe Thodar  , 541937996		9900701313	16810 - Muhammad Ramiz 546135482  10011  Thodar 2380843520
+11509	155	3963	Adam	Ramlan Haji 	561183032	Kuntoor		Kunthoor		Un Known		11270-Ibrahim Kuntoor, 533936347			11509 - Adam Ramlan Haji  561183032  155 3963 Kuntoor 
+11361	373		K.P.	Rasheed  	572279636	Kalangibail		Belthangady		Dayil		11350-Yusuf Kalanjibail, 536581427			11361 - K.P. Rasheed   572279636  373  Kalangibail 
+11565	10135		Abdul	Rauf  		Kotepura		Ullal		Un Known		ISMAIL BANTWAL			11565 - Abdul Rauf     10135  Kotepura 
+11437	1433		Kemmai	Rauf  	535278591	Uppinangadi		Uppinangadi		Un Known		11404-Abdulrahman Sulaiman  , 559906048			11437 - Kemmai Rauf   535278591  1433  Uppinangadi 
+11287	452		Abdul	Rawoof Jaffar Saheb	501622451	Nayoor		Udupi		Sulai		DKMO_Regroup			11287 - Abdul Rawoof Jaffar Saheb 501622451  452  Nayoor 
+7236		3131	Abdul	Razak  	538494765	Mithabail		Bantwal				DKMO_Regroup			7236 - Abdul Razak   538494765   3131 Mithabail 
+11363	1016		Abdul	Razak  	506309928	Kalangibail		Belthangady		Dayil		11350-Yusuf Kalanjibail, 536581427			11363 - Abdul Razak   506309928  1016  Kalangibail 
+7238		3137	Abdul	Razak Palige 	509349344	Bantwal		Bantwal		Un Known		DKMO_Regroup			7238 - Abdul Razak Palige  509349344   3137 Bantwal 
+11338	367		Abdul	Razak Sulaiman 		Gadiyar		Uppinangadi		Ind'L Area		07117-Abbas Mani, 530789678			11338 - Abdul Razak Sulaiman    367  Gadiyar 
+11429	1470		Abdul	Razak Ummer  hiriadka	503110492	Puttige		Udupi	9740584041	Batha		11403 - Eliyas Moideen Yermal  - 502112459			11429 - Abdul Razak Ummer  hiriadka 503110492  1470  Puttige 
+16827	12326		Abdul	Razik	545828250							07124-G.K. Sheikabba  , 508102993			16827 - Abdul Razik 545828250  12326   
+19065			Abdul	Razzak	553317719	Ujire	2115462026	Ujire	553317719	Exit 5	14-Apr-65	11435-Abdul Basheer  T.K. Talapadi, 566384950	M9666686	9901650016	19065 - Abdul Razzak 553317719    Ujire 2115462026
+11301	217		Mohammed	Riyaz  	554502749	Venoor		Belthangady		Batha		11313-Ghani Ahmed  , 509125443			11301 - Mohammed Riyaz   554502749  217  Venoor 
+211003			MOHAMMAD	RIZWAN	549152149	JAMALABAD	2481673362			BATHA		11548-Abdul Razzak Machar, 593870965	T7760963	7899688122	211003 - MOHAMMAD RIZWAN 549152149    JAMALABAD 2481673362
+11359	407		Niyaz	Saad  	543786358	Chokkabettu		Surathkal		Batha		Ismail Katipalla			11359 - Niyaz Saad   543786358  407  Chokkabettu 
+11471	1630	1570	Hamza	Saban  	507694886	Moolur Uchila		Moolur Uchila		Batha		11403 - Eliyas Moideen Yermal  - 502112459			11471 - Hamza Saban   507694886  1630 1570 Moolur Uchila 
+11421	1459		Uchila	Saban Haneef 	560565285	Moolur Uchila				Un Known		11403 - Eliyas Moideen Yermal  - 502112459			11421 - Uchila Saban Haneef  560565285  1459  Moolur Uchila 
+11607	12026		Mohammed	Sabeer  	544302587	Odala		Ujire		Batha		11288-Moahmmed Ali  Jokatte, 502149417			11607 - Mohammed Sabeer   544302587  12026  Odala 
+210804			KALANJIBAIL PUTHILA	SADHIK	535780982	Kalanjibail	2353713643	Kalanjibail	535780982	Yamama	06-Jan-84	11350-Yusuf Kalanjibail, 536581427	T8971028		210804 - KALANJIBAIL PUTHILA SADHIK 535780982    Kalanjibail 2353713643
+7170	11478		Mohammed	Sadik Abdul Khadar	568431578	Ulaibettu				Olaya		DKMO_Regroup			7170 - Mohammed Sadik Abdul Khadar 568431578  11478  Ulaibettu 
+7218		2035	Jafar	Sadik Hussain 	502476315	Kannur		Kannur		Un Known		07120-Mohammed Asif Kannur , 506991416			7218 - Jafar Sadik Hussain  502476315   2035 Kannur 
+11367	1626		Naieem	Sadiq Ibrahim (Jamal)	552215800	Bajpe		Bajpe		Batha		07101-Abdul Azeez Bajpe, 503271851			11367 - Naieem Sadiq Ibrahim (Jamal) 552215800  1626  Bajpe 
+17968	13229		Shaik	Sadulla	562766708	Kaup Uchila	2011886583	Mubai	562766708		09-Jul-1948	07262-Salman Noor  Hasan, 500602458			17968 - Shaik Sadulla 562766708  13229  Kaup Uchila 2011886583
+19074			Syed Mohammed	Safwan	546335460							11380-Shafe Thodar  , 541937996			19074 - Syed Mohammed Safwan 546335460     
+19036	13408		Abu Mahamad	Saheb	552100656	Udupi	2163399906	Udupi	552100656	Al Malaz	18-May-64	07112-Fazlu Rahman  , 502260256		9481481841	19036 - Abu Mahamad Saheb 552100656  13408  Udupi 2163399906
+200904	200904		Aiyoob Nooruddin	Saheb	539023437	Mangalore	2213304435	Mangalore	553152702			11313-Ghani Ahmed  , 509125443		8904878732	200904 - Aiyoob Nooruddin Saheb 539023437  200904  Mangalore 2213304435
+15723	12254		Ali Abbas	Saheb	501101197	Kandalur	2124718749			batha	01-Jun-70	07112-Fazlu Rahman  , 502260256	M6258519	973143437870	15723 - Ali Abbas Saheb 501101197  12254  Kandalur 2124718749
+201016			Arif Ismail	Saheb	557490692	Gurukambla	2087373805	Kaikamba Gurukambla	557490692			17952-Nayaz ahammad, 509862283			201016 - Arif Ismail Saheb 557490692    Gurukambla 2087373805
+18008	13152		Basheer Shukur	Saheb	506252257	pichalar					01-Dec-77	11313-Ghani Ahmed  , 509125443	P7644691		18008 - Basheer Shukur Saheb 506252257  13152  pichalar 
+15687	11752		Mohammed Rizwan	Saheb	507139203	Hangloor	2200847107	Kundapur		Batha	06-May-63	11313-Ghani Ahmed  , 509125443	M7116136	64368724	15687 - Mohammed Rizwan Saheb 507139203  11752  Hangloor 2200847107
+19068			Syed Azeez	Saheb	502442471	No Place mentioned			502442471			07112-Fazlu Rahman  , 502260256		502442471	19068 - Syed Azeez Saheb 502442471    No Place mentioned 
+18054	12801		Jalaluddin Tonse	Sahik	541979384	Hoode	2399971601			Batha	22-Sep-76	07112-Fazlu Rahman  , 502260256			18054 - Jalaluddin Tonse Sahik 541979384  12801  Hoode 2399971601
+17920	11446		Riyaz	Sajeepa Nadu Basti Gudde	576538313		2254277706	Sajipa			01-Jun-79	11313-Ghani Ahmed  , 509125443		9945320318	17920 - Riyaz Sajeepa Nadu Basti Gudde 576538313  11446   2254277706
+18055	12804		Khalid	Sajipa	506970602	Sajipa Nadu	2171968204	Sajipa Nadu		Batha	01-Aug-67	07262-Salman Noor  Hasan, 500602458			18055 - Khalid Sajipa 506970602  12804  Sajipa Nadu 2171968204
+11490	62		Mohammed	Sajjad Salman 	562507540	Gangulli		Kundapura		Un Known		07112-Fazlu Rahman  , 502260256			11490 - Mohammed Sajjad Salman  562507540  62  Gangulli 
+11615	10003		Abdul	Salaam Aboobakkar 	546129972	Thodar	2382309215	Thodar		Un Known		11380-Shafe Thodar  , 541937996			11615 - Abdul Salaam Aboobakkar  546129972  10003  Thodar 2382309215
+7148		1502	Abdul	Salaam Taiba 	557610771	Hejamady		Udupi		Un Known		Abdussalam Taiba			7148 - Abdul Salaam Taiba  557610771   1502 Hejamady 
+211201			KANA MOHAMOOD	SALEEM	501075933	Krishnapura	2085279624	Krishnapura		MALAZ		07124-G.K. Sheikabba  , 508102993			211201 - KANA MOHAMOOD SALEEM 501075933    Krishnapura 2085279624
+11297	1279		Khalander	Saleem  	567519528	Haleyangadi		Haleyangadi		Jubail		07101-Abdul Azeez Bajpe, 503271851			11297 - Khalander Saleem   567519528  1279  Haleyangadi 
+11330	1001		Abdul	Saleem Jogibettu 	567467360	Jogibettu				Olaya		11270-Ibrahim Kuntoor, 533936347			11330 - Abdul Saleem Jogibettu  567467360  1001  Jogibettu 
+11415	1452		Mohammad	Saleem Kasim 	569297786	Katapadi				Un Known		11403 - Eliyas Moideen Yermal  - 502112459			11415 - Mohammad Saleem Kasim  569297786  1452  Katapadi 
+7178		2051	Abdul	Saleem Mittur 	597393844	Mitthur		Mittur		Un Known		DKMO_Regroup			7178 - Abdul Saleem Mittur  597393844   2051 Mitthur 
+7189		1363	Mohammed	Saleem Nehru Nagar	535655336	Bantwal		Bantwal		Un Known		07122 - Shamshudin Addor - 541204731			7189 - Mohammed Saleem Nehru Nagar 535655336   1363 Bantwal 
+11306		2965	Mohammed	Saleem Unni 	556465110	Mulky		Mulky		Batha		11313-Ghani Ahmed  , 509125443			11306 - Mohammed Saleem Unni  556465110   2965 Mulky 
+7132		1833	S.M.	Sali  	503155358	Bunder		Mangaluru		Un Known		07105-Abbas Uchil  , 502124007			7132 - S.M. Sali   503155358   1833 Bunder 
+11327	1011		Abu	Sali Perabe 	594601865	Kuntoor		Perabe		Batha		11270-Ibrahim Kuntoor, 533936347			11327 - Abu Sali Perabe  594601865  1011  Kuntoor 
+11537	1437		Abdul	Samad Bangadi 	502619934	Moodabidri		Moodabidri		Alkhobar		11404-Abdulrahman Sulaiman  , 559906048			11537 - Abdul Samad Bangadi  502619934  1437  Moodabidri 
+11323	366		Abdul	Samad Hasanabba 	596958944	Akkarangadi		Panemangalore		Badea		07117-Abbas Mani, 530789678			11323 - Abdul Samad Hasanabba  596958944  366  Akkarangadi 
+11304	151		Mohammad	Samad Unchi 	507304476	Mulky		Mulky		Dammam		07101-Abdul Azeez Bajpe, 503271851			11304 - Mohammad Samad Unchi  507304476  151  Mulky 
+18001	12048		Mohammed	Samee	551135382	Pichalmar	2208010112					11288-Moahmmed Ali  Jokatte, 502149417			18001 - Mohammed Samee 551135382  12048  Pichalmar 2208010112
+11570			Mohammed	Sameer  	570966315	Kotepura		Ullal		Un Known		07105-Abbas Uchil  , 502124007			11570 - Mohammed Sameer   570966315    Kotepura 
+11580	1422		M.P.Moosa	Saquafi  	598008969	Urwal Padav		Urwal Padav		Un Known		DKMO_Regroup			11580 - M.P.Moosa Saquafi   598008969  1422  Urwal Padav 
+11307	1027		Haider	Sarali Katte	560987852	Saralikatte		Saralikatte		Ind'L Area		11307-Haider Sarali Katte, 597622507			11307 - Haider Sarali Katte 560987852  1027  Saralikatte 
+17993	12864		Haider	Saralikatte	5314937789	thekkar	2117033478	Saralikatte	5314937789	Al Hassa		11307-Haider Sarali Katte, 597622507	K1718458	91632208519	17993 - Haider Saralikatte 5314937789  12864  thekkar 2117033478
+19071			Habibullah	Sarfaraz	506701746			506701746	506701746					506701746	19071 - Habibullah Sarfaraz 506701746     
+11296	1278		Abubaker	Sarfraz  	569856635	Bajpe		Bajpe		Alkhobar		07101-Abdul Azeez Bajpe, 503271851			11296 - Abubaker Sarfraz   569856635  1278  Bajpe 
+11325	353		Abdul	Sattar Vittal 		Vittla		Bantwal		Shifa		07117-Abbas Mani, 530789678			11325 - Abdul Sattar Vittal    353  Vittla 
+16816	12454		Jaleel	Savad	563734555	Yemmikere	2069247060				01-Sep-65	15681-Mohammed Ashraf Kozi Khan, 564671735			16816 - Jaleel Savad 563734555  12454  Yemmikere 2069247060
+20302			Sayed Hussain	Sayed Umar	503857006	Gurukambla		kaikamba Gurukambla	503857006	Dammam		17952-Nayaz ahammad, 509862283			20302 - Sayed Hussain Sayed Umar 503857006    Gurukambla 
+18045	13133		SAYYAD IFTHIKAR	SAYYAD MASOOD	554189031	ULLAL	2302760174		554189031	MALAZ	15-Aug-78	07122 - Shamshudin Addor - 541204731			18045 - SAYYAD IFTHIKAR SAYYAD MASOOD 554189031  13133  ULLAL 2302760174
+16807	8566		Mohammad asif	sayyed	553678041	Yermal						11403 - Eliyas Moideen Yermal  - 502112459			16807 - Mohammad asif sayyed 553678041  8566  Yermal 
+18062	10275		NIZAM	SEEDI	563074673	Goodina Bali	2408551931			EIXT 8	03-Mar-94	07122 - Shamshudin Addor - 541204731			18062 - NIZAM SEEDI 563074673  10275  Goodina Bali 2408551931
+11547	10254		Mohammed	Shabeer  	0568270809	Mallur				Un Known		07124-G.K. Sheikabba  , 508102993			11547 - Mohammed Shabeer   0568270809  10254  Mallur 
+16862	12487		Mohammad	Shafeek	533887437		2369535741					07101-Abdul Azeez Bajpe, 503271851			16862 - Mohammad Shafeek 533887437  12487   2369535741
+18105	10023		Hussain	Shafi	555910340	Katipalla	2375695117	Katipalla	555910340	Malaz	18-May-74	07251-Yusuf Adoor  Nadugudde, 562906572		9845120221	18105 - Hussain Shafi 555910340  10023  Katipalla 2375695117
+16822	12336		Mohammad	shafi	542057984							07130-Ahmed Usman  Kaikamba, 508290998		9916087708	16822 - Mohammad shafi 542057984  12336   
+16849	11797		Kalandar	Shafi ahamed	507104725	Sunnathkere						11313-Ghani Ahmed  , 509125443			16849 - Kalandar Shafi ahamed 507104725  11797  Sunnathkere 
+17980	11449		Saiyad Nasir	Shah	551706733	Karkala	2374193262	Karkala	551706733		05-Sep-85	11313-Ghani Ahmed  , 509125443		9886414947	17980 - Saiyad Nasir Shah 551706733  11449  Karkala 2374193262
+18058	12808		Mohammed	Shahbaz	561080052	Basrur	2433569528	Basrur		Sulay	20-Oct-94	07112-Fazlu Rahman  , 502260256			18058 - Mohammed Shahbaz 561080052  12808  Basrur 2433569528
+15670	11564		Mohammed	Shaheed	530966903	Laila	2281350070	Laila			06-Jan-78	11313-Ghani Ahmed  , 509125443	G4352232	9900796484	15670 - Mohammed Shaheed 530966903  11564  Laila 2281350070
+18082	13135		MOHAMMED	SHAHEER	572918658	ULLAL	2403346303		536948827	BATHA	12-Mar-85	07122 - Shamshudin Addor - 541204731			18082 - MOHAMMED SHAHEER 572918658  13135  ULLAL 2403346303
+211210			MOHAMMED	SHAHID	557987687						01-Dec-89	07128-Abdul Hameed Nazeer  Kulur, 592114842			211210 - MOHAMMED SHAHID 557987687     
+11533	10372		P.	Shaik Ibrahim Dada	564937885	Pulkeri		Karkala	564937885	Marqab		11553 - Muzaffar Ali Mohammed Shareef - 508967545			11533 - P. Shaik Ibrahim Dada 564937885  10372  Pulkeri 
+18056	12805		Mohammed Haneef	Shaikh	503415869	Mangalore	2043770532	Mangalore		Sanaya		7139-Kenjar Mohammed Sharief , 501522161			18056 - Mohammed Haneef Shaikh 503415869  12805  Mangalore 2043770532
+19051	12726		Mohammed Imthiyaz	Shaikh	568511790	Yermal	2237447624		568511790		01-May-74	07112-Fazlu Rahman  , 502260256	K7958167	9880142697	19051 - Mohammed Imthiyaz Shaikh 568511790  12726  Yermal 2237447624
+211203			MOHAMMED YASIR	SHAIKH	599056186	BASRUR	2476887365	BASRUR KUNDAPURA			03-May-97	07112-Fazlu Rahman  , 502260256			211203 - MOHAMMED YASIR SHAIKH 599056186    BASRUR 2476887365
+15639	12007		Mohammed Zameer	Shaikh	533298427	Madoor		Madoor		Malaz		07115-Haneef N.S, 542589564			15639 - Mohammed Zameer Shaikh 533298427  12007  Madoor 
+19109			Nasir Abbas	Shaikh	507450752	Gurukambla	2091515870	Gurukambla	507450752		18-Sep-65	17952-Nayaz ahammad, 509862283	L3400993		19109 - Nasir Abbas Shaikh 507450752    Gurukambla 2091515870
+15714	11571		Mohammed Haneef	Shaikh Basrur	504485968	Basrur	2136334147	Basrur		Sanayya old		07112-Fazlu Rahman  , 502260256		9448428726	15714 - Mohammed Haneef Shaikh Basrur 504485968  11571  Basrur 2136334147
+18079	13168		SYED MOHAMMED	SHAKEEL	552146771	BANTWAL	2435690470	BANTWAL		MALAZ	19-May-71	11313-Ghani Ahmed  , 509125443		7026694999	18079 - SYED MOHAMMED SHAKEEL 552146771  13168  BANTWAL 2435690470
+11563	10134		Ahmed	Shakeer  	544494192	Kotepura		Ullal		Un Known		ISMAIL BANTWAL			11563 - Ahmed Shakeer   544494192  10134  Kotepura 
+11280	752		Ahmed	Shakeer Mohammed 	506449838	Bajpe		Bajpe		Dammam		07101-Abdul Azeez Bajpe, 503271851			11280 - Ahmed Shakeer Mohammed  506449838  752  Bajpe 
+11286	760		Mulki	Shameem Ahmed 		Krishnapura		Surathkal		Rabwa		Irshad			11286 - Mulki Shameem Ahmed    760  Krishnapura 
+11298	1280		Mohammed	Shameer A. 	567099518	Kadike		Haleyangadi		Jubail		07101-Abdul Azeez Bajpe, 503271851			11298 - Mohammed Shameer A.  567099518  1280  Kadike 
+16865	12489		Abdul	Shareef	534563626							07101-Abdul Azeez Bajpe, 503271851			16865 - Abdul Shareef 534563626  12489   
+16820	12042		Hajabba Mohammad	Shareef	566132702							11288-Moahmmed Ali  Jokatte, 502149417			16820 - Hajabba Mohammad Shareef 566132702  12042   
+19053	13144		M.H.	Shareef	502265518	Bajpe		Bajpe	502265518	Madeena Munawwara		07101-Abdul Azeez Bajpe, 503271851		9844115911	19053 - M.H. Shareef 502265518  13144  Bajpe 
+16864	12488		Mohammad	Shareef	553041566							07101-Abdul Azeez Bajpe, 503271851	2332506720		16864 - Mohammad Shareef 553041566  12488   
+17919	11762		Mohammad	Shareef	570141831							11313-Ghani Ahmed  , 509125443			17919 - Mohammad Shareef 570141831  11762   
+11531	10130		Nawaz	Shareef  	594110372	Un Known				Un Known		ISMAIL BANTWAL			11531 - Nawaz Shareef   594110372  10130  Un Known 
+11619	13772		Shaikh	Shareef  	592508922	Puttur		Puttur		Un Known		11350-Yusuf Kalanjibail, 536581427			11619 - Shaikh Shareef   592508922  13772  Puttur 
+11385	1378	1855	Ibrahim	Shareef Iddinabba 	565103294	Thodar		Mijaru		Batha		11380-Shafe Thodar  , 541937996			11385 - Ibrahim Shareef Iddinabba  565103294  1378 1855 Thodar 
+7150	11379		Abdul	Shareef Nandavara 	599268564	Nandavara				Manfooha		DKMO_Regroup			7150 - Abdul Shareef Nandavara  599268564  11379  Nandavara 
+11560	10383		Mohammed	Shareif Hosabettu Ismail	509947055	Krishnapura		Mangaluru		Batha		SAMIULLAH KHAN			11560 - Mohammed Shareif Hosabettu Ismail 509947055  10383  Krishnapura 
+18057	12806		Bantwal Hamad	Sharief	533825614	Navoor	2277379869	Navoor			01-Nov-71	07117-Abbas Mani, 530789678			18057 - Bantwal Hamad Sharief 533825614  12806  Navoor 2277379869
+15679	11567		Abid	Sharif	500807215		2324280763			Rowda	15-Aug-87	DKMO_Regroup		95913404	15679 - Abid Sharif 500807215  11567   2324280763
+210602	210602	210602	Golthamajal Mohammad	Sharif	560397736	Kodlipet	2484437211	Kodlipet	560397736	Olaya	20-Jan-86	11267-Abdulla Dawood Kodlipet, 503027405	N5768263	7899268241	210602 - Golthamajal Mohammad Sharif 560397736  210602 210602 Kodlipet 2484437211
+11561	10384		Mohammad	Sharif Usman 	562693746	Mukka		Surathkal		Batha		SAMIULLAH KHAN			11561 - Mohammad Sharif Usman  562693746  10384  Mukka 
+18007	13151		Mudassir	Shariff	507890017	Chikkamagaloor	2393675752		507890017		05-Jan-91	11313-Ghani Ahmed  , 509125443			18007 - Mudassir Shariff 507890017  13151  Chikkamagaloor 2393675752
+18106	12839		Mohammed	Sharuqh G A	583032851	Mittabagilu	2427743840	Killur	592029366	Batha	31-Jan-92	07251-Yusuf Adoor  Nadugudde, 562906572		9741487577	18106 - Mohammed Sharuqh G A 583032851  12839  Mittabagilu 2427743840
+11525	10156		Rahmath	Shawal Hameed Faizul	561269489	Virajpete		Coorg		Batha		Rahim Airport			11525 - Rahmath Shawal Hameed Faizul 561269489  10156  Virajpete 
+11524	10155		Feroz	Shawal Rafeeq Shaual		Virajpete		Coorg		Batha		Rahim Airport			11524 - Feroz Shawal Rafeeq Shaual   10155  Virajpete 
+11357	402		Mulki	Sheik Abdul Khader	557993882	Mulky		Mulky		Batha		Ismail Katipalla			11357 - Mulki Sheik Abdul Khader 557993882  402  Mulky 
+11439		1354	Kundapur	Sheik Abu Mohamed	502846851	Kundapur		Kundapura		Un Known		Imtiyaz ahmed kundapur			11439 - Kundapur Sheik Abu Mohamed 502846851   1354 Kundapur 
+17981	11450		Saleem Farooq	Sheik Farooq	537588547	Karkala	2434537771	Karkala	537588547	Badiya	13-Nov-84	11313-Ghani Ahmed  , 509125443			17981 - Saleem Farooq Sheik Farooq 537588547  11450  Karkala 2434537771
+7124			G.K.	Sheikabba  	508102993	Kulur		Kulur		Deerah		07124-G.K. Sheikabba  , 508102993			7124 - G.K. Sheikabba   508102993    Kulur 
+15704	11470		Ashraf	Sheikh	507173318	Koteshwara	2177308372	Koteshwara		Batha	01-Jun-77	DKMO_Regroup		8255262954	15704 - Ashraf Sheikh 507173318  11470  Koteshwara 2177308372
+17965	13206		Fouzan Anwar	Sheikh	565465226		2270421163		565465226	Hara	22-Jun-87	07251-Yusuf Adoor  Nadugudde, 562906572		9986286747	17965 - Fouzan Anwar Sheikh 565465226  13206   2270421163
+15691	11751		Mohammed Anwar	sheikh	530607296	Jeppu	2286633173	Jeppu	571938206	Margab	15-Jun-69	11313-Ghani Ahmed  , 509125443	H1555722	9591781237	15691 - Mohammed Anwar sheikh 530607296  11751  Jeppu 2286633173
+15730	12265		Naushad 	Sheikh	508950027	Madoor	2209991559	Madoor		Sulaimaniya	01-Oct-71	07115-Haneef N.S, 542589564		8123894959	15730 - Naushad  Sheikh 508950027  12265  Madoor 2209991559
+11583	11325		Dawood	Sheikh Bengre 	561128166	Kannangar		Kannangar		Un Known		Imtiyaz ahmed kundapur			11583 - Dawood Sheikh Bengre  561128166  11325  Kannangar 
+16882	12273		Abdul Aziz	Sheikh Mahammad	557691389		2105773309				07-May-65	07115-Haneef N.S, 542589564		919036693047	16882 - Abdul Aziz Sheikh Mahammad 557691389  12273   2105773309
+11597	10387		Aslam	Sheikh Mohammed 	543791340	Surathkal		Mangaluru		Batha		SAMIULLAH KHAN			11597 - Aslam Sheikh Mohammed  543791340  10387  Surathkal 
+11467		2967	Ismail	Sheikh Shameer 	536447690	Hassan				Un Known		07101-Abdul Azeez Bajpe, 503271851			11467 - Ismail Sheikh Shameer  536447690   2967 Hassan 
+16846	11855		Abdbaker Irfan	sheikhmale	560690644	sheikhmale		sheikhmale				DKMO_Regroup			16846 - Abdbaker Irfan sheikhmale 560690644  11855  sheikhmale 
+17954	10330		Mahammad Isak	Shekabba	595991021	Malali	2306938891	Malali		New ind city2	17-Dec-88	07120-Mohammed Asif Kannur , 506991416			17954 - Mahammad Isak Shekabba 595991021  10330  Malali 2306938891
+16840	12335		Mohammed Nawaz	Shekabba	549927176							07130-Ahmed Usman  Kaikamba, 508290998		9632244456	16840 - Mohammed Nawaz Shekabba 549927176  12335   
+20301			Mohammed Mudasir	Shoukath  Hussain	556654485	Gurukambla	2431214788	Kaikamba Gurukambla	556654485	Hara		17952-Nayaz ahammad, 509862283			20301 - Mohammed Mudasir Shoukath  Hussain 556654485    Gurukambla 2431214788
+18074	13109		Ashraf	Shukur	548357586	Attawar	2397661501	Attawar	548357586	Malaz	05-Mar-72	11313-Ghani Ahmed  , 509125443			18074 - Ashraf Shukur 548357586  13109  Attawar 2397661501
+15688	11757		Mohammad Altaf	Shukur	542349255	Kudroli	2091052164	Kudroli		Batha	21-Feb-69	11313-Ghani Ahmed  , 509125443		9448639002	15688 - Mohammad Altaf Shukur 542349255  11757  Kudroli 2091052164
+19026			Abubakkar	Siddik	502067053	Jokatte	2166750949	Jokatte	502067053		04-Apr-79	11288-Moahmmed Ali  Jokatte, 502149417		9886660755	19026 - Abubakkar Siddik 502067053    Jokatte 2166750949
+15654	10006		Aboobakkar	Siddiq	570474969	Hejamady Kodi						11380-Shafe Thodar  , 541937996			15654 - Aboobakkar Siddiq 570474969  10006  Hejamady Kodi 
+15731	12266		Abubakkar	Siddiq	544435133	Surathkal	2347119006	Surathkal		Aziziya	27-Nov-85	07101-Abdul Azeez Bajpe, 503271851		9880790854	15731 - Abubakkar Siddiq 544435133  12266  Surathkal 2347119006
+7143		4965	Syed	Sirajuddin  		Bolar		Mangaluru		Un Known		Haneef Panambur			7143 - Syed Sirajuddin      4965 Bolar 
+7187		1362	Moiden	Sirilal Ahmed 	595997558	Karkala		Udupi		Un Known		Imtiyaz ahmed kundapur			7187 - Moiden Sirilal Ahmed  595997558   1362 Karkala 
+17977	13213		Hassan	Siyab	583870176	Kinya	2423794516	Kinya		Hara	10-Apr-90	07113-Ismail Montepadavu, 509173592		7795775577	17977 - Hassan Siyab 583870176  13213  Kinya 2423794516
+210905			Syed Sameer	Subhan	565878170	moodbidri	2466048952	Moodbidri		Manufa Riyadh	31-Oct-87	11313-Ghani Ahmed  , 509125443	R8206736	8095472939	210905 - Syed Sameer Subhan 565878170    moodbidri 2466048952
+7162	11482		Mohammed	Suhail  	531104531	Krishnapura				Jubail		DKMO_Regroup			7162 - Mohammed Suhail   531104531  11482  Krishnapura 
+18108	12840		Sayyad	Suhail	550294403	Ganjimutt	2287057083	Ganjimutt	550294403	New Sanayya	19-Nov-82	7176-Mohammed Altaf  , 507560706			18108 - Sayyad Suhail 550294403  12840  Ganjimutt 2287057083
+11404	953		Abdulrahman	Sulaiman  	559906048	Yermal				Euromarche		11404-Abdulrahman Sulaiman  , 559906048			11404 - Abdulrahman Sulaiman   559906048  953  Yermal 
+11293	257		K.M.	Sulaiman  	502462458	Kenchankere		Mulky		Sulai		Kana Abdul Hameed			11293 - K.M. Sulaiman   502462458  257  Kenchankere 
+19092			Nazeer	Sulaiman	506916972	Addoor	2408365035	Addoor	506916972	Batha	01-Jun-83	07122 - Shamshudin Addor - 541204731		9980150972	19092 - Nazeer Sulaiman 506916972    Addoor 2408365035
+7165	11481		Shaban	Sulaiman  	502956282	Padubidri				Un Known		11313-Ghani Ahmed  , 509125443			7165 - Shaban Sulaiman   502956282  11481  Padubidri 
+17949	11615		Umar Farook	Sulaiman Mukri Beltha	536363072	Laila	2240733242	Laila	536363072		19-May-75	11548-Abdul Razzak Machar, 593870965	N2053598	9481756767	17949 - Umar Farook Sulaiman Mukri Beltha 536363072  11615  Laila 2240733242
+7118			Abdul Hameed 	Sulia	506431871	Un Known				Un Known		07118-Abdul Hameed  Sulia, 506431871			7118 - Abdul Hameed  Sulia 506431871    Un Known 
+18111			Basheer	Sullia	555082486	Sullia			555082486	Riyadh		07120-Mohammed Asif Kannur , 506991416			18111 - Basheer Sullia 555082486    Sullia 
+210101			Abdul Azeez	Sunkadakatte	556969183	Arikkila	237444170	Puttur	556969183	Riyadh	01-Jun-78	11307-Haider Sarali Katte, 597622507		9972789062	210101 - Abdul Azeez Sunkadakatte 556969183    Arikkila 237444170
+16876	12040		Sirajuddin	Surthkal	572110479	Surthkal	2402090282			Batha	08-Apr-92	11288-Moahmmed Ali  Jokatte, 502149417		9844989045	16876 - Sirajuddin Surthkal 572110479  12040  Surthkal 2402090282
+15642	11530		Ismail	Sutta	562425875	Thotal		Kairangala		Malaz		07115-Haneef N.S, 542589564			15642 - Ismail Sutta 562425875  11530  Thotal 
+16804	8567		Abdul Razaq	syed	502287124	Moolur Uchila						11403 - Eliyas Moideen Yermal  - 502112459			16804 - Abdul Razaq syed 502287124  8567  Moolur Uchila 
+11442		1352	Kundapur	Syed Aslam 		Tekkate		Udupi		Un Known		Imtiyaz ahmed kundapur			11442 - Kundapur Syed Aslam     1352 Tekkate 
+11435	276		Abdul Basheer 	T.K. Talapadi	566384950	Talapady				Batha		11435 - Abdul Basheer  T.K. Talapadi - 566384950			11435 - Abdul Basheer  T.K. Talapadi 566384950  276  Talapady 
+11495	980	6326	Mohammed	Tahir Hassan 	507955140	Gangulli		Gangulli		Un Known		07112-Fazlu Rahman  , 502260256			11495 - Mohammed Tahir Hassan  507955140  980 6326 Gangulli 
+7224		2656	Baikady	Tahir Mohamed 	563741656	Kaup		Udupi		Un Known		11403 - Eliyas Moideen Yermal  - 502112459			7224 - Baikady Tahir Mohamed  563741656   2656 Kaup 
+19038	19038		Abdul Samad	Talapady	565420958	Talapady	2171469097	Talapady	565420958	Batha	01-Jan-64	07112-Fazlu Rahman  , 502260256		9731838846	19038 - Abdul Samad Talapady 565420958  19038  Talapady 2171469097
+17973	13211		Khadar	Talapady	545818969	Talapady	2317234520	Talapady	545818969	Malaz		07251-Yusuf Adoor  Nadugudde, 562906572			17973 - Khadar Talapady 545818969  13211  Talapady 2317234520
+19039	12753		Mohamed Altaf	Talapady	571327343	Talapady	2171226646	Talapady	571327343	Batha	08-Aug-70	07112-Fazlu Rahman  , 502260256	K9634867		19039 - Mohamed Altaf Talapady 571327343  12753  Talapady 2171226646
+15684	11568		Moosa	Talapady	504137620	Talapady	2080255645				04-Mar-61	DKMO_Regroup		8242280285	15684 - Moosa Talapady 504137620  11568  Talapady 2080255645
+15740	12268		Muhammad Abbas	Talapady	504126901	kc road	2127773485	Talapady		Malaz	19-Mar-65	DKMO_Regroup		9945791629	15740 - Muhammad Abbas Talapady 504126901  12268  kc road 2127773485
+11507	303		Mohammed	Tameem Shafy 	594931615	Vittla		Vitla		Un Known		DKMO_Regroup			11507 - Mohammed Tameem Shafy  594931615  303  Vittla 
+18021	1327		Hussain	Tanzeel	581726317	Ullala	2301476806		581726317		22-Jun-84	11404-Abdulrahman Sulaiman  , 559906048			18021 - Hussain Tanzeel 581726317  1327  Ullala 2301476806
+17934	13390		Ismail	Tapal Ibrahim	534610961	Neralkatte	2308485032	Puttur		Unaiza		11307-Haider Sarali Katte, 597622507	J7069354	9741922480	17934 - Ismail Tapal Ibrahim 534610961  13390  Neralkatte 2308485032
+15666	11390		Thasleem Ahmed	Thannirbavi	531212373	Krishnapur	2242973887	Surathkal		shifa	05-Jun-82	07105-Abbas Uchil  , 502124007	L6635647	9844991928	15666 - Thasleem Ahmed Thannirbavi 531212373  11390  Krishnapur 2242973887
+19046	12875		K Kasim	Thekkaru	599762503	Thekkaru		Kanaraje House Thekkaru				11350-Yusuf Kalanjibail, 536581427		9686364181	19046 - K Kasim Thekkaru 599762503  12875  Thekkaru 
+16808	1051	1823	Imthiaz	Thodar	507638957	Thodar	2260128174	9980194825	543550929		02-Oct-72	11380-Shafe Thodar  , 541937996			16808 - Imthiaz Thodar 507638957  1051 1823 Thodar 2260128174
+19044	19044		Mohammed Imthiyaz	Thodar	556373611	Thodar		Thodar	556373611	Riyadh		11404-Abdulrahman Sulaiman  , 559906048			19044 - Mohammed Imthiyaz Thodar 556373611  19044  Thodar 
+11380	1376	1817	Shafe	Thodar  	541937996	Thodar		Mijaru		Batha		11380-Shafe Thodar  , 541937996			11380 - Shafe Thodar   541937996  1376 1817 Thodar 
+11388	1380		Abdulla	Thodar Chayabba 	508491833	Thodar		Mijaru		Madeena		11380-Shafe Thodar  , 541937996			11388 - Abdulla Thodar Chayabba  508491833  1380  Thodar 
+11395	1387	1828	Idinabba	Thodar Mohammed Haris	508955001	Thodar		Mijaru		Bukhariya, Altaif		11380-Shafe Thodar  , 541937996			11395 - Idinabba Thodar Mohammed Haris 508955001  1387 1828 Thodar 
+19028	19028		Hyder Ali	Thokur	550515291	Jokatte	2113767140	Jokatte	550515291	Jubail		11288-Moahmmed Ali  Jokatte, 502149417		8197123010	19028 - Hyder Ali Thokur 550515291  19028  Jokatte 2113767140
+16881	12455		Abdul Kasim	Thollath	541704494							07101-Abdul Azeez Bajpe, 503271851			16881 - Abdul Kasim Thollath 541704494  12455   
+16842	12483		Sulaiman	Thonse	502260256							07112-Fazlu Rahman  , 502260256			16842 - Sulaiman Thonse 502260256  12483   
+15645	12281	0	Mohammed Iqbal	Thotal	501234130	Montepadavu	2172286961	Montepadavu		Batha	20-Jul-77	07113-Ismail Montepadavu, 509173592		9980980410	15645 - Mohammed Iqbal Thotal 501234130  12281 0 Montepadavu 2172286961
+19078			Aboobakkar	Thouheed	567540426	Nandavara		Nandavara	567540426			11404-Abdulrahman Sulaiman  , 559906048			19078 - Aboobakkar Thouheed 567540426    Nandavara 
+211001			Ismail	Thouseef	536509392	bajpe		Bajpe		Batha	22-Jul-88	11281-Abdul Irshad Moidin , 502026155	J3010149		211001 - Ismail Thouseef 536509392    bajpe 
+15650	12106	0	Mohammad	Thouseef	542145591	Thaudugoli	2287649509	Thaudugoli		Batha	20-Jan-87	07113-Ismail Montepadavu, 509173592			15650 - Mohammad Thouseef 542145591  12106 0 Thaudugoli 2287649509
+19091			Ibrahim	Tonse	577476414	Kodi Bengre	2096625153	Kodi	577476414	Riyadh		07112-Fazlu Rahman  , 502260256			19091 - Ibrahim Tonse 577476414    Kodi Bengre 2096625153
+15739	12263		Muhammed	Tousif	567913326	Kunjibettu	2304272178	Kunjibettu			02-Dec-89	DKMO_Regroup		9901774789	15739 - Muhammed Tousif 567913326  12263  Kunjibettu 2304272178
+20304			Suhail Ahmed	Turner	541134504	Gurukambla		Kaikamba Gurukambla	541134504	Hara		17952-Nayaz ahammad, 509862283			20304 - Suhail Ahmed Turner 541134504    Gurukambla 
+19103			Muhammad	Ubaidullah	571423722	Mallur	2463179628	9632705074	571423722	Rowdah	06-Feb-86	07122 - Shamshudin Addor - 541204731		9632705074	19103 - Muhammad Ubaidullah 571423722    Mallur 2463179628
+7105		1007	Abbas	Uchil  	502124007	Uchila		Uchil		Hara		07105-Abbas Uchil  , 502124007			7105 - Abbas Uchil   502124007   1007 Uchila 
+16847	11495		Mahammed	Uchil	506537243	Uchil	2406946448				17-Oct-61	11313-Ghani Ahmed  , 509125443	N5645802	9448151315	16847 - Mahammed Uchil 506537243  11495  Uchil 2406946448
+11425	1465		Ahmed	Uchil (Koya Jeddah)	502468713	Moolur Uchila				Jeddah		11403 - Eliyas Moideen Yermal  - 502112459			11425 - Ahmed Uchil (Koya Jeddah) 502468713  1465  Moolur Uchila 
+15663	8778		Sameer Ahmed	Udupi	534518595	Kukkikatte	2311199026	Kukkikatte		new Sanaya	10-Aug-85	11307-Haider Sarali Katte, 597622507	K9635038	8970747758	15663 - Sameer Ahmed Udupi 534518595  8778  Kukkikatte 2311199026
+15711	11637		Aboobacker	Ujire	596789901	Ujire	2365287925	Ujire		Batha	14-Jul-66	11307-Haider Sarali Katte, 597622507		91664483294	15711 - Aboobacker Ujire 596789901  11637  Ujire 2365287925
+19024	11609		Ibrahim Bathisha	Ujire	546261283	Ujire	2342241334	Ujire	554116514	Shareef Buffet Ateekadail	05-Jun-86	11350-Yusuf Kalanjibail, 536581427		9164379377	19024 - Ibrahim Bathisha Ujire 546261283  11609  Ujire 2342241334
+211209			NASEER	ULAIBETTU	549428464	DERALAKATTE	2311867143					07262-Salman Noor  Hasan, 500602458			211209 - NASEER ULAIBETTU 549428464    DERALAKATTE 2311867143
+18019	13134		Shafiq	Ulaibettu	537670076	Ulaibettu	2389956372	Ulaibettu	537670076	Malaz	16-Dec-91	07122 - Shamshudin Addor - 541204731			18019 - Shafiq Ulaibettu 537670076  13134  Ulaibettu 2389956372
+7123			Abbas	Ullal	503285872	Un Known				Malaz		07115-Haneef N.S, 542589564			7123 - Abbas Ullal 503285872    Un Known 
+18103	13171		Ahmed Shafi	Ullal	561671188	Kotepura	2199761186	Ullala Kotepura		Riyadh	14-Jun-73	15698-Moideen Jokatte, 503604969			18103 - Ahmed Shafi Ullal 561671188  13171  Kotepura 2199761186
+16853	11494		Imtiyaz	Ullal	593188927		2267403182					DKMO_Regroup			16853 - Imtiyaz Ullal 593188927  11494   2267403182
+16873	289		Abbas Suhail	Ullal Halekote	553703849	ullal	2415673942				27-Oct-87	07252-Abdullah K.P, 503614377		00918792782595	16873 - Abbas Suhail Ullal Halekote 553703849  289  ullal 2415673942
+201102	13012		Mohammed Azar	Umar Farook	568184146	Krishnapura	2391412371	Krishnapura	568184146	Buraidah	19-Oct-97	07122 - Shamshudin Addor - 541204731		9972722964	201102 - Mohammed Azar Umar Farook 568184146  13012  Krishnapura 2391412371
+210705			Mohammed Mustafa	Umarabba Khadar	531203306	Bajpe	2387490549			Exit 2 Hitteen		07122 - Shamshudin Addor - 541204731		8088626782	210705 - Mohammed Mustafa Umarabba Khadar 531203306    Bajpe 2387490549
+15710	11810		Adam	Ummar	551216032	Thekkar	2252596750			Naseem		11307-Haider Sarali Katte, 597622507	G7311093	9731747032	15710 - Adam Ummar 551216032  11810  Thekkar 2252596750
+19014			Kumbarady Kasim	Ummar	509604874	Hosangara Puttur	2332707765	Hosanagara	509604874	Badiya	21-Jun-76	11313-Ghani Ahmed  , 509125443	N2989021	9632102870	19014 - Kumbarady Kasim Ummar 509604874    Hosangara Puttur 2332707765
+11498	3927		Aslam	Ummar Saheb 	509655494	Gangulli		Kundapura		Un Known		07112-Fazlu Rahman  , 502260256			11498 - Aslam Ummar Saheb  509655494  3927  Gangulli 
+211006			MUZAMMIL	UMMER	561381053	KUDROLI	2253996603					07120-Mohammed Asif Kannur , 506991416			211006 - MUZAMMIL UMMER 561381053    KUDROLI 2253996603
+19062			Sameen Khan	Ummer	554172458	Gurukambla	2421134681	Gurukambla	554172458	Hay Al Wazarath	03-Apr-85	07120-Mohammed Asif Kannur , 506991416			19062 - Sameen Khan Ummer 554172458    Gurukambla 2421134681
+18018	1326		Mohammed Ashraf	Uppinangady	541708389	Uppinangadi		Periadka	541708389	Batha		11404-Abdulrahman Sulaiman  , 559906048			18018 - Mohammed Ashraf Uppinangady 541708389  1326  Uppinangadi 
+7174	11426		Zia	Ur Raheman 	591676281	Ganjimutt				Malaz		07120-Mohammed Asif Kannur , 506991416			7174 - Zia Ur Raheman  591676281  11426  Ganjimutt 
+7125			Mohammed	Usam	537799462	Un Known				Un Known		07125-Mohammed Usam, 537799462			7125 - Mohammed Usam 537799462    Un Known 
+200801			Imran Khan	Vajala	506252257	Kabaka	2479010502	Kabaka	555978442	Exit 6	30-Aug-86	11313-Ghani Ahmed  , 509125443		7338262082	200801 - Imran Khan Vajala 506252257    Kabaka 2479010502
+11551	13762		Mohammad Shareef	Valachil	568525078	Kalangibail	2209961354	Kalanjibail		Murabba		11350-Yusuf Kalanjibail, 536581427		9740941339	11551 - Mohammad Shareef Valachil 568525078  13762  Kalangibail 2209961354
+7127			Masood	Venoor	549786786	Un Known				Un Known		07101-Abdul Azeez Bajpe, 503271851			7127 - Masood Venoor 549786786    Un Known 
+11295	216		Mustaq	Venur  	567105754	Venoor				Batha		DKMO_Regroup			11295 - Mustaq Venur   567105754  216  Venoor 
+7256			Well	Wisher  	55	Un Known				Un Known		DKMO_Regroup			7256 - Well Wisher   55    Un Known 
+17900	12952		Haleji	Yakoob Ibrahim	580898578						07-Jun-83	11548-Abdul Razzak Machar, 593870965		9480585787	17900 - Haleji Yakoob Ibrahim 580898578  12952   
+19017	12876		Mahamad	Yakub	551468892	Iddya	2139511899	Surathkal				07252-Abdullah K.P, 503614377	N9194425	8123232037	19017 - Mahamad Yakub 551468892  12876  Iddya 2139511899
+7153		1508	Valachil	Yakub Ismail 	501336252	Kuttar		Ullal		Un Known		Abdussalam Taiba			7153 - Valachil Yakub Ismail  501336252   1508 Kuttar 
+11617	11790		Mohammed	Yaseer Ahmed 	507942991	Mulky		Mulky		Un Known		11313-Ghani Ahmed  , 509125443			11617 - Mohammed Yaseer Ahmed  507942991  11790  Mulky 
+15728	10146		Abdul Rahim	Yermal	533143945	Yermal	2251169955	Yermal		Batha	05-Aug-74	11404-Abdulrahman Sulaiman  , 559906048		9901892578	15728 - Abdul Rahim Yermal 533143945  10146  Yermal 2251169955
+19105			Abubakkar	Yousuf	543824541							11307-Haider Sarali Katte, 597622507			19105 - Abubakkar Yousuf 543824541     
+11278	451		Mohammad	Yusoof Karambar 	596555603	Pyara		Bajpe		Batha		DKMO_Regroup			11278 - Mohammad Yusoof Karambar  596555603  451  Pyara 
+15668	8798		Abdul Rasheed	Yusub Sunkadakatte	55798805	Kallaje	2357038765	Sunkadakatte		Darrayya	01-Sep-73	11307-Haider Sarali Katte, 597622507		9632687060	15668 - Abdul Rasheed Yusub Sunkadakatte 55798805  8798  Kallaje 2357038765
+16832	12480		Mohammad	Yusuf	556569809							11404-Abdulrahman Sulaiman  , 559906048			16832 - Mohammad Yusuf 556569809  12480   
+11573	10379		Riyaz	Yusuf  	564559984	Kabettu		Karkala	564559984	Manfooha		11553 - Muzaffar Ali Mohammed Shareef - 508967545			11573 - Riyaz Yusuf   564559984  10379  Kabettu 
+15676	11559		Ahmed Zakariya	Yusuf Hameed	541809158	Guruvayana kere	2155752591	Guruvayanakere		Al Swuaidi	01-Oct-65	07101-Abdul Azeez Bajpe, 503271851		94802298870	15676 - Ahmed Zakariya Yusuf Hameed 541809158  11559  Guruvayana kere 2155752591
+15667	12002		Mustaq Ahmed	Yusuf Mulla	599107165	Navunda	2284859978	Naunda		Manfoha	26-Aug-84	07124-G.K. Sheikabba  , 508102993		9535434313	15667 - Mustaq Ahmed Yusuf Mulla 599107165  12002  Navunda 2284859978
+19080			Mohammed	Zabeer	558125768	Balehonnur	2232274460	Balehonnur	558125768		24-Jun-79	17952-Nayaz ahammad, 509862283		08266-251355	19080 - Mohammed Zabeer 558125768    Balehonnur 2232274460
+17987	13223		Ismail	Zabeeullah Kawa	583139900		2304432335			Malaz	10-Jul-78	07112-Fazlu Rahman  , 502260256	H9519597	919986316676	17987 - Ismail Zabeeullah Kawa 583139900  13223   2304432335
+17925	12458		Mohammed	Zafaulla	582095525		2195279951	Bc road			22-Jun-78	15681-Mohammed Ashraf Kozi Khan, 564671735			17925 - Mohammed Zafaulla 582095525  12458   2195279951
+17924	12344		Mohammed	Zaheer Kandlur	509102522			Kundapur				07112-Fazlu Rahman  , 502260256			17924 - Mohammed Zaheer Kandlur 509102522  12344   
+18026	1333		Mohammed	Zahid	544359964	Chickmangalur	2404364727		00917022654827		28-Nov-89	07101-Abdul Azeez Bajpe, 503271851			18026 - Mohammed Zahid 544359964  1333  Chickmangalur 2404364727
+17991	13218		Ibrahim	Zaigadkar	507353969					Al Khobar	01-Jun-70	07112-Fazlu Rahman  , 502260256	F9287221	919483916290	17991 - Ibrahim Zaigadkar 507353969  13218   
+17961	13204		Momin	Zainul Abiddin	508293165	udupi	2141636767	Gangoli		Gurnatha	01-Jan-70	07112-Fazlu Rahman  , 502260256		9980291783	17961 - Momin Zainul Abiddin 508293165  13204  udupi 2141636767
+7167	11427		Ahmed	Zakeer Hussain 	530493481	Talapady				Souk Makkah		11435-Abdul Basheer  T.K. Talapadi, 566384950			7167 - Ahmed Zakeer Hussain  530493481  11427  Talapady 
+17962	13203		Mohammed Habeebi	Zakir Hussain	502248944	Bhatkal	2095302556	Bhatkal	502248944	Gurnatha		07112-Fazlu Rahman  , 502260256			17962 - Mohammed Habeebi Zakir Hussain 502248944  13203  Bhatkal 2095302556
+17971	13209		Mohammad	Ziyad	502007843	Ullal	2437129170	halekote	502007843	Malaz	08-Sep-86	07120-Mohammed Asif Kannur , 506991416		9632566846	17971 - Mohammad Ziyad 502007843  13209  Ullal 2437129170
+16852	11438		Mohammad	Zubair	507819554	Muloor						DKMO_Regroup		9743590520	16852 - Mohammad Zubair 507819554  11438  Muloor 

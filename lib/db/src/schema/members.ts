@@ -26,6 +26,14 @@ export const membersTable = pgTable("members", {
   frfStatus: text("frf_status").notNull().default("active"),
   responsibility: text("responsibility").notNull().default("not_responsible"),
   notes: text("notes").notNull().default(""),
+  // Legacy-import fields (populated by the Import Members module)
+  legacyMemberId: text("legacy_member_id").notNull().default(""),
+  oldApplicationNumber: text("old_application_number").notNull().default(""),
+  whatsappNumber: text("whatsapp_number").notNull().default(""),
+  passportNumber: text("passport_number").notNull().default(""),
+  nativePlace: text("native_place").notNull().default(""),
+  memberGroup: text("member_group").notNull().default(""),
+  importBatchId: uuid("import_batch_id"),
   refMemberName: text("ref_member_name").notNull().default(""),
   refMemberId: text("ref_member_id").notNull().default(""),
   createdAt: timestamp("created_at", { withTimezone: true })

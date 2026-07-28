@@ -628,6 +628,38 @@ async function main() {
     CREATE INDEX IF NOT EXISTS document_activity_doc_idx ON document_activity(document_id);
   `);
 
+  // ── Legacy member import module ─────────────────────────────────────────────
+  await pool.query(`
+    ALTER TABLE members ADD COLUMN IF NOT EXISTS legacy_member_id TEXT NOT NULL DEFAULT '';
+    ALTER TABLE members ADD COLUMN IF NOT EXISTS old_application_number TEXT NOT NULL DEFAULT '';
+    ALTER TABLE members ADD COLUMN IF NOT EXISTS whatsapp_number TEXT NOT NULL DEFAULT '';
+    ALTER TABLE members ADD COLUMN IF NOT EXISTS passport_number TEXT NOT NULL DEFAULT '';
+    ALTER TABLE members ADD COLUMN IF NOT EXISTS native_place TEXT NOT NULL DEFAULT '';
+    ALTER TABLE members ADD COLUMN IF NOT EXISTS member_group TEXT NOT NULL DEFAULT '';
+    ALTER TABLE members ADD COLUMN IF NOT EXISTS import_batch_id UUID;
+    CREATE INDEX IF NOT EXISTS members_legacy_id_idx ON members(legacy_member_id) WHERE legacy_member_id <> '';
+    CREATE INDEX IF NOT EXISTS members_import_batch_idx ON members(import_batch_id) WHERE import_batch_id IS NOT NULL;
+
+    CREATE TABLE IF NOT EXISTS import_batches (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      file_name TEXT NOT NULL DEFAULT '',
+      file_size INTEGER NOT NULL DEFAULT 0,
+      total_rows INTEGER NOT NULL DEFAULT 0,
+      imported INTEGER NOT NULL DEFAULT 0,
+      updated INTEGER NOT NULL DEFAULT 0,
+      skipped INTEGER NOT NULL DEFAULT 0,
+      failed INTEGER NOT NULL DEFAULT 0,
+      duplicates INTEGER NOT NULL DEFAULT 0,
+      duration_ms INTEGER NOT NULL DEFAULT 0,
+      notes TEXT NOT NULL DEFAULT '',
+      rolled_back BOOLEAN NOT NULL DEFAULT false,
+      rolled_back_at TIMESTAMPTZ,
+      created_by TEXT NOT NULL DEFAULT '',
+      created_by_name TEXT NOT NULL DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+
   console.log("✅  All tables created.");
   await pool.end();
 }
