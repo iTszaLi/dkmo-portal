@@ -98,9 +98,16 @@ async function parseFile(file: File): Promise<string[][]> {
   if (/\.xlsx?$/i.test(file.name)) {
     const buf = await file.arrayBuffer();
     const head = new Uint8Array(buf.slice(0, 4));
-    // Old binary .xls files start with D0 CF 11 E0 — not supported by the xlsx reader
+    // Old binary .xls files start with D0 CF 11 E0 — read them with SheetJS
     if (head[0] === 0xd0 && head[1] === 0xcf) {
-      throw new Error("This is an old-format Excel file (.xls). Please open it in Excel and save it as .xlsx or CSV, then upload again.");
+      const XLSX = await import("xlsx");
+      const wb = XLSX.read(buf, { type: "array", cellDates: true });
+      const ws = wb.Sheets[wb.SheetNames[0]!];
+      if (!ws) return [];
+      const raw = XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1, raw: false, defval: "" });
+      return raw
+        .map((r) => (r ?? []).map((v) => (v == null ? "" : String(v))))
+        .filter((r) => r.some((x) => x.trim()));
     }
     const ExcelJS = (await import("exceljs")).default;
     const wb = new ExcelJS.Workbook();
