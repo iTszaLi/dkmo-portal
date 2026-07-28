@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { useListMembers, useCreateMember, useUpdateMember, useDeleteMember, useUpdateMemberFeeStatus, useUpdateMemberCommitteeStatus, getListMembersQueryKey } from "@workspace/api-client-react";
 import { celebrate } from "@/lib/confetti";
-import { MemberInput, type FeeStatusInputFeeStatus, type CommitteeStatusInput } from "@workspace/api-client-react";
+import { MemberInput, type Member, type FeeStatusInputFeeStatus, type CommitteeStatusInput } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,7 @@ import { MemberForm } from "@/components/MemberForm";
 import { RefMemberCell, useMemberIndex } from "@/components/RefMemberCell";
 import { MemberBadges } from "@/components/MemberBadges";
 import { Search, Plus, UserCircle, MapPin, Phone, MoreHorizontal, Edit, Trash, Users, CheckCircle2, Clock, XCircle, MinusCircle, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
-import { formatSAR, feeStatusLabel, feeStatusBadgeClass } from "@/lib/utils";
+import { feeStatusLabel, feeStatusBadgeClass } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { MemberAvatar } from "@/components/MemberAvatar";
 import { ReferralAnalytics } from "@/components/ReferralAnalytics";
@@ -160,6 +160,18 @@ export default function Members() {
     });
   };
 
+  const handleFrfStatus = (member: Member, frfStatus: "active" | "inactive") => {
+    updateMember.mutate({ id: member.id, data: { frfStatus } as any }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListMembersQueryKey() });
+        toast({ title: frfStatus === "active" ? "FRF membership activated" : "FRF membership deactivated", description: member.fullName });
+      },
+      onError: (err: any) => {
+        toast({ title: "Failed to update FRF membership", description: err.message, variant: "destructive" });
+      },
+    });
+  };
+
   const handleCommitteeStatus = (
     id: string,
     data: CommitteeStatusInput,
@@ -279,7 +291,7 @@ export default function Members() {
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Location</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Reference Member</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Status</TableHead>
-              <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">FRF Contributions</TableHead>
+              <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">FRF Membership</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -362,23 +374,15 @@ export default function Members() {
                   </TableCell>
                   <TableCell className="text-right">
                     {(() => {
-                      const due = (member as any).frfDue ?? 0;
-                      const paid = (member as any).frfPaid ?? 0;
-                      const outstanding = (member as any).frfOutstanding ?? 0;
-                      if (due === 0) {
-                        return <span className="text-xs text-slate-400 dark:text-slate-600">—</span>;
-                      }
+                      const active = ((member as any).frfStatus ?? "active") === "active";
                       return (
-                        <div className="text-xs leading-5">
-                          <div className="text-emerald-800 dark:text-emerald-300 font-medium">{formatSAR(paid)} / {formatSAR(due)}</div>
-                          {outstanding > 0 ? (
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${((member as any).frfOverdueCount ?? 0) > 0 ? "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300" : "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"}`}>
-                              Outstanding: {formatSAR(outstanding)}
-                            </span>
-                          ) : (
-                            <div className="text-emerald-600 dark:text-emerald-400">Fully paid</div>
-                          )}
-                        </div>
+                        <span
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold ${active ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-400"}`}
+                          data-testid={`badge-frf-membership-${member.id}`}
+                        >
+                          {active ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                          {active ? "Active" : "Inactive"}
+                        </span>
                       );
                     })()}
                   </TableCell>
@@ -425,6 +429,15 @@ export default function Members() {
                             </>
                           );
                         })()}
+                        {((member as any).frfStatus ?? "active") === "active" ? (
+                          <DropdownMenuItem onClick={() => handleFrfStatus(member, "inactive")} className="text-amber-700 dark:text-amber-400 dark:focus:bg-slate-800" data-testid={`menu-frf-deactivate-${member.id}`}>
+                            <XCircle className="mr-2 h-4 w-4" /> Deactivate FRF Membership
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem onClick={() => handleFrfStatus(member, "active")} className="text-emerald-700 dark:text-emerald-400 dark:focus:bg-slate-800" data-testid={`menu-frf-activate-${member.id}`}>
+                            <CheckCircle2 className="mr-2 h-4 w-4" /> Activate FRF Membership
+                          </DropdownMenuItem>
+                        )}
                         {member.feeStatus !== "paid" && (
                           <DropdownMenuItem onClick={() => handleFeeStatus(member.id, "paid")} className="text-emerald-700 dark:text-emerald-400 dark:focus:bg-slate-800">
                             <CheckCircle2 className="mr-2 h-4 w-4" /> Mark Fee Paid

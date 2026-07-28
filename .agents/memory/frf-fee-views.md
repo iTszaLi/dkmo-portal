@@ -14,3 +14,8 @@ description: How FRF (SAR 50/case) fee UIs are structured vs membership fee (SAR
 **FRF reminders removed (user decision, Jul 2026):** The FRF Reminders page, its route, the "Send FRF Reminder" button on the FRF page, and the dashboard FRF Reminder widget were all removed — the director decided FRF contributors don't need reminders. Do not re-add FRF reminder surfaces unless explicitly asked. Membership-fee reminders (Payments page) remain.
 
 **One-active-case rule (Jul 2026, user decision):** Only ONE FRF collection case (claim status 'approved') may be active at a time. Enforced by DB partial unique index `frf_claims_single_active` (mapped to HTTP 409) + read-check in POST/PUT /frf/claims. Contributions are generated on APPROVAL, not creation. /frf/pending-fees returns only the active (approved) case. 'disbursed' = completed/closed history. Seed has exactly 7 FRF claims (3 disbursed, 1 approved active, 1 under_review, 1 pending, 1 rejected).
+
+## Row actions & auto receipts (Jul 2026)
+- FRF Fees table has a "Responsible / Referred By" column (members.refMemberName = the referrer responsible for collecting from that member); pending-fees API now returns refMemberName too. Column is in PDF/Excel exports (10 cols).
+- Per-row Actions menu: Mark Paid posts a real payment (paymentType frf_contribution + frfClaimId) with an auto-generated receipt number `DKMO-FRF-YYYYMM-<6 digits>`; server transactionally syncs the ledger so Paid On/Receipt No. populate automatically. Exempt hidden for partial rows (server 409s when amountPaid>0).
+- **POST/DELETE /payments are role-gated admin+finance** (was auth-only; closed after review flagged the Mark Paid path).

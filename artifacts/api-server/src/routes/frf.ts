@@ -172,6 +172,7 @@ router.get("/frf/pending-fees", async (req, res): Promise<void> => {
         membershipId: m.membershipId,
         mobileNumber: m.mobileNumber,
         city: m.city,
+        refMemberName: m.refMemberName ?? "",
         claimId: claim.id,
         caseTitle: claim.title || claim.claimantName || "FRF Case",
         amount: Number(c.amount),

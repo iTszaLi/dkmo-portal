@@ -7,7 +7,7 @@ import {
   DeletePaymentParams,
   ListPaymentsQueryParams,
 } from "@workspace/api-zod";
-import { requireAuth } from "../middlewares/requireAuth";
+import { requireAuth, requireRole } from "../middlewares/requireAuth";
 import { paymentToApi } from "../lib/serializers";
 import { logAudit } from "../lib/audit";
 import { markContributionPaid, revertContributionForPayment } from "../lib/frf-ledger";
@@ -57,7 +57,7 @@ router.get("/payments", async (req, res): Promise<void> => {
   );
 });
 
-router.post("/payments", async (req, res): Promise<void> => {
+router.post("/payments", requireRole("admin", "finance"), async (req, res): Promise<void> => {
   const parsed = CreatePaymentBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -213,7 +213,7 @@ router.get("/payments/:id", async (req, res): Promise<void> => {
   );
 });
 
-router.delete("/payments/:id", async (req, res): Promise<void> => {
+router.delete("/payments/:id", requireRole("admin", "finance"), async (req, res): Promise<void> => {
   const params = DeletePaymentParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });

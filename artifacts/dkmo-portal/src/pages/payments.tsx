@@ -24,12 +24,13 @@ import { normalizeWhatsAppNumber, buildWhatsAppLink, type WhatsAppTarget } from 
 import { WhatsAppBulkDialog } from "@/components/WhatsAppBulkDialog";
 
 type PaymentTab = "membership" | "frf";
-type StatusView = "all" | "paid" | "unpaid";
+type StatusView = "all" | "paid" | "unpaid" | "overdue";
 
 const STATUS_VIEWS: { value: StatusView; label: string }[] = [
   { value: "all", label: "All" },
   { value: "paid", label: "Paid" },
   { value: "unpaid", label: "Unpaid" },
+  { value: "overdue", label: "Overdue" },
 ];
 
 function isDue(m: Member): boolean {
@@ -66,7 +67,7 @@ export default function Payments() {
   useEffect(() => setTab(urlTab), [urlTab]);
   // Deep-link: /payments?view=unpaid (membership tab status view)
   const rawView = params.get("view");
-  const urlView: StatusView = rawView === "paid" || rawView === "unpaid" ? rawView : "all";
+  const urlView: StatusView = rawView === "paid" || rawView === "unpaid" || rawView === "overdue" ? rawView : "all";
   const [view, setView] = useState<StatusView>(urlView);
   useEffect(() => setView(urlView), [urlView]);
   const memberIndex = useMemberIndex();
@@ -88,6 +89,8 @@ export default function Payments() {
       case "unpaid":
         // Everything still due — includes pending, partial and unpaid statuses.
         return all.filter(isDue);
+      case "overdue":
+        return all.filter(isOverdue);
       default:
         return all;
     }
@@ -102,10 +105,10 @@ export default function Payments() {
     const unpaidCount = all.filter((m) => isDue(m) && !isOverdue(m)).length;
     const amountDue = all.filter(isDue).reduce((acc, m) => acc + m.membershipFee, 0);
     return [
-      { label: "Paid", value: String(paidCount), sub: "Members who have paid", tone: "green" as const },
-      { label: "Unpaid", value: String(unpaidCount), sub: `Not yet paid (within ${OVERDUE_AFTER_DAYS} days of joining)`, tone: "neutral" as const },
-      { label: "Overdue", value: String(overdueMembers.length), sub: `Still unpaid ${OVERDUE_AFTER_DAYS}+ days after joining`, tone: "red" as const },
-      { label: "Amount Due", value: formatSAR(amountDue), sub: "Total yet to be collected", tone: "amber" as const },
+      { label: "Paid", value: String(paidCount), sub: "Members who have paid", tone: "green" as const, target: "paid" as StatusView },
+      { label: "Unpaid", value: String(unpaidCount), sub: `Not yet paid (within ${OVERDUE_AFTER_DAYS} days of joining)`, tone: "neutral" as const, target: "unpaid" as StatusView },
+      { label: "Overdue", value: String(overdueMembers.length), sub: `Still unpaid ${OVERDUE_AFTER_DAYS}+ days after joining`, tone: "red" as const, target: "overdue" as StatusView },
+      { label: "Amount Due", value: formatSAR(amountDue), sub: "Total yet to be collected", tone: "amber" as const, target: "unpaid" as StatusView },
     ];
   }, [all]);
 
@@ -286,16 +289,20 @@ export default function Payments() {
       {/* Summary cards — Paid / Unpaid / Overdue / Amount Due */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((k) => (
-          <div
+          <button
             key={k.label}
+            type="button"
+            onClick={() => switchView(k.target)}
+            aria-pressed={view === k.target}
             data-testid={`card-fee-${k.label.toLowerCase().replace(/\s/g, "-")}`}
             className={cn(
-              "rounded-2xl border p-4 shadow-sm bg-white dark:bg-slate-900",
+              "rounded-2xl border p-4 shadow-sm bg-white dark:bg-slate-900 text-left transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500",
               k.tone === "red"
                 ? "border-red-200 dark:border-red-900/40"
                 : k.tone === "amber"
                   ? "border-amber-200 dark:border-amber-900/40"
                   : "border-emerald-100 dark:border-slate-800",
+              view === k.target && "ring-2 ring-emerald-500 dark:ring-emerald-400",
             )}
           >
             <p className={cn(
@@ -321,7 +328,7 @@ export default function Payments() {
               </p>
             )}
             <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">{k.sub}</p>
-          </div>
+          </button>
         ))}
       </div>
 
