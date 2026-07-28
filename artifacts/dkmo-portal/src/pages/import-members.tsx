@@ -36,7 +36,7 @@ const TARGET_FIELDS = [
   { key: "nativePlace", label: "Home Place (Native)", patterns: [/home ?place|place ?home|native|place$/i] },
   { key: "city", label: "Local Place (Current)", patterns: [/local|city|location/i] },
   { key: "dateOfBirth", label: "Date of Birth", patterns: [/birth|dob/i] },
-  { key: "memberGroup", label: "Group (Legacy Committee)", patterns: [/^group/i] },
+  { key: "memberGroup", label: "Group (Sponsor / Reference)", patterns: [/^group/i] },
 ] as const;
 type TargetKey = (typeof TARGET_FIELDS)[number]["key"] | "ignore";
 
@@ -122,7 +122,8 @@ interface AnalyzedRow {
 interface AnalyzeResult {
   summary: {
     total: number; valid: number; invalid: number; duplicates: number; blank: number;
-    withWarnings: number; newJamaaths: string[]; newGroups: string[];
+    withWarnings: number; complete: number; partial: number; needsReview: number;
+    newJamaaths: string[]; newGroups: string[];
   };
   rows: AnalyzedRow[];
 }
@@ -410,6 +411,11 @@ export default function ImportMembersPage() {
                   <StatCard label="Invalid" value={analysis.summary.invalid} tone="red" />
                   <StatCard label="Duplicates" value={analysis.summary.duplicates} tone="yellow" />
                   <StatCard label="Blank rows" value={analysis.summary.blank} />
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <StatCard label="Complete records" value={analysis.summary.complete ?? 0} tone="green" />
+                  <StatCard label="Partial (OK to import)" value={analysis.summary.partial ?? 0} />
+                  <StatCard label="Needs review" value={analysis.summary.needsReview ?? 0} tone="red" />
                 </div>
                 {analysis.summary.invalid > 0 && (
                   <div className="max-h-72 overflow-auto rounded-md border">

@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, numeric, boolean } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp, numeric, boolean, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -34,6 +34,12 @@ export const membersTable = pgTable("members", {
   nativePlace: text("native_place").notNull().default(""),
   memberGroup: text("member_group").notNull().default(""),
   homeContactNumber: text("home_contact_number").notNull().default(""),
+  // Sponsor / reference-member info extracted from the legacy "Group" column.
+  legacyReferenceCode: text("legacy_reference_code").notNull().default(""),
+  legacyReferenceName: text("legacy_reference_name").notNull().default(""),
+  legacyReferenceMobile: text("legacy_reference_mobile").notNull().default(""),
+  // Original raw record as received by the importer, for audit/traceability.
+  legacyRawRecord: jsonb("legacy_raw_record"),
   importBatchId: uuid("import_batch_id"),
   refMemberName: text("ref_member_name").notNull().default(""),
   refMemberId: text("ref_member_id").notNull().default(""),

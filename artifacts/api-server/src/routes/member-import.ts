@@ -145,6 +145,13 @@ interface CleanRow {
   dateOfBirth: string;
   memberGroup: string;
   homeContactNumber: string;
+  referenceCode: string;
+  referenceName: string;
+  referenceMobile: string;
+  /** How complete the record is: complete / partial / needsReview. */
+  classification: "complete" | "partial" | "needsReview";
+  /** Original raw record preserved for audit. */
+  rawRecord: Record<string, string>;
   errors: string[];
   warnings: string[];
   /** Original → cleaned value descriptions shown in the preview. */
@@ -174,6 +181,28 @@ function cleanAndValidate(raw: RawRowT): CleanRow {
   const dateOfBirth = dobRaw ? normalizeDate(dobRaw) : "";
   if (dateOfBirth && dateOfBirth !== dobRaw) transforms.push(`DOB: ${dobRaw} → ${dateOfBirth}`);
 
+  // Legacy "Group" column actually holds sponsor/reference info:
+  // "07101-Abdul Azeez Bajpe, 503271851" → code / name / mobile.
+  // "DKMO_Regroup" or blank means no sponsor assigned.
+  const groupRaw = cleanText(raw.memberGroup);
+  let referenceCode = "", referenceName = "", referenceMobile = "";
+  if (groupRaw && !/^dkmo[_ ]?regroup$/i.test(groupRaw)) {
+    const m = groupRaw.match(/^(\d{3,6})\s*-\s*(.*)$/);
+    let rest = groupRaw;
+    if (m) { referenceCode = m[1]; rest = m[2]; }
+    const parts = rest.split(",").map((p) => p.trim()).filter(Boolean);
+    const mobilePart = parts.find((p) => /^\+?\d[\d ]{7,}$/.test(p.replace(/\s+/g, " ")));
+    referenceMobile = mobilePart ? normalizeSaudiMobile(mobilePart) || mobilePart.replace(/\s+/g, "") : "";
+    referenceName = properCase(parts.filter((p) => p !== mobilePart).join(", "));
+    if (referenceCode || referenceName || referenceMobile) {
+      transforms.push(
+        `Sponsor: ${groupRaw} → ${[referenceCode, referenceName, referenceMobile].filter(Boolean).join(" / ")}`,
+      );
+    }
+  } else if (groupRaw) {
+    transforms.push(`Sponsor: ${groupRaw} → (no sponsor assigned)`);
+  }
+
   const row: CleanRow = {
     rowNumber: raw.rowNumber,
     legacyMemberId: cleanText(raw.legacyMemberId),
@@ -189,8 +218,15 @@ function cleanAndValidate(raw: RawRowT): CleanRow {
     city: properCase(cleanText(raw.city)) || "Riyadh",
     country: properCase(cleanText(raw.country)) || "Saudi Arabia",
     dateOfBirth,
-    memberGroup: cleanText(raw.memberGroup),
+    memberGroup: groupRaw && /^dkmo[_ ]?regroup$/i.test(groupRaw) ? "" : groupRaw,
     homeContactNumber: cleanText(raw.homeContactNumber),
+    referenceCode,
+    referenceName,
+    referenceMobile,
+    classification: "partial",
+    rawRecord: Object.fromEntries(
+      Object.entries(raw).filter(([k, v]) => k !== "rowNumber" && typeof v === "string" && v !== ""),
+    ) as Record<string, string>,
     errors,
     warnings,
     transforms,
@@ -206,6 +242,11 @@ function cleanAndValidate(raw: RawRowT): CleanRow {
   if (dobRaw && !dateOfBirth) warnings.push(`Unrecognized date of birth "${dobRaw}" — left blank`);
   if (whatsappRaw && whatsappNumber === whatsappRaw && !normalizeSaudiMobile(whatsappRaw))
     warnings.push("WhatsApp number kept as-is (not a Saudi format)");
+
+  // Classification: needsReview when required data is missing/invalid;
+  // complete when the key optional fields are also present.
+  if (errors.length > 0) row.classification = "needsReview";
+  else if (row.iqamaNumber && row.dateOfBirth && row.jamaath) row.classification = "complete";
   return row;
 }
 
@@ -372,13 +413,17 @@ router.post("/members/import/analyze", requireRole("admin"), async (req, res): P
       duplicates: analyzed.filter((a) => a.status === "duplicate").length,
       blank: analyzed.filter((a) => a.status === "blank").length,
       withWarnings: analyzed.filter((a) => a.row.warnings.length > 0).length,
+      complete: analyzed.filter((a) => !a.row.isBlank && a.row.classification === "complete").length,
+      partial: analyzed.filter((a) => !a.row.isBlank && a.row.classification === "partial").length,
+      needsReview: analyzed.filter((a) => !a.row.isBlank && a.row.classification === "needsReview").length,
       newJamaaths,
       newGroups,
     },
     rows: analyzed.map((a) => ({
       rowNumber: a.row.rowNumber,
       status: a.status,
-      cleaned: { ...a.row, errors: undefined, warnings: undefined, isBlank: undefined },
+      cleaned: { ...a.row, errors: undefined, warnings: undefined, isBlank: undefined, rawRecord: undefined },
+      classification: a.row.classification,
       errors: a.row.errors,
       warnings: a.row.warnings,
       transforms: a.row.transforms,
@@ -476,6 +521,10 @@ router.post("/members/import/commit", requireRole("admin"), async (req: AuthedRe
             nativePlace: row.nativePlace,
             memberGroup: row.memberGroup,
             homeContactNumber: row.homeContactNumber,
+            legacyReferenceCode: row.referenceCode,
+            legacyReferenceName: row.referenceName,
+            legacyReferenceMobile: row.referenceMobile,
+            legacyRawRecord: row.rawRecord,
             importBatchId: batchId,
           });
         }
@@ -496,6 +545,9 @@ router.post("/members/import/commit", requireRole("admin"), async (req: AuthedRe
             native_place = CASE WHEN native_place = '' THEN ${row.nativePlace} ELSE native_place END,
             member_group = CASE WHEN member_group = '' THEN ${row.memberGroup} ELSE member_group END,
             home_contact_number = CASE WHEN home_contact_number = '' THEN ${row.homeContactNumber} ELSE home_contact_number END,
+            legacy_reference_code = CASE WHEN legacy_reference_code = '' THEN ${row.referenceCode} ELSE legacy_reference_code END,
+            legacy_reference_name = CASE WHEN legacy_reference_name = '' THEN ${row.referenceName} ELSE legacy_reference_name END,
+            legacy_reference_mobile = CASE WHEN legacy_reference_mobile = '' THEN ${row.referenceMobile} ELSE legacy_reference_mobile END,
             application_number = CASE WHEN application_number = '' THEN ${row.applicationNumber} ELSE application_number END,
             iqama_number = CASE WHEN iqama_number = '' THEN ${row.iqamaNumber} ELSE iqama_number END,
             jamaath = CASE WHEN jamaath = '' THEN ${row.jamaath} ELSE jamaath END,
