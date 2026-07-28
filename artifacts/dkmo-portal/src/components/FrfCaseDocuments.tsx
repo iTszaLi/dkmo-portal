@@ -49,7 +49,7 @@ export function FrfCaseDocuments({ claimId, isAdmin }: { claimId: string; isAdmi
     try {
       const res = await customFetch<{ uploadURL: string; objectPath: string }>(
         "/api/storage/uploads/request-url",
-        { method: "POST", body: JSON.stringify({ fileName: f.name, contentType: f.type }) },
+        { method: "POST", body: JSON.stringify({ name: f.name, size: f.size, contentType: f.type }) },
       );
       const put = await fetch(res.uploadURL, { method: "PUT", body: f, headers: { "Content-Type": f.type } });
       if (!put.ok) throw new Error(`Upload failed with status ${put.status}`);

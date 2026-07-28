@@ -222,7 +222,7 @@ export default function WelfareModule({ serviceType }: { serviceType: ServiceTyp
       const res = await fetch(`${basePath}/api/storage/uploads/request-url`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type || "application/octet-stream" }),
+        body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }),
       });
       if (!res.ok) throw new Error("Failed to get upload URL");
       const { uploadURL, objectPath } = await res.json();

@@ -193,7 +193,7 @@ export default function MemberDetail() {
       try {
         const res = await customFetch<{ uploadURL: string; objectPath: string }>(
           "/api/storage/uploads/request-url",
-          { method: "POST", body: JSON.stringify({ fileName: file.name, contentType: file.type }) },
+          { method: "POST", body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }) },
         );
         const put = await fetch(res.uploadURL, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
         if (!put.ok) throw new Error(`Upload failed with status ${put.status}`);

@@ -117,7 +117,7 @@ const emptyForm = (): DocumentInput & { tags: string } => ({
 async function uploadToStorage(file: globalThis.File): Promise<PendingFile> {
   const res = await customFetch<{ uploadURL: string; objectPath: string }>(
     "/api/storage/uploads/request-url",
-    { method: "POST", body: JSON.stringify({ fileName: file.name, contentType: file.type }) },
+    { method: "POST", body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }) },
   );
   await fetch(res.uploadURL, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
   return {
