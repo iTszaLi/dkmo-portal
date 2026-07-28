@@ -1,0 +1,724 @@
+# Build a Production-Ready Legacy Member Import & Migration System for the DKMO Portal
+
+I have uploaded a legacy member database (TXT/CSV format) that contains thousands of DKMO members collected over many years. This data is inconsistent, contains missing values, duplicate information, different date formats, inconsistent capitalization, and several legacy-specific fields.
+
+**Do NOT build a simple CSV importer.** Build a complete **Legacy Data Migration System** that intelligently understands the old database structure and safely imports it into the new DKMO Portal.
+
+---
+
+# Objective
+
+Create a secure, professional, reusable import system that can migrate thousands of legacy members into the new DKMO Portal database while preserving old information and cleaning the data automatically.
+
+The importer must be production-ready, scalable, fault-tolerant, and suitable for future imports as well.
+
+---
+
+# Example Legacy Data
+
+The legacy file contains columns similar to these:
+
+* Id No
+* Application No
+* Old Application No
+* First Name
+* Last Name
+* Mobile No
+* Jamaath
+* Iqama No
+* Place Home
+* WhatsApp No
+* Place Local
+* Date of Birth
+* Group
+* Passport No
+* Mobile Home
+* NameAll
+
+Example:
+
+```text
+15680 | 11555 | | Abdul Salam | | 568799520 | surthkal | 2315315974 | Surthkal | | | 17-Sep-81 | 07101-Abdul Azeez Bajpe, 503271851 | | | 15680 - Abdul Salam 568799520 11555 surthkal 2315315974
+```
+
+This file should NOT be treated as a normal CSV because many fields are incomplete or contain legacy information.
+
+---
+
+# Build a New Module
+
+Create:
+
+Admin
+→ Data Management
+→ Legacy Member Import
+
+Only Super Admins should have access.
+
+---
+
+# Supported File Types
+
+Support importing:
+
+* TXT
+* CSV
+* XLSX
+
+Automatically detect:
+
+* File type
+* Encoding
+* Delimiter (Tab, Comma, Semicolon)
+
+No manual delimiter selection.
+
+---
+
+# Six-Step Import Wizard
+
+## Step 1 – Upload File
+
+Show:
+
+* File Name
+* File Size
+* Number of Records
+* File Type
+
+---
+
+## Step 2 – Detect Columns
+
+Automatically detect every column.
+
+Allow administrators to manually remap columns before continuing.
+
+---
+
+## Step 3 – Clean Data
+
+Automatically perform:
+
+* Trim spaces
+* Remove duplicate spaces
+* Remove hidden characters
+* Remove invalid characters
+* Convert names to Proper Case
+* Normalize capitalization
+* Remove empty rows
+* Convert blank strings to NULL
+
+---
+
+# Legacy Field Mapping
+
+Interpret the legacy columns exactly as follows.
+
+## Id No
+
+This is NOT the new Member ID.
+
+This is only the old member number.
+
+Store it as:
+
+Legacy Member ID
+
+Generate a completely new Member ID for every imported member.
+
+Example:
+
+DKMO-000001
+
+DKMO-000002
+
+DKMO-000003
+
+Never reuse the old ID as the primary key.
+
+---
+
+## Application No
+
+Store as:
+
+Application Number
+
+If blank
+
+Store NULL.
+
+---
+
+## Old Application No
+
+Store separately as:
+
+Old Application Number
+
+Never overwrite the current application number.
+
+---
+
+## First Name
+
+Store as First Name.
+
+---
+
+## Last Name
+
+Store as Last Name.
+
+Many records have blank last names.
+
+This is expected.
+
+---
+
+## Full Name
+
+If Last Name exists
+
+Full Name = First Name + Last Name
+
+If Last Name is blank
+
+Full Name = First Name
+
+Do not leave Full Name empty.
+
+---
+
+## Mobile No
+
+This is the member's Saudi mobile number.
+
+Normalize every number.
+
+Example:
+
+568799520
+
+↓
+
+0568799520
+
+Accept formats like:
+
+05XXXXXXXX
+
++9665XXXXXXXX
+
+9665XXXXXXXX
+
+Validate every number.
+
+Highlight invalid numbers.
+
+---
+
+## WhatsApp No
+
+If WhatsApp is blank
+
+Automatically copy the Mobile Number.
+
+Otherwise
+
+Store the provided WhatsApp number.
+
+---
+
+## Jamaath
+
+Normalize spelling.
+
+Examples:
+
+surthkal
+
+SURTHKAL
+
+Surthkal
+
+should all become:
+
+Surthkal
+
+If the Jamaath does not exist
+
+Create it automatically.
+
+Do not create duplicates caused by different spelling or capitalization.
+
+---
+
+## Iqama No
+
+Store as Iqama Number.
+
+If blank
+
+Store NULL.
+
+---
+
+## Place Home
+
+Map to:
+
+Native Place
+
+---
+
+## Place Local
+
+Map to:
+
+Current Location
+
+Examples:
+
+Batha
+
+Olaya
+
+Malaz
+
+Shifa
+
+etc.
+
+---
+
+## Date of Birth
+
+Legacy dates are inconsistent.
+
+Examples:
+
+17-Sep-81
+
+11-Feb-70
+
+30-Nov-90
+
+17/09/1981
+
+1981-09-17
+
+Convert every date into:
+
+YYYY-MM-DD
+
+---
+
+# IMPORTANT — Group Column
+
+The "Group" column is NOT a group.
+
+It actually contains the member's Sponsor / Reference Member information.
+
+Example:
+
+07101-Abdul Azeez Bajpe, 503271851
+
+This should be automatically split into:
+
+Reference Member Code
+
+07101
+
+Reference Member Name
+
+Abdul Azeez Bajpe
+
+Reference Mobile
+
+503271851
+
+Store these as separate fields.
+
+If the value is:
+
+DKMO_Regroup
+
+This means:
+
+No Sponsor Assigned
+
+Store Reference Member as NULL.
+
+If the value is blank
+
+Store NULL.
+
+Never import this field as an actual group.
+
+---
+
+## Passport No
+
+Store as Passport Number.
+
+Blank values are allowed.
+
+---
+
+## Mobile Home
+
+This is usually an Indian contact number.
+
+Store separately as:
+
+Home Contact Number
+
+Never overwrite the Saudi mobile number.
+
+---
+
+## NameAll
+
+Ignore this field completely.
+
+It is only a search string created by the old software.
+
+Do NOT import it into the new database.
+
+---
+
+# Missing Information
+
+Many members are missing:
+
+* Last Name
+* DOB
+* Passport
+* WhatsApp
+* Local Place
+* Iqama
+
+This is expected.
+
+Do NOT reject these records.
+
+Only require:
+
+* Full Name
+* Mobile Number
+
+Everything else is optional.
+
+---
+
+# Duplicate Detection
+
+Before importing, check duplicates using:
+
+* Mobile Number
+* Iqama Number
+* Passport Number
+* Application Number
+* Legacy Member ID
+
+Show administrators:
+
+* Existing Member
+* New Member
+* Possible Duplicate
+
+Provide actions:
+
+* Skip
+* Update Existing
+* Import Anyway
+
+---
+
+# Smart Matching
+
+Use fuzzy matching.
+
+Example:
+
+Mohammed Ali
+
+Mohamad Ali
+
+Muhammad Ali
+
+محمد علي
+
+If the mobile number is the same
+
+Suggest:
+
+"Possible Same Member"
+
+instead of automatically creating duplicates.
+
+---
+
+# Import Preview
+
+Before importing, show a preview of every transformation.
+
+Example:
+
+Original Mobile
+
+568799520
+
+↓
+
+0568799520
+
+Original DOB
+
+17-Sep-81
+
+↓
+
+1981-09-17
+
+Original Group
+
+07101-Abdul Azeez Bajpe, 503271851
+
+↓
+
+Reference Member:
+07101
+Abdul Azeez Bajpe
+503271851
+
+---
+
+# Member Classification
+
+Automatically classify imported records into:
+
+## Complete
+
+Most important information available.
+
+## Partial
+
+Some optional information missing.
+
+## Needs Review
+
+Only if:
+
+Missing Full Name
+
+OR
+
+Missing Mobile Number
+
+OR
+
+Clearly invalid data.
+
+Only the "Needs Review" records should require administrator attention.
+
+---
+
+# Default Values
+
+If values are missing, automatically assign:
+
+Membership Status = Active
+
+Membership Fee Status = Paid
+
+FRF Status = Active
+
+Role = Member
+
+Country = Saudi Arabia
+
+City = Riyadh
+
+Created By = Data Import
+
+Created Date = Current Timestamp
+
+---
+
+# Migration Information
+
+Every imported member must permanently store migration details:
+
+Legacy Member ID
+
+Legacy Application Number
+
+Legacy Old Application Number
+
+Imported From
+
+Import Batch ID
+
+Import Date
+
+Imported By
+
+Migration Status
+
+Original Raw Record (JSON)
+
+This ensures complete traceability for future audits and troubleshooting.
+
+---
+
+# Import Progress
+
+Display a professional progress screen:
+
+Reading File
+
+Cleaning Data
+
+Validating
+
+Checking Duplicates
+
+Preparing Records
+
+Importing Batch 1
+
+Importing Batch 2
+
+Completed
+
+Include:
+
+* Percentage
+* Records Processed
+* Estimated Time Remaining
+
+---
+
+# Performance
+
+The importer must support at least 10,000+ members.
+
+Use:
+
+* Batch processing (500 records per batch)
+* Streaming file parser
+* Database transactions
+* Background processing
+* Memory optimization
+
+The browser must never freeze.
+
+---
+
+# Import Summary
+
+After completion display:
+
+* Total Records
+* Successfully Imported
+* Updated
+* Skipped
+* Duplicates
+* Failed
+* Processing Time
+
+Provide download buttons for:
+
+* Failed Records CSV
+* Duplicate Report CSV
+* Import Log
+
+---
+
+# Rollback
+
+Every import must support:
+
+Undo Last Import
+
+This should restore the database to its previous state.
+
+---
+
+# Import History
+
+Create a complete Import History page showing:
+
+* Date
+* Time
+* Admin
+* File Name
+* Imported
+* Updated
+* Skipped
+* Failed
+* Duration
+* Rollback Available
+
+---
+
+# Security
+
+Only Super Admins may import.
+
+Validate every field on the server.
+
+Prevent SQL injection.
+
+Reject malformed files.
+
+Reject executable files.
+
+Limit upload size.
+
+Record every import in the audit log.
+
+---
+
+# Final Verification
+
+After import automatically verify:
+
+✓ Every member has a new DKMO Member ID.
+
+✓ Legacy Member ID is preserved.
+
+✓ NameAll was ignored.
+
+✓ Dates converted correctly.
+
+✓ Mobile numbers normalized.
+
+✓ Sponsor information extracted correctly.
+
+✓ Jamaaths created or matched.
+
+✓ Dashboard statistics updated.
+
+✓ Search index rebuilt.
+
+✓ Imported members immediately appear in search.
+
+---
+
+# Code Quality
+
+Write clean, modular, maintainable, production-ready code.
+
+Separate frontend and backend responsibilities.
+
+Use reusable components.
+
+Handle edge cases gracefully.
+
+Follow the existing DKMO Portal UI and design language.
+
+The final solution must be fully production-ready for deployment on Vercel and reusable for future legacy database imports without requiring code changes.

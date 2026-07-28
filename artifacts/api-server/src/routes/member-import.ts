@@ -38,6 +38,7 @@ const RawRow = z.object({
   country: z.string().max(200).optional(),
   dateOfBirth: z.string().max(50).optional(),
   memberGroup: z.string().max(200).optional(),
+  homeContactNumber: z.string().max(50).optional(),
 });
 type RawRowT = z.infer<typeof RawRow>;
 
@@ -143,22 +144,35 @@ interface CleanRow {
   country: string;
   dateOfBirth: string;
   memberGroup: string;
+  homeContactNumber: string;
   errors: string[];
   warnings: string[];
+  /** Original → cleaned value descriptions shown in the preview. */
+  transforms: string[];
   isBlank: boolean;
 }
 
 function cleanAndValidate(raw: RawRowT): CleanRow {
   const errors: string[] = [];
   const warnings: string[] = [];
+  const transforms: string[] = [];
 
-  const fullName = properCase(cleanText(raw.fullName));
+  const nameRaw = cleanText(raw.fullName);
+  const fullName = properCase(nameRaw);
+  if (fullName && fullName !== nameRaw) transforms.push(`Name: ${nameRaw} → ${fullName}`);
   const mobileRaw = cleanText(raw.mobileNumber);
   const mobileNumber = mobileRaw ? normalizeSaudiMobile(mobileRaw) : "";
+  if (mobileNumber && mobileNumber !== mobileRaw) transforms.push(`Mobile: ${mobileRaw} → ${mobileNumber}`);
   const whatsappRaw = cleanText(raw.whatsappNumber);
-  const whatsappNumber = whatsappRaw ? normalizeSaudiMobile(whatsappRaw) || whatsappRaw : "";
+  // WhatsApp: use it when present; otherwise default to the (valid) mobile.
+  let whatsappNumber = whatsappRaw ? normalizeSaudiMobile(whatsappRaw) || whatsappRaw : "";
+  if (!whatsappNumber && mobileNumber) {
+    whatsappNumber = mobileNumber;
+    transforms.push(`WhatsApp: (blank) → ${mobileNumber} (copied from mobile)`);
+  }
   const dobRaw = cleanText(raw.dateOfBirth);
   const dateOfBirth = dobRaw ? normalizeDate(dobRaw) : "";
+  if (dateOfBirth && dateOfBirth !== dobRaw) transforms.push(`DOB: ${dobRaw} → ${dateOfBirth}`);
 
   const row: CleanRow = {
     rowNumber: raw.rowNumber,
@@ -176,8 +190,10 @@ function cleanAndValidate(raw: RawRowT): CleanRow {
     country: properCase(cleanText(raw.country)) || "Saudi Arabia",
     dateOfBirth,
     memberGroup: cleanText(raw.memberGroup),
+    homeContactNumber: cleanText(raw.homeContactNumber),
     errors,
     warnings,
+    transforms,
     isBlank: false,
   };
 
@@ -304,11 +320,19 @@ function analyzeRows(
     const fileDupOf = seenMobiles.get(row.mobileNumber) ?? null;
     if (fileDupOf === null) seenMobiles.set(row.mobileNumber, row.rowNumber);
     const duplicate = findDuplicate(row, idx);
-    // Normalize Jamaath / Group casing against existing values.
+    // Normalize Jamaath / Group casing against existing values; new Jamaaths
+    // are stored in Proper Case so "surthkal"/"SURTHKAL" become "Surthkal".
     if (row.jamaath) {
       const known = idx.jamaaths.get(normKey(row.jamaath));
-      if (known) row.jamaath = known;
-      else idx.jamaaths.set(normKey(row.jamaath), row.jamaath);
+      if (known) {
+        if (known !== row.jamaath) row.transforms.push(`Jamaath: ${row.jamaath} → ${known} (existing)`);
+        row.jamaath = known;
+      } else {
+        const proper = properCase(row.jamaath);
+        if (proper !== row.jamaath) row.transforms.push(`Jamaath: ${row.jamaath} → ${proper}`);
+        row.jamaath = proper;
+        idx.jamaaths.set(normKey(proper), proper);
+      }
     }
     if (row.memberGroup) {
       const known = idx.groups.get(normKey(row.memberGroup));
@@ -357,6 +381,7 @@ router.post("/members/import/analyze", requireRole("admin"), async (req, res): P
       cleaned: { ...a.row, errors: undefined, warnings: undefined, isBlank: undefined },
       errors: a.row.errors,
       warnings: a.row.warnings,
+      transforms: a.row.transforms,
       duplicate: a.duplicate,
       fileDuplicateOfRow: a.fileDuplicateOfRow,
     })),
@@ -450,6 +475,7 @@ router.post("/members/import/commit", requireRole("admin"), async (req: AuthedRe
             passportNumber: row.passportNumber,
             nativePlace: row.nativePlace,
             memberGroup: row.memberGroup,
+            homeContactNumber: row.homeContactNumber,
             importBatchId: batchId,
           });
         }
@@ -469,6 +495,7 @@ router.post("/members/import/commit", requireRole("admin"), async (req: AuthedRe
             passport_number = CASE WHEN passport_number = '' THEN ${row.passportNumber} ELSE passport_number END,
             native_place = CASE WHEN native_place = '' THEN ${row.nativePlace} ELSE native_place END,
             member_group = CASE WHEN member_group = '' THEN ${row.memberGroup} ELSE member_group END,
+            home_contact_number = CASE WHEN home_contact_number = '' THEN ${row.homeContactNumber} ELSE home_contact_number END,
             application_number = CASE WHEN application_number = '' THEN ${row.applicationNumber} ELSE application_number END,
             iqama_number = CASE WHEN iqama_number = '' THEN ${row.iqamaNumber} ELSE iqama_number END,
             jamaath = CASE WHEN jamaath = '' THEN ${row.jamaath} ELSE jamaath END,

@@ -21,21 +21,22 @@ const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 // ── Target fields & auto-detection ───────────────────────────────────────────
 const TARGET_FIELDS = [
-  { key: "legacyMemberId", label: "Legacy ID", patterns: [/^(id|sl|sino|si no|legacy|member ?id|id ?no)/i] },
-  { key: "applicationNumber", label: "Application Number", patterns: [/^app(lication)? ?(no|num|number)?$/i] },
-  { key: "oldApplicationNumber", label: "Old Application Number", patterns: [/old ?app/i] },
+  { key: "legacyMemberId", label: "Legacy ID", patterns: [/^(id|sl|sino|si no|legacy|member ?id|id ?no)\b/i] },
+  { key: "oldApplicationNumber", label: "Old Application Number", patterns: [/old\s+app/i] },
+  { key: "applicationNumber", label: "Application Number", patterns: [/^app(lication)?\s*(no|num|number)?\.?$/i] },
   { key: "firstName", label: "First Name", patterns: [/^first ?name/i, /^fname/i] },
   { key: "lastName", label: "Last Name", patterns: [/^last ?name/i, /^lname/i, /^surname/i] },
   { key: "fullName", label: "Full Name", patterns: [/^(full ?)?name$/i, /^member ?name/i] },
-  { key: "mobileNumber", label: "Mobile Number", patterns: [/mobile|phone|contact/i] },
   { key: "whatsappNumber", label: "WhatsApp Number", patterns: [/whats ?app/i] },
+  { key: "homeContactNumber", label: "Home Contact Number", patterns: [/mobile\s*home|home\s*(mobile|contact|phone)/i] },
+  { key: "mobileNumber", label: "Mobile Number", patterns: [/mobile|phone|contact/i] },
   { key: "iqamaNumber", label: "Iqama Number", patterns: [/iqama|resident/i] },
   { key: "passportNumber", label: "Passport Number", patterns: [/passport/i] },
   { key: "jamaath", label: "Jamaath", patterns: [/jama|mahal/i] },
-  { key: "nativePlace", label: "Home Place", patterns: [/home ?place|native|place$/i] },
-  { key: "city", label: "Local Place (City)", patterns: [/local|city|location/i] },
+  { key: "nativePlace", label: "Home Place (Native)", patterns: [/home ?place|place ?home|native|place$/i] },
+  { key: "city", label: "Local Place (Current)", patterns: [/local|city|location/i] },
   { key: "dateOfBirth", label: "Date of Birth", patterns: [/birth|dob/i] },
-  { key: "memberGroup", label: "Group", patterns: [/^group/i] },
+  { key: "memberGroup", label: "Group (Legacy Committee)", patterns: [/^group/i] },
 ] as const;
 type TargetKey = (typeof TARGET_FIELDS)[number]["key"] | "ignore";
 
@@ -114,6 +115,7 @@ interface AnalyzedRow {
   cleaned: Record<string, string | number>;
   errors: string[];
   warnings: string[];
+  transforms: string[];
   duplicate: { memberId: string; membershipId: string; memberName: string; reasons: string[]; likelySame: boolean } | null;
   fileDuplicateOfRow: number | null;
 }
@@ -423,6 +425,25 @@ export default function ImportMembersPage() {
                         ))}
                       </tbody>
                     </table>
+                  </div>
+                )}
+                {analysis.rows.some((r) => r.transforms?.length > 0) && (
+                  <div>
+                    <p className="mb-1 text-sm font-medium">Automatic corrections (original → new)</p>
+                    <div className="max-h-64 overflow-auto rounded-md border">
+                      <table className="w-full text-sm">
+                        <thead className="sticky top-0 bg-muted"><tr><th className="p-2 text-left">Row</th><th className="p-2 text-left">Name</th><th className="p-2 text-left">Corrections</th></tr></thead>
+                        <tbody>
+                          {analysis.rows.filter((r) => r.transforms?.length > 0).slice(0, 300).map((r) => (
+                            <tr key={r.rowNumber} className="border-t align-top">
+                              <td className="p-2">{r.rowNumber}</td>
+                              <td className="whitespace-nowrap p-2">{String(r.cleaned.fullName ?? "")}</td>
+                              <td className="p-2 text-muted-foreground">{r.transforms.map((t) => <div key={t}>{t}</div>)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 )}
                 <p className="text-sm text-muted-foreground">Invalid rows will not be imported. You can download them at the end and fix the source file.</p>

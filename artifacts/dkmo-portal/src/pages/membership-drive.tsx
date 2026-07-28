@@ -281,11 +281,37 @@ export default function MembershipDrivePage() {
     return <span className="text-xs font-bold text-slate-500 w-4 text-center">{i + 1}</span>;
   };
 
+  const scrollToSection = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   const statCards = [
-    { label: "Total Referred Members", value: stats.totalReferred, icon: UserPlus,   color: "text-green-700 dark:text-green-400" },
-    { label: "Active Referred",        value: stats.activeReferred, icon: Users,     color: "text-emerald-600 dark:text-emerald-400" },
-    { label: "Members Referring",      value: stats.referrerCount,  icon: Trophy,    color: "text-amber-600 dark:text-amber-400" },
-    { label: "This Month",             value: stats.thisMonth,      icon: TrendingUp, color: "text-blue-600 dark:text-blue-400" },
+    {
+      label: "Total Referred Members", value: stats.totalReferred, icon: UserPlus,
+      color: "text-green-700 dark:text-green-400", hint: "View all referrers",
+      onClick: () => { setStatus("all"); setFromDate(""); setToDate(""); scrollToSection("referrer-list"); },
+    },
+    {
+      label: "Active Referred", value: stats.activeReferred, icon: Users,
+      color: "text-emerald-600 dark:text-emerald-400", hint: "Filter active members",
+      onClick: () => { setStatus("active"); scrollToSection("referrer-list"); },
+    },
+    {
+      label: "Members Referring", value: stats.referrerCount, icon: Trophy,
+      color: "text-amber-600 dark:text-amber-400", hint: "View leaderboard",
+      onClick: () => scrollToSection("leaderboard"),
+    },
+    {
+      label: "This Month", value: stats.thisMonth, icon: TrendingUp,
+      color: "text-blue-600 dark:text-blue-400", hint: "Filter this month",
+      onClick: () => {
+        const now = new Date();
+        const first = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+        setFromDate(first);
+        setToDate(now.toISOString().slice(0, 10));
+        scrollToSection("referrer-list");
+      },
+    },
   ];
 
   return (
@@ -298,36 +324,46 @@ export default function MembershipDrivePage() {
             Track and celebrate members who grow the DKMO family through referrals
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <Button variant="outline" onClick={() => exportPdf(true)} disabled={exporting || isLoading}
-            className="gap-2 border-green-200 dark:border-slate-700 text-green-800 dark:text-green-300" data-testid="button-monthly-report">
+            className="min-h-9 flex-1 gap-2 border-green-200 text-green-800 active:scale-[0.98] dark:border-slate-700 dark:text-green-300 sm:flex-none" data-testid="button-monthly-report">
             <CalendarDays className="h-4 w-4" /> Monthly Report
           </Button>
           <Button variant="outline" onClick={() => exportPdf(false)} disabled={exporting || isLoading}
-            className="gap-2 border-green-200 dark:border-slate-700 text-green-800 dark:text-green-300" data-testid="button-export-pdf">
+            className="min-h-9 flex-1 gap-2 border-green-200 text-green-800 active:scale-[0.98] dark:border-slate-700 dark:text-green-300 sm:flex-none" data-testid="button-export-pdf">
             <FileDown className="h-4 w-4" /> PDF
           </Button>
           <Button variant="outline" onClick={exportExcel} disabled={exporting || isLoading}
-            className="gap-2 border-green-200 dark:border-slate-700 text-green-800 dark:text-green-300" data-testid="button-export-excel">
+            className="min-h-9 flex-1 gap-2 border-green-200 text-green-800 active:scale-[0.98] dark:border-slate-700 dark:text-green-300 sm:flex-none" data-testid="button-export-excel">
             <FileSpreadsheet className="h-4 w-4" /> Excel
           </Button>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map(({ label, value, icon: Icon, color }) => (
-          <Card key={label} className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
-            <CardContent className="pt-4 pb-4">
-              <div className="flex items-center gap-3">
-                <Icon className={`h-5 w-5 ${color}`} />
-                <div>
-                  <p className="text-2xl font-bold text-green-950 dark:text-white">{isLoading ? "…" : value}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">{label}</p>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {statCards.map(({ label, value, icon: Icon, color, hint, onClick }) => (
+          <button
+            key={label}
+            type="button"
+            onClick={onClick}
+            title={hint}
+            className="group w-full rounded-2xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
+            data-testid={`stat-card-${label.toLowerCase().replace(/\s+/g, "-")}`}
+          >
+            <Card className="rounded-2xl border-green-100 shadow-sm transition-all duration-150 group-hover:-translate-y-0.5 group-hover:border-green-300 group-hover:shadow-md group-active:translate-y-0 group-active:scale-[0.99] dark:border-slate-800 dark:bg-slate-900 dark:group-hover:border-green-700">
+              <CardContent className="pb-4 pt-4">
+                <div className="flex items-center gap-3">
+                  <Icon className={`h-5 w-5 shrink-0 ${color}`} />
+                  <div className="min-w-0">
+                    <p className="text-2xl font-bold text-green-950 dark:text-white">{isLoading ? "…" : value}</p>
+                    <p className="truncate text-xs text-slate-500 dark:text-slate-400">{label}</p>
+                    <p className="text-[11px] text-green-700/0 transition-colors group-hover:text-green-700 dark:group-hover:text-green-400">{hint}</p>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </button>
         ))}
       </div>
 
@@ -356,7 +392,7 @@ export default function MembershipDrivePage() {
         </Card>
 
         {/* Leaderboard */}
-        <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm lg:col-span-2">
+        <Card id="leaderboard" className="scroll-mt-20 rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm lg:col-span-2">
           <CardHeader className="pb-2">
             <CardTitle className="text-base text-green-900 dark:text-green-100 flex items-center gap-2">
               <Trophy className="h-4 w-4 text-amber-500" /> Top Referral Members
@@ -445,7 +481,7 @@ export default function MembershipDrivePage() {
       </Card>
 
       {/* Referral list */}
-      <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm overflow-hidden">
+      <Card id="referrer-list" className="scroll-mt-20 rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm overflow-hidden">
         <CardHeader className="pb-0">
           <CardTitle className="text-base text-green-900 dark:text-green-100 flex items-center gap-2">
             <Users className="h-4 w-4" /> Member Referral List

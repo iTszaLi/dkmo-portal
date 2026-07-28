@@ -33,6 +33,7 @@ export const membersTable = pgTable("members", {
   passportNumber: text("passport_number").notNull().default(""),
   nativePlace: text("native_place").notNull().default(""),
   memberGroup: text("member_group").notNull().default(""),
+  homeContactNumber: text("home_contact_number").notNull().default(""),
   importBatchId: uuid("import_batch_id"),
   refMemberName: text("ref_member_name").notNull().default(""),
   refMemberId: text("ref_member_id").notNull().default(""),
