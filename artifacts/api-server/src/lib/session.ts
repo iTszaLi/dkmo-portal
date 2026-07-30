@@ -51,7 +51,12 @@ export function createSessionMiddleware(): RequestHandler {
   }
 
   const PgStore = connectPgSimple(session);
-  const pool = new pg.Pool({ connectionString: databaseUrl });
+  // On serverless (Vercel) keep the pool tiny — each instance holds its own
+  // connections, and Neon/pgBouncer handle pooling upstream.
+  const pool = new pg.Pool({
+    connectionString: databaseUrl,
+    max: process.env.VERCEL ? 1 : 10,
+  });
 
   void ensureSessionTable(pool);
 
