@@ -645,6 +645,18 @@ async function main() {
     ALTER TABLE members ADD COLUMN IF NOT EXISTS email TEXT NOT NULL DEFAULT '';
     ALTER TABLE members ADD COLUMN IF NOT EXISTS blood_group TEXT NOT NULL DEFAULT '';
     ALTER TABLE members ADD COLUMN IF NOT EXISTS address TEXT NOT NULL DEFAULT '';
+    ALTER TABLE members ADD COLUMN IF NOT EXISTS pp_name TEXT NOT NULL DEFAULT '';
+    ALTER TABLE members ADD COLUMN IF NOT EXISTS marital_status TEXT NOT NULL DEFAULT '';
+    ALTER TABLE members ADD COLUMN IF NOT EXISTS family_status TEXT NOT NULL DEFAULT '';
+    ALTER TABLE members ADD COLUMN IF NOT EXISTS dependents TEXT NOT NULL DEFAULT '';
+    ALTER TABLE members ADD COLUMN IF NOT EXISTS telephone TEXT NOT NULL DEFAULT '';
+    ALTER TABLE members ADD COLUMN IF NOT EXISTS company TEXT NOT NULL DEFAULT '';
+    ALTER TABLE members ADD COLUMN IF NOT EXISTS membership_date TEXT NOT NULL DEFAULT '';
+    ALTER TABLE members ADD COLUMN IF NOT EXISTS legacy_entry_date TEXT NOT NULL DEFAULT '';
+    ALTER TABLE members ADD COLUMN IF NOT EXISTS district TEXT NOT NULL DEFAULT '';
+    ALTER TABLE members ADD COLUMN IF NOT EXISTS legacy_member_status TEXT NOT NULL DEFAULT '';
+    ALTER TABLE members ADD COLUMN IF NOT EXISTS referred_by TEXT NOT NULL DEFAULT '';
+    ALTER TABLE members ADD COLUMN IF NOT EXISTS avail_contribution TEXT NOT NULL DEFAULT '';
     CREATE INDEX IF NOT EXISTS members_legacy_id_idx ON members(legacy_member_id) WHERE legacy_member_id <> '';
     CREATE INDEX IF NOT EXISTS members_import_batch_idx ON members(import_batch_id) WHERE import_batch_id IS NOT NULL;
 

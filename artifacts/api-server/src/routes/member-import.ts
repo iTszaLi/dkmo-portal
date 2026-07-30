@@ -39,6 +39,22 @@ const RawRow = z.object({
   dateOfBirth: z.string().max(50).optional(),
   memberGroup: z.string().max(200).optional(),
   homeContactNumber: z.string().max(50).optional(),
+  ppName: z.string().max(300).optional(),
+  email: z.string().max(300).optional(),
+  maritalStatus: z.string().max(100).optional(),
+  familyStatus: z.string().max(100).optional(),
+  dependents: z.string().max(50).optional(),
+  bloodGroup: z.string().max(20).optional(),
+  telephone: z.string().max(50).optional(),
+  company: z.string().max(300).optional(),
+  designation: z.string().max(200).optional(),
+  membershipDate: z.string().max(50).optional(),
+  legacyEntryDate: z.string().max(50).optional(),
+  district: z.string().max(200).optional(),
+  legacyMemberStatus: z.string().max(100).optional(),
+  referredBy: z.string().max(300).optional(),
+  availContribution: z.string().max(50).optional(),
+  notes: z.string().max(2000).optional(),
 });
 type RawRowT = z.infer<typeof RawRow>;
 
@@ -145,6 +161,22 @@ interface CleanRow {
   dateOfBirth: string;
   memberGroup: string;
   homeContactNumber: string;
+  ppName: string;
+  email: string;
+  maritalStatus: string;
+  familyStatus: string;
+  dependents: string;
+  bloodGroup: string;
+  telephone: string;
+  company: string;
+  designation: string;
+  membershipDate: string;
+  legacyEntryDate: string;
+  district: string;
+  legacyMemberStatus: string;
+  referredBy: string;
+  availContribution: string;
+  notes: string;
   referenceCode: string;
   referenceName: string;
   referenceMobile: string;
@@ -180,6 +212,35 @@ function cleanAndValidate(raw: RawRowT): CleanRow {
   const dobRaw = cleanText(raw.dateOfBirth);
   const dateOfBirth = dobRaw ? normalizeDate(dobRaw) : "";
   if (dateOfBirth && dateOfBirth !== dobRaw) transforms.push(`DOB: ${dobRaw} → ${dateOfBirth}`);
+
+  // Other legacy date columns → ISO (kept as-is when unparseable, with warning).
+  const joinRaw = cleanText(raw.membershipDate);
+  const membershipDate = joinRaw ? normalizeDate(joinRaw) : "";
+  if (membershipDate && membershipDate !== joinRaw) transforms.push(`Joining: ${joinRaw} → ${membershipDate}`);
+  const entryRaw = cleanText(raw.legacyEntryDate);
+  const legacyEntryDate = entryRaw ? normalizeDate(entryRaw) : "";
+  if (legacyEntryDate && legacyEntryDate !== entryRaw) transforms.push(`Entry date: ${entryRaw} → ${legacyEntryDate}`);
+
+  // TRUE/FALSE (Access booleans) → friendly values.
+  function yesNo(v: string): string {
+    if (/^(true|yes|y|1|-1)$/i.test(v)) return "Yes";
+    if (/^(false|no|n|0)$/i.test(v)) return "No";
+    return v;
+  }
+  function activeInactive(v: string): string {
+    if (/^(true|yes|y|1|-1|active)$/i.test(v)) return "Active";
+    if (/^(false|no|n|0|inactive)$/i.test(v)) return "Inactive";
+    return properCase(v);
+  }
+  const availRaw = cleanText(raw.availContribution);
+  const availContribution = availRaw ? yesNo(availRaw) : "";
+  if (availContribution && availContribution !== availRaw) transforms.push(`FRF eligible: ${availRaw} → ${availContribution}`);
+  const statusRaw = cleanText(raw.legacyMemberStatus);
+  const legacyMemberStatus = statusRaw ? activeInactive(statusRaw) : "";
+  if (legacyMemberStatus && legacyMemberStatus !== statusRaw) transforms.push(`Member status: ${statusRaw} → ${legacyMemberStatus}`);
+
+  const emailRaw = cleanText(raw.email).toLowerCase();
+  const email = emailRaw && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw) ? emailRaw : "";
 
   // Legacy "Group" column actually holds sponsor/reference info:
   // "07101-Abdul Azeez Bajpe, 503271851" → code / name / mobile.
@@ -220,6 +281,22 @@ function cleanAndValidate(raw: RawRowT): CleanRow {
     dateOfBirth,
     memberGroup: groupRaw && /^dkmo[_ ]?regroup$/i.test(groupRaw) ? "" : groupRaw,
     homeContactNumber: cleanText(raw.homeContactNumber),
+    ppName: properCase(cleanText(raw.ppName)),
+    email,
+    maritalStatus: properCase(cleanText(raw.maritalStatus)),
+    familyStatus: properCase(cleanText(raw.familyStatus)),
+    dependents: cleanText(raw.dependents),
+    bloodGroup: cleanText(raw.bloodGroup).toUpperCase(),
+    telephone: cleanText(raw.telephone),
+    company: cleanText(raw.company),
+    designation: cleanText(raw.designation),
+    membershipDate,
+    legacyEntryDate,
+    district: properCase(cleanText(raw.district)),
+    legacyMemberStatus,
+    referredBy: properCase(cleanText(raw.referredBy)),
+    availContribution,
+    notes: cleanText(raw.notes),
     referenceCode,
     referenceName,
     referenceMobile,
@@ -240,6 +317,9 @@ function cleanAndValidate(raw: RawRowT): CleanRow {
   if (!mobileRaw) errors.push("Missing mobile number");
   else if (!mobileNumber) errors.push(`Invalid mobile number "${mobileRaw}"`);
   if (dobRaw && !dateOfBirth) warnings.push(`Unrecognized date of birth "${dobRaw}" — left blank`);
+  if (joinRaw && !membershipDate) warnings.push(`Unrecognized joining date "${joinRaw}" — left blank`);
+  if (entryRaw && !legacyEntryDate) warnings.push(`Unrecognized entry date "${entryRaw}" — left blank`);
+  if (emailRaw && !email) warnings.push(`Invalid email "${emailRaw}" — left blank`);
   if (whatsappRaw && whatsappNumber === whatsappRaw && !normalizeSaudiMobile(whatsappRaw))
     warnings.push("WhatsApp number kept as-is (not a Saudi format)");
 
@@ -270,6 +350,7 @@ async function buildExistingIndexes() {
       passportNumber: membersTable.passportNumber,
       applicationNumber: membersTable.applicationNumber,
       legacyMemberId: membersTable.legacyMemberId,
+      email: membersTable.email,
       jamaath: membersTable.jamaath,
       memberGroup: membersTable.memberGroup,
     })
@@ -279,6 +360,7 @@ async function buildExistingIndexes() {
   const byPassport = new Map<string, (typeof existing)[number]>();
   const byAppNo = new Map<string, (typeof existing)[number]>();
   const byLegacy = new Map<string, (typeof existing)[number]>();
+  const byEmail = new Map<string, (typeof existing)[number]>();
   const jamaaths = new Map<string, string>();
   const groups = new Map<string, string>();
   for (const m of existing) {
@@ -288,10 +370,11 @@ async function buildExistingIndexes() {
     if (m.passportNumber) byPassport.set(normKey(m.passportNumber), m);
     if (m.applicationNumber) byAppNo.set(normKey(m.applicationNumber), m);
     if (m.legacyMemberId) byLegacy.set(normKey(m.legacyMemberId), m);
+    if (m.email) byEmail.set(normKey(m.email), m);
     if (m.jamaath) jamaaths.set(normKey(m.jamaath), m.jamaath);
     if (m.memberGroup) groups.set(normKey(m.memberGroup), m.memberGroup);
   }
-  return { byMobile, byIqama, byPassport, byAppNo, byLegacy, jamaaths, groups };
+  return { byMobile, byIqama, byPassport, byAppNo, byLegacy, byEmail, jamaaths, groups };
 }
 
 /** Very light fuzzy match: names share ≥60% of normalized tokens. */
@@ -316,6 +399,7 @@ function findDuplicate(
     [row.passportNumber ? normKey(row.passportNumber) : "", idx.byPassport, "Same passport number"],
     [row.applicationNumber ? normKey(row.applicationNumber) : "", idx.byAppNo, "Same application number"],
     [row.legacyMemberId ? normKey(row.legacyMemberId) : "", idx.byLegacy, "Same legacy member ID"],
+    [row.email ? normKey(row.email) : "", idx.byEmail, "Same email"],
   ];
   for (const [key, map, reason] of checks) {
     if (!key) continue;
@@ -508,14 +592,28 @@ router.post("/members/import/commit", requireRole("admin"), async (req: AuthedRe
             city: row.city,
             country: row.country,
             dateOfBirth: row.dateOfBirth,
-            designation: "Member",
+            designation: row.designation || "Member",
             feeStatus: "paid",
             feePaidAt: new Date(),
             feeUpdatedBy: req.userId ?? "import",
             frfStatus: "active",
-            notes: "Imported from legacy database",
+            notes: row.notes ? `${row.notes} — Imported from legacy database` : "Imported from legacy database",
             legacyMemberId: row.legacyMemberId,
             oldApplicationNumber: row.oldApplicationNumber,
+            ppName: row.ppName,
+            email: row.email,
+            maritalStatus: row.maritalStatus,
+            familyStatus: row.familyStatus,
+            dependents: row.dependents,
+            bloodGroup: row.bloodGroup,
+            telephone: row.telephone,
+            company: row.company,
+            membershipDate: row.membershipDate,
+            legacyEntryDate: row.legacyEntryDate,
+            district: row.district,
+            legacyMemberStatus: row.legacyMemberStatus,
+            referredBy: row.referredBy,
+            availContribution: row.availContribution,
             whatsappNumber: row.whatsappNumber,
             passportNumber: row.passportNumber,
             nativePlace: row.nativePlace,
@@ -552,6 +650,20 @@ router.post("/members/import/commit", requireRole("admin"), async (req: AuthedRe
             iqama_number = CASE WHEN iqama_number = '' THEN ${row.iqamaNumber} ELSE iqama_number END,
             jamaath = CASE WHEN jamaath = '' THEN ${row.jamaath} ELSE jamaath END,
             date_of_birth = CASE WHEN date_of_birth = '' THEN ${row.dateOfBirth} ELSE date_of_birth END,
+            pp_name = CASE WHEN pp_name = '' THEN ${row.ppName} ELSE pp_name END,
+            email = CASE WHEN email = '' THEN ${row.email} ELSE email END,
+            marital_status = CASE WHEN marital_status = '' THEN ${row.maritalStatus} ELSE marital_status END,
+            family_status = CASE WHEN family_status = '' THEN ${row.familyStatus} ELSE family_status END,
+            dependents = CASE WHEN dependents = '' THEN ${row.dependents} ELSE dependents END,
+            blood_group = CASE WHEN blood_group = '' THEN ${row.bloodGroup} ELSE blood_group END,
+            telephone = CASE WHEN telephone = '' THEN ${row.telephone} ELSE telephone END,
+            company = CASE WHEN company = '' THEN ${row.company} ELSE company END,
+            membership_date = CASE WHEN membership_date = '' THEN ${row.membershipDate} ELSE membership_date END,
+            legacy_entry_date = CASE WHEN legacy_entry_date = '' THEN ${row.legacyEntryDate} ELSE legacy_entry_date END,
+            district = CASE WHEN district = '' THEN ${row.district} ELSE district END,
+            legacy_member_status = CASE WHEN legacy_member_status = '' THEN ${row.legacyMemberStatus} ELSE legacy_member_status END,
+            referred_by = CASE WHEN referred_by = '' THEN ${row.referredBy} ELSE referred_by END,
+            avail_contribution = CASE WHEN avail_contribution = '' THEN ${row.availContribution} ELSE avail_contribution END,
             updated_at = NOW()
           WHERE id = ${memberId}::uuid
         `);

@@ -1,0 +1,90 @@
+The new file type detection is working correctly, but there is a major UX and data integrity issue.
+
+When the uploaded file is detected as a Payments file, the Members Import Wizard still allows users to manually map payment columns to member fields (for example Date -> Date of Birth or Amount -> Mobile Number).
+
+This should never be allowed.
+
+Please make the following improvements without changing the current UI design.
+
+1. When the detected file type is NOT "Members" and confidence is above 80%:
+   • Disable every "Import As" dropdown.
+   • Lock the mappings.
+   • Disable the "Clean & Validate" button.
+   • Show the message:
+     "Import blocked. This file has been identified as a Payments file. Please use the Payments Import module."
+
+2. Only show an "Override Detection" button if the confidence is below 80%.
+
+3. If the user chooses Override Detection, display a confirmation dialog:
+
+   WARNING
+
+   This file appears to be a Payments file.
+   Importing it as Members may corrupt your member database.
+
+   Continue anyway?
+
+   [Cancel] [Continue]
+
+4. Even after override, perform intelligent validation.
+
+For example:
+
+Date -> Date of Birth
+Reject because sample values do not resemble dates of birth.
+
+Amount -> Mobile Number
+Reject because values are numeric currency amounts.
+
+Bill_No -> Passport Number
+Reject because bill numbers do not match passport formats.
+
+Details -> Full Name
+Reject because values resemble membership/payment descriptions.
+
+5. Add data-type validation for every field.
+
+Examples:
+
+Date of Birth
+Expected:
+1988-05-10
+10/05/1988
+
+Reject:
+Payment Date
+Invoice Date
+2026-01-01 Transaction
+
+Mobile Number
+Expected:
+9665XXXXXXXX
+
+Reject:
+100
+250
+500
+
+Passport Number
+Expected:
+A1234567
+
+Reject:
+INV-2025-001
+
+Email
+Must contain @
+
+Amount
+Must be numeric
+
+Membership Number
+Must match DKMO format or legacy ID format.
+
+6. During mapping, display a green check if the selected mapping is valid and a red warning icon if it is invalid.
+
+7. Prevent the import from continuing while invalid mappings exist.
+
+8. Never allow obvious payment fields (Amount, Bill_No, Payment Date, Receipt No, Details) to be imported into member-specific fields unless the user explicitly overrides the detection and all validation rules pass.
+
+The goal is to make it impossible for users to accidentally corrupt the Members database by importing payment records into member fields.

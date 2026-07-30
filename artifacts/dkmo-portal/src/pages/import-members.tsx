@@ -24,11 +24,14 @@ const TARGET_FIELDS = [
   { key: "legacyMemberId", label: "Legacy ID", patterns: [/^(id|sl|sino|si no|legacy|member ?id|id ?no)\b/i] },
   { key: "oldApplicationNumber", label: "Old Application Number", patterns: [/old\s+app/i] },
   { key: "applicationNumber", label: "Application Number", patterns: [/^app(lication)?\s*(no|num|number)?\.?$/i] },
+  { key: "ppName", label: "Passport / Preferred Name", patterns: [/^pp ?name|passport ?name|preferred ?name/i] },
   { key: "firstName", label: "First Name", patterns: [/^first ?name/i, /^fname/i] },
   { key: "lastName", label: "Last Name", patterns: [/^last ?name/i, /^lname/i, /^surname/i] },
   { key: "fullName", label: "Full Name", patterns: [/^(full ?)?name$/i, /^member ?name/i] },
   { key: "whatsappNumber", label: "WhatsApp Number", patterns: [/whats ?app/i] },
   { key: "homeContactNumber", label: "Home Contact Number", patterns: [/mobile\s*home|home\s*(mobile|contact|phone)/i] },
+  { key: "telephone", label: "Telephone", patterns: [/telephone/i] },
+  { key: "email", label: "Email", patterns: [/e-?mail/i] },
   { key: "mobileNumber", label: "Mobile Number", patterns: [/mobile|phone|contact/i] },
   { key: "iqamaNumber", label: "Iqama Number", patterns: [/iqama|resident/i] },
   { key: "passportNumber", label: "Passport Number", patterns: [/passport/i] },
@@ -36,7 +39,20 @@ const TARGET_FIELDS = [
   { key: "nativePlace", label: "Home Place (Native)", patterns: [/home ?place|place ?home|native|place$/i] },
   { key: "city", label: "Local Place (Current)", patterns: [/local|city|location/i] },
   { key: "dateOfBirth", label: "Date of Birth", patterns: [/birth|dob/i] },
-  { key: "memberGroup", label: "Group (Sponsor / Reference)", patterns: [/^group/i] },
+  { key: "membershipDate", label: "Membership Date (Joining)", patterns: [/join/i] },
+  { key: "legacyEntryDate", label: "Record Created Date (Entry)", patterns: [/entry/i] },
+  { key: "company", label: "Company", patterns: [/^company/i, /employer/i] },
+  { key: "designation", label: "Occupation / Job Title", patterns: [/job ?title|occupation|^post$/i] },
+  { key: "maritalStatus", label: "Marital Status", patterns: [/marital/i] },
+  { key: "familyStatus", label: "Family Status", patterns: [/family ?status/i] },
+  { key: "dependents", label: "Dependents", patterns: [/dependent/i] },
+  { key: "bloodGroup", label: "Blood Group", patterns: [/blood/i] },
+  { key: "district", label: "District", patterns: [/^dist(rict)?\b/i] },
+  { key: "legacyMemberStatus", label: "Membership Status", patterns: [/member ?status|^status$/i] },
+  { key: "referredBy", label: "Referred By / Sponsor", patterns: [/member ?under|referred|sponsor/i] },
+  { key: "memberGroup", label: "Legacy Group (Sponsor / Reference)", patterns: [/^group/i] },
+  { key: "availContribution", label: "FRF Contribution Eligible", patterns: [/avail|contribution/i] },
+  { key: "notes", label: "Remarks / Notes", patterns: [/remarks?|^notes?$/i] },
 ] as const;
 type TargetKey = (typeof TARGET_FIELDS)[number]["key"] | "ignore";
 
@@ -45,6 +61,35 @@ function autoDetect(header: string): TargetKey {
   if (!h || /^name ?all/i.test(h)) return "ignore";
   for (const f of TARGET_FIELDS) if (f.patterns.some((p) => p.test(h))) return f.key;
   return "ignore";
+}
+
+// ── Saved mapping ("Legacy Access Members Mapping") ─────────────────────────
+const MAPPING_STORE_KEY = "dkmo-legacy-members-mapping";
+
+function headerSignature(headers: string[]): string {
+  return headers.map((h) => h.trim().toLowerCase()).join("|");
+}
+
+function loadSavedMapping(headers: string[]): TargetKey[] | null {
+  try {
+    const raw = localStorage.getItem(MAPPING_STORE_KEY);
+    if (!raw) return null;
+    const store = JSON.parse(raw) as Record<string, string[]>;
+    const m = store[headerSignature(headers)];
+    if (!Array.isArray(m) || m.length !== headers.length) return null;
+    const validKeys = new Set<string>(["ignore", ...TARGET_FIELDS.map((f) => f.key)]);
+    if (!m.every((k) => validKeys.has(k))) return null;
+    return m as TargetKey[];
+  } catch { return null; }
+}
+
+function saveMapping(headers: string[], mapping: TargetKey[]) {
+  try {
+    const raw = localStorage.getItem(MAPPING_STORE_KEY);
+    const store = (raw ? JSON.parse(raw) : {}) as Record<string, string[]>;
+    store[headerSignature(headers)] = mapping;
+    localStorage.setItem(MAPPING_STORE_KEY, JSON.stringify(store));
+  } catch { /* non-fatal */ }
 }
 
 // ── File-type detection (members vs payments vs receipts vs FRF) ────────────
@@ -292,7 +337,9 @@ export default function ImportMembersPage() {
           rec.fullName = target === "firstName" ? `${v} ${rec.__last ?? ""}`.trim() : `${rec.__first ?? rec.fullName ?? ""} ${v}`.trim();
           if (target === "firstName") rec.__first = v; else rec.__last = v;
           rec.fullName = `${rec.__first ?? ""} ${rec.__last ?? ""}`.trim() || rec.fullName;
-        } else {
+        } else if (v.trim() !== "" || rec[target] === undefined) {
+          // Don't let a blank column erase a value another column already provided
+          // (e.g. "Job Title" and "Post" both map to Occupation).
           rec[target] = v;
         }
       });
@@ -311,7 +358,10 @@ export default function ImportMembersPage() {
       if (parsed.length > 20001) { toast({ title: "Too many rows (max 20,000)", variant: "destructive" }); return; }
       setFile(f);
       setGrid(parsed);
-      setMapping(parsed[0]!.map((h) => autoDetect(h)));
+      // Reuse the saved "Legacy Access Members Mapping" when the file has the
+      // same columns as a previous import; otherwise auto-detect each column.
+      const saved = loadSavedMapping(parsed[0]!);
+      setMapping(saved ?? parsed[0]!.map((h) => autoDetect(h)));
       setDetection(detectFileType(parsed[0]!));
       setOverrideDetection(false);
       setAnalysis(null); setResolutions({}); setReport(null);
@@ -573,6 +623,7 @@ export default function ImportMembersPage() {
                           variant: "destructive",
                         }); return;
                       }
+                      saveMapping(header, mapping); // remember as the default Legacy Access Members Mapping
                       void runAnalyze(2);
                     }}
                     data-testid="button-validate"
@@ -587,6 +638,20 @@ export default function ImportMembersPage() {
             <Card>
               <CardHeader><CardTitle className="text-base">Validation Results</CardTitle></CardHeader>
               <CardContent className="space-y-4">
+                <div className="rounded-lg border bg-muted/30 p-4 text-sm space-y-1" data-testid="pre-import-summary">
+                  <p className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-green-600" />{analysis.summary.total.toLocaleString()} member records detected</p>
+                  <p className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-green-600" />{mapping.filter((m) => m !== "ignore").length} fields mapped automatically</p>
+                  {mapping.filter((m) => m === "ignore").length > 0 && (
+                    <p className="flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-amber-500" />{mapping.filter((m) => m === "ignore").length} optional column(s) ignored (no DKMO equivalent)</p>
+                  )}
+                  {analysis.summary.duplicates > 0 && (
+                    <p className="flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-amber-500" />{analysis.summary.duplicates} duplicate member(s) found — review in the next step</p>
+                  )}
+                  {analysis.summary.invalid > 0 && (
+                    <p className="flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-red-500" />{analysis.summary.invalid} record(s) need attention (missing name or invalid mobile)</p>
+                  )}
+                  <p className="flex items-center gap-2 font-medium"><CheckCircle2 className="h-4 w-4 text-green-600" />Ready to import</p>
+                </div>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
                   <StatCard label="Total" value={analysis.summary.total} />
                   <StatCard label="Valid" value={analysis.summary.valid} tone="green" />
