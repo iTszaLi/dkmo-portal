@@ -46,6 +46,18 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        // Split the heaviest vendor libraries into cacheable chunks so the
+        // main bundle stays smaller (helps Vercel/production load times).
+        manualChunks: {
+          react: ["react", "react-dom"],
+          charts: ["recharts"],
+          pdf: ["jspdf", "jspdf-autotable"],
+          xlsx: ["xlsx"],
+        },
+      },
+    },
   },
   server: {
     port,

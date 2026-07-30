@@ -3,13 +3,14 @@
   "installCommand": "pnpm install",
   "buildCommand": "pnpm --filter @workspace/dkmo-portal run build",
   "outputDirectory": "artifacts/dkmo-portal/dist/public",
+  "framework": null,
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://Dkmos.replit.app/api/:path*"
+      "destination": "https://YOUR-API-SERVER-DOMAIN/api/:path*"
     },
     {
-      "source": "/((?!assets/).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]

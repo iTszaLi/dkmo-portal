@@ -37,6 +37,11 @@ if (process.env.REPLIT_DEV_DOMAIN) allowedOrigins.add(`https://${process.env.REP
 for (const d of (process.env.REPLIT_DOMAINS ?? "").split(",")) {
   if (d.trim()) allowedOrigins.add(`https://${d.trim()}`);
 }
+// Extra origins for non-Replit hosting (e.g. a Vercel frontend):
+// CORS_ORIGINS=https://dkmo-portal.vercel.app,https://example.com
+for (const d of (process.env.CORS_ORIGINS ?? "").split(",")) {
+  if (d.trim()) allowedOrigins.add(d.trim().replace(/\/$/, ""));
+}
 app.use(
   cors({
     credentials: true,
