@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import {
   Search, Plus, Check, X, Eye, Clock, Filter, Download, ChevronDown,
@@ -94,6 +95,7 @@ export default function DkmoMemberships() {
   const [newStatus, setNewStatus] = useState<AppStatus>("under_review");
   const [declineReason, setDeclineReason] = useState("");
   const [saving, setSaving] = useState(false);
+  const queryClient = useQueryClient();
   const { toast } = useToast();
 
   async function fetchData() {
@@ -144,14 +146,22 @@ export default function DkmoMemberships() {
         credentials: "include",
         body: JSON.stringify({ status, declineReason: reason ?? null }),
       });
-      if (!res.ok) throw new Error("Failed to update");
+      if (!res.ok) {
+        const body = await res.json().catch(() => null) as { error?: string } | null;
+        throw new Error(body?.error || "Failed to update");
+      }
       toast({ title: "Status updated", description: `Application marked as ${status}.` });
-      if (status === "approved") celebrate();
+      if (status === "approved") {
+        celebrate();
+        // Approval auto-creates the member + fee + FRF records; refresh every
+        // module that shows them so no manual page refresh is needed.
+        void queryClient.invalidateQueries();
+      }
       setStatusChangeOpen(false);
       setDetailOpen(false);
       void fetchData();
-    } catch {
-      toast({ title: "Error", description: "Failed to update status.", variant: "destructive" });
+    } catch (err) {
+      toast({ title: "Error", description: err instanceof Error ? err.message : "Failed to update status.", variant: "destructive" });
     } finally {
       setSaving(false);
     }

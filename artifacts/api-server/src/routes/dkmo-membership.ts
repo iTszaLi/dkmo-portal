@@ -1,7 +1,8 @@
 import crypto from "node:crypto";
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { dkmoMembershipsTable, dkmoMembershipDependentsTable, membersTable } from "@workspace/db/schema";
+import { dkmoMembershipsTable, dkmoMembershipDependentsTable, membersTable, frfClaimsTable, frfContributionsTable } from "@workspace/db/schema";
+import { logAudit } from "../lib/audit";
 import { eq, and, isNull, desc, sql } from "drizzle-orm";
 import z from "zod";
 import { requireAuth, requireRole, type AuthedRequest } from "../middlewares/requireAuth";
@@ -679,7 +680,7 @@ router.get("/dkmo/memberships/:id", async (req, res): Promise<void> => {
   });
 });
 
-router.patch("/dkmo/memberships/:id", async (req, res): Promise<void> => {
+router.patch("/dkmo/memberships/:id", requireRole("admin"), async (req, res): Promise<void> => {
   const id = req.params["id"] as string;
   const parsed = DkmoMembershipInput.partial().safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
@@ -724,9 +725,19 @@ router.patch("/dkmo/memberships/:id", async (req, res): Promise<void> => {
   }
   if (fields.status === "rejected") statusExtras = { rejectedBy: actor, rejectedAt: now };
 
+  const isApproval = fields.status === "approved";
   let updated: typeof dkmoMembershipsTable.$inferSelect | undefined;
+  let provision: { memberId: string; createdNew: boolean; frfIds: string[] } | null = null;
   try {
-    [updated] = await db
+    // The status update and (on approval) all provisioning — member creation,
+    // fee registration, FRF backfill, record linking — run in ONE transaction.
+    // A row lock serializes concurrent approvals of the same application, so a
+    // double click can never create duplicates or revert a finished approval.
+    const result = await db.transaction(async (tx) => {
+      if (isApproval) {
+        await tx.execute(sql`SELECT id FROM dkmo_memberships WHERE id = ${id} FOR UPDATE`);
+      }
+      const [u] = await tx
     .update(dkmoMembershipsTable)
     .set({
       ...(fields.fullName !== undefined && { fullName: fields.fullName }),
@@ -767,6 +778,95 @@ router.patch("/dkmo/memberships/:id", async (req, res): Promise<void> => {
     })
     .where(eq(dkmoMembershipsTable.id, id))
     .returning();
+
+      if (!u) return { u: undefined, p: null };
+
+      let p: { memberId: string; createdNew: boolean; frfIds: string[] } | null = null;
+      if (isApproval && !u.memberId) {
+        // Idempotency: if a member with this DKMO number already exists
+        // (retry / legacy import), link it instead of failing.
+        let [member] = await tx
+          .select()
+          .from(membersTable)
+          .where(eq(membersTable.membershipId, u.dkmoNumber));
+        let createdNew = false;
+        if (!member) {
+          const inserted = await tx
+            .insert(membersTable)
+            .values({
+              fullName: u.fullName,
+              mobileNumber: u.mobileSaudi || u.mobileIndia || "",
+              membershipId: u.dkmoNumber,
+              applicationNumber: u.dkmoNumber,
+              photoUrl: u.photoUrl ?? null,
+              iqamaNumber: u.iqamaNumber || "",
+              passportNumber: u.passportNumber || "",
+              dateOfBirth: u.dateOfBirth ?? "",
+              jamaath: u.nearestJamaath || "",
+              city: u.areaSaudi || u.district || "",
+              country: "Saudi Arabia",
+              designation: u.occupation || "",
+              nativePlace: u.district || "",
+              notes: u.notes || "",
+              membershipFee: "100",
+              feeStatus: "unpaid",
+              frfStatus: "active",
+              refMemberName: u.refMemberName,
+              refMemberId: u.refMemberId,
+            })
+            .onConflictDoNothing({ target: membersTable.membershipId })
+            .returning();
+          member = inserted[0];
+          if (member) createdNew = true;
+          else {
+            // Lost a race with another writer — link the existing member.
+            [member] = await tx
+              .select()
+              .from(membersTable)
+              .where(eq(membersTable.membershipId, u.dkmoNumber));
+          }
+        }
+        if (!member) throw new Error("Member record could not be created");
+
+        // Link application ↔ member.
+        await tx
+          .update(dkmoMembershipsTable)
+          .set({ memberId: member.id, updatedAt: now })
+          .where(eq(dkmoMembershipsTable.id, id));
+        u.memberId = member.id;
+
+        // Register the member in all currently active (approved, collecting)
+        // FRF cases so they appear in FRF Fees immediately. Policy (per user
+        // decision): newly approved members are registered as pending even
+        // though their membership fee is still unpaid — unlike bulk claim
+        // generation, which only includes fee-paid members. Idempotent via
+        // the unique (claim, member) index.
+        const activeClaims = await tx
+          .select({ id: frfClaimsTable.id, contributionAmount: frfClaimsTable.contributionAmount })
+          .from(frfClaimsTable)
+          .where(eq(frfClaimsTable.status, "approved"));
+        let frfIds: string[] = [];
+        if (activeClaims.length > 0) {
+          const inserted = await tx
+            .insert(frfContributionsTable)
+            .values(activeClaims.map((c) => ({
+              claimId: c.id,
+              memberId: member!.id,
+              amount: c.contributionAmount,
+              status: "pending" as const,
+            })))
+            .onConflictDoNothing({
+              target: [frfContributionsTable.claimId, frfContributionsTable.memberId],
+            })
+            .returning({ id: frfContributionsTable.id });
+          frfIds = inserted.map((r) => r.id);
+        }
+        p = { memberId: member.id, createdNew, frfIds };
+      }
+      return { u, p };
+    });
+    updated = result.u;
+    provision = result.p;
   } catch (err) {
     // Race backstop: a concurrent insert/update may trip the partial unique
     // index even though the pre-check passed. Map it to the same friendly 409.
@@ -781,42 +881,33 @@ router.patch("/dkmo/memberships/:id", async (req, res): Promise<void> => {
       res.status(409).json(body);
       return;
     }
+    if (isApproval) {
+      // The transaction rolled back — status change included, so nothing was
+      // partially saved.
+      req.log.error({ err }, "Approval provisioning failed; transaction rolled back");
+      res.status(500).json({
+        error: "Approval failed while creating the member and fee records. Nothing was saved — please try again.",
+      });
+      return;
+    }
     throw err;
   }
 
   if (!updated) { res.status(404).json({ error: "Not found" }); return; }
 
-  // On approval, create a member record (if not already linked) and carry the
-  // reference member over from the application.
-  if (fields.status === "approved" && !updated.memberId) {
-    try {
-      const [createdMember] = await db
-        .insert(membersTable)
-        .values({
-          fullName: updated.fullName,
-          mobileNumber: updated.mobileSaudi || updated.mobileIndia || "",
-          membershipId: updated.dkmoNumber,
-          photoUrl: updated.photoUrl ?? null,
-          city: updated.areaSaudi || updated.district || "",
-          country: "Saudi Arabia",
-          designation: updated.occupation || "",
-          membershipFee: "100",
-          feeStatus: "unpaid",
-          refMemberName: updated.refMemberName,
-          refMemberId: updated.refMemberId,
-        })
-        .returning();
-      if (createdMember) {
-        await db
-          .update(dkmoMembershipsTable)
-          .set({ memberId: createdMember.id, updatedAt: now })
-          .where(eq(dkmoMembershipsTable.id, id));
-        updated.memberId = createdMember.id;
-      }
-    } catch (err) {
-      // A member with this membershipId may already exist; log and continue.
-      req.log.warn({ err }, "Failed to auto-create member on approval");
-    }
+  if (provision) {
+    logAudit(req, "membership_approved", "dkmo_membership", {
+      entityId: id,
+      entityName: updated.fullName,
+      details: JSON.stringify({
+        dkmoNumber: updated.dkmoNumber,
+        memberId: provision.memberId,
+        memberCreated: provision.createdNew,
+        membershipFee: "SAR 100 (unpaid)",
+        frfContributionIds: provision.frfIds,
+        activeFrfCases: provision.frfIds.length,
+      }),
+    });
   }
 
   // On approval, allocate the permanent certificate serial + approval audit
@@ -846,7 +937,7 @@ router.patch("/dkmo/memberships/:id", async (req, res): Promise<void> => {
   res.json(membershipToApi(updated));
 });
 
-router.delete("/dkmo/memberships/:id", async (req, res): Promise<void> => {
+router.delete("/dkmo/memberships/:id", requireRole("admin"), async (req, res): Promise<void> => {
   const id = req.params["id"] as string;
   await db.delete(dkmoMembershipsTable).where(eq(dkmoMembershipsTable.id, id));
   res.status(204).end();

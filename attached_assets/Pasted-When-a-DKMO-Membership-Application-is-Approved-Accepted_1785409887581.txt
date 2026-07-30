@@ -1,0 +1,128 @@
+When a DKMO Membership Application is Approved/Accepted, the system must automatically perform the following actions without requiring any manual steps.
+
+1. Automatically Create a Member
+As soon as the application status changes from Pending → Approved, create a new record in the Members module.
+Copy all available information from the membership application, including:
+Full Name
+Mobile Number
+Iqama Number
+Date of Birth
+City
+Country
+Address
+Occupation/Designation
+Email
+Reference Member
+Notes
+Any uploaded documents/photos
+Any other application fields
+Generate the next available DKMO Member ID automatically if it doesn't already exist.
+The new member should have:
+Status = Active
+Membership Status = Approved
+Membership Date = Approval Date
+Created From = Membership Application
+2. Automatically Add to Membership Fees
+
+Immediately after creating the member:
+
+Create a Membership Fee record.
+Default fee:
+Amount: SAR 100
+Status: Unpaid
+Due Date: Membership Approval Date (or your existing rule)
+The member must instantly appear inside:
+Finance → Payments → Membership Fees
+Update all Membership Fee statistics automatically:
+Total Members
+Paid
+Unpaid
+Overdue
+Amount Due
+3. Automatically Add to FRF Fees
+
+The approved member must also automatically become part of the FRF Fee system.
+
+Create the necessary FRF member record.
+Include the member in all current active FRF cases (if your system tracks active cases).
+If there are no active FRF cases, simply register the member so they automatically appear in future FRF collections.
+The member should immediately appear in:
+Finance → Payments → FRF Fees
+4. Keep Everything Linked
+
+The Membership Application, Member, Membership Fee, and FRF records should all reference each other.
+
+Example:
+
+Membership Application
+↓
+Member Profile
+↓
+Membership Fee Record
+↓
+FRF Fee Record(s)
+
+Store IDs so navigation is easy.
+
+5. Prevent Duplicate Members
+
+If someone clicks Approve more than once or refreshes the page:
+
+Do NOT create duplicate Member records.
+Do NOT create duplicate Membership Fee records.
+Do NOT create duplicate FRF records.
+Check whether the application has already been processed before creating anything.
+6. Database Transaction
+
+The approval process should be atomic.
+
+If any step fails:
+
+Roll back everything.
+Do not leave partially created records.
+Display an error explaining what failed.
+7. UI Updates
+
+Immediately after approval:
+
+Remove the application from the Pending list.
+Increase Approved count.
+Refresh the Members module.
+Refresh Membership Fees.
+Refresh FRF Fees.
+Refresh Dashboard statistics.
+No manual page refresh should be required.
+8. Audit Trail
+
+Log the approval event:
+
+User who approved
+Date & Time
+Application ID
+Generated Member ID
+Membership Fee Record ID
+FRF Record ID
+IP/Device (if available)
+Expected Flow
+New Membership Application
+        │
+        ▼
+Pending
+        │
+Approve
+        ▼
+Create Member
+        │
+        ├──► Add to Members Module
+        │
+        ├──► Create Membership Fee (SAR 100, Unpaid)
+        │
+        ├──► Register in FRF Fees
+        │
+        ├──► Link all records together
+        │
+        ├──► Update dashboard counts
+        │
+        └──► Write audit log
+
+This workflow must happen automatically with a single click on "Approve", ensuring all modules remain synchronized and no duplicate records are ever created.
