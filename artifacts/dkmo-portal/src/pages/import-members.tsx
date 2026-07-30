@@ -63,6 +63,71 @@ function autoDetect(header: string): TargetKey {
   return "ignore";
 }
 
+// ── Content-based mapping validation ─────────────────────────────────────────
+// Checks whether the actual values in a column look like the field they are
+// mapped to (e.g. currency amounts mapped to Mobile Number are rejected).
+const DATE_RE = /^(\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}|\d{1,2}[-/. ][A-Za-z]{3,}[-/. ]\d{2,4})$/;
+
+const CONTENT_VALIDATORS: Partial<Record<Exclude<TargetKey, "ignore">, { test: (v: string) => boolean; reason: string }>> = {
+  dateOfBirth: {
+    test: (v) => { if (!DATE_RE.test(v.trim())) return false; const y = extractYear(v); return y !== null && y >= 1900 && y <= new Date().getFullYear() - 5; },
+    reason: "values do not look like dates of birth",
+  },
+  membershipDate: { test: (v) => DATE_RE.test(v.trim()), reason: "values do not look like dates" },
+  legacyEntryDate: { test: (v) => DATE_RE.test(v.trim()), reason: "values do not look like dates" },
+  mobileNumber: { test: looksLikePhone, reason: "values are not phone numbers (they look like amounts or codes)" },
+  whatsappNumber: { test: looksLikePhone, reason: "values are not phone numbers" },
+  homeContactNumber: { test: looksLikePhone, reason: "values are not phone numbers" },
+  telephone: { test: looksLikePhone, reason: "values are not phone numbers" },
+  passportNumber: { test: (v) => /^[A-Za-z0-9]{6,12}$/.test(v.trim()) && !/^\d{1,5}$/.test(v.trim()), reason: "values do not match passport number formats" },
+  iqamaNumber: { test: (v) => /^\d{8,12}$/.test(v.replace(/\s/g, "")), reason: "values do not look like Iqama numbers" },
+  email: { test: (v) => v.includes("@"), reason: "values are not email addresses" },
+  bloodGroup: { test: (v) => /^(a|b|ab|o)\s?[+-]?(ve)?$/i.test(v.trim()), reason: "values are not blood groups" },
+  dependents: { test: (v) => /^\d{1,2}$/.test(v.trim()), reason: "values are not dependent counts" },
+  fullName: { test: looksLikeName, reason: "values look like payment/description text, not names" },
+  firstName: { test: looksLikeName, reason: "values do not look like names" },
+  lastName: { test: looksLikeName, reason: "values do not look like names" },
+  ppName: { test: looksLikeName, reason: "values do not look like names" },
+  referredBy: { test: looksLikeName, reason: "values do not look like names" },
+  legacyMemberId: { test: (v) => /^[A-Za-z0-9/_-]{1,20}$/.test(v.trim()), reason: "values do not match legacy ID formats" },
+};
+
+function extractYear(v: string): number | null {
+  const m4 = v.match(/\b(19|20)\d{2}\b/);
+  if (m4) return Number(m4[0]);
+  const m2 = v.match(/[-/.](\d{2})\s*$/);
+  if (m2) { const y = Number(m2[1]); return y <= 30 ? 2000 + y : 1900 + y; }
+  return null;
+}
+
+function looksLikePhone(v: string): boolean {
+  const digits = v.replace(/\D/g, "");
+  return digits.length >= 9 && digits.length <= 15 && !/[.]/.test(v.trim());
+}
+
+function looksLikeName(v: string): boolean {
+  const t = v.trim();
+  if (!t) return false;
+  if (/\d/.test(t) && (t.match(/\d/g)!.length / t.length) > 0.2) return false;
+  if (/fee|payment|invoice|receipt|bill|amount|frf|membership fee/i.test(t)) return false;
+  return /^[\p{L}\p{M} .,'()-]+$/u.test(t);
+}
+
+interface ColumnCheck { valid: boolean; reason: string }
+
+/** Validate a mapped column against up to 50 sample values (≥60% must match). */
+function checkColumn(target: TargetKey, samples: string[]): ColumnCheck {
+  if (target === "ignore") return { valid: true, reason: "" };
+  const validator = CONTENT_VALIDATORS[target];
+  if (!validator) return { valid: true, reason: "" };
+  const values = samples.map((s) => (s ?? "").trim()).filter(Boolean).slice(0, 50);
+  if (values.length === 0) return { valid: true, reason: "" };
+  const ok = values.filter(validator.test).length;
+  return ok / values.length >= 0.6
+    ? { valid: true, reason: "" }
+    : { valid: false, reason: validator.reason };
+}
+
 // ── Saved mapping ("Legacy Access Members Mapping") ─────────────────────────
 const MAPPING_STORE_KEY = "dkmo-legacy-members-mapping";
 
@@ -296,6 +361,7 @@ export default function ImportMembersPage() {
   const [file, setFile] = useState<File | null>(null);
   const [detection, setDetection] = useState<Detection | null>(null);
   const [overrideDetection, setOverrideDetection] = useState(false);
+  const [overrideDialogOpen, setOverrideDialogOpen] = useState(false);
   const [grid, setGrid] = useState<string[][]>([]);
   const [mapping, setMapping] = useState<TargetKey[]>([]);
   const [analysis, setAnalysis] = useState<AnalyzeResult | null>(null);
@@ -317,6 +383,19 @@ export default function ImportMembersPage() {
 
   const header = grid[0] ?? [];
   const dataRows = useMemo(() => grid.slice(1), [grid]);
+
+  // Hard lock: non-member file detected with ≥80% confidence — no override.
+  const detectionLocked =
+    !!detection && detection.type !== "members" && detection.type !== "unknown" && detection.confidence >= 80;
+
+  // Content checks: do the column's values actually look like the mapped field?
+  const columnChecks = useMemo<ColumnCheck[]>(
+    () => mapping.map((target, col) => checkColumn(target, dataRows.slice(0, 80).map((r) => r[col] ?? ""))),
+    [mapping, dataRows],
+  );
+  const invalidColumns = columnChecks
+    .map((c, col) => ({ ...c, col }))
+    .filter((c) => !c.valid);
 
   if (user?.role !== "admin") {
     return (
@@ -544,13 +623,23 @@ export default function ImportMembersPage() {
                         <li key={m}>Column matching "{m}" was found. This looks like a {TYPE_LABELS[detection.type].toLowerCase().replace(/s$/, "")} file.</li>
                       ))}
                     </ul>
-                    {detection.confidence < 85 ? (
-                      <label className="mt-3 flex items-center gap-2 font-medium cursor-pointer">
-                        <input type="checkbox" checked={overrideDetection} onChange={(e) => setOverrideDetection(e.target.checked)} data-testid="checkbox-override-detection" />
-                        The detection is wrong — this really is a member file. Continue anyway.
-                      </label>
+                    {detectionLocked ? (
+                      <p className="mt-3 font-semibold" data-testid="text-import-blocked">
+                        Import blocked. This file has been identified as a {TYPE_LABELS[detection.type]} file.
+                        {detection.type === "payments" ? " Please use the Payments Import module." : ` Please use the ${TYPE_LABELS[detection.type]} Import module.`}
+                      </p>
+                    ) : overrideDetection ? (
+                      <p className="mt-3 font-medium" data-testid="text-override-active">
+                        Detection overridden — this file will be treated as a member file. Column values are still checked below.
+                      </p>
                     ) : (
-                      <p className="mt-3 font-medium">Importing this file as members is blocked to protect your data.</p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-3 border-amber-400"
+                        onClick={() => setOverrideDialogOpen(true)}
+                        data-testid="button-override-detection"
+                      >Override Detection</Button>
                     )}
                   </div>
                 )}
@@ -571,13 +660,28 @@ export default function ImportMembersPage() {
                             {dataRows.slice(0, 3).map((r) => r[col]).filter(Boolean).join(" • ")}
                           </td>
                           <td className="p-2">
-                            <Select value={mapping[col] ?? "ignore"} onValueChange={(v) => setMapping((m) => m.map((x, i) => (i === col ? (v as TargetKey) : x)))}>
-                              <SelectTrigger className="w-56" data-testid={`select-mapping-${col}`}><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="ignore">— Ignore —</SelectItem>
-                                {TARGET_FIELDS.map((f) => <SelectItem key={f.key} value={f.key}>{f.label}</SelectItem>)}
-                              </SelectContent>
-                            </Select>
+                            <div className="flex items-center gap-2">
+                              <Select
+                                value={mapping[col] ?? "ignore"}
+                                disabled={detectionLocked}
+                                onValueChange={(v) => setMapping((m) => m.map((x, i) => (i === col ? (v as TargetKey) : x)))}
+                              >
+                                <SelectTrigger className="w-56" data-testid={`select-mapping-${col}`}><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="ignore">— Ignore —</SelectItem>
+                                  {TARGET_FIELDS.map((f) => <SelectItem key={f.key} value={f.key}>{f.label}</SelectItem>)}
+                                </SelectContent>
+                              </Select>
+                              {mapping[col] !== "ignore" && !detectionLocked && (
+                                columnChecks[col]?.valid ? (
+                                  <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600" data-testid={`icon-mapping-valid-${col}`} />
+                                ) : (
+                                  <span className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400" data-testid={`icon-mapping-invalid-${col}`}>
+                                    <AlertTriangle className="h-4 w-4 shrink-0" />{columnChecks[col]?.reason}
+                                  </span>
+                                )
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -587,26 +691,25 @@ export default function ImportMembersPage() {
                 <div className="flex justify-between">
                   <Button variant="outline" onClick={() => setStep(0)} data-testid="button-back"><ArrowLeft className="mr-1 h-4 w-4" />Back</Button>
                   <Button
+                    disabled={detectionLocked}
                     onClick={() => {
-                      if (detection && detection.type !== "members" && detection.type !== "unknown") {
-                        if (detection.confidence >= 85) {
-                          toast({
-                            title: `This looks like a ${TYPE_LABELS[detection.type].toLowerCase()} file (${detection.confidence}% confidence)`,
-                            description: detection.type === "payments"
-                              ? "Payment records cannot be imported as members. Please use the Payments Import module instead."
-                              : "This file cannot be imported as members.",
-                            variant: "destructive",
-                          });
-                          return;
-                        }
-                        if (!overrideDetection) {
-                          toast({
-                            title: `This may be a ${TYPE_LABELS[detection.type].toLowerCase()} file`,
-                            description: "Tick \"Continue anyway\" above if you are sure this is a member file.",
-                            variant: "destructive",
-                          });
-                          return;
-                        }
+                      if (detectionLocked) return;
+                      if (detection && detection.type !== "members" && detection.type !== "unknown" && !overrideDetection) {
+                        toast({
+                          title: `This may be a ${TYPE_LABELS[detection.type].toLowerCase()} file`,
+                          description: "Click \"Override Detection\" above if you are sure this is a member file.",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+                      if (invalidColumns.length > 0) {
+                        const first = invalidColumns[0]!;
+                        toast({
+                          title: "Some columns are mapped to the wrong fields",
+                          description: `"${header[first.col] || `Column ${first.col + 1}`}" — ${first.reason}. Fix the mapping or set it to Ignore.`,
+                          variant: "destructive",
+                        });
+                        return;
                       }
                       const mapped = new Set(mapping.filter((m) => m !== "ignore"));
                       if (!mapped.has("fullName") && !(mapped.has("firstName") || mapped.has("lastName"))) {
@@ -629,6 +732,28 @@ export default function ImportMembersPage() {
                     data-testid="button-validate"
                   >Clean & Validate<ArrowRight className="ml-1 h-4 w-4" /></Button>
                 </div>
+
+                {/* Override Detection confirmation */}
+                <AlertDialog open={overrideDialogOpen} onOpenChange={setOverrideDialogOpen}>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="flex items-center gap-2">
+                        <AlertTriangle className="h-5 w-5 text-amber-500" />Warning
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This file appears to be a {detection ? TYPE_LABELS[detection.type] : ""} file.
+                        Importing it as Members may corrupt your member database.
+                        <br /><br />Continue anyway?
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel data-testid="button-override-cancel">Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => setOverrideDetection(true)} data-testid="button-override-continue">
+                        Continue
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </CardContent>
             </Card>
           )}
