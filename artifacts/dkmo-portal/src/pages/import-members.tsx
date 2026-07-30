@@ -47,6 +47,77 @@ function autoDetect(header: string): TargetKey {
   return "ignore";
 }
 
+// ── File-type detection (members vs payments vs receipts vs FRF) ────────────
+type DetectedType = "members" | "payments" | "receipts" | "frf" | "unknown";
+
+const TYPE_SIGNATURES: Record<Exclude<DetectedType, "unknown">, Array<{ pattern: RegExp; weight: number; label: string }>> = {
+  members: [
+    { pattern: /^(full ?)?name$|member ?name|first ?name|last ?name/i, weight: 3, label: "Member Name" },
+    { pattern: /mobile|phone|contact|whats ?app/i, weight: 2, label: "Mobile Number" },
+    { pattern: /iqama/i, weight: 2, label: "Iqama Number" },
+    { pattern: /passport/i, weight: 2, label: "Passport Number" },
+    { pattern: /jama|mahal/i, weight: 2, label: "Jamaath" },
+    { pattern: /birth|dob/i, weight: 1, label: "Date of Birth" },
+    { pattern: /native|home ?place/i, weight: 1, label: "Native Place" },
+    { pattern: /^group/i, weight: 1, label: "Group / Sponsor" },
+  ],
+  payments: [
+    { pattern: /^amount|amt\b/i, weight: 3, label: "Amount" },
+    { pattern: /bill[_ ]?no|bill ?num/i, weight: 3, label: "Bill Number" },
+    { pattern: /entry ?date|payment ?date|paid ?date/i, weight: 2, label: "Payment Date" },
+    { pattern: /^details?$/i, weight: 2, label: "Details" },
+    { pattern: /remarks?/i, weight: 1, label: "Remarks" },
+    { pattern: /membership ?fee|frf ?fee/i, weight: 2, label: "Fee column" },
+    { pattern: /^date$/i, weight: 1, label: "Date" },
+  ],
+  receipts: [
+    { pattern: /receipt ?(no|num|number)/i, weight: 3, label: "Receipt Number" },
+    { pattern: /^amount|amt\b/i, weight: 2, label: "Amount" },
+    { pattern: /received ?(from|by)/i, weight: 2, label: "Received From/By" },
+  ],
+  frf: [
+    { pattern: /frf/i, weight: 3, label: "FRF" },
+    { pattern: /contribution/i, weight: 3, label: "Contribution" },
+    { pattern: /claim/i, weight: 2, label: "Claim" },
+  ],
+};
+
+type Detection = {
+  type: DetectedType;
+  confidence: number; // 0-100
+  matched: string[];  // human labels of matched signature columns
+  memberMatched: string[];
+};
+
+function detectFileType(headers: string[]): Detection {
+  const scores: Record<string, { score: number; max: number; matched: string[] }> = {};
+  for (const [type, sigs] of Object.entries(TYPE_SIGNATURES)) {
+    let score = 0; const matched: string[] = [];
+    const max = sigs.reduce((s, x) => s + x.weight, 0);
+    for (const sig of sigs) {
+      if (headers.some((h) => sig.pattern.test(h.trim()))) { score += sig.weight; matched.push(sig.label); }
+    }
+    scores[type] = { score, max, matched };
+  }
+  const ranked = Object.entries(scores).sort((a, b) => b[1].score - a[1].score);
+  const [topType, top] = ranked[0]!;
+  const second = ranked[1]![1];
+  if (top.score === 0) return { type: "unknown", confidence: 0, matched: [], memberMatched: scores.members!.matched };
+  // Confidence: how much of the signature matched, boosted by the margin over the runner-up.
+  const coverage = top.score / top.max;
+  const margin = top.score > 0 ? (top.score - second.score) / top.score : 0;
+  const confidence = Math.round(Math.min(0.55 * coverage + 0.45 * margin, 1) * 100);
+  return { type: topType as DetectedType, confidence, matched: top.matched, memberMatched: scores.members!.matched };
+}
+
+const TYPE_LABELS: Record<DetectedType, string> = {
+  members: "Members",
+  payments: "Payments",
+  receipts: "Receipts",
+  frf: "FRF Contributions",
+  unknown: "Unknown",
+};
+
 // ── File parsing (TXT / CSV / XLSX with auto delimiter) ─────────────────────
 function detectDelimiter(text: string): string {
   const line = text.split(/\r?\n/).find((l) => l.trim()) ?? "";
@@ -178,6 +249,8 @@ export default function ImportMembersPage() {
 
   const [step, setStep] = useState(0);
   const [file, setFile] = useState<File | null>(null);
+  const [detection, setDetection] = useState<Detection | null>(null);
+  const [overrideDetection, setOverrideDetection] = useState(false);
   const [grid, setGrid] = useState<string[][]>([]);
   const [mapping, setMapping] = useState<TargetKey[]>([]);
   const [analysis, setAnalysis] = useState<AnalyzeResult | null>(null);
@@ -239,6 +312,8 @@ export default function ImportMembersPage() {
       setFile(f);
       setGrid(parsed);
       setMapping(parsed[0]!.map((h) => autoDetect(h)));
+      setDetection(detectFileType(parsed[0]!));
+      setOverrideDetection(false);
       setAnalysis(null); setResolutions({}); setReport(null);
       setStep(1);
     } catch (err) {
@@ -367,6 +442,17 @@ export default function ImportMembersPage() {
                 </div>
                 <input ref={fileInput} type="file" accept=".txt,.csv,.tsv,.xlsx,.xls" className="hidden"
                   onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleFile(f); e.target.value = ""; }} data-testid="input-file" />
+                <div className="mt-6 grid gap-4 sm:grid-cols-2 text-sm">
+                  <div className="rounded-lg border bg-muted/30 p-4">
+                    <p className="font-semibold mb-1.5">Members Import accepts:</p>
+                    <p className="text-muted-foreground">Name · Membership Number · Mobile Number · Passport Number · Iqama Number · Email · Address · DOB · Nationality</p>
+                  </div>
+                  <div className="rounded-lg border bg-muted/30 p-4">
+                    <p className="font-semibold mb-1.5">Not for this importer — Payments files contain:</p>
+                    <p className="text-muted-foreground">Amount · Receipt Number · Payment Date · Bill Number · Remarks · Membership Fee · FRF Fee</p>
+                    <p className="mt-1.5 text-xs text-muted-foreground">Payment files are detected automatically and cannot be imported as members.</p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           )}
@@ -376,11 +462,48 @@ export default function ImportMembersPage() {
             <Card>
               <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Sparkles className="h-4 w-4 text-primary" />Columns detected automatically — adjust if needed</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                   <span><b className="text-foreground">{file?.name}</b></span>
                   <span>{((file?.size ?? 0) / 1024).toFixed(1)} KB</span>
                   <span>{dataRows.length.toLocaleString()} records</span>
+                  {detection && (
+                    <Badge
+                      variant="outline"
+                      data-testid="badge-detected-type"
+                      className={
+                        detection.type === "members"
+                          ? "border-green-300 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950/40 dark:text-green-400"
+                          : detection.type === "unknown"
+                            ? "border-slate-300 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
+                            : "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-400"
+                      }
+                    >
+                      Detected File Type: {TYPE_LABELS[detection.type]}
+                      {detection.type !== "unknown" ? ` — ${detection.confidence}% confidence` : ""}
+                    </Badge>
+                  )}
                 </div>
+                {detection && detection.type !== "members" && detection.type !== "unknown" && (
+                  <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300" data-testid="warning-wrong-file-type">
+                    <p className="flex items-center gap-2 font-semibold"><AlertTriangle className="h-4 w-4 shrink-0" />
+                      This file appears to contain {TYPE_LABELS[detection.type].toLowerCase()} records, not member records.
+                      {detection.type === "payments" ? " Please use the Payments Import module instead." : ""}
+                    </p>
+                    <ul className="mt-2 list-disc pl-6 space-y-0.5">
+                      {detection.matched.map((m) => (
+                        <li key={m}>Column matching "{m}" was found. This looks like a {TYPE_LABELS[detection.type].toLowerCase().replace(/s$/, "")} file.</li>
+                      ))}
+                    </ul>
+                    {detection.confidence < 85 ? (
+                      <label className="mt-3 flex items-center gap-2 font-medium cursor-pointer">
+                        <input type="checkbox" checked={overrideDetection} onChange={(e) => setOverrideDetection(e.target.checked)} data-testid="checkbox-override-detection" />
+                        The detection is wrong — this really is a member file. Continue anyway.
+                      </label>
+                    ) : (
+                      <p className="mt-3 font-medium">Importing this file as members is blocked to protect your data.</p>
+                    )}
+                  </div>
+                )}
                 <div className="max-h-[420px] overflow-auto rounded-md border">
                   <table className="w-full text-sm">
                     <thead className="sticky top-0 bg-muted">
@@ -415,11 +538,41 @@ export default function ImportMembersPage() {
                   <Button variant="outline" onClick={() => setStep(0)} data-testid="button-back"><ArrowLeft className="mr-1 h-4 w-4" />Back</Button>
                   <Button
                     onClick={() => {
+                      if (detection && detection.type !== "members" && detection.type !== "unknown") {
+                        if (detection.confidence >= 85) {
+                          toast({
+                            title: `This looks like a ${TYPE_LABELS[detection.type].toLowerCase()} file (${detection.confidence}% confidence)`,
+                            description: detection.type === "payments"
+                              ? "Payment records cannot be imported as members. Please use the Payments Import module instead."
+                              : "This file cannot be imported as members.",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        if (!overrideDetection) {
+                          toast({
+                            title: `This may be a ${TYPE_LABELS[detection.type].toLowerCase()} file`,
+                            description: "Tick \"Continue anyway\" above if you are sure this is a member file.",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                      }
                       const mapped = new Set(mapping.filter((m) => m !== "ignore"));
                       if (!mapped.has("fullName") && !(mapped.has("firstName") || mapped.has("lastName"))) {
-                        toast({ title: "Map a Name column first", variant: "destructive" }); return;
+                        toast({
+                          title: "Column 'Member Name' was not found",
+                          description: "A name column (Full Name, or First + Last Name) is required for member import. Map it in the \"Import As\" column.",
+                          variant: "destructive",
+                        }); return;
                       }
-                      if (!mapped.has("mobileNumber")) { toast({ title: "Map the Mobile Number column first", variant: "destructive" }); return; }
+                      if (!mapped.has("mobileNumber")) {
+                        toast({
+                          title: "Column 'Mobile Number' was not found",
+                          description: "A mobile/phone column is required for member import. Map it in the \"Import As\" column.",
+                          variant: "destructive",
+                        }); return;
+                      }
                       void runAnalyze(2);
                     }}
                     data-testid="button-validate"

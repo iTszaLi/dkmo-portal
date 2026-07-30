@@ -1,0 +1,71 @@
+The Members Import Wizard is correctly detecting the uploaded CSV as a member database, but the automatic column mapping is incomplete.
+
+Please improve the importer without redesigning the UI.
+
+Requirements:
+
+1. Automatically map every known legacy column to the correct DKMO field.
+
+Legacy Column -> DKMO Field
+
+Id No -> Legacy ID
+Application No -> Application Number
+Old Application No -> Old Application Number
+First Name -> First Name
+Last Name -> Last Name
+PP Name -> Preferred Name / Passport Name
+Mobile No -> Mobile Number
+WhatsApp No -> WhatsApp Number
+Email Id -> Email
+Passport No -> Passport Number
+Iqama no -> Iqama Number
+Date of Birth -> Date of Birth
+Date of Joining -> Membership Date
+Date of Entry -> Record Created Date
+Company -> Company
+Job Title -> Occupation / Job Title
+Marital Status -> Marital Status
+Family Status -> Family Status
+Number of Dependents -> Dependents
+Blood Group -> Blood Group
+Telephone No -> Telephone
+Mobile Home -> Home Mobile
+Place Local -> Current City
+Place home -> Home Town
+Jamaath -> Jamaath
+Dist -> District
+Member status -> Membership Status
+Member under -> Referred By / Sponsor
+Group -> Legacy Group
+Post -> Committee Position
+Remarks -> Remarks
+Avail Contribution -> FRF Contribution Eligible
+
+2. During import, combine First Name + Last Name into the portal's Full Name field automatically.
+
+3. Ignore legacy columns that have no equivalent instead of marking them as errors.
+
+4. Detect date columns automatically and convert them into proper ISO dates.
+
+5. Convert TRUE/FALSE values into Yes/No or Active/Inactive where appropriate.
+
+6. Detect duplicate members using:
+   - Mobile Number
+   - Passport Number
+   - Iqama Number
+   - Email
+   - Legacy ID
+
+7. Before importing, show a summary:
+
+✓ 1,113 member records detected
+✓ XX fields mapped automatically
+⚠ XX optional fields ignored
+⚠ XX duplicate members found
+✓ Ready to import
+
+8. If a required field is missing, show a clear message explaining which field is missing and why.
+
+9. Save this mapping as the default "Legacy Access Members Mapping" so future imports automatically use it.
+
+10. Do not change the existing design, layout, colors, spacing, or workflow. Only improve the import logic and automatic field mapping.
