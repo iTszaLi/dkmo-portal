@@ -657,13 +657,6 @@ async function main() {
     ALTER TABLE members ADD COLUMN IF NOT EXISTS legacy_member_status TEXT NOT NULL DEFAULT '';
     ALTER TABLE members ADD COLUMN IF NOT EXISTS referred_by TEXT NOT NULL DEFAULT '';
     ALTER TABLE members ADD COLUMN IF NOT EXISTS avail_contribution TEXT NOT NULL DEFAULT '';
-    -- Generic data-import framework
-    ALTER TABLE import_batches ADD COLUMN IF NOT EXISTS entity TEXT NOT NULL DEFAULT 'members';
-    ALTER TABLE payments ADD COLUMN IF NOT EXISTS import_batch_id UUID;
-    ALTER TABLE receipts ADD COLUMN IF NOT EXISTS import_batch_id UUID;
-    ALTER TABLE frf_contributions ADD COLUMN IF NOT EXISTS import_batch_id UUID;
-    ALTER TABLE sponsors ADD COLUMN IF NOT EXISTS import_batch_id UUID;
-    ALTER TABLE events ADD COLUMN IF NOT EXISTS import_batch_id UUID;
     CREATE INDEX IF NOT EXISTS members_legacy_id_idx ON members(legacy_member_id) WHERE legacy_member_id <> '';
     CREATE INDEX IF NOT EXISTS members_import_batch_idx ON members(import_batch_id) WHERE import_batch_id IS NOT NULL;
 
@@ -685,6 +678,13 @@ async function main() {
       created_by_name TEXT NOT NULL DEFAULT '',
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+      -- Generic data-import framework
+    ALTER TABLE import_batches ADD COLUMN IF NOT EXISTS entity TEXT NOT NULL DEFAULT 'members';
+    ALTER TABLE payments ADD COLUMN IF NOT EXISTS import_batch_id UUID;
+    ALTER TABLE receipts ADD COLUMN IF NOT EXISTS import_batch_id UUID;
+    ALTER TABLE frf_contributions ADD COLUMN IF NOT EXISTS import_batch_id UUID;
+    ALTER TABLE sponsors ADD COLUMN IF NOT EXISTS import_batch_id UUID;
+    ALTER TABLE events ADD COLUMN IF NOT EXISTS import_batch_id UUID;
   `);
 
   console.log("✅  All tables created.");

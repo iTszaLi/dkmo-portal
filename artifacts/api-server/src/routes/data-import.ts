@@ -399,7 +399,7 @@ router.post("/import/:entity/commit", requireRole("admin"), async (req: AuthedRe
       if (entity === "payments") {
         await tx.insert(paymentsTable).values({
           memberId: row.memberId!,
-          paymentType: /frf/i.test(v.details ?? "") ? "frf_fee" : "membership_fee",
+          paymentType: /frf/i.test(v.details ?? "") ? "frf_contribution" : "membership_fee",
           amountDue: v.amount!,
           amountPaid: v.amount!,
           status: "paid",
