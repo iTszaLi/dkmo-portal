@@ -489,25 +489,6 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
         <div className="grid grid-cols-1 gap-4">
           <FormField
             control={form.control}
-            name="responsibility"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Responsibility</FormLabel>
-                <FormControl>
-                  <select
-                    {...field}
-                    className="w-full border border-input rounded-md px-3 h-10 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  >
-                    <option value="not_responsible">Not Responsible</option>
-                    <option value="responsible">Responsible</option>
-                  </select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
             name="notes"
             render={({ field }) => (
               <FormItem>

@@ -459,11 +459,6 @@ export default function MemberDetail() {
                     </span>
                   );
                 })()}
-                {(member as any).responsibility === "responsible" ? (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300" data-testid="badge-responsibility">
-                    <UserCheck className="h-3 w-3" /> Responsible
-                  </span>
-                ) : null}
               </div>
             </div>
 
