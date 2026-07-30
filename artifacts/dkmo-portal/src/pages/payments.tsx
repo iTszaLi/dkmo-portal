@@ -468,7 +468,7 @@ export default function Payments() {
                       {member.feeStatus === "paid" ? <CheckCircle2 className="h-3 w-3" /> : member.feeStatus === "exempt" ? <MinusCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
                       {member.feeStatus === "paid" || member.feeStatus === "exempt" ? feeStatusLabel(member.feeStatus) : "Unpaid"}
                     </span>
-                    {Date.now() - new Date(member.createdAt).getTime() < 30 * 24 * 60 * 60 * 1000 && (
+                    {Date.now() - new Date(member.createdAt).getTime() < 15 * 24 * 60 * 60 * 1000 && (
                       <span className="ml-1.5 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-800/40">
                         New Member
                       </span>
