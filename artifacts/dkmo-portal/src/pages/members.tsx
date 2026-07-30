@@ -477,17 +477,19 @@ export default function Members() {
       </div>
 
       <Dialog open={!!editingMember} onOpenChange={(open) => !open && setEditingMember(null)}>
-        <DialogContent className="sm:max-w-[500px] dark:bg-slate-900 dark:border-slate-800">
+        <DialogContent className="sm:max-w-[450px] dark:bg-slate-900 dark:border-slate-800 max-h-[88vh] p-5 flex flex-col overflow-hidden">
           <DialogHeader>
             <DialogTitle className="dark:text-slate-100">Edit Member</DialogTitle>
           </DialogHeader>
-          {editingMember && (
-            <MemberForm
-              defaultValues={editingMember}
-              onSubmit={handleUpdate}
-              isSubmitting={updateMember.isPending}
-            />
-          )}
+          <div className="flex-1 overflow-y-auto -mr-3 pr-3">
+            {editingMember && (
+              <MemberForm
+                defaultValues={editingMember}
+                onSubmit={handleUpdate}
+                isSubmitting={updateMember.isPending}
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 

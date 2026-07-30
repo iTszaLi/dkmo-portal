@@ -944,11 +944,13 @@ export default function MemberDetail() {
 
       {/* Edit Member dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="sm:max-w-[500px] dark:bg-slate-900 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[450px] dark:bg-slate-900 dark:border-slate-800 max-h-[88vh] p-5 flex flex-col overflow-hidden">
           <DialogHeader>
             <DialogTitle className="dark:text-slate-100">Edit Member</DialogTitle>
           </DialogHeader>
-          <MemberForm defaultValues={member as Partial<MemberInput>} onSubmit={handleEdit} isSubmitting={updateMember.isPending} />
+          <div className="flex-1 overflow-y-auto -mr-3 pr-3">
+            <MemberForm defaultValues={member as Partial<MemberInput>} onSubmit={handleEdit} isSubmitting={updateMember.isPending} />
+          </div>
         </DialogContent>
       </Dialog>
 
