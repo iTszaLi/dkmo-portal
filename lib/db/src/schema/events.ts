@@ -8,6 +8,7 @@ export const eventsTable = pgTable("events", {
   budget: numeric("budget", { precision: 14, scale: 2 }).notNull().default("0"),
   description: text("description").notNull().default(""),
   status: text("status").notNull().default("upcoming"),
+  importBatchId: uuid("import_batch_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()

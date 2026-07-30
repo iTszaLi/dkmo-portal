@@ -4,6 +4,7 @@ import authRouter from "./auth";
 import meRouter from "./me";
 import membersRouter from "./members";
 import memberImportRouter from "./member-import";
+import dataImportRouter from "./data-import";
 import paymentsRouter from "./payments";
 import dashboardRouter from "./dashboard";
 import sponsorsRouter from "./sponsors";
@@ -32,6 +33,7 @@ router.use(publicDocumentsRouter);
 router.use(meRouter);
 router.use(dkmoMembershipRouter);
 router.use(memberImportRouter); // before membersRouter so /members/import/* isn't shadowed
+router.use(dataImportRouter);
 router.use(membersRouter);
 router.use(paymentsRouter);
 router.use(dashboardRouter);

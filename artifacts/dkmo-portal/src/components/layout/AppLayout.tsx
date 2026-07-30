@@ -104,6 +104,7 @@ const navigation: NavSection[] = [
     items: [
       { name: "Documents",           href: "/documents",  icon: FolderOpen },
       { name: "Import Members",      href: "/import-members", icon: DatabaseZap, roles: ["admin"] },
+      { name: "Data Import",         href: "/import-data",    icon: DatabaseZap, roles: ["admin"] },
       { name: "Audit Trail",         href: "/audit",      icon: ScrollText, roles: ["admin", "finance"] },
       { name: "Settings",            href: "/settings",   icon: Cog, roles: ["admin"] },
     ],

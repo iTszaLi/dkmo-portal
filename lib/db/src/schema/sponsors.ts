@@ -22,6 +22,7 @@ export const sponsorsTable = pgTable("sponsors", {
   linkedEvent: text("linked_event").notNull().default(""),
   dueDate: timestamp("due_date", { withTimezone: true }),
   notes: text("notes").notNull().default(""),
+  importBatchId: uuid("import_batch_id"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

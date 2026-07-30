@@ -28,6 +28,7 @@ export const paymentsTable = pgTable("payments", {
   paidAt: timestamp("paid_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
+  importBatchId: uuid("import_batch_id"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

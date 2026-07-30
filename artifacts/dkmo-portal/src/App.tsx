@@ -14,6 +14,7 @@ import MemberDetail from "@/pages/member-detail";
 import Payments from "@/pages/payments";
 import MembershipDrive from "@/pages/membership-drive";
 import ImportMembers from "@/pages/import-members";
+import ImportData, { ImportDataHubPage } from "@/pages/import-data";
 import Reports from "@/pages/reports/index";
 import ReportMembership from "@/pages/reports/membership";
 import ReportFees from "@/pages/reports/fees";
@@ -147,6 +148,8 @@ function AppRoutes() {
       <Route path="/pending" component={() => <LegacyRedirect to="/payments" />} />
       <Route path="/membership-drive" component={() => <AuthenticatedRoute component={MembershipDrive} />} />
       <Route path="/import-members" component={() => <AuthenticatedRoute component={ImportMembers} />} />
+      <Route path="/import-data" component={() => <AuthenticatedRoute component={ImportDataHubPage} />} />
+      <Route path="/import-data/:entity" component={() => <AuthenticatedRoute component={ImportData} />} />
       <Route path="/reports" component={() => <AuthenticatedRoute component={Reports} />} />
       <Route path="/reports/membership" component={() => <AuthenticatedRoute component={ReportMembership} />} />
       <Route path="/reports/fees" component={() => <AuthenticatedRoute component={ReportFees} />} />

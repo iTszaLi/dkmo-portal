@@ -54,6 +54,7 @@ export const frfContributionsTable = pgTable(
     status: text("status").notNull().default("pending"),
     paymentId: uuid("payment_id"),
     paidAt: timestamp("paid_at", { withTimezone: true }),
+  importBatchId: uuid("import_batch_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()

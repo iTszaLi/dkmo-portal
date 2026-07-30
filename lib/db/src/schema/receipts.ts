@@ -12,6 +12,7 @@ export const receiptsTable = pgTable("receipts", {
   amount: numeric("amount", { precision: 12, scale: 2 }).notNull().default("0"),
   paymentTypes: text("payment_types").notNull().default("{}"),
   createdBy: text("created_by").notNull().default(""),
+  importBatchId: uuid("import_batch_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

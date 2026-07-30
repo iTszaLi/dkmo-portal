@@ -7,6 +7,7 @@ import { pgTable, uuid, text, timestamp, integer, boolean } from "drizzle-orm/pg
  */
 export const importBatchesTable = pgTable("import_batches", {
   id: uuid("id").primaryKey().defaultRandom(),
+  entity: text("entity").notNull().default("members"),
   fileName: text("file_name").notNull().default(""),
   fileSize: integer("file_size").notNull().default(0),
   totalRows: integer("total_rows").notNull().default(0),
