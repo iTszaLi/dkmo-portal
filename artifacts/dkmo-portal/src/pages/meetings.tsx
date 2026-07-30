@@ -25,6 +25,16 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   ClipboardCheck,
   CalendarDays,
   MapPin,
@@ -227,9 +237,11 @@ export default function Meetings() {
     }
   };
 
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+
   const handleDelete = () => {
     if (!detail) return;
-    if (!window.confirm(`Delete meeting "${detail.title}"? This cannot be undone.`)) return;
+    setConfirmDeleteOpen(false);
     deleteMeeting.mutate(
       { id: detail.id },
       {
@@ -674,7 +686,7 @@ export default function Meetings() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={handleDelete}
+                      onClick={() => setConfirmDeleteOpen(true)}
                       className="border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                       data-testid="button-delete-meeting"
                     >
@@ -836,6 +848,22 @@ export default function Meetings() {
           </CardContent>
         </Card>
       )}
+
+      {/* Delete confirmation */}
+      <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+        <AlertDialogContent className="dark:bg-slate-900 dark:border-slate-800">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="dark:text-slate-100">Delete this meeting?</AlertDialogTitle>
+            <AlertDialogDescription className="dark:text-slate-400">
+              This will permanently delete "{detail?.title}" and its attendance records. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Create / Edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
