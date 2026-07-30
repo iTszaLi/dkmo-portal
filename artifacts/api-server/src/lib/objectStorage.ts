@@ -11,23 +11,46 @@ import {
 
 const REPLIT_SIDECAR_ENDPOINT = "http://127.0.0.1:1106";
 
-export const objectStorageClient = new Storage({
-  credentials: {
-    audience: "replit",
-    subject_token_type: "access_token",
-    token_url: `${REPLIT_SIDECAR_ENDPOINT}/token`,
-    type: "external_account",
-    credential_source: {
-      url: `${REPLIT_SIDECAR_ENDPOINT}/credential`,
-      format: {
-        type: "json",
-        subject_token_field_name: "access_token",
+// Storage credentials are resolved in this order:
+// 1. GCS_CREDENTIALS_JSON — a Google Cloud service-account key (JSON string).
+//    Use this on Vercel or any non-Replit host.
+// 2. Replit sidecar — automatic when running on Replit (no setup needed).
+const gcsCredentialsJson = process.env.GCS_CREDENTIALS_JSON;
+
+/** True when using a standard GCS service account instead of the Replit sidecar. */
+export const usingServiceAccount = Boolean(gcsCredentialsJson);
+
+function createStorageClient(): Storage {
+  if (gcsCredentialsJson) {
+    const credentials = JSON.parse(gcsCredentialsJson) as {
+      project_id?: string;
+      [k: string]: unknown;
+    };
+    return new Storage({
+      credentials,
+      projectId: credentials.project_id ?? "",
+    });
+  }
+  return new Storage({
+    credentials: {
+      audience: "replit",
+      subject_token_type: "access_token",
+      token_url: `${REPLIT_SIDECAR_ENDPOINT}/token`,
+      type: "external_account",
+      credential_source: {
+        url: `${REPLIT_SIDECAR_ENDPOINT}/credential`,
+        format: {
+          type: "json",
+          subject_token_field_name: "access_token",
+        },
       },
+      universe_domain: "googleapis.com",
     },
-    universe_domain: "googleapis.com",
-  },
-  projectId: "",
-});
+    projectId: "",
+  });
+}
+
+export const objectStorageClient = createStorageClient();
 
 export class ObjectNotFoundError extends Error {
   constructor() {
@@ -238,6 +261,20 @@ async function signObjectURL({
   method: "GET" | "PUT" | "DELETE" | "HEAD";
   ttlSec: number;
 }): Promise<string> {
+  // Standard GCS signing when a service account is configured (Vercel etc.).
+  if (usingServiceAccount) {
+    const actionMap = { GET: "read", PUT: "write", DELETE: "delete", HEAD: "read" } as const;
+    const [url] = await objectStorageClient
+      .bucket(bucketName)
+      .file(objectName)
+      .getSignedUrl({
+        version: "v4",
+        action: actionMap[method],
+        expires: Date.now() + ttlSec * 1000,
+      });
+    return url;
+  }
+
   const request = {
     bucket_name: bucketName,
     object_name: objectName,
