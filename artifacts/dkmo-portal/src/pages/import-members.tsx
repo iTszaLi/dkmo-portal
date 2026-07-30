@@ -443,6 +443,7 @@ export default function ImportMembersPage() {
       setMapping(saved ?? parsed[0]!.map((h) => autoDetect(h)));
       setDetection(detectFileType(parsed[0]!));
       setOverrideDetection(false);
+      setOverrideDialogOpen(false);
       setAnalysis(null); setResolutions({}); setReport(null);
       setStep(1);
     } catch (err) {
