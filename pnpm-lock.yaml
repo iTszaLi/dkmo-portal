@@ -80,7 +80,7 @@ overrides:
   dompurify: '>=3.4.11'
   fast-uri: '>=4.1.1'
   form-data@2: '>=2.5.6'
-  js-yaml@4: '>=4.3.0'
+  js-yaml@4: '>=4.3.0 <5'
   linkify-it: '>=5.0.2'
   markdown-it: '>=14.2.0'
   postcss: '>=8.5.18'
@@ -3667,8 +3667,8 @@ packages:
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
-  js-yaml@5.2.2:
-    resolution: {integrity: sha512-dayzUzKkJ1MkuUtZglSebU43utNXH0OWQByK9rKOOuYIO8M5TV1y+n8ALMdG0rdzBnfNkOmZEqrURepb0ejqBw==}
+  js-yaml@4.3.0:
+    resolution: {integrity: sha512-1td788aAnnZ5qs7V2QIRl1owjtYpbKt749Y3xauqQgwIIGF/xXWz1wMTEBx5O3LK3lXLVuqXPdPxj2BoFHaW9Q==}
     hasBin: true
 
   jsesc@3.1.0:
@@ -7868,7 +7868,7 @@ snapshots:
 
   js-tokens@4.0.0: {}
 
-  js-yaml@5.2.2:
+  js-yaml@4.3.0:
     dependencies:
       argparse: 2.0.1
 
@@ -8194,7 +8194,7 @@ snapshots:
       find-up: 8.0.0
       fs-extra: 11.3.4
       jiti: 2.6.1
-      js-yaml: 5.2.2
+      js-yaml: 4.3.0
       remeda: 2.33.6
       string-argv: 0.3.2
       tsconfck: 3.1.6(typescript@5.9.3)

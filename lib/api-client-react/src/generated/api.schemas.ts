@@ -358,6 +358,19 @@ export interface FeeStatusInput {
   feeStatus: FeeStatusInputFeeStatus;
 }
 
+export type FrfStatusInputFrfStatus =
+  (typeof FrfStatusInputFrfStatus)[keyof typeof FrfStatusInputFrfStatus];
+
+export const FrfStatusInputFrfStatus = {
+  active: "active",
+  suspended: "suspended",
+  inactive: "inactive",
+} as const;
+
+export interface FrfStatusInput {
+  frfStatus: FrfStatusInputFrfStatus;
+}
+
 /**
  * Partial update of a member's committee membership. Executive Committee and Core Committee are independent; supply only the flag you want to change. Omitting a flag leaves it untouched.
  */

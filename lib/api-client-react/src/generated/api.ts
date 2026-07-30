@@ -46,6 +46,7 @@ import type {
   FrfContributionStatusResponse,
   FrfOverview,
   FrfStats,
+  FrfStatusInput,
   GetCommitteePerformanceParams,
   GetDashboardCashFlowParams,
   GetDashboardFinancialSummaryParams,
@@ -783,6 +784,93 @@ export const useUpdateMemberFeeStatus = <
   TContext
 > => {
   return useMutation(getUpdateMemberFeeStatusMutationOptions(options));
+};
+
+/**
+ * @summary Update only a member's FRF membership status.
+ */
+export const getUpdateMemberFrfStatusUrl = (id: string) => {
+  return `/api/members/${id}/frf-status`;
+};
+
+export const updateMemberFrfStatus = async (
+  id: string,
+  frfStatusInput: FrfStatusInput,
+  options?: RequestInit,
+): Promise<Member> => {
+  return customFetch<Member>(getUpdateMemberFrfStatusUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(frfStatusInput),
+  });
+};
+
+export const getUpdateMemberFrfStatusMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMemberFrfStatus>>,
+    TError,
+    { id: string; data: BodyType<FrfStatusInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateMemberFrfStatus>>,
+  TError,
+  { id: string; data: BodyType<FrfStatusInput> },
+  TContext
+> => {
+  const mutationKey = ["updateMemberFrfStatus"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateMemberFrfStatus>>,
+    { id: string; data: BodyType<FrfStatusInput> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateMemberFrfStatus(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateMemberFrfStatusMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateMemberFrfStatus>>
+>;
+export type UpdateMemberFrfStatusMutationBody = BodyType<FrfStatusInput>;
+export type UpdateMemberFrfStatusMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update only a member's FRF membership status.
+ */
+export const useUpdateMemberFrfStatus = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMemberFrfStatus>>,
+    TError,
+    { id: string; data: BodyType<FrfStatusInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateMemberFrfStatus>>,
+  TError,
+  { id: string; data: BodyType<FrfStatusInput> },
+  TContext
+> => {
+  return useMutation(getUpdateMemberFrfStatusMutationOptions(options));
 };
 
 /**

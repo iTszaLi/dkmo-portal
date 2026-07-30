@@ -11,6 +11,8 @@ import {
   UpdateMemberFeeStatusParams,
   UpdateMemberFeeStatusBody,
   UpdateMemberCommitteeStatusParams,
+  UpdateMemberFrfStatusBody,
+  UpdateMemberFrfStatusParams,
   UpdateMemberCommitteeStatusBody,
   UpdateMemberPhotoParams,
   UpdateMemberPhotoBody,
@@ -288,6 +290,34 @@ router.patch("/members/:id/fee-status", async (req, res): Promise<void> => {
     entityId: updated.id,
     entityName: updated.fullName,
     details: `Fee status: ${feeStatus}`,
+  });
+  res.json(memberToApi(updated));
+});
+
+router.patch("/members/:id/frf-status", async (req, res): Promise<void> => {
+  const params = UpdateMemberFrfStatusParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const parsed = UpdateMemberFrfStatusBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const [updated] = await db
+    .update(membersTable)
+    .set({ frfStatus: parsed.data.frfStatus })
+    .where(eq(membersTable.id, params.data.id))
+    .returning();
+  if (!updated) {
+    res.status(404).json({ error: "Member not found" });
+    return;
+  }
+  logAudit(req, "member_frf_status_updated", "members", {
+    entityId: updated.id,
+    entityName: updated.fullName,
+    details: `FRF membership: ${parsed.data.frfStatus}`,
   });
   res.json(memberToApi(updated));
 });

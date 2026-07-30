@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
-import { useListMembers, useCreateMember, useUpdateMember, useDeleteMember, useUpdateMemberFeeStatus, useUpdateMemberCommitteeStatus, getListMembersQueryKey } from "@workspace/api-client-react";
+import { useListMembers, useCreateMember, useUpdateMember, useDeleteMember, useUpdateMemberFeeStatus, useUpdateMemberCommitteeStatus, useUpdateMemberFrfStatus, getListMembersQueryKey } from "@workspace/api-client-react";
 import { celebrate } from "@/lib/confetti";
 import { MemberInput, type Member, type FeeStatusInputFeeStatus, type CommitteeStatusInput } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -45,6 +45,7 @@ export default function Members() {
   const updateMember = useUpdateMember();
   const deleteMember = useDeleteMember();
   const updateFeeStatus = useUpdateMemberFeeStatus();
+  const updateFrfStatus = useUpdateMemberFrfStatus();
   const updateCommitteeStatus = useUpdateMemberCommitteeStatus();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -161,7 +162,7 @@ export default function Members() {
   };
 
   const handleFrfStatus = (member: Member, frfStatus: "active" | "inactive") => {
-    updateMember.mutate({ id: member.id, data: { frfStatus } as any }, {
+    updateFrfStatus.mutate({ id: member.id, data: { frfStatus } }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListMembersQueryKey() });
         toast({ title: frfStatus === "active" ? "FRF membership activated" : "FRF membership deactivated", description: member.fullName });

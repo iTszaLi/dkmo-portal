@@ -166,6 +166,31 @@ paths:
               schema:
                 $ref: "#/components/schemas/Member"
 
+  /members/{id}/frf-status:
+    patch:
+      operationId: updateMemberFrfStatus
+      tags: [members]
+      summary: Update only a member's FRF membership status.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FrfStatusInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+
   /members/{id}/committee-status:
     patch:
       operationId: updateMemberCommitteeStatus
@@ -2162,6 +2187,15 @@ components:
           enum: [paid, partial, pending, unpaid, exempt]
       required:
         - feeStatus
+
+    FrfStatusInput:
+      type: object
+      properties:
+        frfStatus:
+          type: string
+          enum: [active, suspended, inactive]
+      required:
+        - frfStatus
 
     CommitteeStatusInput:
       type: object

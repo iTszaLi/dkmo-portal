@@ -301,6 +301,53 @@ export const UpdateMemberFeeStatusResponse = zod.object({
 });
 
 /**
+ * @summary Update only a member's FRF membership status.
+ */
+export const UpdateMemberFrfStatusParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const UpdateMemberFrfStatusBody = zod.object({
+  frfStatus: zod.enum(["active", "suspended", "inactive"]),
+});
+
+export const UpdateMemberFrfStatusResponse = zod.object({
+  id: zod.string(),
+  fullName: zod.string(),
+  mobileNumber: zod.string(),
+  membershipId: zod.string(),
+  photoUrl: zod.string().nullish(),
+  applicationNumber: zod.string(),
+  iqamaNumber: zod.string(),
+  jamaath: zod.string(),
+  city: zod.string(),
+  country: zod.string(),
+  dateOfBirth: zod
+    .string()
+    .optional()
+    .describe("Date of birth as YYYY-MM-DD, or empty if unknown."),
+  designation: zod.string(),
+  isExecutiveCommittee: zod.boolean(),
+  isCoreCommittee: zod.boolean(),
+  membershipFee: zod.number(),
+  feeStatus: zod.enum(["paid", "partial", "pending", "unpaid", "exempt"]),
+  feePaidAt: zod.coerce.date().nullable(),
+  feeUpdatedBy: zod.string(),
+  frfStatus: zod.enum(["active", "suspended", "inactive"]),
+  responsibility: zod.enum(["responsible", "not_responsible"]),
+  notes: zod.string(),
+  frfDue: zod.number().optional(),
+  frfPaid: zod.number().optional(),
+  frfOutstanding: zod.number().optional(),
+  frfOverdueCount: zod.number().optional(),
+  frfPendingCount: zod.number().optional(),
+  refMemberName: zod.string(),
+  refMemberId: zod.string(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
  * @summary Update a member's committee membership. Executive Committee and Core Committee are fully independent; only the provided flags are changed.
  */
 export const UpdateMemberCommitteeStatusParams = zod.object({
