@@ -52,7 +52,13 @@ are provisioned automatically. On any other host, the Documents upload feature
 needs an alternative storage backend (e.g. S3) before it will work — the rest
 of the portal is unaffected.
 
-## 4. Checklist before going live
+## 4. Custom domain — www.dkmo.org
+
+1. In Vercel → Project → Settings → **Domains**, add `www.dkmo.org` (and `dkmo.org`, redirected to www).
+2. At your domain registrar, add the DNS records Vercel shows you (a CNAME for `www` pointing to `cname.vercel-dns.com`, and an A/ALIAS record for the bare domain).
+3. If the API is ever called directly from the browser (without the Vercel `/api` proxy), set `CORS_ORIGINS=https://www.dkmo.org,https://dkmo.org` on the API host.
+
+## 5. Checklist before going live
 
 - [ ] `vercel.json` points to the real API domain
 - [ ] `DATABASE_URL`, `SESSION_SECRET`, `EXEC_PASSWORD…` set on the API host
