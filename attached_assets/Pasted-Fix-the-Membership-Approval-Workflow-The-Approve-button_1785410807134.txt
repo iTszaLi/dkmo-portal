@@ -1,0 +1,166 @@
+Fix the Membership Approval Workflow
+
+The Approve button in the DKMO Membership module is not working correctly.
+
+Currently it only changes the application status to Approved.
+
+That is NOT the expected behavior.
+
+Required Workflow
+
+When the admin clicks Approve on a membership application:
+
+Step 1: Create a Member
+
+Immediately create a new record in the Members table.
+
+The new member must appear instantly in:
+
+People → Members
+
+Copy all application details into the member profile, including:
+
+Name
+Mobile Number
+Iqama Number
+City
+Country
+DOB
+Designation
+Reference Member
+Notes
+Documents
+Any other application fields
+
+Generate the Member ID if it does not already exist.
+
+Example:
+
+Membership Application
+Fazlurrahman Kolkar
+
+↓
+
+Members Module
+
+DKMO-0013
+Fazlurrahman Kolkar
+Status: Active
+Step 2: Automatically Create Membership Fee
+
+Immediately after creating the member, create a Membership Fee record.
+
+The new member must automatically appear in:
+
+Finance → Payments → Membership Fees
+
+The record should be:
+
+Member:
+Fazlurrahman Kolkar
+
+Membership Fee:
+SAR 100
+
+Payment Status:
+UNPAID
+
+Badge:
+New Member
+
+Due:
+According to existing rules
+
+Do NOT mark it as Paid.
+
+Every newly approved member should initially have:
+
+✅ Membership Fee = Unpaid
+
+Step 3: Automatically Register in FRF Fees
+
+Immediately create the FRF payment record.
+
+The member must appear in:
+
+Finance → Payments → FRF Fees
+
+Initial status:
+
+FRF Status:
+Not Paid
+
+Outstanding:
+Current Active FRF Cases
+
+If there are no active FRF cases, still register the member so they automatically appear in future FRF collections.
+
+Step 4: Refresh All Modules
+
+Immediately after clicking Approve:
+
+Update without refreshing the browser:
+
+DKMO Membership
+Members
+Membership Fees
+FRF Fees
+Dashboard Statistics
+Step 5: No Duplicates
+
+If the member already exists:
+
+Do not create another Member.
+Do not create another Membership Fee.
+Do not create another FRF record.
+
+Approval should be idempotent.
+
+Step 6: Use the Same Member ID Everywhere
+
+The same Member ID must be linked across all modules.
+
+Example:
+
+Application
+↓
+
+DKMO-0013
+
+↓
+
+Members
+DKMO-0013
+
+↓
+
+Membership Fees
+DKMO-0013
+
+↓
+
+FRF Fees
+DKMO-0013
+
+No module should generate a different ID.
+
+Step 7: Database Transaction
+
+The approval process must happen inside a single database transaction.
+
+Approve Application
+        ↓
+Create Member
+        ↓
+Create Membership Fee
+        ↓
+Create FRF Record
+        ↓
+Commit Transaction
+
+If any step fails:
+
+Roll back everything.
+Do not leave partially created records.
+
+This is a backend issue, not a UI issue. The "Approve" action must insert records into the members, membership_fees, and frf_fees tables automatically. Simply changing the application status to "Approved" is not enough.

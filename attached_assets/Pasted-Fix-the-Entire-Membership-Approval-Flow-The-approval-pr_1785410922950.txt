@@ -1,0 +1,165 @@
+Fix the Entire Membership Approval Flow
+
+The approval process is still incomplete. Approving a membership application should not only change the status to "Approved". It must automatically create and synchronize records across all related modules.
+
+1. Members Module
+
+When an admin clicks Approve in the DKMO Membership module:
+
+Automatically create a new Member.
+The member must immediately appear in People → Members.
+Status = Active.
+Generate the next DKMO Member ID.
+Do not require manual creation.
+2. Membership Fees Module
+
+Immediately after creating the Member:
+
+Automatically create a Membership Fee record.
+
+The member must instantly appear in:
+
+Finance → Payments → Membership Fees
+
+Default values:
+
+Membership Fee = SAR 100
+Payment Status = Unpaid
+Badge = New Member
+Payment Date = Empty
+Due Date = Existing system rule
+
+Every newly approved member should appear here automatically without clicking Add Member.
+
+3. FRF Fees Module
+
+Immediately after approval:
+
+Automatically create an FRF record.
+
+The member must instantly appear in:
+
+Finance → Payments → FRF Fees
+
+Default status:
+
+FRF Status = Unpaid
+Amount Due = Current active FRF case (if any)
+If no active case exists, still register the member so they automatically appear in future FRF collections.
+4. Membership Drive Module
+
+The newly approved member must also automatically appear in:
+
+Community → Membership Drive
+
+If the application contains a Reference Member, automatically link that reference.
+
+Example:
+
+New Member:
+Mohammed Ali
+
+Referred By:
+Fazlurrahman Kolkar
+
+Membership Drive should automatically credit Fazlurrahman Kolkar with 1 successful referral.
+
+The Membership Drive module should calculate referral counts automatically from approved applications.
+
+5. Copy ALL Application Data
+
+When creating the Member, copy every field from the application.
+
+This includes:
+
+Full Name
+Mobile Number
+Iqama Number
+Email
+Date of Birth
+City
+Country
+Address
+Occupation / Designation
+Blood Group (if available)
+Notes
+Reference Member
+Reference Member ID
+Uploaded Profile Photo
+Uploaded Documents
+Signature (if applicable)
+Any other custom fields
+
+Nothing entered in the application form should be lost.
+
+6. Profile Photo
+
+If the applicant uploads a profile photo:
+
+Save it permanently.
+Copy it to the Member profile.
+Display the photo in the Members module.
+Use the same photo across all related modules where member information is displayed.
+
+Do not require the admin to upload the photo again.
+
+7. Reference Member
+
+If a Reference Member is selected during the application:
+
+Save the Reference Member.
+Show it in the Member profile.
+Show it in Membership Drive.
+Link it using the Reference Member ID.
+Count the referral automatically.
+8. Keep All Modules Synced
+
+One approval should automatically update all of these:
+
+✅ DKMO Membership
+✅ Members
+✅ Payments → Membership Fees
+✅ Payments → FRF Fees
+✅ Membership Drive
+✅ Dashboard Statistics
+
+No manual refresh or manual data entry should ever be required.
+
+9. No Duplicate Records
+
+Approving the same application twice must not create duplicate:
+
+Members
+Membership Fee records
+FRF Fee records
+Membership Drive entries
+
+Check whether the member already exists before creating new records.
+
+10. Backend Requirement
+
+This must be implemented as a backend database workflow, not just a frontend update.
+
+When the Approve button is clicked:
+
+Approve Application
+        ↓
+Create Member
+        ↓
+Copy ALL Application Data
+        ↓
+Copy Profile Photo
+        ↓
+Copy Reference Member
+        ↓
+Create Membership Fee (Unpaid)
+        ↓
+Create FRF Record (Unpaid)
+        ↓
+Create Membership Drive Entry
+        ↓
+Update Dashboard
+        ↓
+Refresh All Modules
+
+The application form should become the single source of truth. Everything the applicant enters—including the profile photo, reference member, and all personal details—must automatically populate the Members, Membership Fees, FRF Fees, and Membership Drive modules after approval, with no manual re-entry by the admin.

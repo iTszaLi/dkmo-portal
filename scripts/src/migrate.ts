@@ -642,6 +642,9 @@ async function main() {
     ALTER TABLE members ADD COLUMN IF NOT EXISTS legacy_reference_mobile TEXT NOT NULL DEFAULT '';
     ALTER TABLE members ADD COLUMN IF NOT EXISTS legacy_raw_record JSONB;
     ALTER TABLE members ADD COLUMN IF NOT EXISTS import_batch_id UUID;
+    ALTER TABLE members ADD COLUMN IF NOT EXISTS email TEXT NOT NULL DEFAULT '';
+    ALTER TABLE members ADD COLUMN IF NOT EXISTS blood_group TEXT NOT NULL DEFAULT '';
+    ALTER TABLE members ADD COLUMN IF NOT EXISTS address TEXT NOT NULL DEFAULT '';
     CREATE INDEX IF NOT EXISTS members_legacy_id_idx ON members(legacy_member_id) WHERE legacy_member_id <> '';
     CREATE INDEX IF NOT EXISTS members_import_batch_idx ON members(import_batch_id) WHERE import_batch_id IS NOT NULL;
 

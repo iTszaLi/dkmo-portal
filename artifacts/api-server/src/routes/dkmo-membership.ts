@@ -791,6 +791,21 @@ router.patch("/dkmo/memberships/:id", requireRole("admin"), async (req, res): Pr
           .where(eq(membersTable.membershipId, u.dkmoNumber));
         let createdNew = false;
         if (!member) {
+          // The application stores the referrer's DKMO number; the Membership
+          // Drive credits referrals by the referrer's internal member id, so
+          // resolve it here (accept either form).
+          let refMemberId = u.refMemberId || "";
+          let refMemberName = u.refMemberName || "";
+          if (refMemberId) {
+            const [referrer] = await tx
+              .select({ id: membersTable.id, fullName: membersTable.fullName })
+              .from(membersTable)
+              .where(sql`${membersTable.membershipId} = ${refMemberId} OR ${membersTable.id}::text = ${refMemberId}`);
+            if (referrer) {
+              refMemberId = referrer.id;
+              if (!refMemberName) refMemberName = referrer.fullName;
+            }
+          }
           const inserted = await tx
             .insert(membersTable)
             .values({
@@ -802,6 +817,11 @@ router.patch("/dkmo/memberships/:id", requireRole("admin"), async (req, res): Pr
               iqamaNumber: u.iqamaNumber || "",
               passportNumber: u.passportNumber || "",
               dateOfBirth: u.dateOfBirth ?? "",
+              email: u.email || "",
+              bloodGroup: u.bloodGroup || "",
+              address: [u.houseName, u.postalAddress, u.district].filter(Boolean).join(", "),
+              homeContactNumber: u.homePhone || u.mobileIndia || "",
+              whatsappNumber: u.mobileSaudi || "",
               jamaath: u.nearestJamaath || "",
               city: u.areaSaudi || u.district || "",
               country: "Saudi Arabia",
@@ -811,8 +831,8 @@ router.patch("/dkmo/memberships/:id", requireRole("admin"), async (req, res): Pr
               membershipFee: "100",
               feeStatus: "unpaid",
               frfStatus: "active",
-              refMemberName: u.refMemberName,
-              refMemberId: u.refMemberId,
+              refMemberName,
+              refMemberId,
             })
             .onConflictDoNothing({ target: membersTable.membershipId })
             .returning();
