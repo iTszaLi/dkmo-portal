@@ -1,0 +1,113 @@
+I want you to prepare this project for GitHub + Vercel production deployment.
+
+1. Push to GitHub
+
+Push the complete project to this repository:
+
+Repository: https://github.com/iTszaLi/dkmo-portal
+
+Requirements:
+
+Initialize Git if not already initialized.
+Commit all project files (except ignored files).
+Use a proper .gitignore.
+Set the remote origin to:
+https://github.com/iTszaLi/dkmo-portal.git
+Push the main branch.
+If the repository already contains commits, pull/rebase first to avoid conflicts.
+Make sure the GitHub repository is fully up to date.
+2. Prepare for Vercel Deployment
+
+Optimize the project so it deploys successfully on Vercel without any manual fixes.
+
+Verify:
+Build completes with zero errors.
+Production build works.
+No hardcoded localhost URLs.
+No Replit-only dependencies.
+No Replit runtime assumptions.
+Environment variables are read from .env / Vercel Environment Variables.
+Static assets resolve correctly.
+Routing works after refresh (SPA fallback if applicable).
+3. Configure for Vercel
+
+Create or update:
+
+vercel.json
+
+Use the correct configuration for this project.
+
+If it is a Vite React application:
+
+{
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
+
+If another framework is detected, configure Vercel appropriately instead.
+
+4. Environment Variables
+
+Identify every required environment variable.
+
+Create:
+
+.env.example
+
+containing every required variable with placeholder values.
+
+Do NOT commit any secrets.
+
+5. Production Cleanup
+
+Remove or fix:
+
+Replit-specific packages
+Replit configuration files (if unnecessary)
+Temporary test code
+Debug logs
+Console spam
+Dead code
+Unused imports
+Duplicate files
+6. Production Optimizations
+
+Ensure:
+
+Lazy loading where appropriate
+Code splitting
+Tree shaking
+Optimized assets
+Compressed production build
+No TypeScript errors
+No ESLint build blockers
+No build warnings that affect deployment
+7. Verify Everything
+
+Run the equivalent of:
+
+npm install
+npm run build
+
+(or the appropriate package manager for this project)
+
+Fix every issue until the build succeeds.
+
+8. Final Report
+
+After completion provide:
+
+✅ GitHub push status
+✅ Current branch
+✅ Latest commit hash
+✅ Repository URL
+✅ Build status
+✅ Vercel readiness status
+✅ Any environment variables I must configure in Vercel
+✅ Any remaining manual steps (if absolutely necessary)
+
+The goal is that I can simply import the GitHub repository into Vercel, add the required environment variables, click Deploy, and the DKMO Portal works correctly in production with no Replit dependencies.

@@ -664,6 +664,8 @@ router.post("/members/import/commit", requireRole("admin"), async (req: AuthedRe
             legacy_member_status = CASE WHEN legacy_member_status = '' THEN ${row.legacyMemberStatus} ELSE legacy_member_status END,
             referred_by = CASE WHEN referred_by = '' THEN ${row.referredBy} ELSE referred_by END,
             avail_contribution = CASE WHEN avail_contribution = '' THEN ${row.availContribution} ELSE avail_contribution END,
+            designation = CASE WHEN designation IN ('', 'Member') AND ${row.designation} <> '' THEN ${row.designation} ELSE designation END,
+            notes = CASE WHEN notes IN ('', 'Imported from legacy database') AND ${row.notes} <> '' THEN ${row.notes} ELSE notes END,
             updated_at = NOW()
           WHERE id = ${memberId}::uuid
         `);
