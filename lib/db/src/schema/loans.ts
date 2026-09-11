@@ -1,5 +1,6 @@
 import { pgTable, uuid, text, numeric, integer, date, timestamp } from "drizzle-orm/pg-core";
 import { membersTable } from "./members";
+import { committeeAssignmentsTable } from "./committee";
 
 export const loansTable = pgTable("loans", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -12,10 +13,30 @@ export const loansTable = pgTable("loans", {
   paidEmis: integer("paid_emis").notNull().default(0),
   status: text("status").notNull().default("active"),
   convenorName: text("convenor_name").notNull().default(""),
+  responsibleCommitteeAssignmentId: uuid("responsible_committee_assignment_id").references(
+    () => committeeAssignmentsTable.id,
+    { onDelete: "set null" },
+  ),
   description: text("description").notNull().default(""),
   notes: text("notes").notNull().default(""),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+});
+
+/** The single row (id=1) stores only the allocation; usage is always derived from loans. */
+export const loanBudgetsTable = pgTable("loan_budgets", {
+  id: integer("id").primaryKey().default(1),
+  amount: numeric("amount", { precision: 14, scale: 2 }).notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const loanBudgetHistoryTable = pgTable("loan_budget_history", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  oldAmount: numeric("old_amount", { precision: 14, scale: 2 }).notNull(),
+  newAmount: numeric("new_amount", { precision: 14, scale: 2 }).notNull(),
+  actorId: text("actor_id").notNull(),
+  actorName: text("actor_name").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const loanPaymentsTable = pgTable("loan_payments", {
@@ -31,3 +52,5 @@ export const loanPaymentsTable = pgTable("loan_payments", {
 
 export type Loan = typeof loansTable.$inferSelect;
 export type LoanPayment = typeof loanPaymentsTable.$inferSelect;
+export type LoanBudget = typeof loanBudgetsTable.$inferSelect;
+export type LoanBudgetHistory = typeof loanBudgetHistoryTable.$inferSelect;

@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { dkmoMembershipsTable, dkmoMembershipDependentsTable, membersTable, frfClaimsTable, frfContributionsTable } from "@workspace/db/schema";
+import { dkmoMembershipsTable, dkmoMembershipDependentsTable, membersTable } from "@workspace/db/schema";
 import { logAudit } from "../lib/audit";
 import { eq, and, isNull, desc, sql } from "drizzle-orm";
 import z from "zod";
@@ -812,7 +812,6 @@ router.patch("/dkmo/memberships/:id", requireRole("admin"), async (req, res): Pr
               fullName: u.fullName,
               mobileNumber: u.mobileSaudi || u.mobileIndia || "",
               membershipId: u.dkmoNumber,
-              applicationNumber: u.dkmoNumber,
               photoUrl: u.photoUrl ?? null,
               iqamaNumber: u.iqamaNumber || "",
               passportNumber: u.passportNumber || "",
@@ -830,7 +829,9 @@ router.patch("/dkmo/memberships/:id", requireRole("admin"), async (req, res): Pr
               notes: u.notes || "",
               membershipFee: "100",
               feeStatus: "unpaid",
-              frfStatus: "active",
+              // Approval does not imply a paid membership fee. FRF eligibility
+              // is activated only after a real membership-fee payment exists.
+              frfStatus: "inactive",
               refMemberName,
               refMemberId,
             })
@@ -855,32 +856,9 @@ router.patch("/dkmo/memberships/:id", requireRole("admin"), async (req, res): Pr
           .where(eq(dkmoMembershipsTable.id, id));
         u.memberId = member.id;
 
-        // Register the member in all currently active (approved, collecting)
-        // FRF cases so they appear in FRF Fees immediately. Policy (per user
-        // decision): newly approved members are registered as pending even
-        // though their membership fee is still unpaid — unlike bulk claim
-        // generation, which only includes fee-paid members. Idempotent via
-        // the unique (claim, member) index.
-        const activeClaims = await tx
-          .select({ id: frfClaimsTable.id, contributionAmount: frfClaimsTable.contributionAmount })
-          .from(frfClaimsTable)
-          .where(eq(frfClaimsTable.status, "approved"));
-        let frfIds: string[] = [];
-        if (activeClaims.length > 0) {
-          const inserted = await tx
-            .insert(frfContributionsTable)
-            .values(activeClaims.map((c) => ({
-              claimId: c.id,
-              memberId: member!.id,
-              amount: c.contributionAmount,
-              status: "pending" as const,
-            })))
-            .onConflictDoNothing({
-              target: [frfContributionsTable.claimId, frfContributionsTable.memberId],
-            })
-            .returning({ id: frfContributionsTable.id });
-          frfIds = inserted.map((r) => r.id);
-        }
+        // No FRF fee row is created while the membership fee is unpaid.
+        // The first real membership payment reconciles the active case.
+        const frfIds: string[] = [];
         p = { memberId: member.id, createdNew, frfIds };
       }
       return { u, p };

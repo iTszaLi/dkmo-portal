@@ -21,6 +21,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from "recharts";
 import { cn } from "@/lib/utils";
+import { withReturnTo } from "@/lib/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useListMembers, type Member } from "@workspace/api-client-react";
 import ExcelJS from "exceljs";
@@ -405,7 +406,7 @@ export default function MembershipDrivePage() {
               : leaderboard.length === 0
               ? <p className="text-sm text-slate-400 py-6 text-center">No referrals recorded yet.</p>
               : leaderboard.map((r, i) => (
-                  <Link key={r.member.id} href={`/members/${r.member.id}`}>
+                  <Link key={r.member.id} href={withReturnTo(`/members/${r.member.id}`)}>
                     <div className={cn(
                       "flex items-center justify-between gap-2 rounded-lg px-3 py-2 cursor-pointer transition-colors",
                       i === 0 ? "bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
@@ -540,7 +541,7 @@ export default function MembershipDrivePage() {
                           <TableCell colSpan={5} className="py-3 px-6">
                             <div className="space-y-1.5">
                               {r.referred.map((m) => (
-                                <Link key={m.id} href={`/members/${m.id}`}>
+                                <Link key={m.id} href={withReturnTo(`/members/${m.id}`)}>
                                   <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-white dark:bg-slate-900 border border-green-100 dark:border-slate-800 px-3 py-2 cursor-pointer hover:border-green-300 dark:hover:border-green-700 transition-colors">
                                     <div className="flex items-center gap-2 min-w-0">
                                       <UserPlus className="h-3.5 w-3.5 text-green-600 shrink-0" />

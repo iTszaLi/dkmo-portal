@@ -1,0 +1,124 @@
+Bro, do the same cleanup for the **Documents module**.
+
+### 1. REMOVE ALL SAMPLE/DEMO DOCUMENTS
+
+The current Documents module contains 6 sample/demo documents:
+
+* dkmo imp file
+* DKMO Trust Registration Certificate
+* Executive Committee Meeting Minutes - June 2026
+* Annual Financial Statement 2025
+* FRF Policy Guidelines v2
+* Membership Drive 2024 Report
+
+These are sample/test records.
+
+**Clear/delete these sample documents and their associated sample attachments only.**
+
+After cleanup, if there are no genuine documents in the database, the Documents module should naturally show:
+
+**Total: 0**
+**Active: 0**
+**Expiring Soon: 0**
+**Archived: 0**
+
+Do NOT hardcode these numbers. They must be calculated from the actual document records.
+
+### 2. DO NOT CHANGE THE DOCUMENT MODULE STRUCTURE
+
+Keep all existing functionality:
+
+* Documents
+* Public Portals
+* Upload Document
+* Categories
+* Tags
+* Attachments
+* Visibility
+* Active/Archived/Expired status
+* Expiry dates
+* Uploaded date
+* Document owner/uploader
+* Search/filtering
+* View/open document
+* Download
+* Edit
+* Archive
+* Delete
+* Any existing document permissions/access controls
+
+Do not redesign the module.
+
+### 3. DO NOT DELETE REAL DKMO DATA
+
+IMPORTANT:
+
+Only remove the seeded/demo/sample document records and their associated sample files.
+
+Do NOT touch:
+
+* Members
+* Membership records
+* Membership payments
+* FRF
+* FRF Claims
+* Loans
+* Committee
+* Meetings
+* Referrals
+* Any other DKMO data
+
+If any of the listed documents have subsequently been replaced with genuine DKMO files, do NOT delete the genuine file. Only remove records that are confirmed to be sample/demo data.
+
+### 4. DOCUMENT COUNTERS MUST UPDATE AUTOMATICALLY
+
+After clearing the sample data, verify that:
+
+**Total** = actual document count
+**Active** = actual active document count
+**Expiring Soon** = actual documents approaching expiry
+**Archived** = actual archived document count
+
+Do not leave stale values such as 6, 4, 0, or 1 after the records have been removed.
+
+### 5. TEST DOCUMENT UPLOAD
+
+After cleanup, test the complete document workflow:
+
+1. Upload a real test document.
+2. Enter document name/title.
+3. Select category.
+4. Add tags.
+5. Set visibility.
+6. Set status.
+7. Add expiry date if applicable.
+8. Save the document.
+9. Verify it appears correctly in the list.
+10. Open/view it.
+11. Download it.
+12. Edit its details.
+13. Change its status.
+14. Archive it.
+15. Verify the counters update correctly.
+16. Verify permissions/visibility work correctly.
+17. Delete the test document and confirm the counters return to the correct values.
+
+### 6. EXPIRY LOGIC
+
+Make sure expiry status is calculated correctly from the actual expiry date.
+
+Do not mark a document as “Expiring Soon” simply because it has an expiry date.
+
+Only documents genuinely within the configured expiring-soon period should appear there.
+
+Expired documents should correctly show **Expired** where applicable.
+
+### 7. FINAL REQUIREMENT
+
+The Documents module should be left **clean and production-ready**, with no fake/demo documents remaining.
+
+Do NOT make any unrelated changes to the DKMO Portal.
+
+The only objective is:
+
+**Clear sample document data → preserve all document functionality → test the complete workflow → ensure counters/statuses work correctly → leave the module production-ready.**

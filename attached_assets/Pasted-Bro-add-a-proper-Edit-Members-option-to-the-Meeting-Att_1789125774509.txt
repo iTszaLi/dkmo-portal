@@ -1,0 +1,241 @@
+Bro, add a proper **Edit Members** option to the **Meeting Attendance** module.
+
+### Current issue
+
+The Meeting Attendance page currently shows the 30 Core Committee Members and says:
+
+**Total Members: 30**
+
+But there is currently no proper option to edit which committee members are included in a particular meeting's attendance register.
+
+I need the ability to **add or remove members for an individual meeting**.
+
+---
+
+## Required functionality
+
+When creating a new meeting, or when viewing an existing meeting's attendance register, provide an:
+
+**Edit Members**
+
+button/action.
+
+When clicked, open a clean modal/panel where the admin can manage the members included in that meeting.
+
+### The admin should be able to:
+
+* Add a committee member to the meeting
+* Remove a committee member from the meeting
+* Search committee members by name
+* Search by DKMO ID
+* Select/deselect members
+* See the current selected members
+* Save the updated meeting member list
+* Cancel without saving
+
+After saving, the attendance register should immediately reflect the updated member list.
+
+---
+
+## VERY IMPORTANT — meeting-specific membership
+
+The **official committee must remain unchanged**.
+
+The current 2026–27 committee has exactly **30 official committee members**.
+
+Editing the members of a meeting must NOT:
+
+* Add/remove anyone from the official committee
+* Change the 2026–27 committee
+* Change committee departments
+* Change committee roles
+* Change the committee term
+* Modify member records
+
+Instead, the meeting should have its own **attendance participant/member list**.
+
+Example:
+
+Official committee = 30 members.
+
+Meeting #1:
+
+* 28 members attended/participated in the meeting register
+
+Meeting #2:
+
+* 30 members
+
+Meeting #3:
+
+* 27 members
+
+This must be possible without changing the official committee of 30.
+
+---
+
+## Default behavior
+
+When creating a new meeting:
+
+**Default selected members = the current active committee members for the applicable committee term.**
+
+So for the current 2026–27 term, a new meeting should initially contain the 30 committee members.
+
+The admin can then click **Edit Members** and remove/add eligible committee members for that specific meeting.
+
+Do not automatically include all 1,140 registered DKMO members.
+
+---
+
+## Attendance records
+
+Make sure attendance is tied to the **meeting + selected member**.
+
+If a member is removed from a meeting:
+
+* Remove them from that meeting's attendance register
+* Do not delete their overall member record
+* Do not remove them from the committee
+* Do not delete historical attendance from other meetings
+
+If a member is added:
+
+* Add them to that meeting's attendance register
+* Default their attendance status appropriately according to the existing attendance workflow
+* Do not mark them Present automatically unless the existing system explicitly does so
+
+---
+
+## Existing meetings
+
+For an existing meeting, clicking:
+
+**Edit Members**
+
+must load the members currently associated with that meeting.
+
+The admin can then add/remove members and save.
+
+Do NOT reset the meeting back to the current 30-member committee when editing an existing meeting.
+
+Historical meeting participant lists must remain intact.
+
+---
+
+## Search
+
+The Edit Members selector should be searchable.
+
+Support:
+
+* Full name
+* Partial name
+* DKMO ID
+* Case-insensitive search
+
+Do not show all 1,140 members in one giant dropdown.
+
+Only show relevant committee members matching the search.
+
+---
+
+## UI
+
+Keep the existing Meeting Attendance design.
+
+Add a clear:
+
+**Edit Members**
+
+button near the selected meeting/attendance register.
+
+Inside the editor, show something like:
+
+**Meeting Members**
+`28 members selected`
+
+Then allow:
+
+**+ Add Member**
+
+and a remove action beside each selected member.
+
+Use the existing UI styling and icons.
+
+Do not redesign the entire Meeting Attendance page.
+
+---
+
+## Important attendance rules
+
+Keep attendance functionality exactly as it currently works.
+
+The Edit Members feature should NOT change:
+
+* Present/Absent/Late/etc. logic
+* Attendance history
+* Meeting creation
+* Meeting dates
+* Meeting notes
+* Committee structure
+* Committee term
+* Member profiles
+* Dashboard committee statistics
+
+Only add the ability to control the participant list for each meeting.
+
+---
+
+## Backend/data integrity
+
+Before implementing, inspect the existing meeting and attendance data model.
+
+Use the existing architecture where possible.
+
+If a meeting-participant/attendance relationship already exists, use it instead of creating duplicate data.
+
+Do not create duplicate attendance records when saving the same meeting.
+
+Make sure adding/removing members is idempotent and does not create duplicates.
+
+---
+
+## Critical historical behavior
+
+This is very important:
+
+If the official committee changes in the future, **old meetings must NOT automatically change their member lists**.
+
+For example:
+
+2026 meeting → 30 members
+
+2027 committee changes → different members
+
+The 2026 meeting must still show the exact members that were registered for that meeting.
+
+Meeting attendance is a historical record.
+
+---
+
+## Testing
+
+Test at least:
+
+1. Create a new meeting → 30 current committee members appear by default.
+2. Edit members → remove 2 members → save → meeting shows 28.
+3. Reopen the meeting → still shows 28, not 30.
+4. Add one of the removed members → save → shows 29.
+5. Search by name works.
+6. Search by DKMO ID works.
+7. Removing a member does NOT remove them from the official committee.
+8. Adding a member does NOT add them to the official committee.
+9. Existing attendance records remain correct.
+10. Editing Meeting A does not change Meeting B.
+11. Historical meetings retain their original participant lists.
+12. No duplicate attendance records are created.
+
+Run typecheck, production build, and relevant tests after implementation.
+
+Do NOT claim browser verification passed unless an actual browser test successfully ran.

@@ -1,0 +1,82 @@
+YES — PROCEED WITH REPLACING THE CURRENT PORTAL MEMBER DATASET
+
+The current Portal members are causing confusion because we now have the old Access database as the historical source of truth.
+
+It is okay to remove/clear the existing current Portal member records from the new DKMO Portal member dataset and rebuild the Members page from the Access database.
+
+IMPORTANT: Do NOT delete, modify, or alter the original .accdb file.
+
+What I want now
+
+Make the 1,118 members from the Access database the actual member dataset shown in the DKMO Portal.
+
+Access Database → 1,118 Members → DKMO Members Page
+
+I do NOT want the Members page to continue showing the old/current Portal member list and only displaying the Access records as a dry-run preview.
+
+I want the actual Members page to contain all 1,118 Access members.
+
+For every one of the 1,118 members:
+Access/Legacy Member ID
+Member Name
+Mobile, if available
+Membership Fee status
+FRF Fee status
+Legacy/Match status
+Reference Member / Referrer
+Referral relationships
+All other relevant historical member information
+
+must be available in the Members page.
+
+MOST IMPORTANT — REFERRALS
+
+Do not just show the 1,118 members.
+
+Bring their referral relationships into the Members page as well.
+
+If Access shows:
+
+Member A → Referred by → Member B
+
+the Members page must show Member B as the Reference Member for Member A.
+
+And I need to be able to filter/search by a referrer and see all members referred by that person.
+
+Preserve the original Access referral relationship even when the referrer is a legacy/unmatched member.
+
+The 7 flagged members
+
+Make sure these seven are also present as actual Members-page records:
+
+7101 — Abdul Azeez Bajpe
+7112 — Fazlu Rahman
+7115 — Haneef N.S
+11485 — Mohammed Ali
+11568 — Majid Parampally
+16842 — Sulaiman Thonse
+19062 — Sameen Khan Ummer
+
+Do not remove them because they are unresolved.
+
+About the existing Portal Member IDs
+
+Since we are rebuilding the member dataset from Access, do not let the existing Portal UUIDs become the primary identity where they conflict with the Access historical identity.
+
+The Access Legacy Member ID should remain the historical primary key.
+
+If a current Portal member is clearly the same person, map it appropriately; if not confirmed, keep the Access member separate and mark it for review.
+
+DO THIS NOW
+
+I am okay with removing/clearing the current Portal member records from the new Portal database/dataset so we can avoid duplicate/conflicting members and populate it cleanly from Access.
+
+Do not touch or delete the original Access database.
+
+After this, the Members page should show:
+
+ALL 1,118 Access members + their referral relationships.
+
+I don't want only a report saying 1,118 / 1,118 planned anymore. I want those 1,118 members actually populated in the DKMO Members page.
+
+Before/while doing this, keep the migration backup/dry-run outputs so nothing historical is lost or unrecoverable.

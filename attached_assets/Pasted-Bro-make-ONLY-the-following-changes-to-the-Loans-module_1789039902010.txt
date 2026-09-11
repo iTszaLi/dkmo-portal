@@ -1,0 +1,167 @@
+Bro, make ONLY the following changes to the **Loans module**.
+
+### 1. REMOVE ALL SAMPLE/DEMO LOAN DATA
+
+The current Loans module contains sample/test loans such as:
+
+* Unknown — Personal — SAR 15,000
+* Unknown — Medical — SAR 25,000
+* Unknown — Education — SAR 12,000
+* Unknown — Business — SAR 30,000
+* And all other sample loan records currently displayed.
+
+**DELETE/CLEAR ALL SAMPLE LOAN DATA ONLY.**
+
+After cleanup, there must be:
+
+* No “Unknown” sample members
+* No sample loan applications
+* No sample repayments
+* No sample schedules
+* No sample overdue records
+* No sample closed loans
+* No sample loan balances
+
+### 2. DO NOT CHANGE THE LOAN MODULE STRUCTURE
+
+Do NOT remove or redesign any existing functionality.
+
+Keep:
+
+* New Loan
+* Edit Budget
+* Total Loan Budget
+* Total Disbursed
+* Remaining Budget
+* Active Loans
+* Pending Applications
+* Total Loans
+* Active
+* Overdue
+* Closed
+* Total Loaned
+* Outstanding
+* Due This Month
+* Missed Payments
+* Search/filter functionality
+* Loan status functionality
+* Loan repayment tracking
+* Loan schedule
+* Edit/view functionality
+* PDF export
+* Excel export
+* CSV export
+
+Only remove the fake/sample loan records.
+
+### 3. AFTER SAMPLE DATA IS CLEARED
+
+All loan statistics must automatically recalculate from the real database.
+
+If there are currently no real loans, the module should show:
+
+**Total Loans: 0**
+**Active: 0**
+**Overdue: 0**
+**Closed: 0**
+**Total Loaned: SAR 0.00**
+**Outstanding: SAR 0.00**
+**Due This Month: SAR 0.00**
+**Missed Payments: 0**
+
+Do not hardcode these values. They should be the natural result of having no loan records.
+
+### 4. DO NOT DELETE THE LOAN BUDGET SETTING UNLESS IT IS SAMPLE DATA
+
+Keep the loan budget functionality and **Edit Budget** feature.
+
+The budget is an administrative configuration, not a loan record.
+
+Do not accidentally delete or break the budget system while clearing sample loans.
+
+If the existing SAR 318,500 budget was only created as demo/test data, reset the budget to an appropriate clean state rather than treating it as money actually disbursed.
+
+Most importantly:
+
+**Total Disbursed must become SAR 0.00 when there are no real disbursed loans.**
+
+**Remaining Budget must be calculated correctly from the configured budget minus actual disbursements.**
+
+### 5. TEST THE COMPLETE LOAN WORKFLOW
+
+After clearing the sample data, test the Loans module thoroughly.
+
+Verify that an admin can:
+
+1. Create a new loan application.
+2. Select an actual DKMO member.
+3. Enter the loan amount.
+4. Select the loan purpose.
+5. Select the responsible committee/member if that functionality exists.
+6. Submit the application.
+7. Approve/reject it where applicable.
+8. Ensure an approved/disbursed loan updates the correct financial totals.
+9. Generate the repayment schedule correctly.
+10. Record repayments.
+11. Ensure outstanding balance decreases correctly.
+12. Ensure the loan status changes correctly.
+13. Ensure overdue calculations work based on actual due dates.
+14. Ensure fully repaid loans become Closed.
+15. Ensure dashboard/loan statistics update automatically.
+
+### 6. MEMBER CONNECTION
+
+Make sure every real loan is linked to an actual DKMO member.
+
+Never display:
+
+**Unknown**
+
+when a valid member exists.
+
+The loan should display the member's:
+
+* Name
+* DKMO ID
+
+and link back to the member profile where appropriate.
+
+### 7. DATABASE SAFETY
+
+IMPORTANT:
+
+Do NOT delete:
+
+* Members
+* Membership records
+* Membership payments
+* FRF records
+* FRF claims
+* Referrals
+* Committee records
+* Documents
+* Meeting records
+* Any other DKMO data
+
+Only clear the **sample/demo loan records and sample loan-related transactions/schedules**.
+
+Do not modify unrelated modules.
+
+### 8. FINAL VERIFICATION
+
+After cleanup, confirm:
+
+* Loans contains no sample records.
+* No “Unknown” loan members remain.
+* All loan totals are recalculated from the database.
+* New Loan works.
+* Loan approval/disbursement works.
+* Repayment recording works.
+* Outstanding balance calculation works.
+* Due dates and overdue status work.
+* Closed status works.
+* Budget calculation works.
+* PDF/Excel/CSV exports still work.
+* Existing DKMO members and all other modules remain untouched.
+
+**IMPORTANT: Do not make any other changes to the DKMO Portal. This task is specifically to clear the sample loan data, preserve the existing Loans functionality, test it, and leave the Loans module production-ready.**

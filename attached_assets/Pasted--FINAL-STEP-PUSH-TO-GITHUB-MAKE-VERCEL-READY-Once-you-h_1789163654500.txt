@@ -1,0 +1,58 @@
+**FINAL STEP — PUSH TO GITHUB + MAKE VERCEL READY**
+
+Once you have completed all the DKMO Portal changes and verified that everything works correctly:
+
+1. **Push the complete, latest project to my GitHub repository:**
+   `https://github.com/iTszaLi/dkmo-portal`
+
+2. Make sure **ALL required project files** are included:
+
+   * Frontend
+   * Backend/API
+   * Database/schema/migrations
+   * Authentication
+   * All DKMO modules
+   * Configuration files
+   * Package files
+   * Vercel configuration
+   * Environment-variable templates if required
+   * Any other files required to run the complete application
+
+3. **Do NOT push secrets or credentials.**
+
+   * Never commit passwords, API keys, database credentials, tokens, or private environment variables.
+   * If environment variables are required, create/update an appropriate `.env.example` showing the required variable names.
+
+4. **Make the project fully Vercel-hosting launch ready.**
+   The target API/server deployment is:
+   `https://dkmo-portal-api-server.vercel.app/`
+
+5. Check the entire project for Vercel compatibility:
+
+   * Correct build commands
+   * Correct start/build configuration
+   * Correct API/server configuration
+   * Correct routing
+   * Correct frontend → backend API URLs
+   * Production environment variables
+   * CORS
+   * Database connection
+   * Static assets
+   * No localhost URLs remaining where production URLs are required
+   * No Replit-only dependencies or configurations that would break outside Replit
+
+6. **Do not redesign or change the UI unnecessarily.**
+   The goal is to deploy the current completed DKMO Portal exactly as it is, only making technical changes necessary for production/Vercel compatibility.
+
+7. Before finishing, perform a **production-readiness check** and fix any errors you find.
+
+8. Confirm that:
+
+   * The GitHub repository contains the latest complete code.
+   * The project builds successfully.
+   * The application is ready to deploy on Vercel.
+   * The API/server is configured for `https://dkmo-portal-api-server.vercel.app/`.
+   * Frontend and backend communicate correctly in production.
+   * There are no broken routes, missing files, or obvious deployment errors.
+
+**IMPORTANT:** Do not just tell me what needs to be done. Actually make the required changes, push the completed code to the GitHub repository, and leave the project in a production/ Vercel-launch-ready state.

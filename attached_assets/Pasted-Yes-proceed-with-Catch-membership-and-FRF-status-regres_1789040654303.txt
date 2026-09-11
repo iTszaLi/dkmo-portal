@@ -1,0 +1,85 @@
+Yes, proceed with **“Catch membership and FRF status regressions before they ship.”**
+
+Run a complete regression test specifically around the DKMO membership and FRF eligibility logic.
+
+### REQUIRED BUSINESS RULE
+
+The system must always enforce:
+
+**Membership Paid → FRF Active/Eligible**
+
+**Membership Unpaid/Pending → FRF Inactive/Not Eligible**
+
+There must never be a normal case where:
+
+**Membership: Paid + FRF: Inactive**
+
+### TEST THESE SCENARIOS
+
+1. Existing member with Membership Paid
+   → FRF must be Active.
+
+2. Existing member with Membership Unpaid
+   → FRF must be Inactive.
+
+3. Change Membership from Unpaid → Paid
+   → FRF automatically becomes Active.
+
+4. Change Membership from Paid → Unpaid/voided where applicable
+   → FRF automatically becomes Inactive.
+
+5. Newly accepted/admitted member
+   → Membership payment status must determine FRF eligibility correctly.
+
+6. FRF Fees page
+   → Only members with paid/eligible membership can have an active FRF contribution.
+
+7. FRF Claims
+   → Verify the member eligibility logic does not conflict with the membership payment status.
+
+8. Dashboard
+   → Verify FRF and membership counts use the same underlying logic.
+
+9. Member Profile
+   → Verify Membership and FRF status display correctly.
+
+10. Payments → Membership Fees
+    → Recording a payment must immediately update the member's eligibility/status everywhere.
+
+### IMPORTANT
+
+Do not create separate status logic for each page.
+
+There must be a **single source of truth** for membership payment status and FRF eligibility so that:
+
+Members → Member Profile → Payments → FRF Fees → FRF Claims → Dashboard
+
+all show consistent information.
+
+### ALSO CHECK REGRESSIONS
+
+Make sure this testing does NOT break:
+
+* Historical membership payment records
+* Migrated Access data
+* FRF collection cases
+* FRF payment records
+* Member IDs
+* Referrals
+* Committee records
+* Loans
+* Documents
+* Other DKMO modules
+
+Do not modify legitimate historical data just to make the tests pass.
+
+If you find a bug, fix the underlying logic rather than hardcoding the expected result.
+
+After testing, report:
+
+* Tests passed
+* Tests failed
+* Bugs fixed
+* Any remaining issues
+
+Then run the production build again and confirm the portal is still launch-ready.

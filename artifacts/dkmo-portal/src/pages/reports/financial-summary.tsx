@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatSAR, formatDate, formatYearMonth } from "@/lib/utils";
+import { getMembershipFeeAmount } from "@/lib/membership-fee";
 import { ArrowLeft, Search, FileDown, FileSpreadsheet, Printer, Coins, Wallet, HeartHandshake, AlertCircle } from "lucide-react";
 import ExcelJS from "exceljs";
 import jsPDF from "jspdf";
@@ -113,8 +114,8 @@ export default function FinancialSummaryReport() {
   const outstandingMembershipFees = useMemo(() => {
     if (!members) return 0;
     return members
-      .filter((m) => m.feeStatus !== "paid" && m.feeStatus !== "exempt")
-      .reduce((a, m) => a + Number(m.membershipFee), 0);
+      .filter((m) => !["paid", "exempt", "not_applicable", "review"].includes(m.feeStatus))
+       .reduce((a, m) => a + getMembershipFeeAmount(m.membershipFee), 0);
   }, [members]);
 
   // ── monthly breakdown ─────────────────────────────────────────────────────

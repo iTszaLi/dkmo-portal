@@ -52,6 +52,7 @@ import {
   type LoanPaymentMethod,
 } from "@workspace/api-client-react";
 import { loanStatusBadge, purposeLabel, fmtSAR } from "./loans";
+import { getReturnTarget, useReturnNavigation, withReturnTo } from "@/lib/navigation";
 
 const METHODS: { value: LoanPaymentMethod; label: string }[] = [
   { value: "cash", label: "Cash" },
@@ -69,6 +70,7 @@ export default function LoanDetail() {
   const loanId = params?.id ?? "";
   const searchStr = useSearch();
   const [, navigate] = useLocation();
+  const goBack = useReturnNavigation("/loans");
   const { toast } = useToast();
   const { canEdit, hasRole } = useAuth();
   const isAdmin = hasRole("admin");
@@ -121,6 +123,7 @@ export default function LoanDetail() {
       } else {
         toast({ title: "Payment Recorded Successfully" });
       }
+      goBack();
     } catch (err: any) {
       toast({ title: "Could not record payment", description: err?.message, variant: "destructive" });
     }
@@ -159,6 +162,7 @@ export default function LoanDetail() {
         ["Status", loan.status],
         ["Start Date", loan.disbursedDate ? format(new Date(loan.disbursedDate), "dd MMM yyyy") : "—"],
         ["Convenor", loan.convenorName || "—"],
+         ["Responsible Staff / Committee Member", loan.responsibleStaff ? `${loan.responsibleStaff.fullName} — ${loan.responsibleStaff.position}` : "—"],
         ["Notes", loan.notes || "—"],
       ],
     });
@@ -190,7 +194,7 @@ export default function LoanDetail() {
     return (
       <div className="p-6">
         <p className="text-slate-500">Loan not found.</p>
-        <Link href="/loans"><Button variant="outline" className="mt-3"><ArrowLeft className="h-4 w-4 mr-2" /> Back to Loans</Button></Link>
+        <Button variant="outline" className="mt-3" onClick={goBack}><ArrowLeft className="h-4 w-4 mr-2" /> Back to Loans</Button>
       </div>
     );
   }
@@ -202,9 +206,9 @@ export default function LoanDetail() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Link href="/loans">
-            <Button variant="ghost" size="icon" data-testid="button-back-loans"><ArrowLeft className="h-5 w-5" /></Button>
-          </Link>
+          <Button variant="ghost" size="icon" onClick={goBack} data-testid="button-back-loans" aria-label="Back to previous context">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-3">
               {loan.memberName ?? "Unknown member"}
@@ -250,7 +254,8 @@ export default function LoanDetail() {
           <div><span className="text-slate-500 block text-xs">Paid</span><span className="font-semibold text-green-700 dark:text-green-400">{fmtSAR(loan.totalPaid)}</span></div>
           <div><span className="text-slate-500 block text-xs">Remaining</span><span className="font-semibold text-slate-800 dark:text-slate-200">{fmtSAR(loan.outstandingBalance)}</span></div>
           <div><span className="text-slate-500 block text-xs">Start Date</span><span className="font-semibold text-slate-800 dark:text-slate-200">{loan.disbursedDate ? format(new Date(loan.disbursedDate), "dd MMM yyyy") : "—"}</span></div>
-          <div><span className="text-slate-500 block text-xs">Convenor</span><span className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1"><User className="h-3.5 w-3.5 text-slate-400" />{loan.convenorName || "—"}</span></div>
+           <div><span className="text-slate-500 block text-xs">Convenor</span><span className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1"><User className="h-3.5 w-3.5 text-slate-400" />{loan.convenorName || "—"}</span></div>
+           <div><span className="text-slate-500 block text-xs">Responsible Staff / Committee Member</span><span className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1"><User className="h-3.5 w-3.5 text-slate-400" />{loan.responsibleStaff ? `${loan.responsibleStaff.fullName} — ${loan.responsibleStaff.position}` : "—"}</span></div>
         </div>
         {loan.notes && <p className="text-sm text-slate-500 dark:text-slate-400 pt-1">Notes: {loan.notes}</p>}
       </div>
@@ -318,7 +323,13 @@ export default function LoanDetail() {
       </div>
 
       {/* Record Payment dialog */}
-      <Dialog open={payOpen} onOpenChange={(o) => { setPayOpen(o); if (!o) navigate(`/loans/${loanId}`, { replace: true }); }}>
+      <Dialog
+        open={payOpen}
+        onOpenChange={(o) => {
+          setPayOpen(o);
+          if (!o) navigate(withReturnTo(`/loans/${loanId}`, getReturnTarget("/loans")), { replace: true });
+        }}
+      >
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Record Payment</DialogTitle>

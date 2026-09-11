@@ -1,5 +1,4 @@
 import { Router, type IRouter } from "express";
-import healthRouter from "./health";
 import authRouter from "./auth";
 import meRouter from "./me";
 import membersRouter from "./members";
@@ -23,10 +22,11 @@ import auditRouter from "./audit";
 import documentsRouter from "./documents";
 import publicDocumentsRouter from "./public-documents";
 import meetingsRouter from "./meetings";
+import committeeRouter from "./committee";
+import memberTimelineRouter from "./member-timeline";
 
 const router: IRouter = Router();
 
-router.use(healthRouter);
 router.use(authRouter);
 // Public portal endpoints must mount BEFORE any router that applies requireAuth globally.
 router.use(publicDocumentsRouter);
@@ -51,5 +51,7 @@ router.use(calendarRouter);
 router.use(auditRouter);
 router.use(documentsRouter);
 router.use(meetingsRouter);
+router.use(committeeRouter);
+router.use(memberTimelineRouter);
 
 export default router;

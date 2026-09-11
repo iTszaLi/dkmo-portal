@@ -1,6 +1,43 @@
 import type { Member, Payment } from "@workspace/db";
 
 export function memberToApi(m: Member) {
+  const raw = m.legacyRawRecord && typeof m.legacyRawRecord === "object"
+    ? (m.legacyRawRecord as Record<string, unknown>)
+    : {};
+  const migrationStatus = typeof raw.migrationMatchStatus === "string"
+    ? raw.migrationMatchStatus
+    : "";
+  const legacyMembershipFeeRecords = Array.isArray(raw.membershipFeeRecords)
+    ? raw.membershipFeeRecords
+        .filter((record): record is Record<string, unknown> => Boolean(record) && typeof record === "object")
+        .map((record) => ({
+          sourceTable: typeof record.source_table === "string" ? record.source_table : "",
+          sourceRow: typeof record.source_row === "string" ? record.source_row : "",
+          legacyMemberId: typeof record.legacy_member_id === "string" ? record.legacy_member_id : "",
+          paymentDate: typeof record.payment_date === "string" ? record.payment_date : "",
+          entryDate: typeof record.entry_date === "string" ? record.entry_date : "",
+          details: typeof record.details === "string" ? record.details : "",
+          amount: typeof record.amount === "string" && record.amount !== "" ? Number(record.amount) : null,
+          billNumber: typeof record.bill_number === "string" ? record.bill_number : "",
+          remarks: typeof record.remarks === "string" ? record.remarks : "",
+          historicalStatus: typeof record.historical_status === "string" ? record.historical_status : "",
+          reviewIssue: typeof record.issue === "string" ? record.issue : "",
+        }))
+    : [];
+  const legacyRecordStatus = !m.legacyMemberId
+    ? "portal_member"
+    : migrationStatus === "NEEDS_REVIEW"
+      ? "needs_review"
+      : migrationStatus === "POSSIBLE_DUPLICATE"
+        ? "possible_duplicate"
+        : migrationStatus === "CONFIRMED_DIFFERENT_PERSON"
+          ? "confirmed_different_person"
+          : migrationStatus === "CONFIRMED_MATCH" || !m.importBatchId
+            ? "confirmed_match"
+            : "legacy_record";
+  // FRF is not an independent membership switch. A paid membership always
+  // makes the member FRF-active; every other fee state is FRF-inactive.
+  const effectiveFrfStatus = m.feeStatus === "paid" ? "active" : "inactive";
   return {
     id: m.id,
     fullName: m.fullName,
@@ -23,19 +60,24 @@ export function memberToApi(m: Member) {
     feeStatus: m.feeStatus,
     feePaidAt: m.feePaidAt ? m.feePaidAt.toISOString() : null,
     feeUpdatedBy: m.feeUpdatedBy ?? "",
-    frfStatus: m.frfStatus ?? "active",
+    frfStatus: effectiveFrfStatus,
     responsibility: m.responsibility ?? "not_responsible",
     notes: m.notes ?? "",
     refMemberName: m.refMemberName ?? "",
     refMemberId: m.refMemberId ?? "",
     // Legacy-import fields
     legacyMemberId: m.legacyMemberId ?? "",
+    legacyRecordStatus,
+    legacyImportBatchId: m.importBatchId ?? null,
     oldApplicationNumber: m.oldApplicationNumber ?? "",
     whatsappNumber: m.whatsappNumber ?? "",
     passportNumber: m.passportNumber ?? "",
     nativePlace: m.nativePlace ?? "",
     memberGroup: m.memberGroup ?? "",
     homeContactNumber: m.homeContactNumber ?? "",
+    legacyReferenceCode: m.legacyReferenceCode ?? "",
+    legacyReferenceName: m.legacyReferenceName ?? "",
+    legacyMembershipFeeRecords,
     ppName: m.ppName ?? "",
     maritalStatus: m.maritalStatus ?? "",
     familyStatus: m.familyStatus ?? "",

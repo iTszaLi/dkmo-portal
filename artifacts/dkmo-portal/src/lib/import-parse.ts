@@ -46,18 +46,11 @@ function decodeText(buf: ArrayBuffer): string {
 }
 
 export async function parseImportFile(file: File): Promise<string[][]> {
-  if (/\.xlsx?$/i.test(file.name)) {
+  if (/\.xlsx$/i.test(file.name)) {
     const buf = await file.arrayBuffer();
     const head = new Uint8Array(buf.slice(0, 4));
     if (head[0] === 0xd0 && head[1] === 0xcf) {
-      const XLSX = await import("xlsx");
-      const wb = XLSX.read(buf, { type: "array", cellDates: true });
-      const ws = wb.Sheets[wb.SheetNames[0]!];
-      if (!ws) return [];
-      const raw = XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1, raw: false, defval: "" });
-      return raw
-        .map((r) => (r ?? []).map((v) => (v == null ? "" : String(v))))
-        .filter((r) => r.some((x) => x.trim()));
+      throw new Error("Legacy .xls files are not supported. Save the workbook as .xlsx and try again.");
     }
     const ExcelJS = (await import("exceljs")).default;
     const wb = new ExcelJS.Workbook();

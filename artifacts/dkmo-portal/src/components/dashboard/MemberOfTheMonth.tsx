@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MemberBadges } from "@/components/MemberBadges";
 import { AchievementBadges } from "@/components/dashboard/AchievementBadges";
+import { withReturnTo } from "@/lib/navigation";
 
 type DashboardMember = {
   id: string;
@@ -108,7 +109,7 @@ export function MemberOfTheMonth({
             transition={{ duration: 0.4 }}
             className="flex flex-col gap-4 sm:flex-row sm:items-center"
           >
-            <Link href={`/members/${winner.member.id}`} className="shrink-0">
+            <Link href={withReturnTo(`/members/${winner.member.id}`)} className="shrink-0">
               {winner.member.photoUrl ? (
                 <img
                   src={winner.member.photoUrl}
@@ -123,7 +124,7 @@ export function MemberOfTheMonth({
             </Link>
             <div className="min-w-0 flex-1">
               <Link
-                href={`/members/${winner.member.id}`}
+                href={withReturnTo(`/members/${winner.member.id}`)}
                 className="text-lg font-bold text-green-950 dark:text-green-100 hover:underline"
                 data-testid="member-of-the-month-name"
               >

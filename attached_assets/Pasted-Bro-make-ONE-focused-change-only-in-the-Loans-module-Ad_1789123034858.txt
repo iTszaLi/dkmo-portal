@@ -1,0 +1,80 @@
+Bro, make ONE focused change only in the **Loans module**.
+
+### Add a Reminder button for the responsible person of an active loan
+
+In the **Loan Desk Ledger**, each loan already shows the responsible committee member/staff, for example:
+
+**Mohammed Ali — DKMO-0398 — Personal — Abdul — SAR 5,000 — Active**
+
+Add a **Reminder** button/action for each relevant active loan so the admin can send a reminder to the **responsible person/committee member assigned to that loan**.
+
+### Reminder flow
+
+When the admin clicks **Reminder**:
+
+1. Open a small reminder dialog/modal.
+2. Before sending the message, show a clear language selection:
+
+   * **English**
+   * **Kannada**
+3. The admin must be able to choose either English or Kannada before sending.
+4. After selecting the language, show the complete reminder message that will be sent.
+5. Give the admin:
+
+   * **Send Reminder**
+   * **Cancel**
+6. Do NOT send anything automatically without the admin clicking **Send Reminder**.
+
+### Reminder message content
+
+The reminder should clearly mention:
+
+* Member name
+* DKMO ID
+* Loan purpose
+* Loan amount
+* Current outstanding amount
+* Current payment/progress status
+* That the person is the responsible committee member/staff for this loan
+* A polite request to follow up/manage the loan appropriately
+
+The **English and Kannada messages should convey the same information**.
+
+### Important
+
+The reminder must be sent to the **responsible staff/committee member assigned to that specific loan**, NOT to the borrower/member.
+
+Use the existing responsible staff/committee member data already stored on the loan. Do not create a separate responsible-person system.
+
+### DO NOT CHANGE ANYTHING ELSE
+
+Do NOT modify:
+
+* Loan calculations
+* Loan amount
+* Monthly payment
+* Outstanding balance
+* Payment tracking
+* Loan status
+* Eligibility
+* Budget
+* Disbursement
+* Convenor
+* Responsible staff assignment
+* Loan creation form
+* Loan records
+* Database structure unless absolutely required for this reminder feature
+* Member data
+* Committee data
+* Dashboard statistics
+* FRF
+* Membership
+* Payments
+* Any other module
+* Existing Loan Desk UI/layout except for adding this reminder action
+
+Keep the existing design and styling. The only functional addition should be the **Reminder** action and its English/Kannada confirmation flow.
+
+Also make sure the reminder uses the correct loan/member/responsible-person data for the specific row and never sends the wrong person's information.
+
+After implementation, run the relevant typecheck/build/tests and verify that the existing loan functionality remains unchanged.

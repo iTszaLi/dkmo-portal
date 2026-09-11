@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, desc, and, sql, notInArray } from "drizzle-orm";
+import { eq, desc, and, sql, notInArray, inArray } from "drizzle-orm";
 import { db, frfClaimsTable, frfContributionsTable, membersTable, paymentsTable } from "@workspace/db";
 import { requireAuth, requireRole } from "../middlewares/requireAuth";
 import { logAudit } from "../lib/audit";
@@ -32,7 +32,8 @@ const FrfClaimInput = z.object({
   claimType: z.enum(["death_benefit", "emergency", "air_ticket", "other"]).default("death_benefit"),
   amountRequested: z.number().min(0).default(0),
   amountApproved: z.number().min(0).default(0),
-  contributionAmount: z.number().min(0).default(50),
+  disbursedAmount: z.number().min(0).optional(),
+  disbursementReference: z.string().optional(),
   status: z.enum(["pending", "under_review", "approved", "rejected", "disbursed"]).default("pending"),
   claimDate: z.string().datetime().optional(),
   approvedDate: z.string().datetime().nullable().optional(),
@@ -47,6 +48,13 @@ const FrfClaimInput = z.object({
 /** A case is closed once it is disbursed or rejected; otherwise it is open. */
 function caseStatusOf(status: string): "open" | "closed" {
   return status === "disbursed" || status === "rejected" ? "closed" : "open";
+}
+
+function collectionStatusOf(status: string): "not_created" | "active" | "closed" | "completed" {
+  if (status === "approved") return "active";
+  if (status === "disbursed") return "completed";
+  if (status === "rejected") return "closed";
+  return "not_created";
 }
 
 /**
@@ -79,6 +87,7 @@ function frfToApi(row: any) {
     photoUrl: row.photoUrl ?? null,
     supportingPhotos: row.supportingPhotos ?? [],
     caseStatus: caseStatusOf(row.status),
+    collectionStatus: collectionStatusOf(row.status),
     closingDate: row.closingDate?.toISOString() ?? null,
     claimantName: row.claimantName,
     membershipId: row.membershipId ?? "",
@@ -94,6 +103,8 @@ function frfToApi(row: any) {
     underReviewBy: row.underReviewBy ?? "",
     disbursedAt: row.disbursedAt?.toISOString() ?? null,
     disbursedBy: row.disbursedBy ?? "",
+    disbursedAmount: Number(row.disbursedAmount ?? 0),
+    disbursementReference: row.disbursementReference ?? "",
     rejectedBy: row.rejectedBy ?? "",
     rejectedAt: row.rejectedAt?.toISOString() ?? null,
     reviewNotes: row.reviewNotes ?? "",
@@ -123,19 +134,31 @@ router.get("/frf/claims", async (req, res): Promise<void> => {
       .select({
         claimId: frfContributionsTable.claimId,
         collected: sql<string>`COALESCE(SUM(LEAST(${frfContributionsTable.amountPaid}, ${frfContributionsTable.amount})), 0)`,
+        expected: sql<string>`COALESCE(SUM(${frfContributionsTable.amount}), 0)`,
       })
       .from(frfContributionsTable)
       .where(notInArray(frfContributionsTable.status, ["cancelled", "exempt"]))
       .groupBy(frfContributionsTable.claimId);
-    const collectedByClaim = new Map(totals.map((t) => [t.claimId, Number(t.collected)]));
+    const totalsByClaim = new Map(totals.map((t) => [
+      t.claimId,
+      { collected: Number(t.collected), expected: Number(t.expected) },
+    ]));
 
     res.json(rows.map((row) => {
-      const collectedAmount = collectedByClaim.get(row.id) ?? 0;
-      const target = Number(row.amountRequested);
+      const totals = totalsByClaim.get(row.id) ?? { collected: 0, expected: 0 };
+      const collectionRate = totals.expected > 0
+        ? Math.min(100, Math.round((totals.collected / totals.expected) * 100))
+        : 0;
       return {
         ...frfToApi(row),
-        collectedAmount,
-        targetProgress: target > 0 ? Math.min(100, Math.round((collectedAmount / target) * 100)) : 0,
+        collectedAmount: totals.collected,
+        // These are member-contribution figures, never the beneficiary relief
+        // request. Keep targetProgress as a compatibility alias for the
+        // collection rate until all older clients are upgraded.
+        collectionExpectedAmount: totals.expected,
+        collectionOutstandingAmount: Math.max(totals.expected - totals.collected, 0),
+        collectionRate,
+        targetProgress: collectionRate,
       };
     }));
   } catch (err) {
@@ -157,8 +180,14 @@ router.get("/frf/pending-fees", async (req, res): Promise<void> => {
       .innerJoin(frfClaimsTable, eq(frfContributionsTable.claimId, frfClaimsTable.id))
       .innerJoin(membersTable, eq(frfContributionsTable.memberId, membersTable.id))
       // Only the active (approved) collection case still collects; closed
-      // cases keep their history but stop generating dues.
-      .where(eq(frfClaimsTable.status, "approved"))
+      // cases keep their history but stop generating dues. A member must also
+      // have a paid membership fee to appear as a current FRF debtor.
+      .where(
+        and(
+          eq(frfClaimsTable.status, "approved"),
+          eq(membersTable.feeStatus, "paid"),
+        ),
+      )
       .orderBy(desc(frfContributionsTable.createdAt));
 
     const now = new Date();
@@ -193,11 +222,34 @@ router.get("/frf/stats", async (req, res): Promise<void> => {
   try {
     const rows = await db.select().from(frfClaimsTable);
     const total = rows.length;
-    const approved = rows.filter((r) => r.status === "approved" || r.status === "disbursed");
+    const approved = rows.filter((r) => r.status === "approved");
+    const disbursed = rows.filter((r) => r.status === "disbursed");
     const pending = rows.filter((r) => r.status === "pending" || r.status === "under_review");
     const rejected = rows.filter((r) => r.status === "rejected");
-    const totalDisbursed = approved.reduce((a, r) => a + Number(r.amountApproved), 0);
+    const totalDisbursed = disbursed.reduce((a, r) => a + Number(r.disbursedAmount ?? r.amountApproved), 0);
     const totalRequested = rows.reduce((a, r) => a + Number(r.amountRequested), 0);
+    const totalApproved = [...approved, ...disbursed].reduce((a, r) => a + Number(r.amountApproved), 0);
+    const contributionRows = await db
+      .select({
+        amount: frfContributionsTable.amount,
+        amountPaid: frfContributionsTable.amountPaid,
+        status: frfContributionsTable.status,
+        claimId: frfContributionsTable.claimId,
+      })
+      .from(frfContributionsTable);
+    const totalContributionsCollected = contributionRows
+      .filter((r) => r.status !== "cancelled")
+      .reduce((sum, r) => sum + Math.min(Number(r.amount), Number(r.amountPaid)), 0);
+    const activeClaimId = approved[0]?.id;
+    const activeCollectionRows = contributionRows.filter((r) =>
+      r.claimId === activeClaimId && r.status !== "cancelled" && r.status !== "exempt",
+    );
+    const activeCollectionExpected = approved.length > 0
+      ? activeCollectionRows.reduce((sum, r) => sum + Number(r.amount), 0)
+      : 0;
+    const activeCollectionCollected = approved.length > 0
+      ? activeCollectionRows.reduce((sum, r) => sum + Math.min(Number(r.amount), Number(r.amountPaid)), 0)
+      : 0;
 
     const byType = ["death_benefit", "emergency", "air_ticket", "other"].map((t) => ({
       type: t,
@@ -209,9 +261,16 @@ router.get("/frf/stats", async (req, res): Promise<void> => {
       total,
       pendingCount: pending.length,
       approvedCount: approved.length,
+      disbursedCount: disbursed.length,
       rejectedCount: rejected.length,
       totalDisbursed,
       totalRequested,
+      totalApproved,
+      totalContributionsCollected,
+      activeCollectionCount: approved.length,
+      activeCollectionExpected,
+      activeCollectionCollected,
+      activeCollectionOutstanding: Math.max(activeCollectionExpected - activeCollectionCollected, 0),
       byType,
     });
   } catch (err) {
@@ -248,7 +307,10 @@ router.post("/frf/claims", requireRole("admin", "finance"), async (req, res): Pr
       claimType: data.claimType,
       amountRequested: String(data.amountRequested),
       amountApproved: String(data.amountApproved),
-      contributionAmount: String(data.contributionAmount),
+       // FRF collection is a fixed SAR 50 per eligible member per case.
+       // Keep the input field in the contract for older records, but never
+       // create a new case with a different member contribution.
+      contributionAmount: "50",
       status: data.status,
       claimDate: data.claimDate ? new Date(data.claimDate) : new Date(),
       approvedDate: data.approvedDate ? new Date(data.approvedDate) : null,
@@ -305,8 +367,9 @@ router.put("/frf/claims/:id", requireRole("admin", "finance"), async (req, res):
     if (data.claimType !== undefined) updateData.claimType = data.claimType;
     if (data.amountRequested !== undefined) updateData.amountRequested = String(data.amountRequested);
     if (data.amountApproved !== undefined) updateData.amountApproved = String(data.amountApproved);
-    if (data.contributionAmount !== undefined) updateData.contributionAmount = String(data.contributionAmount);
     if (data.status !== undefined) updateData.status = data.status;
+    if (data.disbursedAmount !== undefined) updateData.disbursedAmount = String(data.disbursedAmount);
+    if (data.disbursementReference !== undefined) updateData.disbursementReference = data.disbursementReference;
     if (data.claimDate !== undefined) updateData.claimDate = new Date(data.claimDate);
     if (data.approvedDate !== undefined) updateData.approvedDate = data.approvedDate ? new Date(data.approvedDate) : null;
     if (data.approvedBy !== undefined) updateData.approvedBy = data.approvedBy;
@@ -316,17 +379,26 @@ router.put("/frf/claims/:id", requireRole("admin", "finance"), async (req, res):
     if (data.notes !== undefined) updateData.notes = data.notes;
     if (data.reviewNotes !== undefined) updateData.reviewNotes = data.reviewNotes;
 
+    const [existing] = await db.select().from(frfClaimsTable).where(eq(frfClaimsTable.id, id));
+    if (!existing) { res.status(404).json({ error: "Not found" }); return; }
+
     if (data.status !== undefined) {
       const actor = getUserById((req as any).userId ?? "")?.displayName ?? (req as any).userId ?? "";
       const now = new Date();
       if (data.status === "under_review") { updateData.underReviewBy = actor; updateData.underReviewAt = now; }
       if (data.status === "approved") { updateData.approvedBy = actor; updateData.approvedDate = now; }
       if (data.status === "rejected") { updateData.rejectedBy = actor; updateData.rejectedAt = now; }
-      if (data.status === "disbursed") { updateData.disbursedBy = actor; updateData.disbursedAt = now; }
+      if (data.status === "disbursed") {
+        updateData.disbursedBy = actor;
+        updateData.disbursedAt = now;
+        // Older clients only sent status. Preserve backward compatibility by
+        // recording the approved relief amount as the actual disbursement,
+        // while newer clients can submit a distinct amount/reference.
+        if (data.disbursedAmount === undefined) {
+          updateData.disbursedAmount = String(existing.amountApproved);
+        }
+      }
     }
-
-    const [existing] = await db.select().from(frfClaimsTable).where(eq(frfClaimsTable.id, id));
-    if (!existing) { res.status(404).json({ error: "Not found" }); return; }
 
     // One-active-case rule: approving this claim opens its collection case,
     // which is forbidden while a different case is still collecting.
@@ -355,11 +427,6 @@ router.put("/frf/claims/:id", requireRole("admin", "finance"), async (req, res):
       const reopened = wasRejected ? await reopenCancelledContributions(updated.id) : 0;
       const generated = await generateContributionsForClaim(updated.id, Number(updated.contributionAmount));
       req.log.info({ claimId: updated.id, generated, reopened }, "FRF contributions generated on approval");
-    } else if (!isRejected && data.contributionAmount !== undefined && Number(existing.contributionAmount) !== data.contributionAmount) {
-      // Amount changed on an open claim: update unpaid ledger rows only.
-      await db.update(frfContributionsTable)
-        .set({ amount: String(data.contributionAmount) })
-        .where(and(eq(frfContributionsTable.claimId, updated.id), eq(frfContributionsTable.status, "pending")));
     }
 
     const action = data.status === "approved" ? "claim_approved" : data.status === "rejected" ? "claim_rejected" : "claim_updated";
@@ -381,6 +448,13 @@ router.get("/frf/claims/:id/collection", async (req, res): Promise<void> => {
     const [claim] = await db.select().from(frfClaimsTable).where(eq(frfClaimsTable.id, id));
     if (!claim) { res.status(404).json({ error: "Not found" }); return; }
 
+    // Older approved cases may predate the all-member ledger rule. Reconcile
+    // before reading so the collection endpoint is self-healing and every
+    // current member gets a real actionable fee row.
+    if (claim.status === "approved") {
+      await generateContributionsForClaim(id, Number(claim.contributionAmount));
+    }
+
     const rows = await db
       .select({
         contribution: frfContributionsTable,
@@ -388,7 +462,12 @@ router.get("/frf/claims/:id/collection", async (req, res): Promise<void> => {
       })
       .from(frfContributionsTable)
       .innerJoin(membersTable, eq(frfContributionsTable.memberId, membersTable.id))
-      .where(eq(frfContributionsTable.claimId, id))
+      .where(
+        and(
+          eq(frfContributionsTable.claimId, id),
+          eq(membersTable.feeStatus, "paid"),
+        ),
+      )
       .orderBy(desc(frfContributionsTable.createdAt));
 
     // Look up receipt/method/notes of linked payments in one query.
@@ -402,9 +481,9 @@ router.get("/frf/claims/:id/collection", async (req, res): Promise<void> => {
           paymentMethod: paymentsTable.paymentMethod,
           notes: paymentsTable.notes,
         })
-        .from(paymentsTable);
-      const wanted = new Set(paymentIds);
-      for (const p of paymentRows) if (wanted.has(p.id)) paymentById.set(p.id, p);
+        .from(paymentsTable)
+        .where(inArray(paymentsTable.id, paymentIds));
+      for (const p of paymentRows) paymentById.set(p.id, p);
     }
 
     const now = new Date();
@@ -417,19 +496,20 @@ router.get("/frf/claims/:id/collection", async (req, res): Promise<void> => {
       const status = deriveContributionStatus(c, claim.approvedDate, now);
       const amount = Number(c.amount);
       const amountPaid = Number(c.amountPaid);
+      const excludedFromCollection = status === "cancelled" || status === "exempt";
       if (status === "cancelled") {
         cancelledCount++;
       } else if (status === "exempt") {
         exemptCount++;
       } else {
         expectedAmount += amount;
-        collectedAmount += amountPaid;
+        collectedAmount += Math.min(amount, amountPaid);
         if (status === "paid") paidCount++;
         else if (status === "partial") partialCount++;
         else if (status === "overdue") overdueCount++;
         else pendingCount++;
       }
-      if (amountPaid > 0 && c.paidAt && (!lastPaymentAt || c.paidAt > lastPaymentAt)) {
+      if (!excludedFromCollection && amountPaid > 0 && c.paidAt && (!lastPaymentAt || c.paidAt > lastPaymentAt)) {
         lastPaymentAt = c.paidAt;
       }
       const payment = c.paymentId ? paymentById.get(c.paymentId) : undefined;
@@ -443,7 +523,7 @@ router.get("/frf/claims/:id/collection", async (req, res): Promise<void> => {
         refMemberName: m.refMemberName ?? "",
         amount,
         amountPaid,
-        balance: Math.max(amount - amountPaid, 0),
+        balance: excludedFromCollection ? 0 : Math.max(amount - amountPaid, 0),
         status,
         paidAt: c.paidAt?.toISOString() ?? null,
         receiptNumber: payment?.receiptNumber ?? null,
@@ -461,8 +541,14 @@ router.get("/frf/claims/:id/collection", async (req, res): Promise<void> => {
       collectedAmount,
       outstandingAmount,
       targetAmount,
-      remainingToTarget: Math.max(targetAmount - collectedAmount, 0),
-      targetProgress: targetAmount > 0 ? Math.min(Math.round((collectedAmount / targetAmount) * 100), 100) : 0,
+      reliefRequestedAmount: Number(claim.amountRequested),
+      reliefApprovedAmount: Number(claim.amountApproved),
+      reliefDisbursedAmount: Number(claim.disbursedAmount ?? 0),
+      collectionStatus: collectionStatusOf(claim.status),
+      // Legacy names now describe the member-contribution collection target,
+      // never the beneficiary relief amount.
+      remainingToTarget: outstandingAmount,
+      targetProgress: expectedAmount > 0 ? Math.min(Math.round((collectedAmount / expectedAmount) * 100), 100) : 0,
       collectionRate: expectedAmount > 0 ? Math.round((collectedAmount / expectedAmount) * 100) : 0,
       lastPaymentAt: lastPaymentAt ? (lastPaymentAt as Date).toISOString() : null,
       paidCount,

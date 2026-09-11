@@ -1,0 +1,773 @@
+I need you to fully audit, repair, test, and prepare this entire DKMO Portal project for a clean production deployment on Vercel.
+
+IMPORTANT: Do NOT just silence TypeScript errors, add any, disable strict mode, use // @ts-ignore, or remove functionality to make the build pass. Fix the underlying problems properly while preserving the existing application functionality, UI, database logic, authentication, API routes, and features.
+
+## PROJECT
+
+This is my DKMO Portal web application.
+
+GitHub owner: iTszaLi
+GitHub repository: https://github.com/iTszaLi/dkmo-portal
+
+The final objective is:
+
+1. The application must run correctly locally.
+2. The TypeScript compiler must complete successfully.
+3. The production build must complete successfully.
+4. The application must be compatible with Vercel.
+5. API/server functionality must work correctly in Vercel's environment.
+6. There must be no unresolved TypeScript/module/import errors.
+7. Do not break the existing frontend, backend, database, authentication, or DKMO functionality.
+8. After everything is verified, commit the corrected project and push it to the GitHub repository above.
+
+---
+
+# CURRENT VERCEL ERRORS
+
+The current Vercel deployment is failing with these errors:
+
+text
+artifacts/api-server/src/app.ts(10,5): error TS2339: Property 'set' does not exist on type 'Express'.
+
+artifacts/api-server/src/app.ts(12,5): error TS2339: Property 'use' does not exist on type 'Express'.
+
+artifacts/api-server/src/app.ts(13,3): error TS2349: This expression is not callable.
+Type 'typeof import("/vercel/path0/artifacts/api-server/node_modules/pino-http/index")' has no call signatures.
+
+artifacts/api-server/src/app.ts(16,11): error TS7006: Parameter 'req' implicitly has an 'any' type.
+
+artifacts/api-server/src/app.ts(23,11): error TS7006: Parameter 'res' implicitly has an 'any' type.
+
+artifacts/api-server/src/app.ts(45,5): error TS2339: Property 'use' does not exist on type 'Express'.
+
+artifacts/api-server/src/app.ts(62,5): error TS2339: Property 'use' does not exist on type 'Express'.
+
+artifacts/api-server/src/app.ts(62,10): error TS7006: Parameter '_req' implicitly has an 'any' type.
+
+artifacts/api-server/src/app.ts(62,16): error TS7006: Parameter 'res' implicitly has an 'any' type.
+
+artifacts/api-server/src/app.ts(62,21): error TS7006: Parameter 'next' implicitly has an 'any' type.
+
+artifacts/api-server/src/app.ts(69,5): error TS2339: Property 'use' does not exist on type 'Express'.
+
+artifacts/api-server/src/app.ts(70,5): error TS2339: Property 'use' does not exist on type 'Express'.
+
+artifacts/api-server/src/app.ts(72,5): error TS2339: Property 'use' does not exist on type 'Express'.
+
+artifacts/api-server/src/app.ts(74,5): error TS2339: Property 'use' does not exist on type 'Express'.
+
+artifacts/api-server/src/app.ts(78,5): error TS2339: Property 'use' does not exist on type 'Express'.
+
+artifacts/api-server/src/app.ts(87,11): error TS2339: Property 'status' does not exist on type 'Response<any, Record<string, any>>'.
+
+artifacts/api-server/src/app.ts(94,11): error TS2339: Property 'status' does not exist on type 'Response<any, Record<string, any>>'.
+
+artifacts/api-server/src/app.ts(97,9): error TS2339: Property 'log' does not exist on type 'Request<core.ParamsDictionary, any, any, core.Query, Record<string, any>>'.
+
+artifacts/api-server/src/app.ts(98,9): error TS2339: Property 'status' does not exist on type 'Response<any, Record<string, any>>'.
+
+
+There are also these module-resolution errors:
+
+text
+artifacts/api-server/src/app.ts(4,41): error TS2835:
+Relative import paths need explicit file extensions in ECMAScript imports
+when '--moduleResolution' is 'node16' or 'nodenext'.
+Did you mean './lib/session.js'?
+
+artifacts/api-server/src/app.ts(5,20): error TS2834:
+Relative import paths need explicit file extensions in ECMAScript imports
+when '--moduleResolution' is 'node16' or 'nodenext'.
+
+artifacts/api-server/src/app.ts(6,24): error TS2835:
+Relative import paths need explicit file extensions in ECMAScript imports
+when '--moduleResolution' is 'node16' or 'nodenext'.
+Did you mean './lib/logger.js'?
+
+
+The Vercel environment is using:
+
+text
+pnpm 10.28.0
+TypeScript 5.9.3
+
+
+The project is a pnpm workspace with approximately 10 workspace projects.
+
+Vercel also reports:
+
+text
+Detected pnpm-lock.yaml 9
+Using pnpm@10.x based on project creation date
+
+
+There is a preinstall script that intentionally enforces pnpm.
+
+There is also this warning:
+
+text
+Ignored build scripts: core-js@3.49.0
+Run "pnpm approve-builds" to pick which dependencies should be allowed to run scripts.
+
+
+Do NOT treat this warning as the primary cause of the TypeScript failure. Investigate it, but focus first on the actual build errors.
+
+---
+
+# PHASE 1 — FULL PROJECT AUDIT
+
+Before changing anything, inspect the COMPLETE repository.
+
+Do not only inspect app.ts.
+
+Check:
+
+* root package.json
+* all workspace package.json files
+* pnpm-workspace.yaml
+* pnpm-lock.yaml
+* every relevant tsconfig.json
+* Vercel configuration
+* build configuration
+* frontend configuration
+* backend/API configuration
+* Express configuration
+* pino/pino-http configuration
+* database configuration
+* authentication/session configuration
+* environment-variable usage
+* API routes
+* server entry points
+* frontend API calls
+* Vite/Next configuration if applicable
+* deployment scripts
+* TypeScript configuration inheritance
+* module system configuration
+* Node.js version configuration
+* package versions
+* duplicate dependency versions
+* workspace dependency relationships
+
+Find the ROOT cause of the Express typing errors.
+
+Do not assume that the errors are caused only by app.ts.
+
+Check whether there are:
+
+* incompatible Express versions
+* incompatible @types/express
+* Express 4 vs Express 5 type conflicts
+* duplicate Express installations
+* incorrect imports
+* incorrect default/named imports
+* custom type declarations overriding Express
+* incorrect TypeScript module
+* incorrect moduleResolution
+* ESM/CommonJS mismatch
+* broken esModuleInterop
+* broken allowSyntheticDefaultImports
+* package-level TypeScript configuration conflicts
+* workspace dependency resolution problems
+
+---
+
+# PHASE 2 — FIX EXPRESS PROPERLY
+
+Inspect the current Express implementation.
+
+Make sure Express is imported using the correct syntax for the actual Express version installed.
+
+For example, depending on the final package configuration, the application should use a type-safe pattern equivalent to:
+
+ts
+import express, {
+  type Request,
+  type Response,
+  type NextFunction
+} from "express";
+
+
+or another syntax that is correct for the chosen module system.
+
+Do NOT blindly copy this example if the project's final module configuration requires something different.
+
+The resulting Express application must correctly support:
+
+ts
+app.set(...)
+app.use(...)
+app.get(...)
+app.post(...)
+app.listen(...)
+
+
+and middleware must receive correctly typed:
+
+ts
+(req: Request, res: Response, next: NextFunction)
+
+
+where appropriate.
+
+Fix all incorrect Request/Response/NextFunction types.
+
+Do not solve this by using any.
+
+---
+
+# PHASE 3 — FIX PINO-HTTP
+
+Investigate the current pino-http dependency and import.
+
+The current error is:
+
+text
+Type 'typeof import(".../pino-http/index")' has no call signatures.
+
+
+Determine the installed version and its TypeScript/module export format.
+
+Fix the import so that the code correctly invokes the actual pino-http middleware.
+
+Use the import syntax appropriate to the installed version and project's module system.
+
+For example, if appropriate, this may be:
+
+ts
+import pinoHttp from "pino-http";
+
+
+but verify it against the installed package rather than assuming.
+
+Do not use unsafe casts merely to suppress the error.
+
+---
+
+# PHASE 4 — FIX ESM / NODE16 / NODE NEXT PROBLEMS
+
+The project currently has errors caused by:
+
+text
+moduleResolution: node16
+
+
+or:
+
+text
+moduleResolution: nodenext
+
+
+Audit the project's module strategy.
+
+Choose ONE coherent module strategy for the backend and workspace.
+
+The goal is to make the application compatible with:
+
+* TypeScript 5.9
+* current Node.js supported by Vercel
+* pnpm 10
+* Vercel production builds
+* the project's existing frontend
+* Express
+* all workspace packages
+
+Do not mix incompatible ESM and CommonJS configurations.
+
+If the project should remain ESM, correctly configure ESM and update relative imports to use the required .js extensions in source TypeScript where required.
+
+For example:
+
+ts
+import { something } from "./lib/session.js";
+import { logger } from "./lib/logger.js";
+
+
+Do this consistently throughout the relevant backend source files.
+
+IMPORTANT:
+
+Do not blindly add .js to imports everywhere without understanding the build system.
+
+If CommonJS is the better architecture for this Express backend and is compatible with the rest of the project, evaluate whether changing the backend to CommonJS is safer.
+
+Choose the architecture that is most reliable for Vercel and the existing project.
+
+---
+
+# PHASE 5 — TYPESCRIPT CONFIGURATION
+
+Audit and correct all TypeScript configurations.
+
+Pay particular attention to:
+
+text
+module
+moduleResolution
+target
+lib
+types
+esModuleInterop
+allowSyntheticDefaultImports
+strict
+noImplicitAny
+baseUrl
+paths
+rootDir
+outDir
+composite
+declaration
+
+
+Do NOT disable strict TypeScript checking just to make the build pass.
+
+Do NOT set:
+
+text
+noImplicitAny: false
+
+
+unless there is a genuinely documented reason.
+
+Do NOT use:
+
+text
+skipLibCheck: true
+
+
+as a substitute for fixing project code.
+
+It may be used only if it is genuinely necessary for third-party declaration compatibility and does not hide errors in our own source.
+
+Make the configuration internally consistent across the monorepo.
+
+---
+
+# PHASE 6 — DEPENDENCY AUDIT
+
+Inspect the dependency tree.
+
+Check for duplicate or incompatible versions of:
+
+* express
+* @types/express
+* @types/express-serve-static-core
+* pino
+* pino-http
+* @types/node
+* typescript
+* vite
+* React
+* Node-related packages
+
+Make sure workspace packages are not accidentally installing incompatible versions.
+
+If necessary, align dependency versions.
+
+Do not upgrade packages unnecessarily.
+
+Prefer stable versions compatible with the existing application.
+
+After changes, run the equivalent of:
+
+bash
+pnpm install
+
+
+and verify the lockfile.
+
+Do not manually corrupt or remove the lockfile.
+
+---
+
+# PHASE 7 — FIX ALL TYPE ERRORS
+
+After fixing the root configuration problems, run the project's TypeScript checks.
+
+Fix EVERY remaining TypeScript error.
+
+In particular, make sure these no longer occur:
+
+text
+Property 'set' does not exist on type 'Express'
+Property 'use' does not exist on type 'Express'
+Property 'status' does not exist on type 'Response'
+Property 'log' does not exist on type 'Request'
+Parameter implicitly has an 'any' type
+pino-http has no call signatures
+Relative import paths need explicit file extensions
+
+
+Do not just suppress errors.
+
+If req.log is intended to exist because of pino-http, make sure the appropriate pino-http Express type augmentation is actually loaded and compatible.
+
+If the project uses custom logging attached to the request, make the type declaration explicit and correct.
+
+---
+
+# PHASE 8 — VERCEL COMPATIBILITY
+
+Now audit the application specifically for Vercel.
+
+Determine whether this project is:
+
+* a static frontend
+* an SPA with an API
+* an Express backend
+* a monorepo containing frontend + API
+* another architecture
+
+Then configure Vercel appropriately.
+
+Make sure:
+
+* frontend build works
+* API routes work
+* server entry point is correct
+* build output is correct
+* no local filesystem assumptions break deployment
+* no server process expects app.listen() in a Vercel serverless environment unless it is actually required by the deployment architecture
+* environment variables are read correctly
+* database connection works in serverless execution
+* authentication/session handling is compatible with Vercel
+* CORS is correct
+* static assets resolve correctly
+* routes resolve correctly
+* SPA fallback works if needed
+* API endpoints are reachable
+
+If the current architecture is not Vercel-compatible, adapt it with the smallest safe architectural change.
+
+Do NOT rewrite the whole application unnecessarily.
+
+---
+
+# PHASE 9 — NODE VERSION
+
+Check the Node.js version used by the project and Vercel.
+
+Use a currently supported Node.js version compatible with Vercel and the project's dependencies.
+
+If necessary, explicitly configure the Node version in:
+
+* package.json
+* Vercel configuration
+* project configuration
+
+Do not use an obsolete Node version.
+
+The final project should be ready for Vercel's current Node environment.
+
+---
+
+# PHASE 10 — PNPM
+
+The repository uses pnpm.
+
+Keep pnpm as the package manager.
+
+Do not convert the project to npm or yarn.
+
+Check:
+
+text
+packageManager
+pnpm-lock.yaml
+preinstall
+workspace configuration
+
+
+Make sure the lockfile and package manager version are compatible.
+
+Do not create:
+
+text
+package-lock.json
+yarn.lock
+
+
+The existing preinstall script intentionally prevents those package managers from being used.
+
+Keep that behavior unless there is a genuine reason it prevents Vercel from installing dependencies.
+
+---
+
+# PHASE 11 — CORE-JS BUILD SCRIPT WARNING
+
+Investigate:
+
+text
+Ignored build scripts: core-js@3.49.0
+
+
+Determine whether core-js actually requires its install/build script for this project.
+
+If it is required, configure pnpm's approved build scripts properly.
+
+If it is not required, leave it alone.
+
+Do NOT make unrelated changes simply because this warning appears.
+
+The important requirement is that the production application actually builds and runs correctly.
+
+---
+
+# PHASE 12 — ENVIRONMENT VARIABLES
+
+Audit all environment variables.
+
+Find all references to:
+
+text
+process.env
+import.meta.env
+VITE_
+DATABASE_URL
+API URLs
+authentication secrets
+session secrets
+
+
+Do not expose server-only secrets to the frontend.
+
+Create/update an appropriate .env.example containing variable names only.
+
+NEVER commit actual secrets, API keys, database passwords, tokens, or credentials.
+
+If environment variables are required for Vercel, clearly identify which ones need to be configured in Vercel.
+
+---
+
+# PHASE 13 — BUILD TEST
+
+After all fixes, perform a CLEAN installation and production build.
+
+Use the project's correct pnpm commands.
+
+At minimum verify:
+
+bash
+pnpm install
+
+
+then the appropriate:
+
+bash
+pnpm build
+
+
+and, where applicable:
+
+bash
+pnpm typecheck
+
+
+or:
+
+bash
+pnpm exec tsc --noEmit
+
+
+Do not stop after one successful command.
+
+The final production build must complete with:
+
+text
+0 TypeScript errors
+0 build errors
+
+
+Warnings are acceptable only if they are non-blocking and genuinely harmless.
+
+---
+
+# PHASE 14 — TEST THE APPLICATION
+
+After the production build succeeds, test the application.
+
+Verify:
+
+* homepage loads
+* login/authentication works if applicable
+* dashboard loads
+* frontend routes work
+* API routes respond
+* database operations work where environment variables are available
+* forms work
+* CRUD operations work
+* member management works
+* events work
+* donations work
+* business directory works
+* scholarship functionality works
+* Arabic/English functionality works
+* role permissions remain intact
+* admin functionality remains intact
+* mobile layout remains intact
+
+Do not remove existing DKMO features.
+
+---
+
+# PHASE 15 — CHECK FOR BROKEN IMPORTS
+
+Search the ENTIRE repository for imports that may fail under the final module configuration.
+
+Check:
+
+text
+from "./
+from "../
+require(
+import(
+
+
+Pay special attention to backend packages.
+
+Make sure every relative import is compatible with the final module strategy.
+
+Do not change package imports from npm modules unnecessarily.
+
+---
+
+# PHASE 16 — GIT / GITHUB
+
+Once the project is fully repaired and verified:
+
+Check the current Git status.
+
+Make sure you are working with:
+
+text
+https://github.com/iTszaLi/dkmo-portal
+
+
+Do NOT push to another repository.
+
+Do NOT create a new repository.
+
+Do NOT delete the existing repository.
+
+Do NOT overwrite unrelated branches.
+
+First inspect:
+
+bash
+git remote -v
+git branch
+git status
+
+
+If the remote is incorrect, correct it to the specified repository.
+
+Then:
+
+bash
+git add .
+git commit -m "Fix Vercel deployment and TypeScript configuration"
+git push
+
+
+If the repository uses a different default branch, detect it and push to the correct branch.
+
+Before pushing, make absolutely sure that:
+
+* .env
+* secrets
+* API keys
+* passwords
+* private credentials
+* local machine files
+
+are NOT committed.
+
+Update .gitignore if necessary.
+
+---
+
+# IMPORTANT GIT SAFETY
+
+Do NOT use:
+
+bash
+git push --force
+
+
+Do NOT delete branches.
+
+Do NOT reset existing history.
+
+Do NOT overwrite unrelated user work.
+
+Do NOT commit secrets.
+
+If there are existing uncommitted changes that are unrelated to this task, preserve them and explain what they are before committing.
+
+---
+
+# FINAL VERIFICATION
+
+Before telling me the task is complete, run the actual production build again from a clean state.
+
+The final result must satisfy:
+
+text
+pnpm install              PASS
+TypeScript/typecheck      PASS
+production build          PASS
+Vercel-compatible         YES
+no Express type errors    YES
+no pino-http errors       YES
+no TS2834/TS2835 errors   YES
+no implicit-any errors    YES
+Git commit                PASS
+GitHub push               PASS
+
+
+Do not tell me "it should work."
+
+Actually run the checks.
+
+If something fails, continue debugging until it is fixed.
+
+---
+
+# VERY IMPORTANT
+
+Do not make a superficial fix.
+
+I want the project itself to be technically correct and maintainable.
+
+Do not:
+
+* disable TypeScript
+* disable strict mode
+* add @ts-ignore
+* add huge numbers of any types
+* remove functionality
+* remove API routes
+* remove authentication
+* remove database logic
+* downgrade random packages just to bypass an error
+* delete the backend
+* replace the project with a new starter template
+* rewrite the UI
+* remove DKMO features
+* remove workspace packages
+
+Instead, identify the underlying incompatibility and fix it properly.
+
+After everything is complete, give me a concise final report containing:
+
+1. Root cause of the Vercel errors.
+2. Files changed.
+3. Important dependency/version changes.
+4. TypeScript/module configuration changes.
+5. Vercel configuration changes.
+6. Commands used to verify the build.
+7. Whether the production build passed.
+8. Whether GitHub push succeeded.
+9. The commit hash.
+10. Any environment variables I still need to add manually in Vercel.
+
+Do not claim GitHub was updated unless the push actually succeeded.

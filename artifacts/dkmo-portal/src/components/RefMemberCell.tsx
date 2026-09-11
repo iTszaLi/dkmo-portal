@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Link } from "wouter";
 import { useListMembers } from "@workspace/api-client-react";
 import { cn } from "@/lib/utils";
+import { withReturnTo } from "@/lib/navigation";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -9,7 +10,6 @@ export interface MemberRef {
   id: string;
   fullName: string;
   membershipId: string;
-  applicationNumber?: string | null;
 }
 
 /**
@@ -27,7 +27,6 @@ export function useMemberIndex(): Map<string, MemberRef> {
         id: m.id,
         fullName: m.fullName,
         membershipId: m.membershipId,
-        applicationNumber: (m as { applicationNumber?: string | null }).applicationNumber ?? null,
       });
     }
     return map;
@@ -71,7 +70,7 @@ export function RefMemberCell({
   );
 
   return resolved ? (
-    <Link href={`/members/${resolved.id}`} className="block group" data-testid={`link-ref-member-${resolved.membershipId}`}>
+    <Link href={withReturnTo(`/members/${resolved.id}`)} className="block group" data-testid={`link-ref-member-${resolved.membershipId}`}>
       {inner}
     </Link>
   ) : inner;

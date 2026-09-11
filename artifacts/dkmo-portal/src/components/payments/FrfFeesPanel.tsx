@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 import {
   useListFrfClaims,
+  useListMembers,
   useGetFrfClaimCollection,
-  useListPendingFrfFees,
   useCreatePayment,
   useUpdateFrfContributionStatus,
   getFrfClaimCollection,
@@ -17,17 +17,17 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQueryClient, useQueries } from "@tanstack/react-query";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { normalizeWhatsAppNumber, buildWhatsAppLink, type WhatsAppTarget } from "@/lib/whatsapp";
-import { WhatsAppBulkDialog } from "@/components/WhatsAppBulkDialog";
 import { useToast } from "@/hooks/use-toast";
-import { Send, MessageSquareWarning } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, UserCircle, HeartHandshake, FileDown, FileSpreadsheet, CheckCircle2, Clock, MinusCircle, XCircle, MoreHorizontal, History, ExternalLink } from "lucide-react";
-import { formatSAR, formatDate, cn } from "@/lib/utils";
+import { Search, UserCircle, HeartHandshake, FileDown, FileSpreadsheet, CheckCircle2, Clock, MinusCircle, XCircle, MoreHorizontal, History, ExternalLink, MessageSquareWarning, Send } from "lucide-react";
+import { formatSAR, formatDate, feeStatusLabel, cn } from "@/lib/utils";
+import { withReturnTo } from "@/lib/navigation";
+import { normalizeWhatsAppNumber } from "@/lib/whatsapp";
+import { WhatsAppReminderDialog, type WhatsAppReminderLanguage } from "@/components/WhatsAppReminderDialog";
 import ExcelJS from "exceljs";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -78,6 +78,48 @@ function frfStatusBadge(status: string) {
       {STATUS_LABEL[status] ?? status}
     </span>
   );
+}
+
+const UNPAID_FRF_STATUSES = new Set(["pending", "partial", "overdue"]);
+
+function buildFrfReminderMessage(
+  contributor: FrfContributor,
+  activeCaseTitle: string,
+  language: WhatsAppReminderLanguage,
+): string {
+  if (language === "kn") {
+    return `ಅಸ್ಸಲಾಮು ಅಲೈಕುಮ್ ${contributor.fullName},
+
+DKMO ವತಿಯಿಂದ ನಿಮ್ಮ FRF (Family Relief Fund) ಕೊಡುಗೆ ಬಗ್ಗೆ ಒಂದು ನೆನಪಿನ ಸಂದೇಶ.
+
+FRF ಕೇಸ್: ${activeCaseTitle}
+FRF ಶುಲ್ಕ: ${formatSAR(contributor.amount)}
+ಪಾವತಿಸಬೇಕಾದ ಮೊತ್ತ: ${formatSAR(contributor.balance)}
+DKMO ID: ${contributor.membershipId}
+
+ಈ ಕೇಸ್‌ನ ನಿಮ್ಮ FRF ಕೊಡುಗೆ ಇನ್ನೂ ಪಾವತಿಯಾಗಿಲ್ಲ ಎಂದು ನಮ್ಮ ದಾಖಲೆಗಳಲ್ಲಿ ತೋರಿಸುತ್ತಿದೆ.
+
+ದಯವಿಟ್ಟು ಸಾಧ್ಯವಾದಷ್ಟು ಬೇಗ ಈ ಮೊತ್ತವನ್ನು ಪಾವತಿಸಲು ವಿನಂತಿ.
+
+ಜಝಾಕಲ್ಲಾಹು ಖೈರನ್,
+DKMO`;
+  }
+
+  return `Assalamu Alaikum ${contributor.fullName},
+
+This is a reminder from DKMO regarding your FRF (Family Relief Fund) contribution.
+
+FRF Case: ${activeCaseTitle}
+FRF Fee: ${formatSAR(contributor.amount)}
+Amount Due: ${formatSAR(contributor.balance)}
+DKMO ID: ${contributor.membershipId}
+
+Our records show that your FRF contribution for this case is still unpaid.
+
+Kindly arrange the payment at your earliest convenience.
+
+JazakAllahu Khairan,
+DKMO`;
 }
 
 type FeeFilter = "all" | "paid" | "pending" | "overdue";
@@ -207,7 +249,7 @@ function FrfMemberHistoryDialog({
             )}
             <div className="flex flex-wrap justify-end gap-2">
               <Button variant="outline" asChild className="dark:border-slate-700 dark:text-slate-300">
-                <Link href={`/members/${memberId}`}>
+                <Link href={withReturnTo(`/members/${memberId}`)}>
                   <ExternalLink className="mr-1.5 h-4 w-4" /> Full Profile
                 </Link>
               </Button>
@@ -222,46 +264,14 @@ function FrfMemberHistoryDialog({
   );
 }
 
-function buildFrfReminderMessage(fee: PendingFrfFee): string {
-  return `Assalamu Alaikum ${fee.fullName},\n\nThis is a gentle reminder from DKMO (Dakshina Karnataka Muslim Ookota — Committed to the Community). Your FRF fee of ${formatSAR(fee.balance)} for the case "${fee.caseTitle}" is currently ${fee.status}.\n\nPlease complete the payment at your earliest convenience.\n\nJazakallah Khair.`;
-}
-
-function toFrfWhatsAppTargets(fees: PendingFrfFee[]): WhatsAppTarget[] {
-  return fees.flatMap((f) => {
-    const number = normalizeWhatsAppNumber(f.mobileNumber);
-    return number ? [{ id: f.contributionId, name: f.fullName, number, message: buildFrfReminderMessage(f) }] : [];
-  });
-}
-
-export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: FeeFilter }) {
-  const [caseId, setCaseId] = useState("");
+export default function FrfFeesPanel({ initialFeeFilter, initialCaseId }: { initialFeeFilter?: FeeFilter; initialCaseId?: string }) {
+  const [caseId, setCaseId] = useState(initialCaseId ?? "");
   const [search, setSearch] = useState("");
   const [feeFilter, setFeeFilter] = useState<FeeFilter>(initialFeeFilter ?? "all");
-  const [bulkOpen, setBulkOpen] = useState(false);
-  const [bulkTargets, setBulkTargets] = useState<WhatsAppTarget[]>([]);
   const [historyMember, setHistoryMember] = useState<{ id: string; name: string; membershipId: string } | null>(null);
+  const [reminder, setReminder] = useState<{ contributor: FrfContributor; caseTitle: string } | null>(null);
   const { toast } = useToast();
-  const { data: pendingFrf } = useListPendingFrfFees();
-
-  const handleRemindAllPending = () => {
-    if (remindableFees.length === 0) return;
-    const targets = toFrfWhatsAppTargets(remindableFees);
-    if (targets.length === 0) {
-      toast({ title: "No valid mobile numbers", description: "None of these members have a WhatsApp-capable number.", variant: "destructive" });
-      return;
-    }
-    setBulkTargets(targets);
-    setBulkOpen(true);
-  };
-
-  const handleRemindOne = (fee: PendingFrfFee) => {
-    const number = normalizeWhatsAppNumber(fee.mobileNumber);
-    if (!number) {
-      toast({ title: "Cannot send reminder", description: "Member has no valid mobile number", variant: "destructive" });
-      return;
-    }
-    window.open(buildWhatsAppLink(number, buildFrfReminderMessage(fee)), "_blank", "noopener");
-  };
+  const { data: currentMembers = [], isLoading: membersLoading } = useListMembers();
   const queryClient = useQueryClient();
   const refreshFees = () => {
     queryClient.invalidateQueries({ queryKey: getListPendingFrfFeesQueryKey() });
@@ -314,13 +324,6 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
     });
   };
 
-  // Pending FRF fees keyed by contribution id so table rows can offer a Remind action.
-  const pendingByContribution = useMemo(() => {
-    const map = new Map<string, PendingFrfFee>();
-    for (const f of pendingFrf ?? []) map.set(f.contributionId, f);
-    return map;
-  }, [pendingFrf]);
-
   const { data: claimsData = [], isLoading: claimsLoading } = useListFrfClaims();
 
   // Only collecting cases have fee ledgers: the active (approved) case and
@@ -341,8 +344,12 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
   useEffect(() => {
     if (cases.length === 0) return;
     // Default to the active case; also recover if a non-collecting case id was set.
-    if (!caseId || (caseId !== ALL_CASES && !cases.some((c) => c.id === caseId))) setCaseId(cases[0]!.id);
-  }, [cases, caseId]);
+    if (initialCaseId && cases.some((c) => c.id === initialCaseId)) {
+      setCaseId(initialCaseId);
+    } else if (!caseId || (caseId !== ALL_CASES && !cases.some((c) => c.id === caseId))) {
+      setCaseId(cases[0]!.id);
+    }
+  }, [cases, caseId, initialCaseId]);
 
   const { data: collection, isLoading: collectionLoading } = useGetFrfClaimCollection(caseId, {
     query: { queryKey: getGetFrfClaimCollectionQueryKey(caseId), enabled: caseId !== "" && !allMode },
@@ -390,9 +397,11 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
       .sort((a, b) => a.fullName.localeCompare(b.fullName));
   }, [allMode, allCollections]);
 
-  const isLoading = claimsLoading || (allMode ? allCollections.some((q) => q.isLoading) : caseId !== "" && collectionLoading);
+  const isLoading = claimsLoading || membersLoading || (allMode ? allCollections.some((q) => q.isLoading) : caseId !== "" && collectionLoading);
 
   const caseTitle = allMode ? "All FRF Cases" : cases.find((c) => c.id === caseId)?.title || "FRF Case";
+  const selectedCase = cases.find((c) => c.id === caseId);
+  const isActiveCollectionCase = !allMode && selectedCase?.status === "approved";
   const contributors = useMemo<FrfContributor[]>(
     () => (allMode ? aggContributors : collection?.contributors ?? []),
     [allMode, aggContributors, collection],
@@ -424,16 +433,23 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
           claimId: allMode ? "" : caseId,
         };
       });
-  }, [contributors, search, feeFilter, pendingView, pendingFrf, caseTitle, caseId, allMode]);
+  }, [contributors, search, feeFilter, pendingView, caseTitle, caseId, allMode]);
 
-  // Bulk reminders always match what the table shows: in Unpaid view only
-  // the visible rows that actually have a pending fee entry are targeted.
-  const remindableFees = useMemo<PendingFrfFee[]>(() => {
-    const fees = pendingFrf ?? [];
-    if (feeFilter !== "pending" && feeFilter !== "overdue") return fees;
-    const visible = new Set(filtered.map((r) => r.contributionId));
-    return fees.filter((f) => visible.has(f.contributionId));
-  }, [pendingFrf, feeFilter, filtered]);
+  const previewMembers = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return currentMembers
+      .filter((member) =>
+        !q ||
+        member.fullName.toLowerCase().includes(q) ||
+        member.membershipId.toLowerCase().includes(q),
+      )
+      .sort((a, b) => a.fullName.localeCompare(b.fullName));
+  }, [currentMembers, search]);
+
+  const paidMemberCount = useMemo(
+    () => currentMembers.filter((member) => member.feeStatus === "paid").length,
+    [currentMembers],
+  );
 
   // Case-level stats (full ledger, cancelled/exempt excluded).
   const stats = useMemo(() => {
@@ -455,6 +471,20 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
   }, [filtered]);
 
   const hasFilters = search.trim() !== "" || feeFilter !== "all";
+
+  const handleWhatsAppReminder = (contributor: FrfContributor) => {
+    if (!isActiveCollectionCase || !UNPAID_FRF_STATUSES.has(contributor.status)) return;
+    const number = normalizeWhatsAppNumber(contributor.mobileNumber);
+    if (!number) {
+      toast({
+        title: "Cannot send reminder",
+        description: "No WhatsApp/mobile number is available for this member.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setReminder({ contributor, caseTitle });
+  };
 
   const generatedOn = () =>
     new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" });
@@ -484,18 +514,18 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
       pageW / 2, 35, { align: "center" },
     );
 
-    autoTable(doc, {
+     autoTable(doc, {
       startY: 42,
-      head: [["#", "Member Name", "Membership No.", "Responsible", "FRF Case", "Fee Status", "Amount (SAR)", "Paid (SAR)", "Payment Date", "Receipt No."]],
+       head: [["#", "Member Name", "Membership No.", "Mobile", "Responsible", "FRF Case", "Fee Status", "Amount (SAR)", "Paid (SAR)", "Payment Date", "Receipt No."]],
       body: filtered.map((c, i) => [
-        String(i + 1), c.fullName, c.membershipId, c.refMemberName || "—", c.caseTitle,
-        STATUS_LABEL[c.status] ?? c.status, c.amount.toFixed(2), c.amountPaid.toFixed(2),
+         String(i + 1), c.fullName, c.membershipId, c.mobileNumber || "—", c.refMemberName || "—", c.caseTitle,
+         STATUS_LABEL[c.status] ?? c.status, c.amount.toFixed(2), c.amountPaid.toFixed(2),
         c.paidAt ? formatDate(c.paidAt) : "—", c.receiptNumber || "—",
       ]),
       theme: "grid",
       headStyles: { fillColor: green, fontStyle: "bold", fontSize: 8, halign: "center" },
       bodyStyles: { fontSize: 7.5 },
-      columnStyles: { 0: { halign: "center", cellWidth: 10 }, 5: { halign: "center" }, 6: { halign: "right" }, 7: { halign: "right" }, 8: { halign: "center" } },
+       columnStyles: { 0: { halign: "center", cellWidth: 10 }, 6: { halign: "center" }, 7: { halign: "right" }, 8: { halign: "right" }, 9: { halign: "center" } },
     });
 
     const finalY = (doc as any).lastAutoTable.finalY + 8;
@@ -512,21 +542,21 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
     workbook.creator = "DKMO Portal";
     const sheet = workbook.addWorksheet("FRF Fees");
 
-    sheet.mergeCells("A1:J1");
+     sheet.mergeCells("A1:K1");
     sheet.getCell("A1").value = "Dakshina Karnataka Muslim Ookota (DKMO)";
     sheet.getCell("A1").font = { bold: true, size: 14 };
     sheet.getCell("A1").alignment = { horizontal: "center" };
-    sheet.mergeCells("A2:J2");
+     sheet.mergeCells("A2:K2");
     sheet.getCell("A2").value = `FRF Fees — ${pendingView ? `Unpaid · ${caseTitle}` : caseTitle}`;
     sheet.getCell("A2").font = { bold: true, size: 11, color: { argb: "FF059669" } };
     sheet.getCell("A2").alignment = { horizontal: "center" };
-    sheet.mergeCells("A3:J3");
+     sheet.mergeCells("A3:K3");
     sheet.getCell("A3").value = `Generated: ${generatedOn()}${hasFilters ? "  |  Filtered view" : ""}  |  Members Listed: ${exportStats.members}  |  Paid: ${exportStats.paid}  |  Unpaid: ${exportStats.pending}  |  Collected: ${formatSAR(exportStats.collected)}`;
     sheet.getCell("A3").font = { size: 9, color: { argb: "FF6B7280" } };
     sheet.getCell("A3").alignment = { horizontal: "center" };
     sheet.addRow([]);
 
-    const headerRow = sheet.addRow(["#", "Member Name", "Membership No.", "Responsible", "FRF Case", "Fee Status", "Amount (SAR)", "Paid (SAR)", "Payment Date", "Receipt No."]);
+     const headerRow = sheet.addRow(["#", "Member Name", "Membership No.", "Mobile", "Responsible", "FRF Case", "Fee Status", "Amount (SAR)", "Paid (SAR)", "Payment Date", "Receipt No."]);
     headerRow.eachCell((cell) => {
       cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
       cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF059669" } };
@@ -535,8 +565,8 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
     });
     filtered.forEach((c, i) => {
       const row = sheet.addRow([
-        i + 1, c.fullName, c.membershipId, c.refMemberName || "—", c.caseTitle,
-        STATUS_LABEL[c.status] ?? c.status, Number(c.amount.toFixed(2)), Number(c.amountPaid.toFixed(2)),
+         i + 1, c.fullName, c.membershipId, c.mobileNumber || "—", c.refMemberName || "—", c.caseTitle,
+         STATUS_LABEL[c.status] ?? c.status, Number(c.amount.toFixed(2)), Number(c.amountPaid.toFixed(2)),
         c.paidAt ? formatDate(c.paidAt) : "—", c.receiptNumber || "—",
       ]);
       row.eachCell((cell) => {
@@ -549,10 +579,10 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
       cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF0FDF4" } };
       cell.border = { top: { style: "medium" }, bottom: { style: "medium" }, left: { style: "thin" }, right: { style: "thin" } };
     });
-    sheet.columns = [
-      { width: 5 }, { width: 26 }, { width: 16 }, { width: 22 }, { width: 28 }, { width: 12 },
-      { width: 14 }, { width: 12 }, { width: 16 }, { width: 16 },
-    ];
+     sheet.columns = [
+       { width: 5 }, { width: 26 }, { width: 16 }, { width: 18 }, { width: 22 }, { width: 28 }, { width: 12 },
+       { width: 14 }, { width: 12 }, { width: 16 }, { width: 16 },
+     ];
 
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
@@ -566,12 +596,6 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
 
   return (
     <div className="space-y-6">
-      <WhatsAppBulkDialog
-        open={bulkOpen}
-        onOpenChange={setBulkOpen}
-        targets={bulkTargets}
-        title="FRF Fee Reminders"
-      />
       {/* Info banner */}
       <div className="flex items-start gap-3 rounded-xl border border-emerald-100 dark:border-slate-800 bg-emerald-50/50 dark:bg-slate-900 p-4">
         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 shrink-0">
@@ -584,15 +608,6 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <Button
-            size="sm"
-            onClick={handleRemindAllPending}
-            disabled={bulkOpen || remindableFees.length === 0}
-            className="bg-[#25D366] hover:bg-[#128C7E] text-white"
-            data-testid="button-frf-remind-all"
-          >
-            <Send className="h-4 w-4 mr-1" /> Remind All Unpaid ({remindableFees.length})
-          </Button>
           <Button variant="outline" size="sm" onClick={exportPDF} disabled={isLoading || filtered.length === 0} className="border-emerald-300 text-emerald-800 dark:border-slate-700 dark:text-emerald-300" data-testid="button-frf-export-pdf">
             <FileDown className="h-4 w-4 mr-1" /> PDF
           </Button>
@@ -664,6 +679,14 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
           <label className="text-xs font-medium text-emerald-700 dark:text-slate-400">
             Select FRF Case{pendingView && <span className="ml-1 text-emerald-500 dark:text-slate-500">(showing unpaid for this case)</span>}
           </label>
+          {selectedCase && (
+            <div className="mt-1 flex items-center justify-between gap-2 text-xs text-emerald-700/80 dark:text-slate-400">
+              <span>{selectedCase.status === "approved" ? "Active collection case" : "Completed collection history"}</span>
+              <Link href={withReturnTo(`/frf/${selectedCase.id}`)} className="inline-flex items-center gap-1 font-semibold hover:underline">
+                View claim <ExternalLink className="h-3 w-3" />
+              </Link>
+            </div>
+          )}
           <Select value={caseId} onValueChange={setCaseId}>
             <SelectTrigger className="border-emerald-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 h-10" data-testid="select-payments-frf-case">
               <SelectValue placeholder={claimsLoading ? "Loading cases…" : "Select FRF Case"} />
@@ -714,7 +737,8 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
         <Table>
           <TableHeader className="bg-emerald-50/50 dark:bg-slate-800/60">
             <TableRow className="dark:border-slate-700">
-              <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Member</TableHead>
+               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Member</TableHead>
+               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Mobile</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Responsible / Referred By</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">FRF Case</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">Fee</TableHead>
@@ -740,11 +764,53 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
               ))
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="h-32 text-center text-emerald-600 dark:text-slate-500">
-                  <div className="flex flex-col items-center justify-center">
-                    <HeartHandshake className="h-8 w-8 text-emerald-200 dark:text-slate-700 mb-2" />
-                    <p>{hasFilters ? "No FRF fee records match the selected filters." : "No FRF fee records for this case yet."}</p>
-                  </div>
+                <TableCell colSpan={9} className="text-center text-emerald-600 dark:text-slate-500">
+                  {cases.length === 0 && !claimsLoading ? (
+                    <div className="py-5 text-left">
+                      <div className="flex flex-col items-center justify-center">
+                        <HeartHandshake className="h-8 w-8 text-emerald-200 dark:text-slate-700 mb-2" />
+                        <p className="font-medium text-emerald-900 dark:text-slate-300">No FRF collection case is active yet.</p>
+                        <p className="text-sm mt-1">
+                          The Members database contains {currentMembers.length} current member{currentMembers.length === 1 ? "" : "s"}.
+                          {" "}{paidMemberCount} have a paid membership fee and will receive SAR 50 obligations only after an FRF claim is approved.
+                        </p>
+                        <p className="text-xs mt-1 text-emerald-700/70 dark:text-slate-500">
+                          Create and approve a claim to open the next collection case. Pending and rejected claims do not create fees.
+                        </p>
+                      </div>
+                      {previewMembers.length > 0 && (
+                        <div className="mt-5 rounded-lg border border-emerald-100 dark:border-slate-800 overflow-hidden">
+                          <div className="bg-emerald-50/60 dark:bg-slate-800/70 px-3 py-2 text-xs font-semibold text-emerald-900 dark:text-slate-300">
+                            Current members from the Members database ({previewMembers.length})
+                          </div>
+                          <div className="max-h-72 overflow-y-auto divide-y divide-emerald-50 dark:divide-slate-800">
+                            {previewMembers.map((member) => (
+                              <div key={member.id} className="flex items-center justify-between gap-3 px-3 py-2 text-left">
+                                <div className="min-w-0">
+                                  <p className="truncate text-sm font-medium text-emerald-950 dark:text-slate-200">{member.fullName}</p>
+                                  <p className="text-xs text-emerald-600 dark:text-slate-500">{member.membershipId}</p>
+                                </div>
+                                <div className="shrink-0 text-right">
+                                  <p className={cn(
+                                    "text-xs font-semibold",
+                                    member.feeStatus === "paid" ? "text-emerald-700 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400",
+                                  )}>
+                                    {member.feeStatus === "paid" ? "FRF eligible" : "Not FRF eligible"}
+                                  </p>
+                                  <p className="text-[11px] text-slate-500 dark:text-slate-500">{feeStatusLabel(member.feeStatus)}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-32">
+                      <HeartHandshake className="h-8 w-8 text-emerald-200 dark:text-slate-700 mb-2" />
+                      <p>{hasFilters ? "No FRF fee records match the selected filters." : "No paid members are eligible for this FRF case."}</p>
+                    </div>
+                  )}
                 </TableCell>
               </TableRow>
             ) : (
@@ -766,6 +832,9 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
                       </div>
                     </button>
                   </TableCell>
+                  <TableCell className="text-sm text-emerald-800 dark:text-slate-300 whitespace-nowrap">
+                    {c.mobileNumber || "—"}
+                  </TableCell>
                   <TableCell className="text-sm text-emerald-800 dark:text-slate-300" data-testid={`text-frf-responsible-${c.membershipId}`}>
                     {c.refMemberName || <span className="text-emerald-600/60 dark:text-slate-500">—</span>}
                   </TableCell>
@@ -776,17 +845,32 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
                   <TableCell className="text-right text-sm text-emerald-700 dark:text-slate-400">{c.receiptNumber || "—"}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1.5">
-                      {pendingByContribution.has(c.contributionId) && (
-                        <Button
-                          size="sm"
-                          className="bg-[#25D366] hover:bg-[#128C7E] text-white"
-                          onClick={() => handleRemindOne(pendingByContribution.get(c.contributionId)!)}
-                          data-testid={`button-frf-remind-${c.membershipId}`}
-                        >
-                          <MessageSquareWarning className="mr-1.5 h-4 w-4" />
-                          Remind
-                        </Button>
-                      )}
+                       {isActiveCollectionCase && UNPAID_FRF_STATUSES.has(c.status) && (
+                         normalizeWhatsAppNumber(c.mobileNumber) ? (
+                           <Button
+                             size="sm"
+                             className="bg-[#25D366] hover:bg-[#128C7E] text-white"
+                             onClick={() => handleWhatsAppReminder(c)}
+                             data-testid={`button-frf-remind-${c.membershipId}`}
+                           >
+                             <MessageSquareWarning className="mr-1.5 h-4 w-4" />
+                             Remind
+                           </Button>
+                         ) : (
+                           <Button
+                             size="sm"
+                             variant="outline"
+                             disabled
+                             title="No WhatsApp/mobile number"
+                             aria-label="No WhatsApp/mobile number"
+                             className="border-slate-300 text-slate-500 dark:border-slate-700 dark:text-slate-500"
+                             data-testid={`button-frf-remind-disabled-${c.membershipId}`}
+                           >
+                             <MessageSquareWarning className="mr-1.5 h-4 w-4" />
+                             No WhatsApp/mobile number
+                           </Button>
+                         )
+                       )}
                       {allMode ? (
                         <span className="text-sm text-emerald-600/60 dark:text-slate-500">—</span>
                       ) : (
@@ -798,6 +882,18 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="dark:bg-slate-900 dark:border-slate-800">
+                           {isActiveCollectionCase && UNPAID_FRF_STATUSES.has(c.status) && (
+                             <DropdownMenuItem
+                               disabled={!normalizeWhatsAppNumber(c.mobileNumber)}
+                               onClick={() => handleWhatsAppReminder(c)}
+                               title={!normalizeWhatsAppNumber(c.mobileNumber) ? "No WhatsApp/mobile number" : undefined}
+                               className="text-[#128C7E] dark:text-[#25D366] dark:focus:bg-slate-800"
+                               data-testid={`menu-frf-remind-${c.membershipId}`}
+                             >
+                               <Send className="mr-2 h-4 w-4" />
+                               {normalizeWhatsAppNumber(c.mobileNumber) ? "Send WhatsApp Reminder" : "No WhatsApp/mobile number"}
+                             </DropdownMenuItem>
+                           )}
                           {(c.status === "pending" || c.status === "overdue" || c.status === "partial") && (
                             <DropdownMenuItem
                               disabled={createPayment.isPending}
@@ -849,6 +945,18 @@ export default function FrfFeesPanel({ initialFeeFilter }: { initialFeeFilter?: 
         memberName={historyMember?.name ?? ""}
         membershipIdText={historyMember?.membershipId ?? ""}
         onClose={() => setHistoryMember(null)}
+      />
+
+      <WhatsAppReminderDialog
+        open={!!reminder}
+        onOpenChange={(open) => { if (!open) setReminder(null); }}
+        recipientName={reminder?.contributor.fullName ?? ""}
+        mobileNumber={reminder?.contributor.mobileNumber}
+        messageForLanguage={(language) => reminder
+          ? buildFrfReminderMessage(reminder.contributor, reminder.caseTitle, language)
+          : ""}
+        title="Send FRF WhatsApp Reminder"
+        testIdPrefix="frf-whatsapp-reminder"
       />
     </div>
   );

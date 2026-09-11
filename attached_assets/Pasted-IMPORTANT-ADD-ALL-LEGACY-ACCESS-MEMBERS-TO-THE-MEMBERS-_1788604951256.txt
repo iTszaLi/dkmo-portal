@@ -1,0 +1,110 @@
+IMPORTANT — ADD ALL LEGACY ACCESS MEMBERS TO THE MEMBERS PAGE
+
+The Members page currently appears to contain only the members already present in the new Portal. I need this changed.
+
+The old Microsoft Access database (2022_New_Okkuta_02282022.accdb) must be used to bring ALL historical members into the new Portal member dataset, including members who currently do not exist in the Portal.
+
+1. ALL ACCESS MEMBERS MUST BE INCLUDED
+Do not limit the Members page to the current Portal members.
+Every member/person found in the old Access database must be represented in the migration/member dataset.
+Preserve the original Access/legacy Member ID exactly.
+Preserve the member's original name and historical information.
+If there is no current Portal member for a legacy member, create a Legacy/Unmatched Member record rather than excluding them.
+"Unmatched" or "Needs Review" must never mean excluded.
+2. ACCESS DATABASE SHOULD REMAIN THE HISTORICAL SOURCE OF TRUTH
+
+The migration should reconstruct the member relationships from the Access database:
+
+Legacy Member ID → Member → Payments → Membership → Referrals → FRF → Loans → Loan Repayments → Other Historical Records
+
+Do not lose any historical relationships simply because the member is not currently in the Portal.
+
+3. MOST IMPORTANT — SHOW REFERRALS CORRECTLY
+
+The Reference Member / Referrer column shown on the Members page must be populated from the historical Access database relationships, not just from the current Portal data.
+
+If Access says:
+
+Member A was referred by Member B
+
+then the Portal must show:
+
+Reference Member: Member B
+
+even if Member B is an old/legacy member or was not previously imported into the current Portal.
+
+Also preserve the relationship in both directions where possible:
+
+Referrer → Members they referred
+
+and
+
+Member → Who referred them
+
+For example, if Abdul Azeez Bajpe referred 5 members, the system should be able to show those 5 members under Abdul Azeez Bajpe's referral information.
+
+4. DO NOT LOSE REFERRALS BECAUSE OF PORTAL ID MATCHING
+
+Do NOT require both people to already have a current Portal Member ID before preserving the referral.
+
+Use the Access/Legacy Member ID as the relationship key whenever the old database provides it.
+
+Example:
+
+Legacy Member 7101 → referred → Legacy Member 12345
+
+Keep that relationship even if 12345 is currently unmatched.
+
+Once the member is matched to a Portal member, the relationship can then be mapped to the Portal ID.
+
+5. MEMBERS PAGE SHOULD SHOW LEGACY MEMBERS CLEARLY
+
+Please add/display an appropriate status such as:
+
+Confirmed Match
+Legacy / Unmatched
+Needs Review
+Possible Duplicate
+Confirmed Different Person
+
+But all of these records must remain in the dataset unless there is a verified reason to exclude a record.
+
+6. DO NOT CREATE DUPLICATE PEOPLE
+
+If a legacy Access member is confirmed to be the same person as an existing Portal member, retain the Access historical identity and history, and map it to the existing person rather than creating a second person.
+
+If the identity is uncertain, do not merge — keep the legacy record separately and mark it Needs Review / Unresolved.
+
+7. THE 7 FLAGGED MEMBERS MUST ALSO REMAIN
+
+These seven must be included with their complete historical data and relationships:
+
+7101 — Abdul Azeez Bajpe
+7112 — Fazlu Rahman
+7115 — Haneef N.S
+11485 — Mohammed Ali
+11568 — Majid Parampally
+16842 — Sulaiman Thonse
+19062 — Sameen Khan Ummer
+
+Do not remove them because of uncertain matching.
+
+8. BEFORE PRODUCTION
+
+Do not make destructive production changes.
+
+First update the migration/reconciliation engine and generate a new dry-run report showing:
+
+Total members found in Access
+Total current Portal members
+Confirmed matches
+Confirmed different people
+Unmatched legacy members
+Needs Review
+Possible duplicates
+All 7 flagged members
+Legacy ID → Portal ID mappings
+Referrer → referred-member relationships
+Any referral relationships that could not yet be resolved
+
+The key requirement is: the new Portal Members page should contain the complete historical member population from the Access database, while preserving the original Access IDs and especially the historical referral relationships. No silent exclusions.

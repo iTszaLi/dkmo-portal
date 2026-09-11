@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { useLocation } from "wouter";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useSearch } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -25,6 +25,7 @@ import {
   Banknote,
   FileText,
   FileSpreadsheet,
+  Send,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -75,17 +76,28 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
 import {
+  useGetLoanBudget,
+  useUpdateLoanBudget,
+  useGetActiveCommitteeTerm,
+  useGetCommitteeTermDetail
+} from "@/hooks/use-loans-extras";
+import {
   useListLoans,
   useGetLoanStats,
   useCreateLoan,
   useUpdateLoan,
   useDeleteLoan,
+  getListMembersQueryKey,
+  getGetMemberQueryKey,
   useListMembers,
+  useGetMember,
   type Loan,
   type LoanStatus,
   type LoanListStatusFilter,
   type LoanType,
 } from "@workspace/api-client-react";
+import { replaceCurrentQuery, withReturnTo } from "@/lib/navigation";
+import { WhatsAppReminderDialog, type WhatsAppReminderLanguage } from "@/components/WhatsAppReminderDialog";
 
 export const LOAN_PURPOSES: { value: LoanType; label: string }[] = [
   { value: "personal", label: "Personal" },
@@ -119,6 +131,57 @@ export function fmtSAR(n: number) {
   return new Intl.NumberFormat("en-SA", { style: "currency", currency: "SAR", maximumFractionDigits: 0 }).format(n);
 }
 
+function loanStatusLabel(status: LoanStatus): string {
+  return status.charAt(0).toUpperCase() + status.slice(1);
+}
+
+export function buildLoanReminderMessage(loan: Loan, language: WhatsAppReminderLanguage = "en"): string {
+  const responsibleName = loan.responsibleStaff?.fullName ?? "the responsible committee member/staff";
+  const memberName = loan.memberName ?? "the member";
+  const memberId = loan.membershipId ?? "not available";
+  const purpose = purposeLabel(loan.loanType);
+  const amount = fmtSAR(loan.principalAmount);
+  const outstanding = fmtSAR(loan.outstandingBalance);
+  const progress = `${loan.paidEmis} of ${loan.emiCount} instalments paid`;
+  const status = loanStatusLabel(loan.status);
+
+  if (language === "kn") {
+    return `ಅಸ್ಸಲಾಮು ಅಲೈಕುಮ್ ${responsibleName},
+
+ಈ ಸಾಲಿನ ಜವಾಬ್ದಾರಿಯುತ ಸಮಿತಿ ಸದಸ್ಯರು/ಸಿಬ್ಬಂದಿಯಾಗಿ ದಯವಿಟ್ಟು ಕೆಳಗಿನ ಸಾಲವನ್ನು ಪರಿಶೀಲಿಸಿ ಮತ್ತು ಸೂಕ್ತವಾಗಿ ನಿರ್ವಹಿಸಿ.
+
+ಸದಸ್ಯರ ಹೆಸರು: ${memberName}
+DKMO ID: ${memberId}
+ಸಾಲಿನ ಉದ್ದೇಶ: ${purpose}
+ಸಾಲಿನ ಮೊತ್ತ: ${amount}
+ಪ್ರಸ್ತುತ ಬಾಕಿ: ${outstanding}
+ಪಾವತಿ ಪ್ರಗತಿ: ${progress}
+ಪ್ರಸ್ತುತ ಸ್ಥಿತಿ: ${status}
+
+ದಯವಿಟ್ಟು ಸದಸ್ಯರನ್ನು ಅನುಸರಿಸಿ ಮತ್ತು ಈ ಸಾಲನ್ನು ಸೂಕ್ತವಾಗಿ ನಿರ್ವಹಿಸಲು ಅಗತ್ಯ ಕ್ರಮ ಕೈಗೊಳ್ಳಿ.
+
+ಜಝಾಕಲ್ಲಾಹು ಖೈರ್,
+DKMO`;
+  }
+
+  return `Assalamu Alaikum ${responsibleName},
+
+You are the responsible committee member/staff for this loan. Please review and manage it appropriately.
+
+Member name: ${memberName}
+DKMO ID: ${memberId}
+Loan purpose: ${purpose}
+Loan amount: ${amount}
+Current outstanding amount: ${outstanding}
+Payment progress: ${progress}
+Current status: ${status}
+
+Please follow up with the member and take the appropriate action to manage this loan.
+
+Jazakallah Khair,
+DKMO`;
+}
+
 const createSchema = z
   .object({
     memberId: z.string().min(1, "Please select a member"),
@@ -128,6 +191,7 @@ const createSchema = z
     disbursedDate: z.string().min(1, "Choose the disbursement date"),
     convenorName: z.string().default(""),
     notes: z.string().default(""),
+    responsibleCommitteeAssignmentId: z.string().nullable().optional(),
   })
   .refine((d) => d.emiAmount <= d.principalAmount, {
     message: "Monthly payment cannot be more than the loan amount",
@@ -138,22 +202,198 @@ type CreateValues = z.infer<typeof createSchema>;
 const PAGE_SIZE = 20;
 const today = () => new Date().toISOString().slice(0, 10);
 
+type LoanMemberOption = {
+  id: string;
+  fullName: string;
+  membershipId: string;
+};
+
+function normalizeMemberSearchText(value: string): string {
+  return value.trim().toLocaleLowerCase().replace(/\s+/g, " ");
+}
+
+function memberMatchesSearch(
+  member: { fullName: string; membershipId: string },
+  query: string,
+): boolean {
+  const terms = normalizeMemberSearchText(query).split(" ").filter(Boolean);
+  if (terms.length === 0) return false;
+  const name = normalizeMemberSearchText(member.fullName);
+  const membershipId = normalizeMemberSearchText(member.membershipId);
+  return terms.every((term) => name.includes(term) || membershipId.includes(term));
+}
+
+function LoanMemberCombobox({
+  value,
+  selectedMember,
+  onChange,
+}: {
+  value: string;
+  selectedMember: LoanMemberOption | null;
+  onChange: (member: LoanMemberOption | null) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const rootRef = useRef<HTMLDivElement>(null);
+  const normalizedQuery = query.trim();
+  const canSearch = normalizedQuery.length >= 2;
+  const { data, isFetching, isError } = useListMembers(
+    canSearch ? { search: normalizedQuery } : undefined,
+    {
+      query: {
+        queryKey: getListMembersQueryKey(canSearch ? { search: normalizedQuery } : undefined),
+        enabled: open && canSearch,
+        staleTime: 30_000,
+      },
+    },
+  );
+  const matches = (data ?? [])
+    .filter((member) => member.feeStatus === "paid" && memberMatchesSearch(member, normalizedQuery))
+    .slice(0, 50);
+
+  useEffect(() => {
+    const handleOutsidePointer = (event: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsidePointer);
+    return () => document.removeEventListener("mousedown", handleOutsidePointer);
+  }, []);
+
+  const selectMember = (member: LoanMemberOption) => {
+    onChange(member);
+    setQuery("");
+    setOpen(false);
+  };
+
+  const clearMember = () => {
+    onChange(null);
+    setQuery("");
+    setOpen(true);
+  };
+
+  return (
+    <div ref={rootRef} className="relative">
+      <div
+        className={cn(
+          "flex min-h-10 items-center gap-2 rounded-md border bg-white px-3 py-1.5 text-sm shadow-sm dark:bg-slate-800/60",
+          open ? "border-green-500 ring-1 ring-green-500" : "border-green-200 dark:border-slate-700",
+        )}
+        role="combobox"
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        aria-controls="loan-member-search-results"
+      >
+        {open ? (
+          <Search className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+        ) : null}
+        <input
+          value={open ? query : selectedMember ? `${selectedMember.fullName} — ${selectedMember.membershipId}` : ""}
+          onChange={(event) => {
+            setQuery(event.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          placeholder="Search and select member…"
+          className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-slate-400 dark:text-slate-100"
+          aria-label="Search and select member"
+          data-testid="input-loan-member-search"
+        />
+        {selectedMember ? (
+          <button
+            type="button"
+            onClick={clearMember}
+            className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+            aria-label="Clear selected member"
+            data-testid="button-clear-loan-member"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        ) : null}
+      </div>
+
+      {open ? (
+        <div
+          id="loan-member-search-results"
+          role="listbox"
+          className="absolute z-50 mt-1 max-h-64 w-full overflow-y-auto rounded-md border border-green-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+        >
+          {!canSearch ? (
+            <p className="px-3 py-2 text-xs text-slate-500">
+              Type at least 2 characters to search by member name or DKMO ID.
+            </p>
+          ) : isFetching ? (
+            <p className="px-3 py-2 text-xs text-slate-500">Searching members…</p>
+          ) : isError ? (
+            <p className="px-3 py-2 text-xs text-red-600 dark:text-red-400">
+              Member search is unavailable. Try again.
+            </p>
+          ) : matches.length === 0 ? (
+            <p className="px-3 py-2 text-xs text-slate-500">No members found</p>
+          ) : (
+            matches.map((member) => (
+              <button
+                key={member.id}
+                type="button"
+                role="option"
+                aria-selected={member.id === value}
+                onClick={() =>
+                  selectMember({
+                    id: member.id,
+                    fullName: member.fullName,
+                    membershipId: member.membershipId,
+                  })
+                }
+                className={cn(
+                  "flex w-full items-center rounded px-3 py-2 text-left text-sm transition-colors hover:bg-green-50 dark:hover:bg-green-950/30",
+                  member.id === value && "bg-green-50 text-green-800 dark:bg-green-950/40 dark:text-green-200",
+                )}
+              >
+                <span className="truncate">
+                  {member.fullName} <span className="text-slate-500 dark:text-slate-400">— {member.membershipId}</span>
+                </span>
+              </button>
+            ))
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export default function Loans() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
+  const searchString = useSearch();
+  const initialParams = useMemo(() => new URLSearchParams(searchString), [searchString]);
   const { user, canEdit, hasRole } = useAuth();
   const isAdmin = hasRole("admin");
 
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<LoanListStatusFilter | "">("");
-  const [typeFilter, setTypeFilter] = useState<LoanType | "">("");
-  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState(() => initialParams.get("search") ?? "");
+  const [statusFilter, setStatusFilter] = useState<LoanListStatusFilter | "">(
+    () => (initialParams.get("status") as LoanListStatusFilter | "") || "",
+  );
+  const [typeFilter, setTypeFilter] = useState<LoanType | "">(
+    () => (initialParams.get("loanType") as LoanType | "") || "",
+  );
+  const [page, setPage] = useState(() => Math.max(1, Number(initialParams.get("page")) || 1));
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingLoan, setEditingLoan] = useState<Loan | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [reminderLoan, setReminderLoan] = useState<Loan | null>(null);
+  const [budgetDialogOpen, setBudgetDialogOpen] = useState(false);
+  const [budgetAmount, setBudgetAmount] = useState("");
+  const [selectedMember, setSelectedMember] = useState<LoanMemberOption | null>(null);
+
+  const { data: budgetData } = useGetLoanBudget();
+  const updateBudget = useUpdateLoanBudget();
+
+  const { data: activeTerm } = useGetActiveCommitteeTerm();
+  const { data: activeTermDetail } = useGetCommitteeTermDetail(activeTerm?.committeeYear);
+  const activeAssignments = activeTermDetail?.members?.filter(m => m.isActive) || [];
 
   const { data: statsData } = useGetLoanStats();
-  const { data: membersData } = useListMembers();
   const { data, isLoading } = useListLoans({
     search: search || undefined,
     status: statusFilter || undefined,
@@ -161,6 +401,19 @@ export default function Loans() {
     page,
     pageSize: PAGE_SIZE,
   });
+  const responsibleMemberId = reminderLoan?.responsibleStaff?.memberId ?? "";
+  const { data: reminderRecipient } = useGetMember(responsibleMemberId, {
+    query: { enabled: Boolean(responsibleMemberId), queryKey: getGetMemberQueryKey(responsibleMemberId) },
+  });
+
+  useEffect(() => {
+    replaceCurrentQuery({
+      search: search || null,
+      status: statusFilter || null,
+      loanType: typeFilter || null,
+      page: page > 1 ? page : null,
+    });
+  }, [search, statusFilter, typeFilter, page]);
 
   const createLoan = useCreateLoan();
   const updateLoan = useUpdateLoan(editingLoan?.id ?? "");
@@ -176,6 +429,7 @@ export default function Loans() {
       disbursedDate: today(),
       convenorName: user?.displayName ?? "",
       notes: "",
+      responsibleCommitteeAssignmentId: null,
     },
   });
 
@@ -188,6 +442,7 @@ export default function Loans() {
 
   const openAdd = () => {
     setEditingLoan(null);
+    setSelectedMember(null);
     form.reset({
       memberId: "",
       loanType: "personal",
@@ -196,12 +451,18 @@ export default function Loans() {
       disbursedDate: today(),
       convenorName: user?.displayName ?? "",
       notes: "",
+      responsibleCommitteeAssignmentId: null,
     });
     setDialogOpen(true);
   };
 
   const openEdit = (loan: Loan) => {
     setEditingLoan(loan);
+    setSelectedMember(
+      loan.memberId && loan.memberName && loan.membershipId
+        ? { id: loan.memberId, fullName: loan.memberName, membershipId: loan.membershipId }
+        : null,
+    );
     form.reset({
       memberId: loan.memberId ?? "",
       loanType: loan.loanType,
@@ -210,11 +471,18 @@ export default function Loans() {
       disbursedDate: loan.disbursedDate ?? today(),
       convenorName: loan.convenorName,
       notes: loan.notes,
+      responsibleCommitteeAssignmentId: loan.responsibleStaff?.assignmentId ?? null,
     });
     setDialogOpen(true);
   };
 
   const onSubmit = async (values: CreateValues) => {
+    if (!editingLoan && budgetData) {
+      if (values.principalAmount > budgetData.remainingBudget) {
+        // Warning, but proceed and let server decide
+        toast({ title: "Requested amount exceeds remaining budget", variant: "destructive" });
+      }
+    }
     try {
       if (editingLoan) {
         await updateLoan.mutateAsync({
@@ -225,6 +493,7 @@ export default function Loans() {
           disbursedDate: values.disbursedDate,
           convenorName: values.convenorName,
           notes: values.notes,
+          responsibleCommitteeAssignmentId: values.responsibleCommitteeAssignmentId,
         });
         toast({ title: "Loan updated" });
       } else {
@@ -249,12 +518,25 @@ export default function Loans() {
     }
   };
 
+  const onSaveBudget = async () => {
+    try {
+      await updateBudget.mutateAsync({ amount: Number(budgetAmount) });
+      toast({ title: "Budget updated successfully" });
+      setBudgetDialogOpen(false);
+    } catch (err: any) {
+      toast({ title: "Could not update budget", description: err?.message, variant: "destructive" });
+    }
+  };
+
+  const openBudgetEdit = () => {
+    setBudgetAmount(budgetData?.totalBudget ? String(budgetData.totalBudget) : "");
+    setBudgetDialogOpen(true);
+  };
+
   const stats = statsData;
   const loans = data?.items ?? [];
   const total = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const members = membersData ?? [];
-
   const exportRows = useMemo(
     () =>
       loans.map((l) => [
@@ -343,6 +625,44 @@ export default function Loans() {
         </div>
       </div>
 
+      {/* Budget Summary */}
+      {budgetData && (
+        <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+            <h2 className="font-semibold text-slate-800 dark:text-slate-200">Loan Desk Ledger</h2>
+            {isAdmin && (
+              <Button variant="outline" size="sm" onClick={openBudgetEdit}>
+                <Pencil className="h-4 w-4 mr-2" /> Edit Budget
+              </Button>
+            )}
+          </div>
+          <div className="p-5 grid grid-cols-2 gap-4 sm:grid-cols-5">
+            <div>
+              <p className="text-xs text-slate-500 mb-1">Total Loan Budget</p>
+              <p className="text-xl font-bold font-mono text-slate-800 dark:text-slate-100">{fmtSAR(budgetData.totalBudget)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 mb-1">Total Disbursed</p>
+              <p className="text-xl font-bold font-mono text-blue-600 dark:text-blue-400">{fmtSAR(budgetData.totalDisbursed)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 mb-1">Remaining Budget</p>
+              <p className={`text-xl font-bold font-mono ${budgetData.remainingBudget < 0 ? "text-red-600" : "text-green-600 dark:text-green-400"}`}>
+                {fmtSAR(budgetData.remainingBudget)}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 mb-1">Active Loans</p>
+              <p className="text-xl font-bold text-slate-800 dark:text-slate-100">{budgetData.activeLoans}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 mb-1">Pending Applications</p>
+              <p className="text-xl font-bold text-slate-800 dark:text-slate-100">{budgetData.pendingApplications}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Stats */}
       {stats && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -400,6 +720,18 @@ export default function Loans() {
         )}
       </div>
 
+      <WhatsAppReminderDialog
+        open={Boolean(reminderLoan)}
+        onOpenChange={(open) => { if (!open) setReminderLoan(null); }}
+        recipientName={reminderLoan?.responsibleStaff?.fullName ?? ""}
+        mobileNumber={reminderRecipient?.mobileNumber}
+        messageForLanguage={(language) => reminderLoan ? buildLoanReminderMessage(reminderLoan, language) : ""}
+        title="Send Loan Reminder"
+        description="Choose English or Kannada, review the complete reminder, and then send it to the responsible committee member/staff on WhatsApp."
+        actionLabel="Send Reminder"
+        testIdPrefix="loan-whatsapp-reminder"
+      />
+
       {/* Table */}
       <div className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden bg-white dark:bg-slate-900">
         {isLoading ? (
@@ -415,7 +747,7 @@ export default function Loans() {
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
                   <th className="px-4 py-3 text-left font-medium text-slate-500 dark:text-slate-400">Member</th>
-                  <th className="px-4 py-3 text-left font-medium text-slate-500 dark:text-slate-400">Purpose</th>
+                  <th className="px-4 py-3 text-left font-medium text-slate-500 dark:text-slate-400">Purpose / Resp.</th>
                   <th className="px-4 py-3 text-right font-medium text-slate-500 dark:text-slate-400">Amount</th>
                   <th className="px-4 py-3 text-center font-medium text-slate-500 dark:text-slate-400">Progress</th>
                   <th className="px-4 py-3 text-right font-medium text-slate-500 dark:text-slate-400">Outstanding</th>
@@ -430,7 +762,7 @@ export default function Loans() {
                     <tr
                       key={loan.id}
                       className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
-                      onClick={() => navigate(`/loans/${loan.id}`)}
+                      onClick={() => navigate(withReturnTo(`/loans/${loan.id}`))}
                       data-testid={`row-loan-${loan.id}`}
                     >
                       <td className="px-4 py-3">
@@ -440,7 +772,15 @@ export default function Loans() {
                         {loan.membershipId && <div className="text-xs text-slate-400">{loan.membershipId}</div>}
                       </td>
                       <td className="px-4 py-3">
-                        <Badge variant="outline" className="capitalize">{purposeLabel(loan.loanType)}</Badge>
+                        <div className="flex flex-col gap-1 items-start">
+                          <Badge variant="outline" className="capitalize">{purposeLabel(loan.loanType)}</Badge>
+                          {loan.responsibleStaff && (
+                            <span className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1" title={loan.responsibleStaff.fullName}>
+                              <Users className="h-3 w-3 inline mr-1" />
+                              {loan.responsibleStaff.fullName.split(" ")[0]}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-right font-mono text-slate-700 dark:text-slate-300">{fmtSAR(loan.principalAmount)}</td>
                       <td className="px-4 py-3">
@@ -467,12 +807,17 @@ export default function Loans() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => navigate(`/loans/${loan.id}`)}>
+                            <DropdownMenuItem onClick={() => navigate(withReturnTo(`/loans/${loan.id}`))}>
                               <Eye className="mr-2 h-4 w-4" /> View Details
                             </DropdownMenuItem>
                             {canEdit && loan.outstandingBalance > 0 && (
-                              <DropdownMenuItem onClick={() => navigate(`/loans/${loan.id}?pay=1`)}>
+                              <DropdownMenuItem onClick={() => navigate(withReturnTo(`/loans/${loan.id}?pay=1`))}>
                                 <Banknote className="mr-2 h-4 w-4" /> Record Payment
+                              </DropdownMenuItem>
+                            )}
+                            {isAdmin && loan.status === "active" && loan.responsibleStaff && (
+                              <DropdownMenuItem onClick={() => setReminderLoan(loan)}>
+                                <Send className="mr-2 h-4 w-4" /> Reminder
                               </DropdownMenuItem>
                             )}
                             {isAdmin && (
@@ -528,18 +873,14 @@ export default function Loans() {
                   <FormItem>
                     <FormLabel>Member</FormLabel>
                     <FormControl>
-                      <Select value={field.value || undefined} onValueChange={field.onChange}>
-                        <SelectTrigger data-testid="select-loan-member">
-                          <SelectValue placeholder="Select member…" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {members.map((m) => (
-                            <SelectItem key={m.id} value={m.id}>
-                              {m.fullName} ({m.membershipId})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <LoanMemberCombobox
+                        value={field.value}
+                        selectedMember={selectedMember}
+                        onChange={(member) => {
+                          setSelectedMember(member);
+                          field.onChange(member?.id ?? "");
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -624,13 +965,43 @@ export default function Loans() {
                 name="convenorName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Convenor</FormLabel>
+                    <FormLabel>Convenor (Text)</FormLabel>
                     <FormControl>
                       <Input {...field} disabled={!isAdmin} data-testid="input-loan-convenor" />
                     </FormControl>
                     {!isAdmin && (
                       <p className="text-xs text-slate-400">Set automatically to you — only admins can change it.</p>
                     )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="responsibleCommitteeAssignmentId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Responsible Staff / Committee Member</FormLabel>
+                    <FormControl>
+                      <Select
+                        value={field.value || "none"}
+                        onValueChange={(v) => field.onChange(v === "none" ? null : v)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select responsible staff..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">-- None --</SelectItem>
+                          {activeAssignments.map((m) => (
+                            <SelectItem key={m.assignmentId} value={m.assignmentId}>
+                              {m.fullName} ({m.position})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <p className="text-xs text-slate-400">Linked to active committee term.</p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -665,6 +1036,45 @@ export default function Loans() {
               </DialogFooter>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Budget Edit Dialog */}
+      <Dialog open={budgetDialogOpen} onOpenChange={setBudgetDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Edit Loan Budget</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Total Budget Amount (SAR)</label>
+              <Input
+                type="number"
+                min={0}
+                value={budgetAmount}
+                onChange={(e) => setBudgetAmount(e.target.value)}
+                placeholder="e.g. 100000"
+              />
+            </div>
+            {budgetData && Number(budgetAmount) < budgetData.totalDisbursed && (
+              <div className="text-sm text-red-600 dark:text-red-400 p-2 bg-red-50 dark:bg-red-900/20 rounded">
+                Warning: New budget is less than the total already disbursed ({fmtSAR(budgetData.totalDisbursed)}).
+              </div>
+            )}
+          </div>
+          <DialogFooter className="pt-2">
+            <DialogClose asChild>
+              <Button type="button" variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button
+              type="button"
+              onClick={onSaveBudget}
+              disabled={updateBudget.isPending}
+              className="bg-green-700 hover:bg-green-800 text-white"
+            >
+              Save Budget
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

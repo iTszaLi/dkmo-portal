@@ -1,0 +1,106 @@
+Bro, fix ONLY the **Member search field in Loans → New Loan**.
+
+### Current problem
+
+The Member field was changed to a searchable selector, but the search/filtering is not working correctly.
+
+For example, when I search:
+
+**Yusuf Adoor**
+
+—even after typing the complete name, the selector is still showing many unrelated members such as:
+
+* Azmatullah Hassan Khan
+* Cheyya Moiden Shareef
+* Yusuf Adoor Nadugudde
+* Mohammed Irfan
+* Shabir Ahmed Katipalla
+* Hussain Shafi
+* etc.
+
+This is incorrect.
+
+### Required behavior
+
+Make the member search a proper **live filtered search**.
+
+When the user types:
+
+**Yusuf Adoor**
+
+the results should contain ONLY members whose searchable name/data actually matches that query.
+
+For example, if the database member is:
+
+**Yusuf Adoor Nadugudde — DKMO-0191**
+
+then typing `Yusuf Adoor` should return that member.
+
+It should NOT return unrelated members simply because they are in the default member list.
+
+### Search rules
+
+The search should:
+
+* Search by **member name**
+* Search by **DKMO ID**
+* Support partial names
+* Be case-insensitive
+* Trim unnecessary spaces
+* Match the typed search terms properly
+* Update results live as the user types
+* Show only matching results
+* Show a clear **No members found** message when nothing matches
+
+Examples:
+
+`Yusuf` → only members whose name contains Yusuf
+
+`Yusuf Adoor` → only members matching Yusuf Adoor
+
+`DKMO-0191` → Yusuf Adoor Nadugudde
+
+`0191` → DKMO-0191 member
+
+Do NOT use a loose filter that keeps displaying the original/default member list after searching.
+
+### Important
+
+The search must search the **full member database**, not just the currently loaded/visible members.
+
+Once a member is selected, keep the existing selected-member behavior exactly as it is.
+
+### DO NOT TOUCH ANYTHING ELSE
+
+Do NOT change:
+
+* Loan creation logic
+* Loan eligibility
+* Loan amount
+* Monthly payment
+* Purpose
+* Disbursement date
+* Convenor
+* Responsible Staff / Committee Member
+* Notes
+* Loan calculations
+* Loan API
+* Database structure
+* Existing loan records
+* Loan dashboard
+* Loan statuses
+* Budget
+* Payments
+* Any other module
+* Any other form field
+
+This task is **ONLY to fix the Member search/filtering behavior in the New Loan form**.
+
+After fixing it, test specifically with:
+
+1. `Yusuf`
+2. `Yusuf Adoor`
+3. `DKMO-0191`
+4. A name that does not exist
+
+Confirm that the results are properly filtered and that selecting the correct member still creates the loan exactly as before.

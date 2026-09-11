@@ -1,0 +1,401 @@
+IMPORTANT — FULL DKMO LEGACY DATA MIGRATION
+
+You have successfully verified that 2022_New_Okkuta_02282022.accdb is a valid Access database.
+
+Now I want you to extract ALL actual data from the Access database, not just the table structure.
+
+DO NOT simply import the Access tables as-is.
+Instead, understand the old database and map its data into the existing DKMO Portal modules and database structure shown in the current application.
+
+🚨 MOST IMPORTANT: MEMBERS FIRST
+
+The Members module is the primary source of truth.
+
+Extract every member from the Access database and migrate the member records into the new DKMO Portal.
+
+For every member, preserve as much historical information as available, including:
+
+Full name
+Old/legacy member ID
+Mobile/telephone
+Address
+Membership information
+Membership date/year
+Membership status
+Referrer/referred-by information
+Any family/member relationships
+Payment history
+Outstanding balance
+Amount already paid
+Any other useful member information contained in the Access database
+
+Do not lose old information just because the new portal has different column names.
+
+If the old database contains a field that doesn't currently exist in the new portal, determine whether a new field should be added.
+
+1. MEMBERS + REFERRALS
+
+After importing/mapping the members, reconstruct their referral relationships.
+
+For example:
+
+Member A → Referred Member B
+
+The relationship must remain attached to the correct member.
+
+Do not treat the referral as simple text if the old database actually identifies another member.
+
+If possible, create proper relationships:
+
+referrer_member_id → referred_member_id
+
+This should work with the existing Membership Drive / Members functionality.
+
+2. MEMBERSHIP PAYMENTS
+
+This is extremely important.
+
+Extract the actual historical payment records from Access.
+
+For every member, determine:
+
+Required membership amount
+Amount paid
+Date paid
+Payment method, if available
+Receipt/reference number, if available
+Remaining outstanding amount
+Payment status
+
+The new portal must show the correct current outstanding amount based on the old database.
+
+For example:
+
+Membership fee: ₹/SAR X
+Paid: ₹/SAR Y
+Outstanding: ₹/SAR Z
+
+Do NOT simply mark everyone as "Paid."
+
+If someone partially paid, the remaining balance must be preserved.
+
+If someone paid multiple times, preserve the individual transactions where possible.
+
+3. WHO HAS PAID VS WHO HAS NOT PAID
+
+Cross-check the Access data against the members being created/matched in the new portal.
+
+Create a reconciliation:
+
+Member	Old Access Record	Amount Due	Amount Paid	Outstanding	New Portal Status
+Member A	Found	X	X	0	Paid
+Member B	Found	X	Y	Z	Partial
+Member C	Found	X	0	X	Pending
+
+The new portal's payment status must be based on the actual Access records, not assumptions.
+
+4. ALL OTHER HISTORICAL DATA
+
+After Members and Membership Payments are correctly mapped, extract ALL other useful data from the Access database.
+
+Map it into the appropriate existing DKMO Portal modules.
+
+The current portal contains:
+
+PEOPLE
+Members
+Committee
+Meeting Attendance
+DKMO Membership
+FINANCE
+Payments
+Receipts
+Loans
+Sponsors
+Reports
+COMMUNITY
+FRF Claims
+Membership Drive
+Welfare Programs
+Events
+Tasks
+ADMINISTRATION
+Documents
+Import Members
+Data Import
+Audit Trail
+Settings
+
+For every Access table, determine which module it belongs to.
+
+5. DO NOT FORCE DATA INTO THE WRONG MODULE
+
+If an Access table contains:
+
+Member data → Members
+Membership payments → Payments / DKMO Membership
+Receipts → Receipts
+Loans → Loans
+Sponsor information → Sponsors
+FRF information → FRF Claims
+Events → Events
+Welfare information → Welfare Programs
+Committee information → Committee
+Attendance → Meeting Attendance
+
+etc.
+
+Map it logically.
+
+If there is no equivalent module, do not discard the data.
+
+Create a proper migration structure or recommend where it should be stored.
+
+6. PRESERVE HISTORICAL DATA
+
+The old Access database is historical DKMO data.
+
+Nothing important should be lost.
+
+For every old record, maintain traceability back to the original Access record/table where possible.
+
+Use fields such as:
+
+legacy_source
+
+legacy_table
+
+legacy_record_id
+
+if appropriate.
+
+This will allow us to know where migrated information came from.
+
+7. EXISTING NEW PORTAL DATA
+
+The new DKMO Portal may already contain members and records.
+
+DO NOT DELETE THEM.
+
+Before adding a legacy member:
+
+Check whether the member already exists.
+Match using reliable information.
+Prefer existing member ID or reliable identifiers.
+Compare normalized mobile number.
+Compare name and other available information.
+If uncertain, flag for manual review.
+NEVER create duplicate members simply because the names are slightly different.
+
+Example:
+
+Mohammed Ali
+
+and
+
+MOHAMMED ALI
+
+could potentially be the same person.
+
+But:
+
+Mohammed Ali
+
+and
+
+Mohammed A. Ali
+
+should not automatically be merged without sufficient evidence.
+
+8. IMPORTANT — DO NOT OVERWRITE CURRENT DATA
+
+If the new portal already contains a member with payment information, do not blindly replace it with old Access data.
+
+Instead determine:
+
+What is historical?
+What is current?
+Are they the same payment?
+Is the old balance still relevant?
+Does the new record contain newer information?
+
+Create a conflict report whenever necessary.
+
+9. DATABASE STRUCTURE
+
+If the existing database doesn't have enough fields/tables to correctly represent the legacy information, extend the database schema carefully.
+
+Do not create a messy collection of unnecessary columns.
+
+Use proper relational tables where appropriate.
+
+For example:
+
+members
+
+member_referrals
+
+membership_payments
+
+receipts
+
+frf_claims
+
+frf_contributions
+
+loans
+
+etc.
+
+Maintain proper foreign-key relationships.
+
+10. BUILD A MIGRATION ENGINE
+
+Do not manually copy records.
+
+Create a reusable migration process that:
+
+Reads the Access database.
+Extracts all tables.
+Maps legacy fields to the new schema.
+Normalizes data.
+Matches existing members.
+Creates new members where required.
+Preserves legacy IDs.
+Imports historical transactions.
+Reconstructs referral relationships.
+Calculates outstanding balances.
+Validates payment status.
+Generates a complete migration report.
+11. RECONCILIATION IS MANDATORY
+
+After the migration, generate totals from the Access database and compare them with the new portal.
+
+For example:
+
+MEMBERS
+
+Access Members: XXXX
+
+New Portal Members: XXXX
+
+Matched: XXXX
+
+Newly Added: XXXX
+
+Duplicates/Conflicts: XXXX
+
+PAYMENTS
+
+Access Payment Records: XXXX
+
+Migrated Payment Records: XXXX
+
+Unmatched: XXXX
+
+MEMBERSHIP BALANCES
+
+Total Amount Due: XXXX
+
+Total Amount Paid: XXXX
+
+Total Outstanding: XXXX
+
+The totals should reconcile.
+
+Do the same for every financial/historical module where possible.
+
+12. CREATE A MIGRATION REPORT
+
+Generate a detailed report containing:
+
+Members
+Total legacy members
+Migrated members
+Existing members matched
+New members created
+Duplicate candidates
+Unmatched members
+Payments
+Total historical payments
+Total amount paid
+Total outstanding
+Paid members
+Partial members
+Unpaid members
+Referrals
+Total referral relationships
+Successfully reconstructed
+Unmatched referrals
+Other modules
+Records found
+Records migrated
+Records requiring review
+Errors
+
+List every record that could not be safely migrated.
+
+13. DATA IMPORT MODULE
+
+Since the portal already has:
+
+Administration → Data Import
+
+make the migration functionality compatible with this area where appropriate.
+
+However, do not expose the raw Access database directly to normal users.
+
+The migration should be an administrator-only operation.
+
+14. AUDIT TRAIL
+
+Every migration action must be logged.
+
+For example:
+
+Legacy member imported
+
+Legacy member matched to existing member
+
+Historical payment imported
+
+Referral relationship created
+
+Duplicate detected
+
+Record skipped
+
+Migration error
+
+Include timestamps and relevant record IDs.
+
+🔴 FINAL SAFETY RULE
+
+For now:
+
+DO NOT:
+Delete current portal data
+Overwrite current portal data
+Reset the database
+Remove existing members
+Automatically merge uncertain members
+Change historical payment amounts
+Guess missing payment information
+Discard Access data
+FIRST:
+
+Extract → Map → Match → Validate → Reconcile → DRY RUN
+
+Only after I review the migration report and explicitly approve it should the production migration be executed.
+
+The final objective is:
+
+Take the complete historical DKMO information from 2022_New_Okkuta_02282022.accdb and intelligently incorporate it into the existing DKMO Portal, with Members as the foundation, preserving referrals, payment history, paid/unpaid status, outstanding balances, and all other relevant historical information in the appropriate portal modules.
+
+At the end of this phase, show me the complete migration report and clearly state:
+
+"DRY RUN COMPLETE — NO PRODUCTION DATA MODIFIED."
+
+Wait for my explicit approval before performing the actual migration.
+
+One extra thing I'd strongly tell Replit: don't just make an Import Members CSV. Your Access file potentially contains relationships and financial history, so a simple CSV import could lose the connection between member → referral → payment → outstanding balance → FRF/claim. The migration should preserve those relationships in the new database.

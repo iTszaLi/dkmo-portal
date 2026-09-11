@@ -1,0 +1,429 @@
+DKMO
+DKMO Portal
+Executive Suite
+Dashboard
+Calendar
+People
+
+Members
+Committee
+Meeting Attendance
+DKMO Membership
+Finance
+
+Payments
+Receipts
+Loans
+Sponsors
+Reports
+Community
+
+FRF Claims
+Membership Drive
+Welfare Programs
+Events
+Tasks
+Administration
+
+Documents
+Audit Trail
+Settings
+Secure session · auto-logout after 30 min
+Search anything…
+
+1
+Admin
+
+AD
+Administrator
+Admin
+Dashboard
+DKMO — Committed to the community
+
+Wednesday, September 9, 2026
+
+Quick Actions
+Customize
+Membership Reminder
+Send Reminders
+0
+Members with pending fees · SAR 0.00 due
+
+Open WhatsApp reminders
+FRF Pending Fees
+View Pending
+0
+Members with FRF dues · SAR 0.00 outstanding
+
+Open FRF fees — pending view
+Total Members
+1,140
+↑ +1140 this month
+Registered members
+
+Active Members
+695
+0 suspended · 445 inactive
+
+Pending FRF Claims
+2
+Awaiting review
+
+Monthly Collections
+SAR 108,500.00
+Collected this month
+
+Membership Fees Pending
+0
+SAR 0.00 outstanding
+
+Active FRF Cases
+3
+5 closed
+
+Members Pending FRF
+0
+0 paid · 0 partial
+
+FRF Collected
+SAR 0.00
+Total FRF contributions received
+
+FRF Outstanding
+SAR 0.00
+Contributions still due
+
+Action Required
+Things needing attention right now
+Members with missing data
+
+83 members have empty required fields.
+
+Members with paid fees
+
+1096 members have paid the membership fee.
+
+Committee Activity
+Overall contribution across recruitment, fees, FRF, and loans
+View Full Activity Report
+Members Recruited
+
+1102
+
+Membership Fees Collected
+
+SAR 110,200.00
+
+FRF Members Referred
+
+671
+
+Loans Processed
+
+19
+
+Top 5 Committee Members
+
+1
+FR
+Fazlu Rahman
+
+Member
+1247
+
+score
+
+View Details
+2
+ST
+Shafe Thodar
+
+Member
+1024
+
+score
+
+View Details
+3
+AB
+Abdul Azeez Bajpe
+
+Member
+942
+
+score
+
+View Details
+4
+SA
+Shamshuddin Addor
+
+Member
+648
+
+score
+
+View Details
+5
+EY
+Eliyas Moideen Yermal
+
+Member
+603
+
+score
+
+View Details
+Recent Activity
+Latest actions across the portal
+View all
+Administrator member committee status updated · Mohammed Ali
+
+30 Jul
+Administrator member committee status updated · Mohammed Ali
+
+30 Jul
+Administrator payments import rolled back
+
+30 Jul
+Administrator payments import committed
+
+30 Jul
+Administrator payment created · Mohammed Ali
+
+30 Jul
+Administrator member frf status updated · Asif Kannur
+
+30 Jul
+Administrator member frf status updated · Asif Kannur
+
+30 Jul
+Administrator member fee status updated · Mohammed Ali
+
+30 Jul
+Administrator member fee status updated · Mohammed Ali
+
+30 Jul
+Administrator member fee status updated · Mohammed Ali
+
+30 Jul
+Administrator member committee status updated · Mohammed Ali
+
+30 Jul
+Administrator member committee status updated · Mohammed Ali
+
+30 Jul
+Trends
+Collections, member growth and payment channels over the last 12 months.
+Monthly Collections
+
+Oct
+Dec
+Feb
+Apr
+Jun
+Aug
+0
+1
+2
+3
+4
+New Members
+
+Oct
+Dec
+Feb
+Apr
+Jun
+Aug
+0
+300
+600
+900
+1200
+
+Payment Methods
+
+No payments yet.
+
+Community Impact
+DKMO's assistance across all programs
+SAR 466,300.00
+
+Assistance Distributed
+
+1140
+
+Total Members
+
+5
+
+FRF Beneficiaries
+
+19
+
+Loan Beneficiaries
+
+25
+
+Welfare Requests
+
+2
+
+Emergency Relief
+
+Member of the Month
+Top recruiter this month
+
+Fazlu Rahman
+DKMO-0066
+
+Member
+Top Recruiter
+91
+recruits
+View referral analytics
+Top 5 Recruiters
+Members who referred the most new members
+View all
+1
+Fazlu Rahman
+
+91 recruits
+2
+Shafe Thodar
+
+69 recruits
+3
+Ghani Ahmed Mulki
+
+68 recruits
+4
+Abdul Azeez Bajpe
+
+67 recruits
+5
+Shamshuddin Addor
+
+48 recruits
+Upcoming Events
+Next scheduled DKMO events, sorted by nearest date
+View All Events
+22
+Oct
+DKMO Sports Day 2026
+
+3:45 PM
+Karnataka Ground, Mangalore
+Starts in 43 Days
+Upcoming
+Top Sponsors & Collection Responsibility
+Sponsorship commitments and collection accountability
+View All Sponsors
+Total Committed
+
+SAR 340,000.00
+
+Total Collected
+
+SAR 262,500.00
+
+Outstanding
+
+SAR 77,500.00
+
+Al-Khaleej Trading Co.
+
+Bank Transfer
+
+Collected
+Committed
+
+SAR 100,000.00
+
+Collected
+
+SAR 100,000.00
+
+Balance
+
+SAR 0.00
+
+Assigned to:
+Abdul Azeez Bajpe
+Al-Baraka Finance House
+
+Bank Transfer
+
+Partial
+Committed
+
+SAR 75,000.00
+
+Collected
+
+SAR 37,500.00
+
+Balance
+
+SAR 37,500.00
+
+Assigned to:
+Fazlurrahman Kolkar
+Hind Exports Ltd.
+
+Bank Transfer
+
+Collected
+Committed
+
+SAR 50,000.00
+
+Collected
+
+SAR 50,000.00
+
+Balance
+
+SAR 0.00
+
+Assigned to:
+Ghani Ahmed Mulki
+Noor Pharmacy Group
+
+Cash
+
+Collected
+Committed
+
+SAR 40,000.00
+
+Collected
+
+SAR 40,000.00
+
+Balance
+
+SAR 0.00
+
+Assigned to:
+Ashraf Kozhikan
+Gulf Constructions LLC
+
+Cheque
+
+Partial
+Committed
+
+SAR 30,000.00
+
+Collected
+
+SAR 15,000.00
+
+Balance
+
+SAR 15,000.00
+
+Assigned to:
+Irfan Shaikh

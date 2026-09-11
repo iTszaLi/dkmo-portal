@@ -142,7 +142,7 @@ export default function DkmoVerifyPage() {
         <Button
           variant="outline"
           className="w-full border-green-200 dark:border-slate-700 text-green-800 dark:text-green-300 gap-2"
-          onClick={() => setLocation(`${basePath}/dkmo-track`)}
+          onClick={() => setLocation("/dkmo-track")}
         >
           <ArrowLeft className="h-4 w-4" />
           Check application status

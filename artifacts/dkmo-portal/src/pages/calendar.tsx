@@ -8,20 +8,26 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import {
   ChevronLeft, ChevronRight, CalendarDays, Users2, ListChecks, Handshake,
-  FolderOpen, Cake, Circle, Plus,
+  FolderOpen, Circle, Plus,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
-import { useCreateEvent, useCreateMeeting } from "@workspace/api-client-react";
+import {
+  useCreateEvent,
+  useCreateMeeting,
+  useCreateTask,
+  useCreateSponsor,
+} from "@workspace/api-client-react";
+import { useCreateDocument } from "@workspace/api-client-react";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 type CalendarItem = {
   date: string; // YYYY-MM-DD
-  type: "event" | "meeting" | "task" | "sponsor_due" | "document_expiry" | "birthday";
+  type: "event" | "meeting" | "task" | "sponsor_due" | "document_expiry";
   title: string;
   href: string;
   meta?: string;
@@ -33,11 +39,11 @@ const TYPE_STYLE: Record<CalendarItem["type"], { label: string; dot: string; chi
   task:            { label: "Task due",     dot: "bg-orange-500", chip: "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300", icon: ListChecks },
   sponsor_due:     { label: "Sponsor",      dot: "bg-purple-500", chip: "bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300", icon: Handshake },
   document_expiry: { label: "Doc expiry",   dot: "bg-red-500",    chip: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",           icon: FolderOpen },
-  birthday:        { label: "Birthday",     dot: "bg-pink-500",   chip: "bg-pink-100 text-pink-800 dark:bg-pink-900/40 dark:text-pink-300",       icon: Cake },
 };
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const WEEKDAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+type ScheduleType = "event" | "meeting" | "task" | "sponsor" | "document_expiry";
 
 export default function CalendarPage() {
   const today = new Date();
@@ -47,18 +53,37 @@ export default function CalendarPage() {
   const { toast } = useToast();
   const { hasRole } = useAuth();
   const canScheduleEvent = hasRole("admin", "event");
+  const canScheduleTask = hasRole("admin", "event", "finance");
+  const canScheduleSponsor = hasRole("admin");
+  const canScheduleDocument = hasRole("admin", "finance");
   const queryClient = useQueryClient();
 
   // ── schedule dialog ─────────────────────────────────────────────────────────
   const [scheduleOpen, setScheduleOpen] = useState(false);
-  const [scheduleType, setScheduleType] = useState<"event" | "meeting">("event");
+  const [scheduleType, setScheduleType] = useState<ScheduleType>("event");
   const [scheduleForm, setScheduleForm] = useState({ title: "", date: "", location: "", notes: "" });
   const createEvent = useCreateEvent();
   const createMeeting = useCreateMeeting();
-  const scheduling = createEvent.isPending || createMeeting.isPending;
+  const createTask = useCreateTask();
+  const createSponsor = useCreateSponsor();
+  const createDocument = useCreateDocument();
+  const scheduling = createEvent.isPending || createMeeting.isPending || createTask.isPending || createSponsor.isPending || createDocument.isPending;
+
+  const canScheduleType = (type: ScheduleType) => (
+    type === "event" ? canScheduleEvent
+      : type === "meeting" ? true
+        : type === "task" ? canScheduleTask
+          : type === "sponsor" ? canScheduleSponsor
+            : canScheduleDocument
+  );
+
+  const firstAvailableScheduleType = (): ScheduleType => {
+    const types: ScheduleType[] = ["event", "meeting", "task", "sponsor", "document_expiry"];
+    return types.find(canScheduleType) ?? "meeting";
+  };
 
   const openSchedule = (presetDate?: string) => {
-    setScheduleType(canScheduleEvent ? "event" : "meeting");
+    setScheduleType(firstAvailableScheduleType());
     setScheduleForm({
       title: "",
       date: presetDate ?? new Date().toISOString().split("T")[0]!,
@@ -70,6 +95,9 @@ export default function CalendarPage() {
 
   const afterScheduled = (label: string) => {
     queryClient.invalidateQueries({ queryKey: ["calendar"] });
+    queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    queryClient.invalidateQueries({ queryKey: ["sponsors"] });
+    queryClient.invalidateQueries({ queryKey: ["documents"] });
     setScheduleOpen(false);
     setSelectedDate(scheduleForm.date);
     toast({ title: `${label} scheduled`, description: new Date(scheduleForm.date + "T00:00:00").toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" }) });
@@ -81,6 +109,11 @@ export default function CalendarPage() {
       toast({ title: "Missing details", description: "A title and date are required.", variant: "destructive" });
       return;
     }
+    if (!canScheduleType(scheduleType)) {
+      toast({ title: "You do not have permission to schedule this type", variant: "destructive" });
+      return;
+    }
+    const dateTime = new Date(scheduleForm.date + "T00:00:00").toISOString();
     if (scheduleType === "event") {
       createEvent.mutate(
         {
@@ -97,7 +130,7 @@ export default function CalendarPage() {
           onError: () => toast({ title: "Could not schedule the event", variant: "destructive" }),
         },
       );
-    } else {
+    } else if (scheduleType === "meeting") {
       createMeeting.mutate(
         {
           data: {
@@ -110,6 +143,53 @@ export default function CalendarPage() {
         {
           onSuccess: () => afterScheduled("Meeting"),
           onError: () => toast({ title: "Could not schedule the meeting", variant: "destructive" }),
+        },
+      );
+    } else if (scheduleType === "task") {
+      createTask.mutate(
+        {
+          data: {
+            title: scheduleForm.title.trim(),
+            dueDate: dateTime,
+            assignedTo: scheduleForm.location.trim() || undefined,
+            description: scheduleForm.notes.trim() || undefined,
+            priority: "medium",
+            status: "pending",
+          },
+        },
+        {
+          onSuccess: () => afterScheduled("Task"),
+          onError: () => toast({ title: "Could not schedule the task", variant: "destructive" }),
+        },
+      );
+    } else if (scheduleType === "sponsor") {
+      createSponsor.mutate(
+        {
+          data: {
+            sponsorName: scheduleForm.title.trim(),
+            company: scheduleForm.location.trim(),
+            dueDate: dateTime,
+            notes: scheduleForm.notes.trim(),
+          },
+        },
+        {
+          onSuccess: () => afterScheduled("Sponsor follow-up"),
+          onError: () => toast({ title: "Could not schedule the sponsor follow-up", variant: "destructive" }),
+        },
+      );
+    } else {
+      createDocument.mutate(
+        {
+          title: scheduleForm.title.trim(),
+          expiryDate: scheduleForm.date,
+          category: "general",
+          status: "active",
+          visibility: "members",
+          notes: scheduleForm.notes.trim(),
+        },
+        {
+          onSuccess: () => afterScheduled("Document expiry"),
+          onError: () => toast({ title: "Could not schedule the document expiry", variant: "destructive" }),
         },
       );
     }
@@ -162,7 +242,7 @@ export default function CalendarPage() {
               <CalendarDays className="h-6 w-6 text-emerald-600 dark:text-emerald-400" /> Calendar
             </h1>
             <p className="text-sm text-emerald-700/80 dark:text-slate-400">
-              Events, meetings, task deadlines, sponsor follow-ups, document expiries and birthdays.
+              Events, meetings, task deadlines, sponsor follow-ups and document expiries.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -302,51 +382,61 @@ export default function CalendarPage() {
               <DialogTitle>Schedule something</DialogTitle>
             </DialogHeader>
             <form onSubmit={submitSchedule} className="space-y-4">
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => canScheduleEvent && setScheduleType("event")}
-                  disabled={!canScheduleEvent}
-                  title={canScheduleEvent ? undefined : "Only admins and event coordinators can schedule events"}
-                  aria-pressed={scheduleType === "event"}
-                  data-testid="button-schedule-type-event"
-                  className={cn(
-                    "flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
-                    scheduleType === "event"
-                      ? "border-emerald-500 bg-emerald-50 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300"
-                      : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800",
-                    !canScheduleEvent && "opacity-50 cursor-not-allowed",
-                  )}
-                >
-                  <CalendarDays className="h-4 w-4" /> Event
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setScheduleType("meeting")}
-                  aria-pressed={scheduleType === "meeting"}
-                  data-testid="button-schedule-type-meeting"
-                  className={cn(
-                    "flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
-                    scheduleType === "meeting"
-                      ? "border-emerald-500 bg-emerald-50 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300"
-                      : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800",
-                  )}
-                >
-                  <Users2 className="h-4 w-4" /> Meeting
-                </button>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {([
+                  { type: "event", label: "Event", icon: CalendarDays, disabledTitle: "Only admins and event coordinators can schedule events" },
+                  { type: "meeting", label: "Meeting", icon: Users2, disabledTitle: undefined },
+                  { type: "task", label: "Task due", icon: ListChecks, disabledTitle: "Only admins, event coordinators and finance users can schedule tasks" },
+                  { type: "sponsor", label: "Sponsor", icon: Handshake, disabledTitle: "Only administrators can schedule sponsors" },
+                  { type: "document_expiry", label: "Doc expiry", icon: FolderOpen, disabledTitle: "Only administrators and finance users can schedule document expiries" },
+                ] as const).map(({ type, label, icon: Icon, disabledTitle }) => {
+                  const disabled = !canScheduleType(type);
+                  return (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => !disabled && setScheduleType(type)}
+                      disabled={disabled}
+                      title={disabled ? disabledTitle : undefined}
+                      aria-pressed={scheduleType === type}
+                      data-testid={`button-schedule-type-${type}`}
+                      className={cn(
+                        "flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
+                        scheduleType === type
+                          ? "border-emerald-500 bg-emerald-50 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300"
+                          : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800",
+                        disabled && "opacity-50 cursor-not-allowed",
+                      )}
+                    >
+                      <Icon className="h-4 w-4" /> {label}
+                    </button>
+                  );
+                })}
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-medium">{scheduleType === "event" ? "Event name" : "Meeting title"}</label>
+                <label className="text-sm font-medium">
+                  {scheduleType === "event" ? "Event name"
+                    : scheduleType === "meeting" ? "Meeting title"
+                      : scheduleType === "task" ? "Task title"
+                        : scheduleType === "sponsor" ? "Sponsor name"
+                          : "Document title"}
+                </label>
                 <Input
                   value={scheduleForm.title}
                   onChange={(e) => setScheduleForm((f) => ({ ...f, title: e.target.value }))}
-                  placeholder={scheduleType === "event" ? "e.g. Annual Family Gathering" : "e.g. Core Committee Meeting"}
+                  placeholder={scheduleType === "event" ? "e.g. Annual Family Gathering"
+                    : scheduleType === "meeting" ? "e.g. Core Committee Meeting"
+                      : scheduleType === "task" ? "e.g. Confirm event catering"
+                        : scheduleType === "sponsor" ? "e.g. Al Noor Trading"
+                          : "e.g. Committee policy document"}
                   autoFocus
                   data-testid="input-schedule-title"
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-medium">Date</label>
+                <label className="text-sm font-medium">
+                  {scheduleType === "task" ? "Due date" : scheduleType === "sponsor" ? "Follow-up date" : scheduleType === "document_expiry" ? "Expiry date" : "Date"}
+                </label>
                 <Input
                   type="date"
                   value={scheduleForm.date}
@@ -355,12 +445,18 @@ export default function CalendarPage() {
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-medium">Location (optional)</label>
-                <Input
-                  value={scheduleForm.location}
-                  onChange={(e) => setScheduleForm((f) => ({ ...f, location: e.target.value }))}
-                  data-testid="input-schedule-location"
-                />
+                <label className="text-sm font-medium">
+                  {scheduleType === "task" ? "Assigned to (optional)" : scheduleType === "sponsor" ? "Company (optional)" : "Location (optional)"}
+                </label>
+                {scheduleType !== "document_expiry" ? (
+                  <Input
+                    value={scheduleForm.location}
+                    onChange={(e) => setScheduleForm((f) => ({ ...f, location: e.target.value }))}
+                    data-testid="input-schedule-location"
+                  />
+                ) : (
+                  <p className="text-xs text-slate-500 dark:text-slate-400">The document will be created in the General category.</p>
+                )}
               </div>
               <div className="space-y-1">
                 <label className="text-sm font-medium">Notes (optional)</label>

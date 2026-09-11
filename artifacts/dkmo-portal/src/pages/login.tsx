@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/lib/auth";
+import { getReturnTarget } from "@/lib/navigation";
 import { DkmoLogo } from "@/components/DkmoLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -33,7 +34,7 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       await login(u, password);
-      setLocation("/dashboard");
+      setLocation(getReturnTarget("/dashboard"));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign-in failed. Please try again.");
     } finally {

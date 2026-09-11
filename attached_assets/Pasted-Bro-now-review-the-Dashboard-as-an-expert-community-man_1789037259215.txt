@@ -1,0 +1,196 @@
+Bro, now review the **Dashboard** as an expert community-management/admin portal and make ONLY the changes that are genuinely necessary. Do not add unnecessary widgets or redesign the dashboard.
+
+The goal is to make the dashboard clean, non-duplicated, accurate, and useful for DKMO committee/admin users.
+
+### 1. TOTAL MEMBERS
+
+Keep:
+
+* Total Members
+* Current value: 1,140
+* Subtitle: “Registered members”
+
+REMOVE the “+1140 this month” text.
+
+That number is misleading unless 1,140 members actually joined during the current month. Do not show a monthly increase unless it is calculated from actual member creation/admission dates.
+
+### 2. ACTIVE MEMBERS
+
+Keep:
+
+* Active Members
+* Current value: 663
+* Subtitle/status: “0 suspended · 477 inactive”
+
+Make sure these numbers are calculated from the actual member status records.
+
+### 3. MEMBERSHIP PENDING
+
+Keep the Membership Fees Pending metric because it is genuinely useful.
+
+It should show:
+
+* Number of members whose membership fee is currently unpaid/pending
+* Total SAR outstanding
+
+It must use the actual membership payment/ledger data.
+
+Do NOT duplicate the same information elsewhere unnecessarily.
+
+### 4. QUICK ACTIONS
+
+Keep Quick Actions, but simplify them to only genuinely useful actions:
+
+* Add Member
+* Record Payment
+* Review FRF Claims
+* View Pending Membership
+* View Pending FRF Fees
+
+Remove duplicate actions or actions that simply take the user to the same page without a meaningful purpose.
+
+### 5. REMOVE DUPLICATE PENDING-FEE INFORMATION
+
+The current dashboard has:
+
+* “Members with pending fees”
+* “Membership Fees Pending”
+
+These overlap.
+
+Keep the main **Membership Fees Pending** metric as the dashboard statistic.
+
+The Quick Action should simply provide navigation to the pending membership-payment view rather than displaying another duplicate large metric.
+
+### 6. FRF DASHBOARD — SIMPLIFY
+
+The current FRF dashboard has too many overlapping cards:
+
+* Pending FRF Claims
+* Active FRF Cases
+* Members Pending FRF
+* FRF Collected
+* FRF Outstanding
+
+Because the FRF Claims page and Payments → FRF Fees page already contain detailed information, the dashboard should only show the most important FRF information.
+
+KEEP ONLY:
+
+**Pending FRF Claims**
+
+* Number of claims awaiting committee/admin review.
+
+**Active FRF Case**
+
+* Must be 0 or 1 because DKMO can have only ONE active FRF collection case at a time.
+* If there is no active collection case, show:
+  “No active case”
+
+**FRF Outstanding**
+
+* Total SAR still outstanding for the CURRENT active FRF collection case.
+* If there is no active case, show SAR 0.00.
+
+REMOVE the separate **Members Pending FRF** dashboard card because the detailed member-level information belongs in Payments → FRF Fees.
+
+### 7. MONTHLY COLLECTIONS
+
+Keep Monthly Collections because it is useful.
+
+Rename subtitle to:
+**“Total payments collected this month”**
+
+Calculate it from actual payment records.
+
+Do not mix up membership payments and FRF payments or double-count any payment.
+
+### 8. REMOVE FRF COLLECTED FROM MAIN DASHBOARD
+
+Remove the separate “FRF Collected” card.
+
+Detailed FRF collection totals belong in:
+**Payments → FRF Fees**
+
+The dashboard should remain an overview, not duplicate the entire Finance module.
+
+### 9. ADD ONE USEFUL SECTION — “ATTENTION REQUIRED”
+
+Instead of adding more statistic cards, create one compact section called:
+
+**Attention Required**
+
+It should show only things that require admin/committee action, for example:
+
+* Pending membership payments
+* Pending FRF claims
+* Outstanding FRF contributions for the active FRF case
+* Pending loan requests, if applicable
+* Upcoming committee meeting/action, if applicable
+
+Each item should be clickable and take the admin directly to the relevant page.
+
+If there is nothing requiring action, display:
+
+**No actions required**
+
+Do not show unnecessary zero-value alerts.
+
+### 10. COMMITTEE / MEETING DATA
+
+Do NOT add the 30 committee members or committee attendance statistics to the main dashboard.
+
+Committee membership and meeting attendance belong in the Committee/Meetings modules.
+
+Remember:
+
+* Total portal members = 1,140
+* Current committee = exactly 30 members
+
+Do not mix these two populations.
+
+### 11. IMPORTANT FRF LOGIC
+
+The dashboard must follow the same FRF logic already implemented elsewhere:
+
+* FRF claim approval creates/opens the next FRF collection case.
+* Only ONE FRF collection case can be active at a time.
+* Payments → FRF Fees tracks each eligible member's SAR 50 contribution for that active case.
+* A member must have their membership fee paid/eligible before their FRF contribution becomes active.
+* If membership is unpaid, FRF is inactive for that member.
+* A new FRF collection case cannot start until the previous case is completed/closed.
+
+Therefore, dashboard numbers must come from the same source of truth as FRF Claims and Payments → FRF Fees. Do NOT create separate or conflicting FRF calculations.
+
+### 12. FINAL DASHBOARD STRUCTURE
+
+Use this hierarchy:
+
+HEADER
+DKMO — Committed to the Community
+Date
+
+QUICK ACTIONS
+Add Member | Record Payment | Review FRF Claims | View Pending Membership | View Pending FRF Fees
+
+CORE OVERVIEW
+
+* Total Members
+* Active Members
+* Membership Fees Pending
+* Monthly Collections
+
+FRF OVERVIEW
+
+* Pending FRF Claims
+* Active FRF Case
+* FRF Outstanding
+
+ATTENTION REQUIRED
+
+* Only actionable items
+
+Keep the existing visual style and design language. Do not unnecessarily redesign the dashboard.
+
+Most importantly, avoid adding more cards just for the sake of showing more data. Every dashboard metric must have a clear administrative purpose and must not duplicate information already available in Members, Payments, FRF Claims, Committee, Meetings, or other modules.
+
+After implementing this, verify that all dashboard numbers are calculated from the real database and remain synchronized with the relevant modules.

@@ -1,33 +1,23 @@
 ---
-name: Committee membership is DB-driven and fully independent
-description: Committee membership/badges derive from two independent boolean columns, not a hardcoded roster or a single enum.
+name: Versioned committee authority
+description: Committee rosters are term assignments; legacy member flags are compatibility-only and cannot grant login privileges.
 ---
 
-Committee membership is the DB source of truth, expressed as **two fully independent
-boolean columns** on `members`: `isExecutiveCommittee` and `isCoreCommittee`. Plus the
-existing `designation` ("Assigned Role"). All three are independent — a member may be on
-Executive, Core, both, or neither, and have any role or none. There is NO nesting,
-subset, or hidden link between them, and no hardcoded roster constant.
+Committee membership is defined by versioned term assignments linked to member identities.
+A roster must name its committee year, assignment position, dates, and active state. The
+current authoritative 2026–27 roster contains exactly 30 assignments; the general member
+registry does not automatically grant committee or meeting eligibility.
 
-**Why:** the roster used to be a static frontend array, then a single enum
-(`committeeLevel`: regular/core/executive) where Executive implied Core. The user
-required these to be three independent attributes with no implicit coupling, so
-removing one membership must never change the other or the role.
+**Why:** a current-state flag cannot preserve committee history and fuzzy name matching
+can attach governance authority to the wrong person. Portal login accounts also are not
+inherently the same identity as member records.
 
 **How to apply:**
-- "Who is on Executive?" = `isExecutiveCommittee === true`; "on Core?" = `isCoreCommittee === true`.
-  Never treat Executive as a subset of Core. A combined "any committee" view must be an
-  explicit OR, used only where intentional.
-- Shared helpers live in `artifacts/dkmo-portal/src/lib/committee.ts` (badge classes,
-  designation→department map, initials). No normalize/isCommitteeLevel/isExecutiveLevel.
-- Badges render independently in order ROLE | EXECUTIVE COMMITTEE (gold) | CORE COMMITTEE (silver).
-- Badge dedup rule (MemberBadges): generic designations "Member" and "Executive Member" are
-  NEVER shown as a role badge — they merely restate committee membership and produced confusing
-  "EXECUTIVE MEMBER" + "EXECUTIVE COMMITTEE" pairs. A single "MEMBER" fallback badge shows only
-  when a member has no distinct role AND no committee. Distinct roles (President, Treasurer, etc.)
-  still render alongside committee badges.
-- Toggling goes through `PATCH /members/:id/committee-status` with a partial body
-  ({ isExecutiveCommittee? , isCoreCommittee? }); only provided flags change. Audit action
-  `member_committee_status_updated`; UI uses generated `useUpdateMemberCommitteeStatus`.
-- Department grouping on /committee is derived from designation→department map, not stored.
-- Felicitation section on /committee stays intentionally static (not committee membership).
+- Use term assignments—not member booleans—to render authoritative committee rosters.
+- Keep at most one active term; activating a successor retires its predecessor without deleting history.
+- Treat old executive/core member flags as compatibility metadata, never as term history.
+- Never enforce committee-only login privileges until a portal account is explicitly linked
+  to the corresponding member; roles or similar display names are not sufficient evidence.
+- Preserve unconfirmed official names outside the roster until a DKMO/Access ID is confirmed.
+- Meeting attendance must derive its eligible member list from the meeting's committee term,
+  never from the full member registry.

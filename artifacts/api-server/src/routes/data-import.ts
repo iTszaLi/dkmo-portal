@@ -16,6 +16,7 @@ import { requireAuth, requireRole, type AuthedRequest } from "../middlewares/req
 import { logAudit } from "../lib/audit";
 import { getUserById } from "../lib/users";
 import { normalizeSaudiMobile, normalizeDate } from "./member-import";
+import { syncMemberFrfEligibility } from "../lib/frf-ledger";
 
 /**
  * Generic legacy data import (Payments / Receipts / FRF Contributions /
@@ -397,9 +398,10 @@ router.post("/import/:entity/commit", requireRole("admin"), async (req: AuthedRe
     for (const row of toImport) {
       const v = row.values;
       if (entity === "payments") {
-        await tx.insert(paymentsTable).values({
+        const paymentType = /frf/i.test(v.details ?? "") ? "frf_contribution" : "membership_fee";
+        const [insertedPayment] = await tx.insert(paymentsTable).values({
           memberId: row.memberId!,
-          paymentType: /frf/i.test(v.details ?? "") ? "frf_contribution" : "membership_fee",
+          paymentType,
           amountDue: v.amount!,
           amountPaid: v.amount!,
           status: "paid",
@@ -408,7 +410,29 @@ router.post("/import/:entity/commit", requireRole("admin"), async (req: AuthedRe
           notes: [v.details, v.remarks].filter(Boolean).join(" — ") || "Imported from legacy database",
           paidAt: v.date ? new Date(`${v.date}T12:00:00Z`) : new Date(),
           importBatchId: id,
-        });
+        }).returning({ memberId: paymentsTable.memberId });
+        if (paymentType === "membership_fee" && insertedPayment) {
+          const [member] = await tx
+            .select({ legacyMemberId: membersTable.legacyMemberId })
+            .from(membersTable)
+            .where(eq(membersTable.id, insertedPayment.memberId));
+          if (member && !member.legacyMemberId) {
+            const [updated] = await tx
+              .update(membersTable)
+              .set({
+                feeStatus: "paid",
+                feePaidAt: v.date ? new Date(`${v.date}T12:00:00Z`) : new Date(),
+                feeUpdatedBy: req.userId ?? "import",
+              })
+              .where(eq(membersTable.id, insertedPayment.memberId))
+              .returning({ feeStatus: membersTable.feeStatus });
+            await syncMemberFrfEligibility(
+              insertedPayment.memberId,
+              updated?.feeStatus ?? "paid",
+              tx,
+            );
+          }
+        }
       } else if (entity === "receipts") {
         await tx.insert(receiptsTable).values({
           receiptNumber: v.receiptNumber!,
@@ -424,12 +448,20 @@ router.post("/import/:entity/commit", requireRole("admin"), async (req: AuthedRe
           importBatchId: id,
         });
       } else if (entity === "frf") {
+        const [member] = await tx
+          .select({ feeStatus: membersTable.feeStatus })
+          .from(membersTable)
+          .where(eq(membersTable.id, row.memberId!));
+        const importedStatus =
+          member?.feeStatus === "paid" || Number(v.amountPaid ?? 0) > 0
+            ? v.status!
+            : "cancelled";
         await tx.insert(frfContributionsTable).values({
           claimId: row.claimId!,
           memberId: row.memberId!,
           amount: v.amount!,
           amountPaid: v.amountPaid!,
-          status: v.status!,
+          status: importedStatus,
           paidAt: v.status === "paid" ? (v.paidAt ? new Date(`${v.paidAt}T12:00:00Z`) : new Date()) : null,
           importBatchId: id,
         });

@@ -11,7 +11,7 @@ import {
 export const FRF_OVERDUE_DAYS = 30;
 
 /** Any drizzle executor — the shared db instance or an open transaction. */
-type Executor = Pick<typeof db, "insert" | "update">;
+type Executor = Pick<typeof db, "select" | "insert" | "update">;
 
 export type FrfEligibilityStatus =
   | "eligible"
@@ -23,18 +23,14 @@ export function frfEligibility(member: Pick<Member, "feeStatus" | "frfStatus">):
   status: FrfEligibilityStatus;
   reason: string;
 } {
-  if (member.frfStatus === "suspended") {
-    return { status: "suspended", reason: "Member Suspended" };
-  }
-  if (member.frfStatus === "inactive") {
-    return { status: "not_eligible", reason: "Member Inactive" };
-  }
   if (member.feeStatus !== "paid") {
     return {
-      status: "pending_activation",
+      status: "not_eligible",
       reason: "Membership Fee Not Paid",
     };
   }
+  // Membership payment is the sole FRF eligibility gate. Stored FRF status
+  // values are legacy/cache data and must not override a paid membership.
   return { status: "eligible", reason: "" };
 }
 
@@ -69,28 +65,32 @@ export function deriveContributionStatus(
 }
 
 /**
- * Generate contribution ledger rows for every currently-eligible active
- * member for an approved claim. Idempotent: the unique (claim_id, member_id)
- * index plus ON CONFLICT DO NOTHING guarantees no duplicates.
+ * Reconcile contribution ledger rows for every current DKMO member for a
+ * collecting claim. Idempotent: the unique (claim_id, member_id) index plus
+ * ON CONFLICT DO NOTHING guarantees no duplicates. Existing paid, partial,
+ * exempt, cancelled, and pending rows are never overwritten.
  * Returns the number of rows created.
  */
 export async function generateContributionsForClaim(
   claimId: string,
   amount: number,
 ): Promise<number> {
-  const eligibleMembers = await db
+  // A claim is also the current collection-case record. Never self-heal a
+  // closed, rejected, or review-only historical claim into a live ledger.
+  const [claim] = await db
+    .select({ status: frfClaimsTable.status })
+    .from(frfClaimsTable)
+    .where(eq(frfClaimsTable.id, claimId));
+  if (!claim || claim.status !== "approved") return 0;
+
+  const currentMembers = await db
     .select({ id: membersTable.id })
     .from(membersTable)
-    .where(
-      and(
-        eq(membersTable.feeStatus, "paid"),
-        eq(membersTable.frfStatus, "active"),
-      ),
-    );
+    .where(eq(membersTable.feeStatus, "paid"));
 
-  if (eligibleMembers.length === 0) return 0;
+  if (currentMembers.length === 0) return 0;
 
-  const rows = eligibleMembers.map((m) => ({
+  const rows = currentMembers.map((m) => ({
     claimId,
     memberId: m.id,
     amount: String(amount),
@@ -106,6 +106,73 @@ export async function generateContributionsForClaim(
     .returning({ id: frfContributionsTable.id });
 
   return inserted.length;
+}
+
+/**
+ * Keep the current FRF collection rows aligned with membership-fee
+ * eligibility. A member can only receive new/reopened dues after the
+ * membership fee is paid. Existing contribution rows are preserved for
+ * history; only still-pending rows are cancelled when eligibility is lost.
+ */
+export async function syncMemberFrfEligibility(
+  memberId: string,
+  feeStatus: string,
+  executor: Executor = db,
+): Promise<void> {
+  if (feeStatus !== "paid") {
+    await executor
+      .update(frfContributionsTable)
+      .set({ status: "cancelled" })
+      .where(
+        and(
+          eq(frfContributionsTable.memberId, memberId),
+          eq(frfContributionsTable.status, "pending"),
+        ),
+      );
+    await executor
+      .update(membersTable)
+      .set({ frfStatus: "inactive" })
+      .where(eq(membersTable.id, memberId));
+    return;
+  }
+
+  await executor
+    .update(membersTable)
+    .set({ frfStatus: "active" })
+    .where(eq(membersTable.id, memberId));
+
+  const activeClaims = await executor
+    .select({
+      id: frfClaimsTable.id,
+      contributionAmount: frfClaimsTable.contributionAmount,
+    })
+    .from(frfClaimsTable)
+    .where(eq(frfClaimsTable.status, "approved"));
+
+  for (const claim of activeClaims) {
+    await executor
+      .insert(frfContributionsTable)
+      .values({
+        claimId: claim.id,
+        memberId,
+        amount: claim.contributionAmount,
+        status: "pending",
+      })
+      .onConflictDoNothing({
+        target: [frfContributionsTable.claimId, frfContributionsTable.memberId],
+      });
+
+    await executor
+      .update(frfContributionsTable)
+      .set({ status: "pending" })
+      .where(
+        and(
+          eq(frfContributionsTable.claimId, claim.id),
+          eq(frfContributionsTable.memberId, memberId),
+          eq(frfContributionsTable.status, "cancelled"),
+        ),
+      );
+  }
 }
 
 /**
@@ -245,19 +312,22 @@ export async function aggregateMemberFrf(
     .select({
       contribution: frfContributionsTable,
       approvedDate: frfClaimsTable.approvedDate,
+      feeStatus: membersTable.feeStatus,
     })
     .from(frfContributionsTable)
     .innerJoin(
       frfClaimsTable,
       eq(frfContributionsTable.claimId, frfClaimsTable.id),
-    );
+    )
+    .innerJoin(membersTable, eq(frfContributionsTable.memberId, membersTable.id));
 
   const filter = memberIds ? new Set(memberIds) : null;
   const now = new Date();
   const map = new Map<string, MemberFrfAggregate>();
 
-  for (const { contribution: c, approvedDate } of rows) {
+  for (const { contribution: c, approvedDate, feeStatus } of rows) {
     if (filter && !filter.has(c.memberId)) continue;
+    if (feeStatus !== "paid") continue;
     const status = deriveContributionStatus(c, approvedDate, now);
     if (status === "cancelled" || status === "exempt") continue;
     let agg = map.get(c.memberId);

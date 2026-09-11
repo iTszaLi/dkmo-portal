@@ -86,7 +86,6 @@
     "exceljs": "^4.4.0",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",
-    "qrcode": "^1.5.4",
-    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+    "qrcode": "^1.5.4"
   }
 }

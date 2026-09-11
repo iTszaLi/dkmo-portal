@@ -72,6 +72,10 @@ export function PaymentForm({ defaultValues, fixedMemberId, onSubmit, isSubmitti
       notes: defaultValues?.notes || "",
     },
   });
+  const selectedMember = members?.find((member) => member.id === form.watch("memberId"));
+  const frfAllowed =
+    selectedMember?.feeStatus === "paid" ||
+    defaultValues?.paymentType === "frf_contribution";
 
   useEffect(() => {
     if (defaultValues) {
@@ -136,9 +140,11 @@ export function PaymentForm({ defaultValues, fixedMemberId, onSubmit, isSubmitti
                     <SelectItem value="membership_fee">
                       Membership Fee (one-time SAR 100)
                     </SelectItem>
-                    <SelectItem value="frf_contribution">
-                      FRF Contribution (per approved claim)
-                    </SelectItem>
+                    {frfAllowed && (
+                      <SelectItem value="frf_contribution">
+                        FRF Contribution (per approved claim)
+                      </SelectItem>
+                    )}
                     <SelectItem value="donation">Donation</SelectItem>
                     <SelectItem value="sponsorship">Sponsorship</SelectItem>
                     <SelectItem value="waiver">Waiver (zero-amount allowed)</SelectItem>

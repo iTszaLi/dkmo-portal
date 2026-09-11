@@ -3,6 +3,7 @@ import cors from "cors";
 import pinoHttp from "pino-http";
 import { createSessionMiddleware } from "./lib/session";
 import router from "./routes";
+import healthRouter from "./routes/health";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
@@ -69,6 +70,9 @@ app.use((_req, res, next) => {
 app.use(express.json({ limit: "8mb" }));
 app.use(express.urlencoded({ extended: true, limit: "8mb" }));
 
+// Keep the startup probe independent from the session store. Authenticated
+// application routes still pass through the database-backed session middleware.
+app.use("/api", healthRouter);
 app.use(createSessionMiddleware());
 
 app.use("/api", router);

@@ -11,7 +11,17 @@ description: How FRF (SAR 50/case) fee UIs are structured vs membership fee (SAR
 
 - **FRF pending parity (user rule, July 2026):** Every surface that lists pending FRF fees (Payments FRF tab Pending view, FRF Reminders page, any future UI) MUST derive from GET /frf/pending-fees so lists/names/totals are identical. Never derive pending FRF lists from member.frfOutstanding or per-case collection filters.
 
-**FRF reminders removed (user decision, Jul 2026):** The FRF Reminders page, its route, the "Send FRF Reminder" button on the FRF page, and the dashboard FRF Reminder widget were all removed — the director decided FRF contributors don't need reminders. Do not re-add FRF reminder surfaces unless explicitly asked. Membership-fee reminders (Payments page) remain.
+**FRF reminder status:** An explicit later request reintroduced the FRF WhatsApp reminder action on Payments → FRF Fees. Keep it limited to the approved active case, membership-fee-paid contributors, unpaid statuses, and valid mobile numbers; the former standalone FRF Reminders page/widget remains removed.
+
+**Why:** The explicit request changed the earlier product decision, but the same active-case and eligibility rules still protect against reminding members about historical, closed, or ineligible FRF obligations.
+
+**How to apply:** Reuse the membership reminder's number normalization and `wa.me` link behavior. Do not add a separate tracking system unless the membership reminder system gains one.
+
+**Bilingual reminder flow:** FRF reminders require an English/Kannada choice and a preview of the exact dynamic message before WhatsApp opens. Keep names, case titles, IDs, and SAR values unchanged in Kannada.
+
+**Why:** Committee members need to send a natural local-language reminder while verifying the real recipient and active-case details before sending.
+
+**How to apply:** Use simple conversational Kannada, keep the confirmation as a user gesture, and never mutate payment or contribution status from the reminder flow.
 
 **One-active-case rule (Jul 2026, user decision):** Only ONE FRF collection case (claim status 'approved') may be active at a time. Enforced by DB partial unique index `frf_claims_single_active` (mapped to HTTP 409) + read-check in POST/PUT /frf/claims. Contributions are generated on APPROVAL, not creation. /frf/pending-fees returns only the active (approved) case. 'disbursed' = completed/closed history. Seed has exactly 7 FRF claims (3 disbursed, 1 approved active, 1 under_review, 1 pending, 1 rejected).
 

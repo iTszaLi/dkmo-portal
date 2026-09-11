@@ -159,7 +159,7 @@ export default function DkmoTrackPage() {
       <div className="border-b border-green-100 dark:border-slate-800 bg-white/60 dark:bg-slate-950/60 backdrop-blur-sm">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-3">
           <button
-            onClick={() => setLocation(`${basePath}/login`)}
+            onClick={() => setLocation("/login")}
             className="text-green-700 dark:text-green-400 hover:text-green-900 dark:hover:text-green-200 p-1 rounded-lg hover:bg-green-50 dark:hover:bg-slate-800 transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -289,7 +289,7 @@ export default function DkmoTrackPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => setLocation(`${basePath}/dkmo-verify?n=${encodeURIComponent(r.dkmoNumber)}`)}
+                        onClick={() => setLocation(`/dkmo-verify?n=${encodeURIComponent(r.dkmoNumber)}`)}
                         className="border-green-400 dark:border-green-800 text-green-800 dark:text-green-300 gap-1.5"
                       >
                         <ShieldCheck className="h-4 w-4" />
@@ -340,7 +340,7 @@ export default function DkmoTrackPage() {
                     variant="outline"
                     size="sm"
                     className="flex-1 border-green-300 dark:border-slate-700 text-green-700 dark:text-green-400 gap-1.5"
-                    onClick={() => setLocation(`${basePath}/dkmo-apply`)}
+                    onClick={() => setLocation("/dkmo-apply")}
                   >
                     New Application
                   </Button>
@@ -360,7 +360,7 @@ export default function DkmoTrackPage() {
         <p className="text-center text-xs text-slate-400 dark:text-slate-600 pb-4">
           Don't have an application yet?{" "}
           <button
-            onClick={() => setLocation(`${basePath}/dkmo-apply`)}
+            onClick={() => setLocation("/dkmo-apply")}
             className="text-green-700 dark:text-green-400 underline hover:no-underline"
           >
             Apply for DKMO Membership

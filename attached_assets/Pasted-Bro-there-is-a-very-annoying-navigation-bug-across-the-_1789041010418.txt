@@ -1,0 +1,235 @@
+Bro, there is a **very annoying navigation bug across the DKMO Portal** that needs to be fixed globally.
+
+## 🚨 PROBLEM
+
+Whenever I open a module/page, then click something inside that module — for example:
+
+* Open Members → open a member profile
+* Open Payments → open a payment/details page
+* Open FRF Claims → open a claim
+* Open Loans → open a loan
+* Open Documents → open a document
+* Open Committee → open a committee member
+* Open any other module → open a detail/edit/view page
+
+When I click **Back**, the application sometimes takes me to a **random or unrelated module/page** instead of returning me to the module/list page I was previously using.
+
+This is very frustrating and makes navigation confusing.
+
+---
+
+# REQUIRED BEHAVIOR
+
+The Back button must always return the user to the **correct previous context**.
+
+### Examples:
+
+**Members**
+
+* Members → Member Profile → Back
+* MUST return to **Members**
+
+**Members → Edit Member → Save/Back**
+
+* MUST return to **Members or the correct member profile context**, according to the action.
+
+**Payments**
+
+* Payments → Payment Details → Back
+* MUST return to **Payments**
+
+**FRF Fees**
+
+* FRF Fees → Member/FRF Details → Back
+* MUST return to **FRF Fees**
+
+**FRF Claims**
+
+* FRF Claims → Claim Details → Back
+* MUST return to **FRF Claims**
+
+**Loans**
+
+* Loans → Loan Details → Back
+* MUST return to **Loans**
+
+**Documents**
+
+* Documents → Document Details/Edit → Back
+* MUST return to **Documents**
+
+**Committee**
+
+* Committee → Committee Member Details/Edit → Back
+* MUST return to **Committee**
+  [**Dashboard**](https://a24a40ce-cf58-4531-b781-69839223986b-00-vnv36bxy9sd6.pike.replit.dev/dashboard)[**Calendar**](https://a24a40ce-cf58-4531-b781-69839223986b-00-vnv36bxy9sd6.pike.replit.dev/calendar)
+
+  **People**
+
+  [**Members**](https://a24a40ce-cf58-4531-b781-69839223986b-00-vnv36bxy9sd6.pike.replit.dev/members)[**Committee**](https://a24a40ce-cf58-4531-b781-69839223986b-00-vnv36bxy9sd6.pike.replit.dev/committee)[**Meeting Attendance**](https://a24a40ce-cf58-4531-b781-69839223986b-00-vnv36bxy9sd6.pike.replit.dev/meetings)[**DKMO Membership**](https://a24a40ce-cf58-4531-b781-69839223986b-00-vnv36bxy9sd6.pike.replit.dev/dkmo-memberships)
+
+  **Finance**
+
+  [**Payments**](https://a24a40ce-cf58-4531-b781-69839223986b-00-vnv36bxy9sd6.pike.replit.dev/payments)[**Receipts**](https://a24a40ce-cf58-4531-b781-69839223986b-00-vnv36bxy9sd6.pike.replit.dev/receipts)[**Loans**](https://a24a40ce-cf58-4531-b781-69839223986b-00-vnv36bxy9sd6.pike.replit.dev/loans)[**Sponsors**](https://a24a40ce-cf58-4531-b781-69839223986b-00-vnv36bxy9sd6.pike.replit.dev/sponsors)[**Reports**](https://a24a40ce-cf58-4531-b781-69839223986b-00-vnv36bxy9sd6.pike.replit.dev/reports)
+
+  **Community**
+
+  [**FRF Claims**](https://a24a40ce-cf58-4531-b781-69839223986b-00-vnv36bxy9sd6.pike.replit.dev/frf)[**Membership Drive**](https://a24a40ce-cf58-4531-b781-69839223986b-00-vnv36bxy9sd6.pike.replit.dev/membership-drive)[**Welfare Programs**](https://a24a40ce-cf58-4531-b781-69839223986b-00-vnv36bxy9sd6.pike.replit.dev/services)[**Events**](https://a24a40ce-cf58-4531-b781-69839223986b-00-vnv36bxy9sd6.pike.replit.dev/events)[**Tasks**](https://a24a40ce-cf58-4531-b781-69839223986b-00-vnv36bxy9sd6.pike.replit.dev/tasks)
+
+  **Administration**
+
+  [**Documents**](https://a24a40ce-cf58-4531-b781-69839223986b-00-vnv36bxy9sd6.pike.replit.dev/documents)[**Audit Trail**](https://a24a40ce-cf58-4531-b781-69839223986b-00-vnv36bxy9sd6.pike.replit.dev/audit)[**Settings**](https://a24a40ce-cf58-4531-b781-69839223986b-00-vnv36bxy9sd6.pike.replit.dev/settings)
+
+And the same behavior must work for **EVERY module in the portal**.
+
+---
+
+# IMPORTANT: DO NOT HARD-CODE RANDOM ROUTES
+
+Please inspect the current routing/navigation architecture and identify why the Back behavior is losing the previous page context.
+
+Use the application's existing routing system properly.
+
+If appropriate, use:
+
+* Browser history
+* React Router navigation/history
+* Previous-location state
+* Route state/query parameters
+* A centralized navigation helper
+
+Choose the cleanest approach that fits the existing architecture.
+
+Do **NOT** create a separate hardcoded Back destination for every page if the existing routing/history system can solve this properly.
+
+---
+
+# PRESERVE LIST STATE
+
+This is especially important.
+
+If I was on a module with:
+
+* Search/filter applied
+* Pagination on a certain page
+* Sort order
+* Selected tab
+* Filtered status
+* Date filter
+* Other existing list state
+
+then I open a record and press Back, preserve the previous module context whenever technically possible.
+
+For example:
+
+**Loans**
+→ filter Status = Active
+→ open Loan #123
+→ Back
+
+Should return to **Loans with the Active filter still applied**, rather than resetting me to some unrelated page.
+
+Do the same for Members, Payments, Documents, FRF, Committee, etc.
+
+---
+
+# CHECK ALL MODULES
+
+Do a complete navigation audit.
+
+Do NOT only fix the module where the bug was first noticed.
+
+Check every major DKMO Portal module and its:
+
+* List → Details
+* List → Edit
+* List → Add/Create
+* Details → Edit
+* Details → related records
+* Nested pages
+* Modal/page transitions where Back is available
+* Cancel buttons
+* Back buttons
+* Breadcrumb navigation if present
+
+Make sure navigation is consistent throughout the application.
+
+---
+
+# IMPORTANT DISTINCTION
+
+There are two different behaviors:
+
+### Browser Back
+
+The browser's native Back button should follow the actual browser history correctly.
+
+### Application Back button
+
+If the application has a Back button, it should return to the user's actual previous context, not a hardcoded/random module.
+
+Do not break either one.
+
+---
+
+# DO NOT BREAK
+
+While fixing this:
+
+* Do NOT redesign the UI.
+* Do NOT rename modules.
+* Do NOT change database logic.
+* Do NOT change member data.
+* Do NOT change financial calculations.
+* Do NOT change FRF rules.
+* Do NOT change loan rules.
+* Do NOT change permissions.
+* Do NOT delete data.
+* Do NOT introduce unnecessary dependencies.
+* Do NOT modify unrelated functionality.
+
+This should be a **navigation/routing fix only**.
+
+---
+
+# TEST THE FIX
+
+After implementing the fix, manually and/or automatically test navigation through **every major module**.
+
+At minimum test:
+
+1. Dashboard → module → record → Back
+2. Members → member profile → Back
+3. Payments → payment details → Back
+4. FRF Fees → member/details → Back
+5. FRF Claims → claim/details → Back
+6. Loans → loan details → Back
+7. Documents → document details → Back
+8. Committee → member/details → Back
+9. Any remaining modules in the sidebar → detail/edit → Back
+
+Also test:
+
+* Browser Back button
+* Application Back button
+* Cancel buttons
+* Save → return behavior
+* Search/filter state preservation
+* Pagination state preservation
+* Direct URL opening
+* Refreshing a detail page
+* Nested navigation
+
+---
+
+# FINAL REQUIREMENT
+
+Before considering this task complete, verify that there are **no random Back destinations anywhere in the portal**.
+
+The principle should be:
+
+> **If I came from Module A and opened something inside Module A, pressing Back should take me back to Module A and preserve its context whenever possible.**
+
+Please inspect the entire routing/navigation implementation, identify the root cause, implement the cleanest global solution, test every module, and report exactly what was changed.
+
+Do not make unnecessary UI or architecture changes.

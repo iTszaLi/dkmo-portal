@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import TicketSalesAnalytics from "@/components/events/TicketSalesAnalytics";
-import { Link, useLocation } from "wouter";
+import { Link, useLocation, useSearch } from "wouter";
 import { useListEvents, useDeleteEvent } from "@workspace/api-client-react";
 import {
   Card,
@@ -41,6 +41,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { replaceCurrentQuery, withReturnTo } from "@/lib/navigation";
 
 const EVENT_STATUSES = ["upcoming", "ongoing", "completed", "cancelled"] as const;
 
@@ -67,14 +68,25 @@ function formatSAR(n: number) {
 
 export default function Events() {
   const [, setLocation] = useLocation();
+  const searchString = useSearch();
+  const initialParams = useMemo(() => new URLSearchParams(searchString), [searchString]);
   const { canEdit, canDelete } = useAuth();
   const { toast } = useToast();
 
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<string>("all");
-  const [sort, setSort] = useState<string>("dateDesc");
-  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState(() => initialParams.get("search") ?? "");
+  const [status, setStatus] = useState<string>(() => initialParams.get("status") ?? "all");
+  const [sort, setSort] = useState<string>(() => initialParams.get("sort") ?? "dateDesc");
+  const [page, setPage] = useState(() => Math.max(1, Number(initialParams.get("page")) || 1));
   const pageSize = 25;
+
+  useEffect(() => {
+    replaceCurrentQuery({
+      search: search || null,
+      status: status === "all" ? null : status,
+      sort: sort === "dateDesc" ? null : sort,
+      page: page > 1 ? page : null,
+    });
+  }, [search, status, sort, page]);
 
   const queryParams = useMemo(
     () => ({
@@ -208,7 +220,7 @@ export default function Events() {
                   <TableRow
                     key={ev.id}
                     className="cursor-pointer hover:bg-green-50/40 dark:hover:bg-slate-800/40 transition-colors"
-                    onClick={() => setLocation(`/events/${ev.id}`)}
+                    onClick={() => setLocation(withReturnTo(`/events/${ev.id}`))}
                   >
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -240,7 +252,7 @@ export default function Events() {
                       onClick={(e) => e.stopPropagation()}
                     >
                       <div className="flex items-center justify-end gap-1">
-                        <Link href={`/events/${ev.id}`}>
+                        <Link href={withReturnTo(`/events/${ev.id}`)}>
                           <Button size="icon" variant="ghost" className="h-8 w-8 text-green-800 dark:text-green-400">
                             <ArrowRight className="h-4 w-4" />
                           </Button>

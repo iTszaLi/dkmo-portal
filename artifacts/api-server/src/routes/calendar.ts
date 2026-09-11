@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { and, gte, lt, isNotNull, eq } from "drizzle-orm";
+import { and, gte, lt, isNotNull } from "drizzle-orm";
 import {
   db,
   eventsTable,
@@ -7,7 +7,6 @@ import {
   tasksTable,
   sponsorsTable,
   documentsTable,
-  dkmoMembershipsTable,
 } from "@workspace/db";
 import { requireAuth } from "../middlewares/requireAuth";
 
@@ -15,7 +14,7 @@ const router: IRouter = Router();
 
 type CalendarItem = {
   date: string; // YYYY-MM-DD
-  type: "event" | "meeting" | "task" | "sponsor_due" | "document_expiry" | "birthday";
+  type: "event" | "meeting" | "task" | "sponsor_due" | "document_expiry";
   title: string;
   href: string;
   meta?: string;
@@ -27,8 +26,8 @@ function ymd(d: Date): string {
 
 /**
  * GET /api/calendar?year=2026&month=7 — everything happening in a given month:
- * events, meetings, task due dates, sponsor follow-ups, document expiries and
- * member birthdays. Auth-only, matching the portal's role-open read model.
+ * events, meetings, task due dates, sponsor follow-ups and document expiries.
+ * Auth-only, matching the portal's role-open read model.
  */
 router.get("/calendar", requireAuth, async (req, res): Promise<void> => {
   const now = new Date();
@@ -42,7 +41,7 @@ router.get("/calendar", requireAuth, async (req, res): Promise<void> => {
   const end = new Date(Date.UTC(year, month, 1));
 
   try {
-    const [events, meetings, tasks, sponsors, documents, births] = await Promise.all([
+    const [events, meetings, tasks, sponsors, documents] = await Promise.all([
       db
         .select({ id: eventsTable.id, name: eventsTable.name, date: eventsTable.eventDate })
         .from(eventsTable)
@@ -64,11 +63,6 @@ router.get("/calendar", requireAuth, async (req, res): Promise<void> => {
         .select({ id: documentsTable.id, title: documentsTable.title, expiry: documentsTable.expiryDate })
         .from(documentsTable)
         .where(isNotNull(documentsTable.expiryDate)),
-      // Birthdays: approved memberships whose DOB month matches, any year.
-      db
-        .select({ id: dkmoMembershipsTable.id, name: dkmoMembershipsTable.fullName, dob: dkmoMembershipsTable.dateOfBirth })
-        .from(dkmoMembershipsTable)
-        .where(and(isNotNull(dkmoMembershipsTable.dateOfBirth), eq(dkmoMembershipsTable.status, "approved"))),
     ]);
 
     const items: CalendarItem[] = [];
@@ -83,23 +77,6 @@ router.get("/calendar", requireAuth, async (req, res): Promise<void> => {
         items.push({ date: d.expiry, type: "document_expiry", title: `${d.title} expires`, href: "/documents" });
       }
     }
-    const daysInViewedMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
-    for (const b of births) {
-      if (!b.dob) continue;
-      const dob = String(b.dob); // date column serializes as YYYY-MM-DD
-      const [, mm, dd] = dob.split("-");
-      if (Number(mm) === month && dd) {
-        // Feb 29 birthdays fall back to Feb 28 in non-leap years.
-        const day = Math.min(Number(dd), daysInViewedMonth);
-        items.push({
-          date: `${prefix}${String(day).padStart(2, "0")}`,
-          type: "birthday",
-          title: `${b.name}'s birthday`,
-          href: "/dkmo-memberships",
-        });
-      }
-    }
-
     items.sort((a, b) => a.date.localeCompare(b.date));
     res.json({ year, month, items });
   } catch (err) {

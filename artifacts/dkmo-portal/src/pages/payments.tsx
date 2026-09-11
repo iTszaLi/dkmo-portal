@@ -2,8 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearch } from "wouter";
 import {
   useListMembers,
+  useListPayments,
+  useUpdateMember,
   useUpdateMemberFeeStatus,
+  useCreatePayment,
+  customFetch,
   getListMembersQueryKey,
+  getListPaymentsQueryKey,
   getGetPendingMembersQueryKey,
 } from "@workspace/api-client-react";
 import type { FeeStatusInputFeeStatus, Member } from "@workspace/api-client-react";
@@ -12,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, UserCircle, MoreHorizontal, Search, Wallet, CheckCircle2, XCircle, MinusCircle, HeartHandshake, Send, MessageSquareWarning, Phone, MapPin } from "lucide-react";
+import { Plus, UserCircle, MoreHorizontal, Search, Wallet, CheckCircle2, XCircle, MinusCircle, HeartHandshake, Send, MessageSquareWarning, Phone, MapPin, Clock, Pencil } from "lucide-react";
 import { formatSAR, formatDate, feeStatusLabel, feeStatusBadgeClass } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,8 +25,13 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { RefMemberCell, useMemberIndex } from "@/components/RefMemberCell";
 import FrfFeesPanel from "@/components/payments/FrfFeesPanel";
 import { cn } from "@/lib/utils";
-import { normalizeWhatsAppNumber, buildWhatsAppLink, type WhatsAppTarget } from "@/lib/whatsapp";
+import { withReturnTo } from "@/lib/navigation";
+import { normalizeWhatsAppNumber, type WhatsAppTarget } from "@/lib/whatsapp";
 import { WhatsAppBulkDialog } from "@/components/WhatsAppBulkDialog";
+import { WhatsAppReminderDialog, type WhatsAppReminderLanguage } from "@/components/WhatsAppReminderDialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { getMembershipFeeAmount } from "@/lib/membership-fee";
 
 type PaymentTab = "membership" | "frf";
 type StatusView = "all" | "paid" | "unpaid" | "overdue";
@@ -33,8 +43,24 @@ const STATUS_VIEWS: { value: StatusView; label: string }[] = [
   { value: "overdue", label: "Overdue" },
 ];
 
+const EDITABLE_FEE_STATUSES: FeeStatusInputFeeStatus[] = [
+  "paid",
+  "partial",
+  "pending",
+  "unpaid",
+  "exempt",
+  "review",
+  "not_applicable",
+];
+
+function dateInputValue(value: string | Date | null | undefined): string {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 10);
+}
+
 function isDue(m: Member): boolean {
-  return m.feeStatus !== "paid" && m.feeStatus !== "exempt";
+  return !["paid", "exempt", "not_applicable", "review"].includes(m.feeStatus);
 }
 
 /** A fee is overdue when it is still due 30+ days after the member was registered. */
@@ -46,14 +72,39 @@ function isOverdue(m: Member): boolean {
   return Date.now() - created > OVERDUE_AFTER_DAYS * 24 * 60 * 60 * 1000;
 }
 
-function buildReminderMessage(m: Member): string {
-  return `Assalamu Alaikum ${m.fullName},\n\nThis is a gentle reminder from DKMO (Dakshina Karnataka Muslim Ookota — Committed to the Community). Your one-time membership registration fee of ${formatSAR(m.membershipFee)} is currently ${feeStatusLabel(m.feeStatus).toLowerCase()}.\n\nPlease complete the payment at your earliest convenience to activate your membership.\n\nJazakallah Khair.`;
+function hasWhatsAppNumber(m: Member): boolean {
+  return Boolean(normalizeWhatsAppNumber(m.mobileNumber));
+}
+
+function buildReminderMessage(m: Member, language: WhatsAppReminderLanguage = "en"): string {
+  const fee = formatSAR(getMembershipFeeAmount(m.membershipFee));
+  if (language === "kn") {
+    return `ಅಸ್ಸಲಾಮು ಅಲೈಕುಮ್ ${m.fullName},
+
+DKMO (ದಕ್ಷಿಣ ಕರ್ನಾಟಕ ಮುಸ್ಲಿಂ ಒಕ್ಕೂಟ — ಸಮುದಾಯದ ಬದ್ಧತೆ) ವತಿಯಿಂದ ಒಂದು ಸೌಮ್ಯ ನೆನಪಿನ ಸಂದೇಶ.
+
+ನಿಮ್ಮ ಒಂದು ಬಾರಿ ಪಾವತಿಸಬೇಕಾದ ಸದಸ್ಯತ್ವ ನೋಂದಣಿ ಶುಲ್ಕ ${fee} ಆಗಿದೆ. ಪ್ರಸ್ತುತ ಸ್ಥಿತಿ: ${feeStatusLabel(m.feeStatus).toLowerCase()}.
+DKMO ID: ${m.membershipId}
+
+ನಿಮ್ಮ ಸದಸ್ಯತ್ವವನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಲು ಸಾಧ್ಯವಾದಷ್ಟು ಬೇಗ ಪಾವತಿಸಲು ವಿನಂತಿ.
+
+ಜಝಾಕಲ್ಲಾಹು ಖೈರ್.`;
+  }
+
+  return `Assalamu Alaikum ${m.fullName},
+
+This is a gentle reminder from DKMO (Dakshina Karnataka Muslim Ookota — Committed to the Community). Your one-time membership registration fee of ${fee} is currently ${feeStatusLabel(m.feeStatus).toLowerCase()}.
+DKMO ID: ${m.membershipId}
+
+Please complete the payment at your earliest convenience to activate your membership.
+
+Jazakallah Khair.`;
 }
 
 function toWhatsAppTargets(members: Member[]): WhatsAppTarget[] {
   return members.flatMap((m) => {
     const number = normalizeWhatsAppNumber(m.mobileNumber);
-    return number ? [{ id: m.id, name: m.fullName, number, message: buildReminderMessage(m) }] : [];
+    return number ? [{ id: m.id, name: m.fullName, number, message: buildReminderMessage(m, "en") }] : [];
   });
 }
 
@@ -63,6 +114,7 @@ export default function Payments() {
   const params = useMemo(() => new URLSearchParams(searchString), [searchString]);
   const urlTab: PaymentTab = params.get("tab") === "frf" ? "frf" : "membership";
   const initialFrfStatus = params.get("frfStatus");
+  const initialFrfCaseId = params.get("frfCaseId") ?? undefined;
   const [tab, setTab] = useState<PaymentTab>(urlTab);
   useEffect(() => setTab(urlTab), [urlTab]);
   // Deep-link: /payments?view=unpaid (membership tab status view)
@@ -75,13 +127,141 @@ export default function Payments() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkTargets, setBulkTargets] = useState<WhatsAppTarget[]>([]);
+  const [reminderMember, setReminderMember] = useState<Member | null>(null);
 
   const { data: members, isLoading } = useListMembers({ search: textSearch.length > 2 ? textSearch : undefined });
+  const { data: membershipPayments } = useListPayments({ paymentType: "membership_fee" });
   const updateFeeStatus = useUpdateMemberFeeStatus();
+  const updateMember = useUpdateMember();
+  const createPayment = useCreatePayment();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const all = members ?? [];
+  const referenceMemberOptions = useMemo(() => {
+    const options = new Map<string, { id: string; fullName: string; membershipId: string }>();
+    for (const reference of memberIndex.values()) options.set(reference.id, reference);
+    for (const member of all) {
+      options.set(member.id, { id: member.id, fullName: member.fullName, membershipId: member.membershipId });
+    }
+    return [...options.values()].sort((a, b) => a.fullName.localeCompare(b.fullName));
+  }, [memberIndex, all]);
+  const latestMembershipPaymentByMember = useMemo(() => {
+    const map = new Map<string, any>();
+    for (const payment of membershipPayments ?? []) {
+      if (payment.status === "cancelled" || payment.status === "refunded") continue;
+      const current = map.get(payment.memberId);
+      if (!current || new Date(payment.paidAt ?? 0).getTime() > new Date(current.paidAt ?? 0).getTime()) {
+        map.set(payment.memberId, payment);
+      }
+    }
+    return map;
+  }, [membershipPayments]);
+
+  const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [editReferenceMemberId, setEditReferenceMemberId] = useState("");
+  const [editFeeStatus, setEditFeeStatus] = useState<FeeStatusInputFeeStatus>("unpaid");
+  const [editPaidOn, setEditPaidOn] = useState("");
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+
+  const openPaymentEdit = (member: Member) => {
+    const latestPayment = latestMembershipPaymentByMember.get(member.id);
+    setEditingMember(member);
+    setEditReferenceMemberId(member.refMemberId || "");
+    setEditFeeStatus(member.feeStatus);
+    setEditPaidOn(dateInputValue(latestPayment?.paidAt ?? member.feePaidAt));
+  };
+
+  const savePaymentEdit = async () => {
+    if (!editingMember) return;
+    const member = editingMember;
+    const latestPayment = latestMembershipPaymentByMember.get(member.id);
+    const selectedReference = referenceMemberOptions.find((candidate) => candidate.id === editReferenceMemberId);
+    const financialEditAllowed = !member.legacyMemberId;
+    const nextFeeStatus =
+      editFeeStatus === "paid"
+        ? "paid"
+        : financialEditAllowed
+          ? editFeeStatus
+          : member.feeStatus;
+    const paidAt = editPaidOn ? new Date(`${editPaidOn}T12:00:00Z`).toISOString() : undefined;
+
+    setIsSavingEdit(true);
+    try {
+      if (nextFeeStatus === "paid") {
+        const membershipFeeAmount = getMembershipFeeAmount(member.membershipFee);
+        if (latestPayment) {
+          await customFetch(`/api/payments/${latestPayment.id}`, {
+            method: "PUT",
+            body: JSON.stringify({
+              amountDue: membershipFeeAmount,
+              amountPaid: membershipFeeAmount,
+              status: "paid",
+              paidAt: paidAt ?? latestPayment.paidAt,
+            }),
+          });
+        } else {
+          await createPayment.mutateAsync({
+            data: {
+              memberId: member.id,
+              paymentType: "membership_fee",
+              amountDue: membershipFeeAmount,
+              amountPaid: membershipFeeAmount,
+              status: "paid",
+              paymentMethod: "cash",
+              receiptNumber: `DKMO-MEM-${Date.now().toString().slice(-8)}`,
+              paidAt,
+              notes: "Membership fee recorded from the Payments editor",
+            },
+          });
+        }
+      } else if (latestPayment && paidAt && paidAt !== latestPayment.paidAt) {
+        await customFetch(`/api/payments/${latestPayment.id}`, {
+          method: "PUT",
+          body: JSON.stringify({ paidAt }),
+        });
+      }
+
+      await updateMember.mutateAsync({
+        id: member.id,
+        data: {
+          fullName: member.fullName,
+          mobileNumber: member.mobileNumber,
+          membershipId: member.membershipId,
+          iqamaNumber: member.iqamaNumber ?? "",
+          jamaath: member.jamaath ?? "",
+          city: member.city ?? "",
+          country: member.country ?? "",
+          dateOfBirth: member.dateOfBirth ?? "",
+          designation: member.designation ?? "",
+          isExecutiveCommittee: member.isExecutiveCommittee,
+          isCoreCommittee: member.isCoreCommittee,
+          membershipFee: member.membershipFee,
+          feeStatus: nextFeeStatus,
+          responsibility: member.responsibility,
+          notes: member.notes ?? "",
+          refMemberId: editReferenceMemberId,
+          refMemberName: selectedReference?.fullName ?? "",
+        },
+      });
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: getListMembersQueryKey() }),
+        queryClient.invalidateQueries({ queryKey: getGetPendingMembersQueryKey() }),
+        queryClient.invalidateQueries({ queryKey: getListPaymentsQueryKey({ paymentType: "membership_fee" }) }),
+      ]);
+      setEditingMember(null);
+      toast({ title: "Membership payment record updated" });
+    } catch (err: any) {
+      toast({
+        title: "Could not update membership payment",
+        description: err?.message ?? String(err),
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
   const filtered = useMemo(() => {
     switch (view) {
       case "paid":
@@ -103,7 +283,7 @@ export default function Payments() {
     const paidCount = all.filter((m) => m.feeStatus === "paid").length;
     const overdueMembers = all.filter(isOverdue);
     const unpaidCount = all.filter((m) => isDue(m) && !isOverdue(m)).length;
-    const amountDue = all.filter(isDue).reduce((acc, m) => acc + m.membershipFee, 0);
+    const amountDue = all.filter(isDue).reduce((acc, m) => acc + getMembershipFeeAmount(m.membershipFee), 0);
     return [
       { label: "Paid", value: String(paidCount), sub: "Members who have paid", tone: "green" as const, target: "paid" as StatusView },
       { label: "Unpaid", value: String(unpaidCount), sub: `Not yet paid (within ${OVERDUE_AFTER_DAYS} days of joining)`, tone: "neutral" as const, target: "unpaid" as StatusView },
@@ -149,13 +329,40 @@ export default function Payments() {
   const handleWhatsAppReminder = (m: Member) => {
     const number = normalizeWhatsAppNumber(m.mobileNumber);
     if (!number) {
-      toast({ title: "Cannot send reminder", description: "Member has no valid mobile number", variant: "destructive" });
+      toast({ title: "Cannot send reminder", description: "No WhatsApp/mobile number is available for this member.", variant: "destructive" });
       return;
     }
-    window.open(buildWhatsAppLink(number, buildReminderMessage(m)), "_blank", "noopener");
+    setReminderMember(m);
   };
 
   const handleFeeStatus = (id: string, feeStatus: FeeStatusInputFeeStatus) => {
+    if (feeStatus === "paid") {
+      const member = all.find((candidate) => candidate.id === id);
+      if (!member) return;
+      const membershipFeeAmount = getMembershipFeeAmount(member.membershipFee);
+      createPayment.mutate({
+        data: {
+          memberId: member.id,
+          paymentType: "membership_fee",
+          amountDue: membershipFeeAmount,
+          amountPaid: membershipFeeAmount,
+          status: "paid",
+          paymentMethod: "cash",
+          receiptNumber: `DKMO-MEM-${Date.now().toString().slice(-8)}`,
+          notes: "Membership fee recorded from the Payments module",
+        },
+      }, {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListMembersQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getGetPendingMembersQueryKey() });
+          toast({ title: "Membership fee payment recorded" });
+        },
+        onError: (err: any) => {
+          toast({ title: "Failed to record membership payment", description: err.message, variant: "destructive" });
+        },
+      });
+      return;
+    }
     updateFeeStatus.mutate({ id, data: { feeStatus } }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListMembersQueryKey() });
@@ -177,7 +384,7 @@ export default function Payments() {
           </h1>
           <p className="text-emerald-700/80 dark:text-slate-400">
             {tab === "membership"
-              ? "Track the one-time SAR 100 registration fee for each member"
+              ? "Membership-fee information from recorded payments and preserved Access evidence"
               : "Track SAR 50 FRF fees per member for each FRF case"}
           </p>
         </div>
@@ -244,8 +451,108 @@ export default function Payments() {
         title="Membership Fee Reminders"
       />
 
+      <WhatsAppReminderDialog
+        open={!!reminderMember}
+        onOpenChange={(open) => { if (!open) setReminderMember(null); }}
+        recipientName={reminderMember?.fullName ?? ""}
+        mobileNumber={reminderMember?.mobileNumber}
+        messageForLanguage={(language) => reminderMember ? buildReminderMessage(reminderMember, language) : ""}
+        title="Send Membership WhatsApp Reminder"
+        testIdPrefix="membership-whatsapp-reminder"
+      />
+
+      <Dialog open={!!editingMember} onOpenChange={(open) => { if (!open && !isSavingEdit) setEditingMember(null); }}>
+        <DialogContent className="sm:max-w-[500px] dark:bg-slate-900 dark:border-slate-800">
+          <DialogHeader>
+            <DialogTitle className="dark:text-slate-100">
+              Edit Membership Payment — {editingMember?.fullName}
+            </DialogTitle>
+          </DialogHeader>
+          {editingMember ? (
+            <div className="space-y-4">
+              <div className="rounded-lg bg-emerald-50/60 dark:bg-slate-800/70 p-3 text-sm">
+                <p className="font-medium text-emerald-900 dark:text-slate-200">{editingMember.membershipId}</p>
+                <p className="text-emerald-700/80 dark:text-slate-400">
+                  Membership fee: {formatSAR(getMembershipFeeAmount(editingMember.membershipFee))}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="payment-reference-member">Reference Member</Label>
+                <select
+                  id="payment-reference-member"
+                  value={editReferenceMemberId}
+                  onChange={(e) => setEditReferenceMemberId(e.target.value)}
+                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200"
+                >
+                  <option value="">No reference member</option>
+                  {referenceMemberOptions
+                    .filter((candidate) => candidate.id !== editingMember.id)
+                    .map((candidate) => (
+                      <option key={candidate.id} value={candidate.id}>
+                        {candidate.fullName} ({candidate.membershipId})
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="payment-fee-status">Fee Status</Label>
+                  <select
+                    id="payment-fee-status"
+                    value={editFeeStatus}
+                    disabled={Boolean(editingMember.legacyMemberId)}
+                    onChange={(e) => setEditFeeStatus(e.target.value as FeeStatusInputFeeStatus)}
+                    className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm disabled:opacity-60 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200"
+                  >
+                    {EDITABLE_FEE_STATUSES.map((status) => (
+                      <option key={status} value={status}>{feeStatusLabel(status)}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="payment-paid-on">Paid On</Label>
+                  <Input
+                    id="payment-paid-on"
+                    type="date"
+                    value={editPaidOn}
+                    disabled={Boolean(editingMember.legacyMemberId)}
+                    onChange={(e) => setEditPaidOn(e.target.value)}
+                    className="dark:bg-slate-800 dark:border-slate-700"
+                  />
+                </div>
+              </div>
+
+              {editingMember.legacyMemberId ? (
+                <p className="text-xs text-amber-700 dark:text-amber-400">
+                  Access fee status and payment dates are preserved as historical evidence and cannot be edited here. Reference links remain editable.
+                </p>
+              ) : (
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Marking a member paid records or updates the real membership-fee payment. FRF eligibility remains tied to that payment.
+                </p>
+              )}
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => setEditingMember(null)} disabled={isSavingEdit}>
+                  Cancel
+                </Button>
+                <Button onClick={() => void savePaymentEdit()} disabled={isSavingEdit || updateMember.isPending || createPayment.isPending}>
+                  {isSavingEdit ? "Saving…" : "Save Changes"}
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
       {tab === "frf" ? (
-        <FrfFeesPanel key={initialFrfStatus ?? "default"} initialFeeFilter={initialFrfStatus === "pending" ? "pending" : undefined} />
+        <FrfFeesPanel
+          key={`${initialFrfStatus ?? "default"}:${initialFrfCaseId ?? "default"}`}
+          initialFeeFilter={initialFrfStatus === "pending" ? "pending" : undefined}
+          initialCaseId={initialFrfCaseId}
+        />
       ) : (
       <>
       {/* Membership fee banner */}
@@ -254,9 +561,9 @@ export default function Payments() {
           <HeartHandshake className="h-5 w-5" />
         </div>
         <div className="text-sm">
-          <p className="font-semibold text-emerald-900 dark:text-slate-200">One-time membership fee — SAR 100 per member</p>
+          <p className="font-semibold text-emerald-900 dark:text-slate-200">Membership fees — evidence-based records</p>
           <p className="text-emerald-700/80 dark:text-slate-400">
-            Family Relief Fund (FRF) fees are tracked separately — switch to the FRF Fees tab above.
+            Access-imported members show only values found in the legacy ledger. Missing information is not treated as unpaid. FRF fees are tracked separately.
           </p>
         </div>
       </div>
@@ -433,7 +740,7 @@ export default function Payments() {
                     </TableCell>
                   )}
                   <TableCell>
-                    <Link href={`/members/${member.id}`} className="flex items-center gap-3 group" onClick={(e) => e.stopPropagation()}>
+                     <Link href={withReturnTo(`/members/${member.id}`)} className="flex items-center gap-3 group" onClick={(e) => e.stopPropagation()}>
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 group-hover:bg-emerald-200 dark:group-hover:bg-emerald-900/60 transition-colors shrink-0">
                         <UserCircle className="h-5 w-5" />
                       </div>
@@ -461,21 +768,20 @@ export default function Payments() {
                     <RefMemberCell refId={member.refMemberId} refName={member.refMemberName} index={memberIndex} />
                   </TableCell>
                   <TableCell className="text-right font-bold text-emerald-900 dark:text-green-300">
-                    {formatSAR(member.membershipFee)}
+                    {member.feeStatus === "not_applicable" || member.feeStatus === "review" ? "—" : formatSAR(getMembershipFeeAmount(member.membershipFee))}
                   </TableCell>
                   <TableCell>
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${feeStatusBadgeClass(member.feeStatus === "paid" || member.feeStatus === "exempt" ? member.feeStatus : "unpaid")}`}>
-                      {member.feeStatus === "paid" ? <CheckCircle2 className="h-3 w-3" /> : member.feeStatus === "exempt" ? <MinusCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-                      {member.feeStatus === "paid" || member.feeStatus === "exempt" ? feeStatusLabel(member.feeStatus) : "Unpaid"}
-                    </span>
-                    {Date.now() - new Date(member.createdAt).getTime() < 15 * 24 * 60 * 60 * 1000 && (
-                      <span className="ml-1.5 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-800/40">
-                        New Member
+                    {member.feeStatus === "not_applicable" ? (
+                      <span className="text-sm text-slate-500">—</span>
+                    ) : (
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${feeStatusBadgeClass(member.feeStatus)}`}>
+                        {member.feeStatus === "paid" ? <CheckCircle2 className="h-3 w-3" /> : member.feeStatus === "exempt" ? <MinusCircle className="h-3 w-3" /> : member.feeStatus === "review" ? <Clock className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                        {feeStatusLabel(member.feeStatus)}
                       </span>
                     )}
                   </TableCell>
                   <TableCell className="text-sm text-emerald-700 dark:text-slate-400">
-                    {member.feePaidAt ? formatDate(member.feePaidAt) : "—"}
+                    {member.feeStatus === "not_applicable" ? "—" : member.feePaidAt ? formatDate(member.feePaidAt) : "—"}
                   </TableCell>
                   <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-1.5">
@@ -497,10 +803,12 @@ export default function Payments() {
                           size="sm"
                           className="bg-[#25D366] hover:bg-[#128C7E] text-white"
                           onClick={() => handleWhatsAppReminder(member)}
+                          disabled={!hasWhatsAppNumber(member)}
+                          title={!hasWhatsAppNumber(member) ? "No WhatsApp/mobile number available" : "Send WhatsApp reminder"}
                           data-testid={`button-remind-${member.membershipId}`}
                         >
                           <MessageSquareWarning className="mr-1.5 h-4 w-4" />
-                          Remind
+                          {hasWhatsAppNumber(member) ? "Remind" : "No WhatsApp/mobile number"}
                         </Button>
                       )}
                       <DropdownMenu>
@@ -512,8 +820,13 @@ export default function Payments() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="dark:bg-slate-900 dark:border-slate-800">
                           {isDue(member) && (
-                            <DropdownMenuItem onClick={() => handleWhatsAppReminder(member)} className="text-[#128C7E] dark:text-[#25D366] dark:focus:bg-slate-800" data-testid={`menu-remind-${member.membershipId}`}>
-                              <Send className="mr-2 h-4 w-4" /> Send WhatsApp Reminder
+                            <DropdownMenuItem
+                              onClick={() => handleWhatsAppReminder(member)}
+                              disabled={!hasWhatsAppNumber(member)}
+                              className="text-[#128C7E] dark:text-[#25D366] dark:focus:bg-slate-800"
+                              data-testid={`menu-remind-${member.membershipId}`}
+                            >
+                              <Send className="mr-2 h-4 w-4" /> {hasWhatsAppNumber(member) ? "Send WhatsApp Reminder" : "No WhatsApp/mobile number"}
                             </DropdownMenuItem>
                           )}
                           {member.feeStatus !== "paid" && (
@@ -521,16 +834,23 @@ export default function Payments() {
                               <CheckCircle2 className="mr-2 h-4 w-4" /> Mark Fee Paid
                             </DropdownMenuItem>
                           )}
-                          {member.feeStatus !== "exempt" && (
+                          {!member.legacyMemberId && member.feeStatus !== "exempt" && (
                             <DropdownMenuItem onClick={() => handleFeeStatus(member.id, "exempt")} className="text-slate-600 dark:text-slate-400 dark:focus:bg-slate-800">
                               <MinusCircle className="mr-2 h-4 w-4" /> Mark Fee Exempt
                             </DropdownMenuItem>
                           )}
-                          {member.feeStatus !== "unpaid" && (
+                          {!member.legacyMemberId && member.feeStatus !== "unpaid" && (
                             <DropdownMenuItem onClick={() => handleFeeStatus(member.id, "unpaid")} className="dark:text-slate-300 dark:focus:bg-slate-800">
                               <XCircle className="mr-2 h-4 w-4" /> Mark Fee Unpaid
                             </DropdownMenuItem>
                           )}
+                          <DropdownMenuItem
+                            onClick={() => openPaymentEdit(member)}
+                            className="dark:text-slate-300 dark:focus:bg-slate-800"
+                            data-testid={`menu-edit-membership-payment-${member.membershipId}`}
+                          >
+                            <Pencil className="mr-2 h-4 w-4" /> Edit Payment Record
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>

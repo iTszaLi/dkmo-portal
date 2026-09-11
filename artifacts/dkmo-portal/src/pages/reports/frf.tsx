@@ -65,6 +65,7 @@ type FrfRow = {
   status: string;
   amountRequested: number;
   amountApproved: number;
+  amountDisbursed: number;
   collectedAmount: number;
   claimDate: string | null;
 };
@@ -88,6 +89,7 @@ export default function FrfReport() {
         status: c.status ?? "",
         amountRequested: Number(c.amountRequested ?? 0),
         amountApproved: Number(c.amountApproved ?? 0),
+        amountDisbursed: Number(c.disbursedAmount ?? (c.status === "disbursed" ? c.amountApproved : 0)),
         collectedAmount: Number(c.collectedAmount ?? 0),
         claimDate: c.claimDate ?? null,
       })),
@@ -116,6 +118,7 @@ export default function FrfReport() {
     () => ({
       count: filtered.length,
       approved: filtered.reduce((a, r) => a + r.amountApproved, 0),
+      disbursed: filtered.reduce((a, r) => a + r.amountDisbursed, 0),
       collected: filtered.reduce((a, r) => a + r.collectedAmount, 0),
       requested: filtered.reduce((a, r) => a + r.amountRequested, 0),
     }),
@@ -156,7 +159,7 @@ export default function FrfReport() {
     doc.setTextColor(80, 80, 80);
     doc.setFontSize(8);
     doc.text(
-      `Generated: ${generatedOn()}   |   Claims: ${totals.count}   |   Approved: ${formatSAR(totals.approved)}   |   Collected: ${formatSAR(totals.collected)}`,
+      `Generated: ${generatedOn()}   |   Claims: ${totals.count}   |   Relief approved: ${formatSAR(totals.approved)}   |   Relief disbursed: ${formatSAR(totals.disbursed)}   |   Member contributions: ${formatSAR(totals.collected)}`,
       pageW / 2,
       35,
       { align: "center" },
@@ -164,7 +167,7 @@ export default function FrfReport() {
 
     autoTable(doc, {
       startY: 42,
-      head: [["#", "Claim / Claimant", "Status", "Requested", "Approved", "Collected", "Claim Date"]],
+       head: [["#", "Claim / Claimant", "Status", "Relief Requested", "Relief Approved", "Relief Disbursed", "Member Contributions", "Claim Date"]],
       body: [
         ...filtered.map((r, i) => [
           String(i + 1),
@@ -172,6 +175,7 @@ export default function FrfReport() {
           statusLabel(r.status),
           `SAR ${r.amountRequested.toFixed(2)}`,
           `SAR ${r.amountApproved.toFixed(2)}`,
+          `SAR ${r.amountDisbursed.toFixed(2)}`,
           `SAR ${r.collectedAmount.toFixed(2)}`,
           r.claimDate ? formatDate(r.claimDate) : "—",
         ]),
@@ -181,6 +185,7 @@ export default function FrfReport() {
           "",
           `SAR ${totals.requested.toFixed(2)}`,
           `SAR ${totals.approved.toFixed(2)}`,
+          `SAR ${totals.disbursed.toFixed(2)}`,
           `SAR ${totals.collected.toFixed(2)}`,
           "",
         ],
@@ -267,7 +272,8 @@ export default function FrfReport() {
         r.claimantName,
         statusLabel(r.status),
         Number(r.amountRequested.toFixed(2)),
-        Number(r.amountApproved.toFixed(2)),
+         Number(r.amountApproved.toFixed(2)),
+         Number(r.amountDisbursed.toFixed(2)),
         Number(r.collectedAmount.toFixed(2)),
         r.claimDate ? formatDate(r.claimDate) : "—",
       ]);
@@ -288,6 +294,7 @@ export default function FrfReport() {
       "",
       Number(totals.requested.toFixed(2)),
       Number(totals.approved.toFixed(2)),
+       Number(totals.disbursed.toFixed(2)),
       Number(totals.collected.toFixed(2)),
       "",
     ]);
@@ -445,10 +452,13 @@ export default function FrfReport() {
           Total Claims: {totals.count}
         </span>
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-slate-800 text-emerald-700 dark:text-slate-300 border border-emerald-200 dark:border-slate-700">
-          Total Approved: {formatSAR(totals.approved)}
+           Relief Approved: {formatSAR(totals.approved)}
         </span>
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-slate-800 text-emerald-700 dark:text-slate-300 border border-emerald-200 dark:border-slate-700">
-          Total Collected: {formatSAR(totals.collected)}
+           Relief Disbursed: {formatSAR(totals.disbursed)}
+         </span>
+         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-slate-800 text-emerald-700 dark:text-slate-300 border border-emerald-200 dark:border-slate-700">
+           Member Contributions Collected: {formatSAR(totals.collected)}
         </span>
       </div>
 
@@ -462,9 +472,10 @@ export default function FrfReport() {
                   <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 w-10">#</TableHead>
                   <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Claim</TableHead>
                   <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Status</TableHead>
-                  <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">Requested</TableHead>
-                  <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">Approved</TableHead>
-                  <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">Collected</TableHead>
+                   <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">Relief Requested</TableHead>
+                   <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">Relief Approved</TableHead>
+                   <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">Relief Disbursed</TableHead>
+                   <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">Member Contributions</TableHead>
                   <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Claim Date</TableHead>
                 </TableRow>
               </TableHeader>
@@ -472,7 +483,7 @@ export default function FrfReport() {
                 {isLoading ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i} className="dark:border-slate-800">
-                      {Array.from({ length: 7 }).map((_, j) => (
+                      {Array.from({ length: 8 }).map((_, j) => (
                         <TableCell key={j}>
                           <Skeleton className="h-5 w-full" />
                         </TableCell>
@@ -481,7 +492,7 @@ export default function FrfReport() {
                   ))
                 ) : filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center text-emerald-600 dark:text-slate-500">
+                   <TableCell colSpan={8} className="h-24 text-center text-emerald-600 dark:text-slate-500">
                       <div className="flex flex-col items-center gap-2">
                         <HeartHandshake className="h-8 w-8 text-emerald-200 dark:text-slate-700" />
                         <p>No FRF claims match the current filters.</p>
@@ -512,6 +523,9 @@ export default function FrfReport() {
                         <TableCell className="text-right text-emerald-900 dark:text-slate-300 tabular-nums font-medium">
                           {formatSAR(row.amountApproved)}
                         </TableCell>
+                         <TableCell className="text-right text-emerald-700 dark:text-emerald-400 tabular-nums font-medium">
+                           {formatSAR(row.amountDisbursed)}
+                         </TableCell>
                         <TableCell className="text-right text-emerald-700 dark:text-emerald-400 tabular-nums font-medium">
                           {formatSAR(row.collectedAmount)}
                         </TableCell>
@@ -521,7 +535,7 @@ export default function FrfReport() {
                       </TableRow>
                     ))}
                     <TableRow className="bg-emerald-50/70 dark:bg-slate-800/70 font-semibold dark:border-slate-700">
-                      <TableCell colSpan={3} className="text-emerald-950 dark:text-slate-200">
+                       <TableCell colSpan={3} className="text-emerald-950 dark:text-slate-200">
                         Totals ({totals.count})
                       </TableCell>
                       <TableCell className="text-right text-emerald-950 dark:text-slate-200 tabular-nums">
@@ -530,6 +544,9 @@ export default function FrfReport() {
                       <TableCell className="text-right text-emerald-950 dark:text-slate-200 tabular-nums">
                         {formatSAR(totals.approved)}
                       </TableCell>
+                       <TableCell className="text-right text-emerald-950 dark:text-slate-200 tabular-nums">
+                         {formatSAR(totals.disbursed)}
+                       </TableCell>
                       <TableCell className="text-right text-emerald-950 dark:text-slate-200 tabular-nums">
                         {formatSAR(totals.collected)}
                       </TableCell>

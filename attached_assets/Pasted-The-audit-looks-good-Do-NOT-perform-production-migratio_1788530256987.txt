@@ -1,0 +1,194 @@
+The audit looks good. Do NOT perform production migration yet.
+
+I now want you to go one level deeper and prepare the actual member-by-member migration reconciliation, because Members + their historical payment status are the highest priority.
+
+1. First resolve the table-count discrepancy
+
+The report says there are 15 Access tables. Earlier the inspection mentioned 16. Give me the definitive complete list of all Access tables and confirm the exact number.
+
+2. Members are the primary priority
+
+Take the full 02_Name table containing the 1,118 legacy members and create a detailed member migration preview.
+
+For every legacy member, show/derive where available:
+
+Legacy Id No
+Full name
+Mobile
+Address
+DOB
+Email
+Iqama/passport if available
+Status
+Group
+Jamaath
+District/area
+Referral/referrer
+Any other meaningful member fields
+
+Do not delete or discard members simply because they have missing mobile/email/Iqama/etc.
+
+Missing information should remain blank and the member should still be preserved if they are a legitimate legacy member.
+
+3. MOST IMPORTANT — connect members to their old payment history
+
+Investigate exactly how 02_Name.Id No relates to 01_Main_new.Id No and any other tables.
+
+I want you to determine whether the old Id No is the key that connects:
+
+Member → historical ledger/payment records
+
+Do not rely on names alone if a numeric legacy ID can establish the relationship.
+
+4. Classify the 3,934 ledger records
+
+Do NOT call all 3,934 records "payments" automatically.
+
+Analyze the Details, amount, date, bill number, Id No, and other fields and classify each record where possible as:
+
+Membership payment
+FRF contribution/payment
+Other payment
+Adjustment
+Historical/non-financial record
+Unknown / manual review
+
+Preserve the original Details value.
+
+5. Calculate each member's historical payment position
+
+For every legacy member, calculate from the actual Access data:
+
+Total amount recorded as due — if the old database contains this information
+Total amount paid
+Remaining outstanding
+Payment status
+
+Payment status should be something like:
+
+Paid
+Partially Paid
+Unpaid
+No payment record
+Unknown / Review Required
+
+Do NOT invent an amount due.
+
+If the old Access database does not contain enough information to determine the amount due, explicitly say Amount Due Cannot Be Determined From Legacy Data rather than guessing.
+
+6. Referral relationships
+
+Investigate all tables/fields that may contain referral information.
+
+Build:
+
+legacy_referrer_id → legacy_referred_member_id
+
+wherever the relationship can be established reliably.
+
+If the old database only contains a name/text reference, preserve the original text and mark it for review instead of guessing.
+
+7. Duplicate findings
+
+The report says 559 duplicate findings.
+
+Separate these into:
+
+Actual duplicate members
+Same member appearing under spelling variations
+Duplicate payment records
+Repeated bill numbers
+Other duplicate/reference findings
+
+Do not treat every duplicate finding as a duplicate member.
+
+8. FRF
+
+The report says:
+
+12 sparse FRF case/reference candidates
+2,828 FRF case/reference and transaction candidates
+
+Explain exactly why there are 2,828 candidates and how they were identified.
+
+Give me a breakdown by table and by Details/transaction type.
+
+Do NOT create 2,828 FRF claims automatically.
+
+Preserve FRF transaction history and determine which records can actually be connected to a member and/or FRF case.
+
+9. Loans
+
+Reconstruct:
+
+Legacy Member → Legacy Loan → Loan Repayments
+
+wherever possible.
+
+Do not attach a loan to a member based only on an uncertain name match.
+
+10. Current portal
+
+Compare the 1,118 legacy members against the existing 46 portal members.
+
+Since the audit found 0 reliable automatic matches, investigate whether this is because:
+
+different IDs
+different phone formats
+different names
+incomplete current records
+or genuinely different people
+
+Do not conclude that all 1,118 are new members until this is verified.
+
+11. Create the MASTER MIGRATION PREVIEW
+
+Create one master CSV/report with approximately:
+
+Legacy ID	Member Name	Current Portal Member	Match Confidence	Paid	Outstanding	Payment Status	Referral	FRF	Loan	Action
+
+This should become the main review file before migration.
+
+12. Critical safety rule
+
+Still:
+
+NO INSERT
+
+NO UPDATE
+
+NO DELETE
+
+NO MERGE
+
+NO PRODUCTION MIGRATION
+
+NO automatic creation of 1,118 members yet.
+
+I want the complete member/payment/referral reconciliation first.
+
+Finish by showing:
+
+AUDIT + MEMBER RECONCILIATION COMPLETE — NO PRODUCTION DATA MODIFIED.
+
+Why I'm asking for this
+
+The most important relationship in your old system is probably:
+
+02_Name
+→ identifies the member
+
+01_Main_new
+→ contains the historical financial/ledger records
+
+So we need to establish something like:
+
+DKMO Old ID 125 → Mohammed → ₹X/SAR X paid → ₹X outstanding → referral → FRF → loan
+
+and then put that into the new portal as structured data.
+
+The report already confirms that the new portal has proper members and payments tables, and that payments are linked to members.
+
+Also, don't worry about the 0 automatic matches yet. It only means Replit couldn't safely match the old 1,118 members to the existing 46 using its current matching rules. The old Id No may still allow it to connect the old member to their own historical records, which is much more important for the migration. The audit itself says the Access references are mostly numeric/free-text and that an explicit legacy-ID crosswalk is needed.
+
+Send me the next Replit output after it creates that master reconciliation. That's the report I want to inspect before you let it import anything.

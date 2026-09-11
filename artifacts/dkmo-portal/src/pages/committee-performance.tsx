@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { formatSAR, cn } from "@/lib/utils";
 import { initialsOf } from "@/lib/committee";
+import { withReturnTo } from "@/lib/navigation";
 import { Trophy, Users, Coins, HeartHandshake, Activity, Search, FileDown, FileSpreadsheet, Printer, X } from "lucide-react";
 
 type SortKey = "activity" | "name" | "recruited" | "fees" | "frf";
@@ -651,7 +652,7 @@ export default function CommitteeActivityReport() {
                 </div>
                 {member && (
                   <Button asChild variant="outline" size="sm" className="border-green-300 text-green-800 dark:border-slate-700 dark:text-green-300 self-start" data-testid="button-view-full-profile">
-                    <Link href={`/members/${member.id}`}>View full member profile</Link>
+                    <Link href={withReturnTo(`/members/${member.id}`)}>View full member profile</Link>
                   </Button>
                 )}
               </>

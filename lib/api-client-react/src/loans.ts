@@ -13,6 +13,15 @@ export type LoanType =
 export type LoanStatus = "active" | "closed" | "overdue" | "defaulted";
 export type LoanPaymentMethod = "cash" | "bank_transfer" | "upi" | "card" | "cheque";
 
+export interface LoanResponsibleStaff {
+  assignmentId: string;
+  memberId: string;
+  membershipId: string;
+  fullName: string;
+  position: string;
+  committeeYear: string;
+}
+
 export interface Loan {
   id: string;
   memberId: string | null;
@@ -28,6 +37,8 @@ export interface Loan {
   outstandingBalance: number;
   status: LoanStatus;
   convenorName: string;
+  responsibleCommitteeAssignmentId: string | null;
+  responsibleStaff: LoanResponsibleStaff | null;
   description: string;
   notes: string;
   createdAt: string;
@@ -72,6 +83,7 @@ export interface LoanCreateInput {
   emiAmount: number;
   disbursedDate: string;
   convenorName?: string;
+  responsibleCommitteeAssignmentId?: string | null;
   notes?: string;
 }
 
@@ -82,6 +94,7 @@ export interface LoanUpdateInput {
   disbursedDate?: string | null;
   emiAmount?: number;
   convenorName?: string;
+  responsibleCommitteeAssignmentId?: string | null;
   description?: string;
   notes?: string;
 }
@@ -161,6 +174,7 @@ export function useRecordLoanPayment(loanId: string) {
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["loans"] });
+      qc.invalidateQueries({ queryKey: ["loan-budget"] });
     },
   });
 }
@@ -172,6 +186,7 @@ export function useDeleteLoanPayment(loanId: string) {
       customFetch<void>(`/api/loans/${loanId}/payments/${paymentId}`, { method: "DELETE" }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["loans"] });
+      qc.invalidateQueries({ queryKey: ["loan-budget"] });
     },
   });
 }
@@ -183,6 +198,7 @@ export function useCreateLoan() {
       customFetch<Loan>("/api/loans", { method: "POST", body: JSON.stringify(body) }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["loans"] });
+      qc.invalidateQueries({ queryKey: ["loan-budget"] });
     },
   });
 }

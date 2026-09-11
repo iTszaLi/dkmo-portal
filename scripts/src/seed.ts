@@ -298,6 +298,11 @@ const sponsorRows = [
 
 // ── main ──────────────────────────────────────────────────────────────────────
 async function main() {
+  if (process.env.ALLOW_DEMO_SEED !== "true") {
+    throw new Error(
+      "Refusing to run the destructive demo seed. Set ALLOW_DEMO_SEED=true only against an intentionally disposable database.",
+    );
+  }
   console.log("🌱  Seeding DKMO database…");
 
   // ── Clear existing data (order respects FK constraints) ──────────────────
@@ -505,32 +510,10 @@ async function main() {
   const insertedSponsors = await db.insert(sponsorsTable).values(sponsorRows).returning();
 
   // ── Meetings & Attendance ──────────────────────────────────────────────────
-  console.log("  ↳ inserting meetings…");
-  const insertedMeetings = await db
-    .insert(meetingsTable)
-    .values([
-      { title: "Executive Committee Meeting — June 2026", meetingDate: daysAgo(7), location: "DKMO Office, Riyadh", notes: "Reviewed FRF claims, membership drive progress and upcoming Sports Day budget." },
-      { title: "Core Committee Monthly Meeting — May 2026", meetingDate: daysAgo(38), location: "Community Hall, Riyadh", notes: "Monthly review of collections, pending members and welfare applications." },
-      { title: "Annual General Body Meeting 2025", meetingDate: daysAgo(190), location: "Mangalore Community Hall", notes: "Election of office-bearers, presentation of annual financial report and FRF disbursements." },
-    ])
-    .returning();
-
-  // Committee members occupy indices 0..28. Vary attendance per meeting so the
-  // present/absent figures are realistic rather than uniform.
-  const committeeCount = Math.min(29, insertedMembers.length);
-  const attendanceRows: { meetingId: string; memberId: string; status: string }[] = [];
-  for (let m = 0; m < insertedMeetings.length; m++) {
-    for (let i = 0; i < committeeCount; i++) {
-      // Recent meetings have higher turnout; deterministic pattern for stable seeds.
-      const absent = m === 0 ? i % 7 === 0 : m === 1 ? i % 5 === 0 : i % 4 === 0;
-      attendanceRows.push({
-        meetingId: insertedMeetings[m].id,
-        memberId: insertedMembers[i].id,
-        status: absent ? "absent" : "present",
-      });
-    }
-  }
-  await db.insert(meetingAttendanceTable).values(attendanceRows);
+  // Meeting Attendance intentionally starts empty. The cleanup near the start
+  // of this seed removes old demo records while preserving committee members.
+  console.log("  ↳ leaving meetings and attendance empty…");
+  const insertedMeetings: never[] = [];
 
   // ── Tasks ─────────────────────────────────────────────────────────────────
   console.log("  ↳ inserting tasks…");

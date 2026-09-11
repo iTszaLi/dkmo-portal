@@ -1,0 +1,622 @@
+I want you to redesign and improve ONLY the DKMO Portal Dashboard so it becomes a professional Executive/Committee Command Center.
+
+IMPORTANT:
+
+* Do NOT delete, overwrite, reset, fabricate, or alter any existing DKMO member data.
+* Do NOT modify the authoritative migrated membership, referral, payment, FRF, committee, loan, or audit data unless required only to correctly display it.
+* Do NOT create fake/sample dashboard statistics.
+* Every dashboard number must come from the actual database.
+* Preserve all existing routes and modules.
+* Do not break any existing functionality.
+* Before making changes, inspect the current database schema and existing modules so the dashboard uses the correct source of truth.
+
+==================================================
+
+1. DASHBOARD PURPOSE
+   ==================================================
+
+The dashboard should answer four questions immediately:
+
+1. How many DKMO members do we have?
+2. What is the current financial/FRF situation?
+3. What requires administrator or committee action?
+4. What is happening next?
+
+The dashboard should feel like an Executive Suite, not simply a collection of random statistics.
+
+==================================================
+2. HEADER
+=========
+
+Keep:
+
+DKMO Portal
+Executive Suite
+
+Show:
+
+* Current date
+* Current user
+* User role
+* Secure session information
+
+Add a professional greeting such as:
+
+"Good afternoon, Administrator"
+
+Keep the existing Quick Actions area.
+
+Quick Actions should include:
+
+* Add Member
+* Record Payment
+* FRF Claim
+* Create Task
+
+Only show actions the current user has permission to perform.
+
+==================================================
+3. CORE OVERVIEW
+================
+
+Create a clean Core Overview section.
+
+Cards:
+
+A. Total Members
+Use the actual registered member count.
+
+B. Active Members
+Use the actual active member count.
+
+C. Membership Payments Pending
+Show:
+
+* number of members requiring membership payment/review
+* actual outstanding amount
+
+D. Total Membership Fees Collected
+Show actual amount collected.
+
+E. Loan Money Outstanding
+Show actual outstanding member loan balance.
+
+Do NOT fabricate numbers.
+
+Make every relevant card clickable and take the user to the corresponding module/filter.
+
+==================================================
+4. ATTENTION REQUIRED
+=====================
+
+This should be one of the most prominent dashboard sections.
+
+It must ONLY show items that genuinely require administrator or committee action.
+
+Possible items:
+
+* Membership payments pending
+* FRF claims awaiting review
+* Loan applications pending approval
+* Documents requiring review
+* Overdue tasks
+* Other genuine administrative actions
+
+Each item must show:
+
+* count
+* short explanation
+* "Review" button/link
+
+Example:
+
+Membership payments pending
+"1 member requires membership payment review."
+[Review]
+
+If there is nothing requiring action, show:
+
+"All caught up — no actions required."
+
+Do not display fake alerts.
+
+==================================================
+5. FRF COMMAND CENTER
+=====================
+
+Create a dedicated FRF Overview section.
+
+Display:
+
+* Pending FRF Claims
+* Active FRF Case
+* FRF Fees Collected
+* FRF Fees Outstanding
+* Eligible Members
+* Paid Members
+* Unpaid Members
+* Collection Percentage
+
+CRITICAL FRF LOGIC:
+
+There can be ONLY ONE active FRF collection case at a time.
+
+An approved FRF claim opens the next active collection case.
+
+Payments → FRF Fees tracks the individual member contributions for that active case.
+
+Membership payment eligibility MUST control FRF eligibility.
+
+A member who has NOT paid the required membership fee:
+
+* is NOT eligible for FRF
+* must NOT have an active FRF fee
+* must NOT be counted as an eligible FRF contributor
+
+If there is NO active FRF case:
+
+Show:
+
+"No active FRF collection case"
+
+and:
+
+"Approving an FRF claim will open the next collection case."
+
+FRF Outstanding must be SAR 0.00 when there is no active collection case.
+
+Do NOT create or display a fake FRF case.
+
+==================================================
+6. MEMBERSHIP & COMMUNITY
+=========================
+
+Add a Membership & Community section.
+
+Show:
+
+* New Members This Month
+* Active Members
+* Inactive Members
+* Members Awaiting Approval, if applicable
+* Membership Collection Rate
+
+Add a simple membership growth chart using REAL historical data.
+
+The chart should show membership growth over time.
+
+Do not invent monthly values.
+
+==================================================
+7. MEMBERSHIP DRIVE
+===================
+
+Add a compact Membership Drive summary.
+
+Show actual migrated referral information:
+
+* Total Referred Members
+* Active Referred Members
+* Active Referrers
+* Top Referrers
+
+IMPORTANT:
+
+The original referral information imported from the authoritative Access database must remain unchanged.
+
+Do NOT regenerate referrals based on current portal activity.
+
+Do NOT replace historical referral relationships with sample data.
+
+If there are no referrals, show zero.
+
+Clicking the section should open the Membership Drive module.
+
+==================================================
+8. COMMITTEE 2026–2027
+======================
+
+Create a dedicated Committee dashboard card.
+
+The authoritative current committee is:
+
+30 committee members
+
+Term:
+
+January 1, 2026 – December 31, 2027
+
+Show:
+
+* Committee Members: 30
+* Current Term: 2026–2027
+* Upcoming Committee Meeting
+* Last Meeting Attendance
+* Attendance percentage
+
+IMPORTANT:
+
+Committee statistics MUST NOT use the total member count.
+
+Do NOT treat all 1,140 members as committee members.
+
+Meeting attendance must only use the 30 current committee members.
+
+If there is no meeting data, show an appropriate empty state rather than fake statistics.
+
+Clicking the section opens Committee or Meeting Attendance.
+
+==================================================
+9. FINANCE SUMMARY
+==================
+
+Create a Finance section showing:
+
+Membership Fees
+
+* Collected
+* Pending
+
+FRF
+
+* Current case collected
+* Current case outstanding
+
+Loans
+
+* Active loans
+* Outstanding balance
+* Pending loan applications
+
+Sponsors
+
+* Current/total sponsor contributions if actual data exists
+
+Do NOT combine membership and FRF money into one misleading number.
+
+Membership fees and FRF fees are separate financial categories.
+
+==================================================
+10. LOANS
+=========
+
+Add a compact Loan summary:
+
+* Pending Loan Applications
+* Active Loans
+* Total Outstanding
+* Recent Loan Activity
+
+Respect the existing loan rules:
+
+All eligible members may request loans.
+
+Loan approval/disbursement is controlled by administrator/committee authority and the configured loan budget.
+
+Do not automatically approve or fabricate loans.
+
+==================================================
+11. UPCOMING EVENTS & MEETINGS
+==============================
+
+Create an Upcoming section.
+
+Show actual upcoming:
+
+* Committee meetings
+* DKMO events
+* Important deadlines
+* Community activities
+* Relevant tasks
+
+Show date and title.
+
+If nothing is scheduled:
+
+"No upcoming events or meetings."
+
+Do not create fake events.
+
+==================================================
+12. TASKS
+=========
+
+Create a My Tasks dashboard section.
+
+Show:
+
+* Overdue
+* Due Today
+* Due This Week
+* Recently Completed
+
+Use the existing Tasks module/database.
+
+Each item should link directly to the relevant task.
+
+If no tasks exist, show a clean empty state.
+
+==================================================
+13. WELFARE PROGRAMS
+====================
+
+Add a small Welfare/Community Impact summary if actual data exists.
+
+Possible metrics:
+
+* Active Welfare Programs
+* Pending Applications
+* Active Cases
+* Completed Cases
+* Beneficiaries
+* Amount Distributed
+
+Only display metrics supported by the actual database.
+
+Do not fabricate data.
+
+==================================================
+14. DOCUMENTS & ADMINISTRATION
+==============================
+
+Add a small administrative status section.
+
+Show only actionable information such as:
+
+* Documents pending review
+* Documents requiring verification
+* Other administrative items requiring attention
+
+Do not display every document on the dashboard.
+
+==================================================
+15. RECENT ACTIVITY
+===================
+
+Add a Recent Activity section near the bottom.
+
+This should use the existing Audit Trail as the source of truth.
+
+Display the latest approximately 10 meaningful activities.
+
+Examples:
+
+"Member added"
+"Membership payment recorded"
+"FRF claim approved"
+"Loan application updated"
+"Committee member updated"
+"Document uploaded"
+
+Show:
+
+* action
+* affected item/member where appropriate
+* user/admin who performed it
+* date/time
+
+Do NOT create fake activity records just for the dashboard.
+
+==================================================
+16. QUICK NAVIGATION
+====================
+
+At the bottom, add clean Quick Links:
+
+Members
+Committee
+Payments
+FRF Claims
+Loans
+Reports
+Documents
+Audit Trail
+
+These should use the existing routes.
+
+==================================================
+17. VISUAL DESIGN
+=================
+
+Make the dashboard look like a professional organization management system.
+
+Use:
+
+* Clean cards
+* Clear hierarchy
+* Consistent spacing
+* Professional typography
+* Small meaningful icons
+* Responsive design
+* Clear section headings
+* Good empty states
+* Minimal visual clutter
+
+Do NOT make every statistic a huge card.
+
+The most important information should visually stand out:
+
+1. Attention Required
+2. Core Overview
+3. FRF Command Center
+4. Committee
+5. Finance
+6. Upcoming / Tasks
+7. Recent Activity
+
+==================================================
+18. NAVIGATION / BACK BUTTON BUG
+================================
+
+VERY IMPORTANT:
+
+There is currently an annoying navigation bug across the portal.
+
+When I open a module, interact with something inside that module, and then click Back, the system sometimes sends me to a random or incorrect module/page.
+
+FIX THIS ACROSS THE ENTIRE PORTAL.
+
+Expected behavior:
+
+If I am on:
+
+Members → Member Profile → Payment History
+
+and click Back,
+
+I should return to the exact Members page/state I came from.
+
+If I was on:
+
+Payments → FRF Fees
+
+and open a member,
+
+then click Back,
+
+I should return to:
+
+Payments → FRF Fees
+
+NOT Dashboard, Members, or another random page.
+
+Preserve:
+
+* Previous route
+* Active tab
+* Filters
+* Search
+* Pagination
+* Selected view
+* Relevant query parameters
+
+Use a consistent navigation/history strategy across ALL modules.
+
+Do NOT solve this with random hardcoded redirects.
+
+Inspect the routing/navigation architecture and implement a reliable reusable solution.
+
+Test this across:
+
+Dashboard
+Members
+Member Profile
+Committee
+Meeting Attendance
+Payments
+Membership Fees
+FRF Fees
+Receipts
+Loans
+Sponsors
+Reports
+FRF Claims
+Membership Drive
+Welfare Programs
+Events
+Tasks
+Documents
+Audit Trail
+Settings
+
+==================================================
+19. DATA INTEGRITY
+==================
+
+Before completing the work, verify:
+
+* Total member count remains correct.
+* Historical migrated member records remain unchanged.
+* Referral relationships remain unchanged.
+* Membership ledger remains unchanged.
+* FRF records remain unchanged.
+* Committee remains exactly 30 members for 2026–2027.
+* Meeting attendance is limited to the current 30 committee members.
+* No fake financial transactions were created.
+* No fake FRF case was created.
+* No fake loan was created.
+* No fake referral was created.
+* Audit Trail remains accurate.
+
+==================================================
+20. EMPTY STATES
+================
+
+Use professional empty states instead of zeros that could be misleading.
+
+Examples:
+
+FRF:
+
+"No active FRF collection case"
+
+Loans:
+
+"No outstanding member loans"
+
+Tasks:
+
+"No pending tasks"
+
+Events:
+
+"No upcoming events"
+
+Attention Required:
+
+"All caught up — no actions required."
+
+==================================================
+21. PERFORMANCE
+===============
+
+Do not make the dashboard unnecessarily slow.
+
+Use efficient database queries.
+
+Avoid loading the entire members table multiple times just to calculate dashboard statistics.
+
+Where possible:
+
+* aggregate in the database
+* reuse existing API endpoints/services
+* avoid duplicate requests
+* cache only where safe and where stale data would not create financial/administrative problems
+
+Financial and FRF figures should always be based on current authoritative data.
+
+==================================================
+22. FINAL TESTING
+=================
+
+After implementation:
+
+1. Test the dashboard on desktop.
+2. Test responsive/mobile layout.
+3. Test every dashboard card link.
+4. Test FRF with no active case.
+5. Test FRF with an active case.
+6. Test membership unpaid → FRF inactive.
+7. Test membership paid → FRF eligible.
+8. Test committee count = 30.
+9. Test meeting attendance uses only committee members.
+10. Test referral statistics use original migrated referral data.
+11. Test Recent Activity uses Audit Trail.
+12. Test all navigation/back-button behavior.
+13. Test filters/search/pagination are preserved when going back.
+14. Check browser console for errors.
+15. Check server logs for errors.
+16. Make sure no existing module has been broken.
+
+IMPORTANT:
+Do not just make the UI look correct.
+
+Verify that every displayed number is connected to the correct real database source and that existing DKMO business rules remain intact.
+
+After completing the implementation, give me a concise summary of:
+
+* What you changed
+* Which database sources each dashboard section uses
+* Navigation/back-button fix implemented
+* Tests performed
+* Any issues that still need attention

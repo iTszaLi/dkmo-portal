@@ -7,14 +7,89 @@ import {
   DeletePaymentParams,
   ListPaymentsQueryParams,
 } from "@workspace/api-zod";
-import { requireAuth, requireRole } from "../middlewares/requireAuth";
+import { requireAuth, requireRole, type AuthedRequest } from "../middlewares/requireAuth";
 import { paymentToApi } from "../lib/serializers";
 import { logAudit } from "../lib/audit";
-import { markContributionPaid, revertContributionForPayment } from "../lib/frf-ledger";
+import {
+  markContributionPaid,
+  revertContributionForPayment,
+  syncMemberFrfEligibility,
+} from "../lib/frf-ledger";
 
 const router: IRouter = Router();
 
 router.use(requireAuth);
+
+async function syncPortalMembershipFee(
+  memberId: string,
+  actor: string,
+  executor: Pick<typeof db, "select" | "update" | "insert"> = db,
+): Promise<void> {
+  const [member] = await executor
+    .select({
+      id: membersTable.id,
+    })
+    .from(membersTable)
+    .where(eq(membersTable.id, memberId));
+  if (!member) return;
+
+  const membershipPayments = await executor
+    .select({
+      status: paymentsTable.status,
+      amountDue: paymentsTable.amountDue,
+      amountPaid: paymentsTable.amountPaid,
+      paidAt: paymentsTable.paidAt,
+    })
+    .from(paymentsTable)
+    .where(
+      and(
+        eq(paymentsTable.memberId, memberId),
+        eq(paymentsTable.paymentType, "membership_fee"),
+      ),
+    );
+
+  const activePayments = membershipPayments.filter(
+    (payment) => payment.status !== "cancelled" && payment.status !== "refunded",
+  );
+  const successfulPayments = activePayments
+    .filter(
+      (payment) =>
+        payment.status === "paid" &&
+        Number(payment.amountPaid) >= Number(payment.amountDue),
+    )
+    .sort((a, b) => b.paidAt.getTime() - a.paidAt.getTime());
+  const partialPayments = activePayments.filter(
+    (payment) =>
+      Number(payment.amountPaid) > 0 &&
+      Number(payment.amountPaid) < Number(payment.amountDue),
+  );
+  const pendingPayments = activePayments.filter(
+    (payment) => payment.status === "pending" || payment.status === "overdue",
+  );
+
+  const nextFeeStatus = successfulPayments.length > 0
+    ? "paid"
+    : partialPayments.length > 0
+      ? "partial"
+      : pendingPayments.length > 0
+        ? "pending"
+        : "unpaid";
+  const [updated] = await executor
+    .update(membersTable)
+    .set({
+      feeStatus: nextFeeStatus,
+      feePaidAt: successfulPayments[0]?.paidAt ?? null,
+      feeUpdatedBy: actor,
+    })
+    .where(eq(membersTable.id, memberId))
+    .returning({ feeStatus: membersTable.feeStatus });
+
+  await syncMemberFrfEligibility(
+    memberId,
+    updated?.feeStatus ?? nextFeeStatus,
+    executor,
+  );
+}
 
 router.get("/payments", async (req, res): Promise<void> => {
   const parsed = ListPaymentsQueryParams.safeParse(req.query);
@@ -95,6 +170,17 @@ router.post("/payments", requireRole("admin", "finance"), async (req, res): Prom
   const frfClaimId =
     paymentType === "frf_contribution" ? (parsed.data.frfClaimId ?? null) : null;
 
+  if (paymentType === "frf_contribution" && member.feeStatus !== "paid") {
+    res.status(409).json({
+      error: "FRF payment is unavailable because the membership fee has not been paid.",
+    });
+    return;
+  }
+  if (paymentType === "frf_contribution" && !frfClaimId) {
+    res.status(400).json({ error: "FRF payments must be linked to an FRF case." });
+    return;
+  }
+
   // Server-side validation: an FRF contribution linked to a claim may only be
   // recorded against a collectable (approved or disbursed) claim.
   if (frfClaimId) {
@@ -163,6 +249,9 @@ router.post("/payments", requireRole("admin", "finance"), async (req, res): Prom
           tx,
         );
       }
+      if (row.paymentType === "membership_fee") {
+        await syncPortalMembershipFee(row.memberId, (req as AuthedRequest).userId, tx);
+      }
       return row;
     });
   } catch (err) {
@@ -213,6 +302,132 @@ router.get("/payments/:id", async (req, res): Promise<void> => {
   );
 });
 
+router.put("/payments/:id", requireRole("admin", "finance"), async (req, res): Promise<void> => {
+  const params = GetPaymentParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const [existingRow] = await db
+    .select({ payment: paymentsTable, member: membersTable })
+    .from(paymentsTable)
+    .innerJoin(membersTable, eq(paymentsTable.memberId, membersTable.id))
+    .where(eq(paymentsTable.id, params.data.id));
+  if (!existingRow) {
+    res.status(404).json({ error: "Payment not found" });
+    return;
+  }
+
+  // A payment remains attached to its member and FRF claim. Moving money
+  // between members/cases would bypass the ledger's identity guarantees.
+  const candidate = {
+    ...existingRow.payment,
+    ...req.body,
+    memberId: existingRow.payment.memberId,
+    paymentType: existingRow.payment.paymentType,
+    frfClaimId: existingRow.payment.frfClaimId ?? undefined,
+    amountDue: req.body.amountDue ?? Number(existingRow.payment.amountDue),
+    amountPaid: req.body.amountPaid ?? Number(existingRow.payment.amountPaid),
+    status: req.body.status ?? existingRow.payment.status,
+    paymentMethod: req.body.paymentMethod ?? existingRow.payment.paymentMethod,
+    receiptNumber: req.body.receiptNumber ?? existingRow.payment.receiptNumber,
+  };
+  const parsed = CreatePaymentBody.safeParse(candidate);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const next = parsed.data;
+  if (
+    existingRow.payment.paymentType === "frf_contribution" &&
+    existingRow.member.feeStatus !== "paid"
+  ) {
+    res.status(409).json({
+      error: "FRF payment is unavailable because the membership fee has not been paid.",
+    });
+    return;
+  }
+  const isSpecialType = existingRow.payment.paymentType === "waiver" || existingRow.payment.paymentType === "adjustment";
+  const isNonCollecting = next.status === "cancelled" || next.status === "refunded";
+  if (Number(next.amountPaid) <= 0 && !isSpecialType && !isNonCollecting) {
+    res.status(400).json({ error: "Payment amount must be greater than 0" });
+    return;
+  }
+
+  try {
+    const updated = await db.transaction(async (tx) => {
+      const wasLedgerPayment =
+        existingRow.payment.paymentType === "frf_contribution" &&
+        existingRow.payment.frfClaimId &&
+        existingRow.payment.status !== "cancelled" &&
+        existingRow.payment.status !== "refunded";
+      if (wasLedgerPayment) {
+        await revertContributionForPayment(
+          {
+            claimId: existingRow.payment.frfClaimId!,
+            memberId: existingRow.payment.memberId,
+            amountPaid: Number(existingRow.payment.amountPaid),
+          },
+          tx,
+        );
+      }
+      const [row] = await tx
+        .update(paymentsTable)
+        .set({
+          amountDue: String(next.amountDue ?? existingRow.payment.amountDue),
+          amountPaid: String(next.amountPaid),
+          status: next.status ?? existingRow.payment.status,
+          paymentMethod: next.paymentMethod,
+          receiptNumber: next.receiptNumber,
+          notes: next.notes ?? null,
+          dueDate: next.dueDate ? new Date(next.dueDate) : null,
+          paidAt: next.paidAt ? new Date(next.paidAt) : existingRow.payment.paidAt,
+        })
+        .where(eq(paymentsTable.id, params.data.id))
+        .returning();
+      if (!row) throw new Error("Payment not found");
+      if (
+        row.paymentType === "frf_contribution" &&
+        row.frfClaimId &&
+        row.status !== "cancelled" &&
+        row.status !== "refunded"
+      ) {
+        const [claim] = await tx
+          .select({ contributionAmount: frfClaimsTable.contributionAmount })
+          .from(frfClaimsTable)
+          .where(eq(frfClaimsTable.id, row.frfClaimId));
+        await markContributionPaid(
+          {
+            claimId: row.frfClaimId,
+            memberId: row.memberId,
+            paymentId: row.id,
+            amountPaid: Number(row.amountPaid),
+            dueAmount: Number(claim?.contributionAmount ?? row.amountDue),
+            paidAt: row.paidAt,
+          },
+          tx,
+        );
+      }
+      if (row.paymentType === "membership_fee") {
+        await syncPortalMembershipFee(row.memberId, (req as AuthedRequest).userId, tx);
+      }
+      return row;
+    });
+    await logAudit(req, "payment_updated", "payments", {
+      entityId: updated.id,
+      entityName: existingRow.member.fullName,
+      details: `Receipt: ${updated.receiptNumber}, Amount: ${updated.amountPaid}`,
+    });
+    res.json(paymentToApi(updated, {
+      fullName: existingRow.member.fullName,
+      membershipId: existingRow.member.membershipId,
+    }));
+  } catch (err) {
+    req.log.error({ err, paymentId: params.data.id }, "Failed to update payment");
+    res.status(500).json({ error: "Failed to update payment" });
+  }
+});
+
 router.delete("/payments/:id", requireRole("admin", "finance"), async (req, res): Promise<void> => {
   const params = DeletePaymentParams.safeParse(req.params);
   if (!params.success) {
@@ -249,6 +464,9 @@ router.delete("/payments/:id", requireRole("admin", "finance"), async (req, res)
           },
           tx,
         );
+      }
+      if (row.payment.paymentType === "membership_fee") {
+        await syncPortalMembershipFee(row.payment.memberId, (req as AuthedRequest).userId, tx);
       }
     });
   } catch (err) {

@@ -45,11 +45,8 @@ export default function Settings() {
             <Users className="h-4 w-4" /> Seeded users
           </CardTitle>
           <CardDescription className="dark:text-slate-400">
-            Fixed seed accounts. Each uses the password{" "}
-            <code className="px-1.5 py-0.5 rounded bg-green-50 dark:bg-slate-800 text-green-900 dark:text-green-300 text-xs">
-              dkmo@2026
-            </code>
-            .
+            Fixed account identities and roles. Login passwords are managed through
+            the server environment secrets and are never displayed here.
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -10,6 +10,15 @@ import {
   welfareRequestsTable,
   loansTable,
   frfContributionsTable,
+  dkmoMembershipsTable,
+  committeeTermsTable,
+  committeeAssignmentsTable,
+  meetingsTable,
+  meetingAttendanceTable,
+  loanPaymentsTable,
+  tasksTable,
+  documentsTable,
+  auditLogsTable,
 } from "@workspace/db";
 import {
   GetDashboardSummaryQueryParams,
@@ -33,7 +42,7 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
     return;
   }
   // `month` query param retained for API compatibility but no longer used —
-  // membership fee is a one-time fee tracked on the member record.
+  // membership fees are lifetime ledger records, not monthly collections.
   void parsed.data.month;
 
   const members = await db.select().from(membersTable);
@@ -41,7 +50,6 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
   let paidCount = 0;
   let pendingCount = 0;
   let unpaidCount = 0;
-  let totalFeesCollected = 0;
   let outstandingFees = 0;
   let membershipFeeTotal = 0;
   let activeCount = 0;
@@ -53,34 +61,74 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
     membershipFeeTotal += fee;
     if (m.feeStatus === "paid") {
       paidCount++;
-      totalFeesCollected += fee;
     } else if (m.feeStatus === "pending" || m.feeStatus === "partial") {
       pendingCount++;
       outstandingFees += fee;
-    } else if (m.feeStatus === "exempt") {
-      // Exempt members owe nothing — excluded from outstanding totals.
+    } else if (m.feeStatus === "exempt" || m.feeStatus === "not_applicable" || m.feeStatus === "review") {
+      // Exempt/no-evidence/review records are not an assessed outstanding fee.
     } else {
       unpaidCount++;
       outstandingFees += fee;
     }
-    const status = m.frfStatus ?? "active";
-    if (status === "suspended") suspendedCount++;
-    else if (status === "inactive") inactiveCount++;
+    const status = m.feeStatus === "paid" ? "active" : "inactive";
+    if (status === "inactive") inactiveCount++;
     else activeCount++;
   }
 
-  // FRF aggregates: pending/collected contribution totals, members still
-  // owing, and open (active) cases.
+  const [membershipPaymentAgg] = await db
+    .select({
+      total: sql<string>`coalesce(sum(${paymentsTable.amountPaid}) filter (where ${paymentsTable.status} = 'paid'), 0)::text`,
+    })
+    .from(paymentsTable)
+    .where(eq(paymentsTable.paymentType, "membership_fee"));
+
+  const [loanOutstandingAgg] = (
+    await db.execute(sql`
+      WITH repayment_totals AS (
+        SELECT loan_id, COALESCE(SUM(amount), 0)::numeric AS total_paid
+        FROM loan_payments
+        GROUP BY loan_id
+      )
+      SELECT COALESCE(SUM(
+        GREATEST(
+          l.principal_amount
+          - LEAST(
+              l.principal_amount,
+              (l.emi_amount * l.paid_emis) + COALESCE(rt.total_paid, 0)
+            ),
+          0
+        )
+      ), 0)::numeric AS outstanding
+      FROM loans l
+      LEFT JOIN repayment_totals rt ON rt.loan_id = l.id
+      WHERE l.member_id IS NOT NULL
+        AND l.disbursed_date IS NOT NULL
+        AND l.status NOT IN ('cancelled', 'rejected')
+    `)
+  ).rows as Array<{ outstanding: string | number }>;
+
+  // FRF aggregates: pending/collected contribution totals for the single
+  // active collection case and currently eligible members.
   const [frfAgg] = (
     await db.execute(sql`
+      WITH active_case AS (
+        SELECT id
+        FROM frf_claims
+        WHERE status = 'approved'
+        ORDER BY approved_date DESC NULLS LAST, created_at DESC
+        LIMIT 1
+      )
       SELECT
-        COALESCE(SUM(GREATEST(amount - amount_paid, 0)) FILTER (WHERE status IN ('pending', 'partial')), 0) AS pending_total,
-        COALESCE(SUM(amount_paid) FILTER (WHERE status NOT IN ('cancelled')), 0) AS collected_total,
-        COALESCE(SUM(amount) FILTER (WHERE status NOT IN ('cancelled', 'exempt')), 0) AS committed_total,
-        COUNT(DISTINCT member_id) FILTER (WHERE status = 'pending') AS members_pending,
-        COUNT(DISTINCT member_id) FILTER (WHERE status = 'partial') AS members_partial,
-        COUNT(DISTINCT member_id) FILTER (WHERE status = 'paid') AS members_paid
-      FROM frf_contributions
+        COALESCE(SUM(GREATEST(fc.amount - fc.amount_paid, 0)) FILTER (WHERE fc.status IN ('pending', 'partial')), 0) AS pending_total,
+        COALESCE(SUM(fc.amount_paid) FILTER (WHERE fc.status NOT IN ('cancelled')), 0) AS collected_total,
+        COALESCE(SUM(fc.amount) FILTER (WHERE fc.status NOT IN ('cancelled', 'exempt')), 0) AS committed_total,
+        COUNT(DISTINCT fc.member_id) FILTER (WHERE fc.status = 'pending') AS members_pending,
+        COUNT(DISTINCT fc.member_id) FILTER (WHERE fc.status = 'partial') AS members_partial,
+        COUNT(DISTINCT fc.member_id) FILTER (WHERE fc.status = 'paid') AS members_paid
+      FROM frf_contributions fc
+      INNER JOIN active_case ac ON ac.id = fc.claim_id
+      INNER JOIN frf_claims frf ON frf.id = fc.claim_id AND frf.status = 'approved'
+      INNER JOIN members m ON m.id = fc.member_id AND m.fee_status = 'paid'
     `)
   ).rows as Array<{
     pending_total: string | number;
@@ -93,20 +141,29 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
 
   const [caseAgg] = (
     await db.execute(sql`
+      WITH active_case AS (
+        SELECT status, amount_requested
+        FROM frf_claims
+        WHERE status = 'approved'
+        ORDER BY approved_date DESC NULLS LAST, created_at DESC
+        LIMIT 1
+      )
       SELECT
-        COUNT(*) FILTER (WHERE status NOT IN ('disbursed', 'rejected')) AS open_count,
-        COUNT(*) FILTER (WHERE status IN ('disbursed', 'rejected')) AS closed_count,
-        COALESCE(SUM(amount_requested) FILTER (WHERE status NOT IN ('rejected')), 0) AS target_total
-      FROM frf_claims
+        (SELECT COUNT(*) FROM active_case) AS open_count,
+        (SELECT COUNT(*) FROM frf_claims WHERE status IN ('disbursed', 'rejected')) AS closed_count,
+        COALESCE((SELECT SUM(amount_requested) FROM active_case), 0) AS target_total
     `)
   ).rows as Array<{ open_count: string | number; closed_count: string | number; target_total: string | number }>;
 
+  const totalMembershipFeesCollected = Number(membershipPaymentAgg?.total ?? 0);
   res.json({
     totalMembers: members.length,
     paidMembersCount: paidCount,
     pendingMembersCount: pendingCount,
     unpaidMembersCount: unpaidCount,
-    totalFeesCollected,
+    totalFeesCollected: totalMembershipFeesCollected,
+    totalMembershipFeesCollected,
+    loanMoneyOutstanding: Number(loanOutstandingAgg?.outstanding ?? 0),
     outstandingFees,
     membershipFeeTotal,
     activeMembersCount: activeCount,
@@ -124,6 +181,407 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
   });
 });
 
+router.get("/dashboard/command-center", async (req, res): Promise<void> => {
+  const now = new Date();
+  const dayFormatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Riyadh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const monthFormatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Riyadh",
+    year: "numeric",
+    month: "2-digit",
+  });
+  const dayKey = (value: Date | string | null | undefined) =>
+    value ? dayFormatter.format(value instanceof Date ? value : new Date(value)) : "";
+  const monthKey = (value: Date | string | null | undefined) =>
+    value ? monthFormatter.format(value instanceof Date ? value : new Date(value)) : "";
+  const dateOnly = (value: Date | string | null | undefined) =>
+    value ? String(value).slice(0, 10) : "";
+  const numberValue = (value: string | number | null | undefined) => Number(value ?? 0);
+  const startOfToday = new Date(`${dayKey(now)}T00:00:00+03:00`);
+  const today = dayKey(now);
+  const currentMonth = monthKey(now);
+
+  try {
+    const [
+      members,
+      membershipApplications,
+      payments,
+      claims,
+      contributionRows,
+      committeeTerms,
+      committeeAssignments,
+      meetings,
+      attendance,
+      sponsors,
+      loans,
+      loanPayments,
+      events,
+      tasks,
+      welfare,
+      documents,
+      auditRows,
+    ] = await Promise.all([
+      db.select({
+        id: membersTable.id,
+        fullName: membersTable.fullName,
+        membershipId: membersTable.membershipId,
+        membershipFee: membersTable.membershipFee,
+        feeStatus: membersTable.feeStatus,
+        refMemberId: membersTable.refMemberId,
+        refMemberName: membersTable.refMemberName,
+        membershipDate: membersTable.membershipDate,
+        legacyEntryDate: membersTable.legacyEntryDate,
+        importBatchId: membersTable.importBatchId,
+        createdAt: membersTable.createdAt,
+      }).from(membersTable),
+      db.select({
+        status: dkmoMembershipsTable.status,
+        createdAt: dkmoMembershipsTable.createdAt,
+      }).from(dkmoMembershipsTable),
+      db.select({
+        paymentType: paymentsTable.paymentType,
+        status: paymentsTable.status,
+        amountPaid: paymentsTable.amountPaid,
+      }).from(paymentsTable),
+      db.select().from(frfClaimsTable),
+      db.select({
+        contribution: frfContributionsTable,
+        memberFeeStatus: membersTable.feeStatus,
+      }).from(frfContributionsTable)
+        .innerJoin(membersTable, eq(frfContributionsTable.memberId, membersTable.id)),
+      db.select().from(committeeTermsTable),
+      db.select().from(committeeAssignmentsTable),
+      db.select().from(meetingsTable),
+      db.select().from(meetingAttendanceTable),
+      db.select().from(sponsorsTable),
+      db.select().from(loansTable),
+      db.select().from(loanPaymentsTable),
+      db.select({
+        id: eventsTable.id,
+        name: eventsTable.name,
+        eventDate: eventsTable.eventDate,
+        status: eventsTable.status,
+      }).from(eventsTable),
+      db.select({
+        id: tasksTable.id,
+        title: tasksTable.title,
+        dueDate: tasksTable.dueDate,
+        status: tasksTable.status,
+        priority: tasksTable.priority,
+        updatedAt: tasksTable.updatedAt,
+      }).from(tasksTable),
+      db.select({
+        status: welfareRequestsTable.status,
+        serviceType: welfareRequestsTable.serviceType,
+        memberId: welfareRequestsTable.memberId,
+        amountApproved: welfareRequestsTable.amountApproved,
+      }).from(welfareRequestsTable),
+      db.select({
+        id: documentsTable.id,
+        title: documentsTable.title,
+        status: documentsTable.status,
+        expiryDate: documentsTable.expiryDate,
+        updatedAt: documentsTable.updatedAt,
+      }).from(documentsTable),
+      db.select({
+        id: auditLogsTable.id,
+        action: auditLogsTable.action,
+        module: auditLogsTable.module,
+        entityName: auditLogsTable.entityName,
+        details: auditLogsTable.details,
+        userName: auditLogsTable.userName,
+        createdAt: auditLogsTable.createdAt,
+      }).from(auditLogsTable).orderBy(desc(auditLogsTable.createdAt)).limit(25),
+    ]);
+
+    const paidMembers = members.filter((m) => m.feeStatus === "paid");
+    const assessedMembers = members.filter((m) =>
+      ["paid", "pending", "partial", "unpaid"].includes(m.feeStatus),
+    );
+    const unpaidFeeMembers = assessedMembers.filter((m) => m.feeStatus !== "paid");
+    const unassessedFeeMembers = members.filter((m) =>
+      ["exempt", "not_applicable", "review"].includes(m.feeStatus),
+    );
+    const membershipPaidAmount = payments
+      .filter((p) => p.paymentType === "membership_fee" && p.status === "paid")
+      .reduce((total, p) => total + numberValue(p.amountPaid), 0);
+    const membershipOutstanding = members
+      .filter((m) => ["pending", "partial", "unpaid"].includes(m.feeStatus))
+      .reduce((total, member) => total + numberValue(member.membershipFee), 0);
+    const memberActivityMonth = (member: typeof members[number]) => {
+      if (member.importBatchId) {
+        const importedDate = member.membershipDate || member.legacyEntryDate;
+        return /^\d{4}-\d{2}-\d{2}$/.test(importedDate) ? importedDate.slice(0, 7) : "";
+      }
+      return dayKey(member.createdAt).slice(0, 7);
+    };
+
+    const growthBuckets: { month: string; count: number }[] = [];
+    const currentMonthDate = new Date(`${currentMonth}-01T00:00:00+03:00`);
+    for (let i = 11; i >= 0; i -= 1) {
+      const d = new Date(currentMonthDate);
+      d.setMonth(d.getMonth() - i);
+      const key = monthKey(d);
+      growthBuckets.push({
+        month: key,
+        count: members.filter((m) => memberActivityMonth(m) === key).length,
+      });
+    }
+
+    const memberById = new Map(members.map((m) => [m.id, m]));
+    const referralMap = new Map<string, { member: typeof members[number]; referred: typeof members }>();
+    for (const member of members) {
+      if (!member.refMemberId || !memberById.has(member.refMemberId)) continue;
+      const referrer = memberById.get(member.refMemberId)!;
+      const current = referralMap.get(referrer.id) ?? { member: referrer, referred: [] };
+      current.referred.push(member);
+      referralMap.set(referrer.id, current);
+    }
+    const referralRows = [...referralMap.values()]
+      .map(({ member, referred }) => ({
+        memberId: member.id,
+        fullName: member.fullName,
+        membershipId: member.membershipId,
+        count: referred.length,
+        activeCount: referred.filter((m) => m.feeStatus === "paid").length,
+        referrerActive: member.feeStatus === "paid",
+      }))
+      .sort((a, b) => b.count - a.count || a.fullName.localeCompare(b.fullName));
+
+    const approvedClaims = claims
+      .filter((claim) => claim.status === "approved")
+      .sort((a, b) =>
+        numberValue(b.approvedDate ? new Date(b.approvedDate).getTime() : 0)
+        - numberValue(a.approvedDate ? new Date(a.approvedDate).getTime() : 0),
+      );
+    const activeClaim = approvedClaims[0] ?? null;
+    const activeContributions = activeClaim
+      ? contributionRows.filter((row) => row.contribution.claimId === activeClaim.id && row.memberFeeStatus === "paid")
+      : [];
+    const eligibleFrfMembers = new Set(
+      activeContributions
+        .filter((row) => !["cancelled", "exempt"].includes(row.contribution.status))
+        .map((row) => row.contribution.memberId),
+    );
+    const frfCollected = activeContributions
+      .filter((row) => !["cancelled", "exempt"].includes(row.contribution.status))
+      .reduce((total, row) => total + Math.min(numberValue(row.contribution.amountPaid), numberValue(row.contribution.amount)), 0);
+    const frfCommitted = activeContributions
+      .filter((row) => !["cancelled", "exempt"].includes(row.contribution.status))
+      .reduce((total, row) => total + numberValue(row.contribution.amount), 0);
+    const frfPaidMembers = new Set(
+      activeContributions
+        .filter((row) => row.contribution.status === "paid")
+        .map((row) => row.contribution.memberId),
+    );
+
+    const activeTerm = committeeTerms.find((term) => term.isActive) ?? null;
+    const currentAssignments = activeTerm
+      ? committeeAssignments.filter((assignment) => assignment.termId === activeTerm.id && assignment.isActive)
+      : [];
+    const committeeMemberIds = new Set(currentAssignments.map((assignment) => assignment.memberId));
+    const termMeetings = activeTerm
+      ? meetings.filter((meeting) => meeting.committeeTermId === activeTerm.id)
+      : [];
+    const upcomingMeeting = [...termMeetings]
+      .filter((meeting) => meeting.meetingDate > now)
+      .sort((a, b) => a.meetingDate.getTime() - b.meetingDate.getTime())[0] ?? null;
+    const lastMeeting = [...termMeetings]
+      .filter((meeting) => meeting.meetingDate <= now)
+      .sort((a, b) => b.meetingDate.getTime() - a.meetingDate.getTime())[0] ?? null;
+    const lastMeetingAttendance = lastMeeting
+      ? attendance.filter((row) => row.meetingId === lastMeeting.id && committeeMemberIds.has(row.memberId))
+      : [];
+    const lastMeetingPresent = lastMeetingAttendance.filter((row) => row.status === "present").length;
+
+    const loanPaymentTotals = new Map<string, number>();
+    for (const payment of loanPayments) {
+      loanPaymentTotals.set(payment.loanId, (loanPaymentTotals.get(payment.loanId) ?? 0) + numberValue(payment.amount));
+    }
+    const activeLoans = loans.filter((loan) => ["active", "overdue"].includes(loan.status) && loan.memberId);
+    const loanOutstanding = activeLoans.reduce((total, loan) => {
+      const paid = numberValue(loan.emiAmount) * loan.paidEmis + (loanPaymentTotals.get(loan.id) ?? 0);
+      return total + Math.max(0, numberValue(loan.principalAmount) - Math.min(numberValue(loan.principalAmount), paid));
+    }, 0);
+    const pendingLoans = loans.filter((loan) =>
+      !loan.disbursedDate && !["rejected", "cancelled", "closed"].includes(loan.status),
+    );
+
+    const completedTaskStatuses = new Set(["completed", "cancelled"]);
+    const tasksWithDueDate = tasks.filter((task) => task.dueDate);
+    const overdueTasks = tasksWithDueDate.filter((task) =>
+      !completedTaskStatuses.has(task.status) && dateOnly(task.dueDate) < today,
+    );
+    const dueTodayTasks = tasksWithDueDate.filter((task) =>
+      !completedTaskStatuses.has(task.status) && dateOnly(task.dueDate) === today,
+    );
+    const weekEnd = new Date(startOfToday);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+    const dueThisWeekTasks = tasksWithDueDate.filter((task) => {
+      if (completedTaskStatuses.has(task.status) || !task.dueDate) return false;
+      const due = new Date(task.dueDate);
+      return due >= startOfToday && due <= weekEnd;
+    });
+    const recentlyCompletedTasks = tasks.filter((task) =>
+      task.status === "completed" && new Date(task.updatedAt).getTime() >= now.getTime() - 7 * 24 * 60 * 60 * 1000,
+    );
+    const taskItems = [...tasksWithDueDate]
+      .filter((task) => !completedTaskStatuses.has(task.status))
+      .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime())
+      .slice(0, 8)
+      .map((task) => ({
+        id: task.id,
+        title: task.title,
+        date: new Date(task.dueDate!).toISOString(),
+        status: task.status,
+        priority: task.priority,
+        href: `/tasks/${task.id}`,
+      }));
+
+    const upcoming = [
+      ...events
+        .filter((event) => event.eventDate && new Date(event.eventDate) >= now && event.status !== "cancelled")
+         .map((event) => ({ id: `event:${event.id}`, title: event.name, date: new Date(event.eventDate!).toISOString(), kind: "Event", href: `/events/${event.id}` })),
+      ...termMeetings
+        .filter((meeting) => meeting.meetingDate >= now)
+         .map((meeting) => ({ id: `meeting:${meeting.id}`, title: meeting.title, date: meeting.meetingDate.toISOString(), kind: "Meeting", href: "/meetings" })),
+       ...taskItems.map((task) => ({ id: `task:${task.id}`, title: task.title, date: task.date, kind: "Task due", href: task.href })),
+      ...sponsors
+        .filter((sponsor) => sponsor.dueDate && sponsor.dueDate >= now && sponsor.status !== "paid")
+         .map((sponsor) => ({ id: `sponsor:${sponsor.id}`, title: `${sponsor.sponsorName} follow-up`, date: sponsor.dueDate!.toISOString(), kind: "Sponsor", href: `/sponsors/${sponsor.id}` })),
+      ...documents
+        .filter((document) => document.expiryDate && document.expiryDate >= today && document.expiryDate <= dateOnly(new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000)))
+         .map((document) => ({ id: `document:${document.id}`, title: `${document.title} expires`, date: `${document.expiryDate}T00:00:00.000Z`, kind: "Document", href: "/documents" })),
+    ]
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(0, 8);
+
+    const documentExpiringSoon = documents.filter((document) =>
+      document.expiryDate && document.expiryDate >= today && document.expiryDate <= dateOnly(new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)),
+    ).length;
+    const documentExpired = documents.filter((document) => document.expiryDate && document.expiryDate < today).length;
+    const documentPendingReview = documents.filter((document) => ["pending", "review"].includes(document.status)).length;
+
+    const activeWelfareStatuses = new Set(["pending", "under_review", "approved", "in_progress"]);
+    const completedWelfareStatuses = new Set(["completed"]);
+    const activeWelfare = welfare.filter((request) => activeWelfareStatuses.has(request.status));
+    const completedWelfare = welfare.filter((request) => completedWelfareStatuses.has(request.status));
+    const welfareBeneficiaries = new Set(
+      welfare.filter((request) => request.memberId && ["approved", "completed"].includes(request.status)).map((request) => request.memberId),
+    );
+    const auditActivity = auditRows
+      .filter((row) => !["login", "logout"].includes(row.action))
+      .slice(0, 10)
+      .map((row) => ({
+        id: row.id,
+        action: row.action,
+        module: row.module,
+        entityName: row.entityName ?? "",
+        details: row.details ?? "",
+        userName: row.userName,
+        createdAt: row.createdAt.toISOString(),
+      }));
+
+    res.json({
+      membership: {
+        total: members.length,
+        active: paidMembers.length,
+        inactive: members.length - paidMembers.length,
+        paidFees: paidMembers.length,
+        unpaidFees: unpaidFeeMembers.length,
+        unassessedFees: unassessedFeeMembers.length,
+        newThisMonth: members.filter((member) => memberActivityMonth(member) === currentMonth).length,
+        awaitingApproval: membershipApplications.filter((application) => ["submitted", "under_review", "review"].includes(application.status)).length,
+        collectionRate: assessedMembers.length > 0 ? Math.round((paidMembers.length / assessedMembers.length) * 100) : 0,
+        growth: growthBuckets,
+      },
+      referrals: {
+        totalReferred: referralRows.reduce((total, row) => total + row.count, 0),
+        activeReferred: referralRows.reduce((total, row) => total + row.activeCount, 0),
+        activeReferrers: referralRows.filter((row) => row.referrerActive).length,
+        topReferrers: referralRows.slice(0, 5),
+      },
+      frf: {
+        pendingClaims: claims.filter((claim) => ["pending", "under_review"].includes(claim.status)).length,
+        activeCase: activeClaim ? {
+          id: activeClaim.id,
+          title: activeClaim.description || activeClaim.claimType,
+          approvedDate: activeClaim.approvedDate?.toISOString() ?? null,
+          targetAmount: frfCommitted,
+        } : null,
+        collected: activeClaim ? frfCollected : 0,
+        outstanding: activeClaim ? Math.max(0, frfCommitted - frfCollected) : 0,
+        eligibleMembers: activeClaim ? eligibleFrfMembers.size : 0,
+        paidMembers: activeClaim ? frfPaidMembers.size : 0,
+        unpaidMembers: activeClaim ? Math.max(0, eligibleFrfMembers.size - frfPaidMembers.size) : 0,
+        collectionPercentage: activeClaim && frfCommitted > 0 ? Math.round((frfCollected / frfCommitted) * 100) : 0,
+      },
+      committee: {
+        memberCount: committeeMemberIds.size,
+        term: activeTerm?.committeeYear ?? null,
+        startDate: activeTerm?.startDate ?? null,
+        endDate: activeTerm?.endDate ?? null,
+        upcomingMeeting: upcomingMeeting ? {
+          id: upcomingMeeting.id,
+          title: upcomingMeeting.title,
+          meetingDate: upcomingMeeting.meetingDate.toISOString(),
+        } : null,
+        lastMeeting: lastMeeting ? {
+          id: lastMeeting.id,
+          title: lastMeeting.title,
+          meetingDate: lastMeeting.meetingDate.toISOString(),
+          present: lastMeetingPresent,
+          eligible: committeeMemberIds.size,
+          attendanceRecorded: lastMeetingAttendance.length > 0,
+          attendancePercentage: committeeMemberIds.size > 0 ? Math.round((lastMeetingPresent / committeeMemberIds.size) * 100) : 0,
+        } : null,
+      },
+      finance: {
+        membershipCollected: membershipPaidAmount,
+        membershipOutstanding,
+        frfCollected,
+        frfOutstanding: activeClaim ? Math.max(0, frfCommitted - frfCollected) : 0,
+        activeLoans: activeLoans.length,
+        loanOutstanding,
+        pendingLoanApplications: pendingLoans.length,
+        sponsorCollected: sponsors.reduce((total, sponsor) => total + numberValue(sponsor.paidAmount), 0),
+        sponsorPledged: sponsors.reduce((total, sponsor) => total + numberValue(sponsor.totalAmount), 0),
+        sponsorOutstanding: sponsors.reduce((total, sponsor) => total + Math.max(0, numberValue(sponsor.totalAmount) - numberValue(sponsor.paidAmount)), 0),
+        totalSponsors: sponsors.length,
+      },
+      upcoming,
+      tasks: {
+        overdue: overdueTasks.length,
+        dueToday: dueTodayTasks.length,
+        dueThisWeek: dueThisWeekTasks.length,
+        recentlyCompleted: recentlyCompletedTasks.length,
+        items: taskItems,
+      },
+      welfare: {
+        activePrograms: new Set(activeWelfare.map((request) => request.serviceType)).size,
+        pendingApplications: welfare.filter((request) => ["pending", "under_review"].includes(request.status)).length,
+        activeCases: activeWelfare.length,
+        completedCases: completedWelfare.length,
+        beneficiaries: welfareBeneficiaries.size,
+        amountDistributed: completedWelfare.reduce((total, request) => total + numberValue(request.amountApproved), 0),
+      },
+      documents: {
+        pendingReview: documentPendingReview,
+        expiringSoon: documentExpiringSoon,
+        expired: documentExpired,
+      },
+      recentActivity: auditActivity,
+    });
+  } catch (err) {
+    req.log.error({ err }, "dashboard command center failed");
+    res.status(500).json({ error: "Failed to load dashboard command center" });
+  }
+});
+
 router.get("/dashboard/pending", async (req, res): Promise<void> => {
   const parsed = GetPendingMembersQueryParams.safeParse(req.query);
   if (!parsed.success) {
@@ -136,7 +594,7 @@ router.get("/dashboard/pending", async (req, res): Promise<void> => {
 
   const result = [];
   for (const m of members) {
-    if (m.feeStatus === "paid" || m.feeStatus === "exempt") continue;
+    if (m.feeStatus === "paid" || m.feeStatus === "exempt" || m.feeStatus === "not_applicable" || m.feeStatus === "review") continue;
     result.push({
       memberId: m.id,
       fullName: m.fullName,
@@ -336,7 +794,7 @@ router.get("/dashboard/financial-summary", async (req, res): Promise<void> => {
   for (const m of membersAll) {
     const fee = Number(m.membershipFee);
     if (m.feeStatus === "paid") feesCollected += fee;
-    else if (m.feeStatus !== "exempt") feesOutstanding += fee;
+    else if (!["exempt", "not_applicable", "review"].includes(m.feeStatus)) feesOutstanding += fee;
   }
 
   res.json({
@@ -373,53 +831,80 @@ router.get("/dashboard/alerts", async (req, res): Promise<void> => {
     link: string;
   }[] = [];
 
-  const [membersAll, paymentsAll, sponsorRows] = await Promise.all([
+  const [
+    membersAll,
+    paymentsAll,
+    sponsorRows,
+    membershipApplications,
+    frfClaimsAll,
+    frfContributionsAll,
+    documentRows,
+    taskRows,
+    loanRows,
+    loanPaymentRows,
+    committeeTermRows,
+    meetingRows,
+    meetingAttendanceRows,
+  ] = await Promise.all([
     db.select().from(membersTable),
     db.select().from(paymentsTable),
     db.select().from(sponsorsTable),
+    db.select().from(dkmoMembershipsTable).where(eq(dkmoMembershipsTable.status, "submitted")),
+    db.select().from(frfClaimsTable),
+    db.select().from(frfContributionsTable),
+    db.select().from(documentsTable),
+    db.select().from(tasksTable),
+    db.select().from(loansTable),
+    db.select().from(loanPaymentsTable),
+    db.select().from(committeeTermsTable),
+    db.select().from(meetingsTable),
+    db.select().from(meetingAttendanceTable),
   ]);
 
-  // Members with missing required fields
-  const missingFields = membersAll.filter(
-    (m) => !m.mobileNumber || !m.fullName || !m.membershipId,
-  );
-  if (missingFields.length > 0) {
+  // New public membership applications stay visible in the notification bell
+  // until an administrator moves them into review or approves/rejects them.
+  if (membershipApplications.length > 0) {
     alerts.push({
-      id: "missing-member-fields",
-      severity: "critical",
-      type: "missing_data",
-      title: "Members with missing data",
-      description: `${missingFields.length} member${missingFields.length === 1 ? "" : "s"} have empty required fields.`,
-      count: missingFields.length,
-      link: "/members",
+      id: "new-membership-applications",
+      severity: "warning",
+      type: "new_membership_application",
+      title: "New membership applications",
+      description: `${membershipApplications.length} new member application${membershipApplications.length === 1 ? "" : "s"} awaiting review.`,
+      count: membershipApplications.length,
+      link: "/dkmo-memberships",
     });
   }
 
-  // Members who have not paid their membership fee
+  // Membership payments are shown as one actionable queue item. Keeping
+  // unpaid and pending/partial members together avoids duplicating the same
+  // admin task in the dashboard.
   const unpaidMembers = membersAll.filter((m) => m.feeStatus === "unpaid");
-  if (unpaidMembers.length > 0) {
-    alerts.push({
-      id: "unpaid-members",
-      severity: "critical",
-      type: "pending_payment",
-      title: "Unpaid membership fees",
-      description: `${unpaidMembers.length} member${unpaidMembers.length === 1 ? "" : "s"} have not paid the membership fee.`,
-      count: unpaidMembers.length,
-      link: "/pending",
-    });
-  }
-
-  // Members with pending membership fee
   const pendingMembers = membersAll.filter((m) => m.feeStatus === "pending" || m.feeStatus === "partial");
-  if (pendingMembers.length > 0) {
+  const membershipPaymentCount = unpaidMembers.length + pendingMembers.length;
+  if (membershipPaymentCount > 0) {
     alerts.push({
-      id: "pending-members",
+      id: "pending-membership-payments",
       severity: "warning",
       type: "pending_payment",
-      title: "Pending membership fees",
-      description: `${pendingMembers.length} member${pendingMembers.length === 1 ? "" : "s"} have a pending membership fee.`,
-      count: pendingMembers.length,
-      link: "/pending",
+      title: "Membership payments pending",
+      description: `${membershipPaymentCount} member${membershipPaymentCount === 1 ? "" : "s"} need membership payment review.`,
+      count: membershipPaymentCount,
+      link: "/payments?view=unpaid",
+    });
+  }
+
+  const pendingFrfClaims = frfClaimsAll.filter(
+    (claim) => claim.status === "pending" || claim.status === "under_review",
+  );
+  if (pendingFrfClaims.length > 0) {
+    alerts.push({
+      id: "pending-frf-claims",
+      severity: "warning",
+      type: "frf_claim_review",
+      title: "Pending FRF claims",
+      description: `${pendingFrfClaims.length} FRF claim${pendingFrfClaims.length === 1 ? "" : "s"} awaiting committee/admin review.`,
+      count: pendingFrfClaims.length,
+      link: "/frf?status=pending",
     });
   }
 
@@ -510,19 +995,30 @@ router.get("/dashboard/alerts", async (req, res): Promise<void> => {
     });
   }
 
-  // FRF contribution alerts derived from the contribution ledger.
-  const frfLedger = await db
-    .select({ contribution: frfContributionsTable, approvedDate: frfClaimsTable.approvedDate })
-    .from(frfContributionsTable)
-    .innerJoin(frfClaimsTable, eq(frfContributionsTable.claimId, frfClaimsTable.id));
+  // FRF contribution alerts are for the current approved collection case only.
+  // Closed/rejected cases and exempt/cancelled rows are historical ledger data,
+  // not current work for the dashboard.
+  const memberFeeStatus = new Map(membersAll.map((member) => [member.id, member.feeStatus]));
+  const activeFrfClaim = frfClaimsAll
+    .filter((claim) => claim.status === "approved")
+    .sort((a, b) => {
+      const aDate = a.approvedDate?.getTime() ?? a.createdAt.getTime();
+      const bDate = b.approvedDate?.getTime() ?? b.createdAt.getTime();
+      return bDate - aDate;
+    })[0];
   const nowFrf = new Date();
   let frfPendingCount = 0;
   let frfOverdueCount = 0;
   let frfOutstandingAmount = 0;
-  for (const { contribution: c, approvedDate } of frfLedger) {
-    const st = deriveContributionStatus(c, approvedDate, nowFrf);
-    if (st === "pending") { frfPendingCount++; frfOutstandingAmount += Number(c.amount); }
-    else if (st === "overdue") { frfOverdueCount++; frfOutstandingAmount += Number(c.amount); }
+  if (activeFrfClaim) {
+    for (const c of frfContributionsAll.filter((row) => row.claimId === activeFrfClaim.id)) {
+      if (memberFeeStatus.get(c.memberId) !== "paid") continue;
+      const st = deriveContributionStatus(c, activeFrfClaim.approvedDate, nowFrf);
+      if (st === "cancelled" || st === "exempt") continue;
+      const remaining = Math.max(Number(c.amount) - Number(c.amountPaid), 0);
+      if (st === "pending" && remaining > 0) { frfPendingCount++; frfOutstandingAmount += remaining; }
+      else if (st === "overdue" && remaining > 0) { frfOverdueCount++; frfOutstandingAmount += remaining; }
+    }
   }
   if (frfOverdueCount > 0) {
     alerts.push({
@@ -532,7 +1028,7 @@ router.get("/dashboard/alerts", async (req, res): Promise<void> => {
       title: "Overdue FRF contributions",
       description: `${frfOverdueCount} FRF contribution${frfOverdueCount === 1 ? " is" : "s are"} overdue (30+ days since claim approval).`,
       count: frfOverdueCount,
-      link: "/frf",
+      link: "/payments?tab=frf&frfStatus=overdue",
     });
   }
   if (frfPendingCount > 0) {
@@ -543,7 +1039,162 @@ router.get("/dashboard/alerts", async (req, res): Promise<void> => {
       title: "Pending FRF contributions",
       description: `${frfPendingCount} FRF contribution${frfPendingCount === 1 ? "" : "s"} pending, SAR ${frfOutstandingAmount.toLocaleString()} outstanding in total.`,
       count: frfPendingCount,
-      link: "/frf",
+      link: "/payments?tab=frf&frfStatus=pending",
+    });
+  }
+
+  const riyadhDateKey = (value: Date): string =>
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Riyadh",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(value);
+  const today = riyadhDateKey(new Date());
+  const in30Days = riyadhDateKey(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
+
+  const expiredDocuments = documentRows.filter(
+    (document) =>
+      document.status !== "archived" &&
+      (document.status === "expired" || Boolean(document.expiryDate && document.expiryDate < today)),
+  );
+  const expiringDocuments = documentRows.filter(
+    (document) =>
+      document.status === "active" &&
+      Boolean(document.expiryDate && document.expiryDate >= today && document.expiryDate <= in30Days),
+  );
+  if (expiredDocuments.length > 0) {
+    alerts.push({
+      id: "expired-documents",
+      severity: "critical",
+      type: "document_expiry",
+      title: "Expired documents",
+      description: `${expiredDocuments.length} document${expiredDocuments.length === 1 ? "" : "s"} need renewal or review.`,
+      count: expiredDocuments.length,
+      link: "/documents?status=expired",
+    });
+  }
+  if (expiringDocuments.length > 0) {
+    alerts.push({
+      id: "expiring-documents",
+      severity: "warning",
+      type: "document_expiry",
+      title: "Documents expiring soon",
+      description: `${expiringDocuments.length} document${expiringDocuments.length === 1 ? "" : "s"} expire within 30 days.`,
+      count: expiringDocuments.length,
+      link: "/documents?expiring=true",
+    });
+  }
+  const activeTasks = taskRows.filter((task) => task.status === "pending" || task.status === "in_progress");
+  const overdueTasks = activeTasks.filter((task) => task.dueDate && task.dueDate < now);
+  const dueTodayTasks = activeTasks.filter(
+    (task) => task.dueDate && riyadhDateKey(task.dueDate) === today,
+  );
+  const urgentTasks = activeTasks.filter((task) => task.priority === "urgent");
+  if (overdueTasks.length > 0) {
+    alerts.push({
+      id: "overdue-tasks",
+      severity: "critical",
+      type: "task_overdue",
+      title: "Overdue tasks",
+      description: `${overdueTasks.length} task${overdueTasks.length === 1 ? "" : "s"} are past due and need follow-through.`,
+      count: overdueTasks.length,
+      link: "/tasks?status=active&sort=dueAsc",
+    });
+  }
+  if (dueTodayTasks.length > 0) {
+    alerts.push({
+      id: "tasks-due-today",
+      severity: "warning",
+      type: "task_due",
+      title: "Tasks due today",
+      description: `${dueTodayTasks.length} task${dueTodayTasks.length === 1 ? "" : "s"} are due today.`,
+      count: dueTodayTasks.length,
+      link: "/tasks?status=active&sort=dueAsc",
+    });
+  }
+  if (urgentTasks.length > 0) {
+    alerts.push({
+      id: "urgent-tasks",
+      severity: "warning",
+      type: "task_urgent",
+      title: "Urgent tasks",
+      description: `${urgentTasks.length} urgent task${urgentTasks.length === 1 ? "" : "s"} remain open.`,
+      count: urgentTasks.length,
+      link: "/tasks?status=active&sort=priority",
+    });
+  }
+
+  const paymentTotalsByLoan = new Map<string, number>();
+  for (const payment of loanPaymentRows) {
+    paymentTotalsByLoan.set(
+      payment.loanId,
+      (paymentTotalsByLoan.get(payment.loanId) ?? 0) + Number(payment.amount),
+    );
+  }
+  const expectedInstallments = (loan: typeof loansTable.$inferSelect, emiCount: number): number => {
+    if (!loan.disbursedDate) return 0;
+    const start = new Date(loan.disbursedDate);
+    if (Number.isNaN(start.getTime())) return 0;
+    let months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
+    if (now.getDate() < start.getDate()) months -= 1;
+    return Math.max(0, Math.min(months, emiCount));
+  };
+  const overdueLoans = loanRows.filter((loan) => {
+    const principal = Number(loan.principalAmount);
+    const emi = Number(loan.emiAmount);
+    const totalPaid = Math.min(emi * loan.paidEmis + (paymentTotalsByLoan.get(loan.id) ?? 0), principal);
+    const outstanding = Math.max(principal - totalPaid, 0);
+    const emiCount = loan.emiCount > 0 ? loan.emiCount : emi > 0 ? Math.ceil(principal / emi) : 0;
+    const paidInstallments = emi > 0 ? Math.min(Math.floor(totalPaid / emi + 1e-9), emiCount) : 0;
+    return (
+      loan.status === "defaulted" ||
+      (outstanding > 0 && expectedInstallments(loan, emiCount) > paidInstallments)
+    );
+  });
+  if (overdueLoans.length > 0) {
+    alerts.push({
+      id: "overdue-loans",
+      severity: "critical",
+      type: "loan_overdue",
+      title: "Overdue loans",
+      description: `${overdueLoans.length} loan${overdueLoans.length === 1 ? "" : "s"} have missed repayments.`,
+      count: overdueLoans.length,
+      link: "/loans?status=overdue",
+    });
+  }
+
+  const activeCommitteeTerm = committeeTermRows.find((term) => term.isActive);
+  const upcomingMeetings = meetingRows.filter(
+    (meeting) => meeting.meetingDate > now && (!activeCommitteeTerm || meeting.committeeTermId === activeCommitteeTerm.id),
+  );
+  const meetingsWithAttendance = new Set(meetingAttendanceRows.map((attendance) => attendance.meetingId));
+  const meetingsMissingAttendance = meetingRows.filter(
+    (meeting) =>
+      meeting.meetingDate <= now &&
+      (!activeCommitteeTerm || meeting.committeeTermId === activeCommitteeTerm.id) &&
+      !meetingsWithAttendance.has(meeting.id),
+  );
+  if (meetingsMissingAttendance.length > 0) {
+    alerts.push({
+      id: "meetings-missing-attendance",
+      severity: "warning",
+      type: "meeting_follow_up",
+      title: "Meetings need follow-through",
+      description: `${meetingsMissingAttendance.length} past committee meeting${meetingsMissingAttendance.length === 1 ? "" : "s"} need attendance follow-up.`,
+      count: meetingsMissingAttendance.length,
+      link: "/meetings",
+    });
+  }
+  if (activeCommitteeTerm && upcomingMeetings.length === 0 && meetingRows.length === 0) {
+    alerts.push({
+      id: "committee-no-meetings",
+      severity: "info",
+      type: "committee_planning",
+      title: "No committee meetings scheduled",
+      description: "Schedule the next committee meeting for the active term.",
+      count: 0,
+      link: "/meetings",
     });
   }
   const recentlyApprovedClaims = await db
@@ -594,8 +1245,8 @@ router.get("/dashboard/cash-flow", async (req, res): Promise<void> => {
   const totalCollected = totalCollectedMembers + totalCollectedSponsors;
 
   const totalDisbursed = frfClaims
-    .filter((c) => c.status === "disbursed" || c.status === "approved")
-    .reduce((s, c) => s + Number(c.amountApproved), 0);
+    .filter((c) => c.status === "disbursed")
+    .reduce((s, c) => s + Number(c.disbursedAmount ?? c.amountApproved), 0);
 
   const netBalance = totalCollected - totalDisbursed;
 
@@ -625,7 +1276,7 @@ router.get("/dashboard/cash-flow", async (req, res): Promise<void> => {
   });
 });
 
-const FRF_GRANTED = ["approved", "disbursed"];
+const FRF_GRANTED = ["disbursed"];
 const WELFARE_GRANTED = ["approved", "completed"];
 
 router.get("/dashboard/impact", async (_req, res): Promise<void> => {
@@ -762,7 +1413,7 @@ router.get("/dashboard/committee-performance", async (req, res): Promise<void> =
     const recruiter = get(m.refMemberName ?? "");
     if (recruiter) {
       recruiter.membersRecruited += 1;
-      if (m.frfStatus === "active") recruiter.frfReferred += 1;
+      if (m.feeStatus === "paid") recruiter.frfReferred += 1;
     }
   }
 
@@ -861,6 +1512,7 @@ router.get("/dashboard/member-assistance/:memberId", async (req, res): Promise<v
   const items = [
     ...frfClaims.map((c) => ({
       id: c.id,
+      sourceType: "frf_claim",
       category: FRF_CLAIM_LABEL[c.claimType] ?? "FRF",
       referenceNumber: "",
       date: c.claimDate ? c.claimDate.toISOString() : null,
@@ -871,6 +1523,7 @@ router.get("/dashboard/member-assistance/:memberId", async (req, res): Promise<v
     })),
     ...welfare.map((w) => ({
       id: w.id,
+      sourceType: "welfare_request",
       category: WELFARE_CATEGORY[w.serviceType] ?? w.serviceType,
       referenceNumber: w.requestNumber ?? "",
       date: w.submittedAt ? w.submittedAt.toISOString() : null,
@@ -881,6 +1534,7 @@ router.get("/dashboard/member-assistance/:memberId", async (req, res): Promise<v
     })),
     ...loans.map((l) => ({
       id: l.id,
+      sourceType: "loan",
       category: "Loan",
       referenceNumber: "",
       date: l.disbursedDate ?? null,
@@ -905,22 +1559,26 @@ router.get("/dashboard/frf-overview", async (req, res): Promise<void> => {
     const [claims, ledger, membersAll] = await Promise.all([
       db.select().from(frfClaimsTable),
       db
-        .select({ contribution: frfContributionsTable, approvedDate: frfClaimsTable.approvedDate })
+        .select({
+          contribution: frfContributionsTable,
+          approvedDate: frfClaimsTable.approvedDate,
+          memberFeeStatus: membersTable.feeStatus,
+        })
         .from(frfContributionsTable)
-        .innerJoin(frfClaimsTable, eq(frfContributionsTable.claimId, frfClaimsTable.id)),
+        .innerJoin(frfClaimsTable, eq(frfContributionsTable.claimId, frfClaimsTable.id))
+        .innerJoin(membersTable, eq(frfContributionsTable.memberId, membersTable.id)),
       db.select().from(membersTable),
     ]);
 
-    const approvedClaims = claims.filter(
-      (c) => c.status === "approved" || c.status === "disbursed",
-    ).length;
+    const approvedClaims = claims.filter((c) => c.status === "approved").length;
 
     const now = new Date();
     let expectedTotal = 0;
     let collectedTotal = 0;
     const outstandingByMember = new Map<string, { outstanding: number; pendingClaims: number }>();
 
-    for (const { contribution: c, approvedDate } of ledger) {
+    for (const { contribution: c, approvedDate, memberFeeStatus } of ledger) {
+      if (memberFeeStatus !== "paid") continue;
       const status = deriveContributionStatus(c, approvedDate, now);
       if (status === "cancelled" || status === "exempt") continue;
       const amount = Number(c.amount);

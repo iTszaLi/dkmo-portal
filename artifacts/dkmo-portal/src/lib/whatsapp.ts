@@ -1,3 +1,5 @@
+import { formatSAR } from "@/lib/utils";
+
 /**
  * WhatsApp number + link helpers.
  *
@@ -34,6 +36,43 @@ export function normalizeWhatsAppNumber(raw: string | null | undefined): string 
 /** Build a wa.me chat link with a prefilled message. */
 export function buildWhatsAppLink(normalizedNumber: string, message: string): string {
   return `https://wa.me/${normalizedNumber}?text=${encodeURIComponent(message)}`;
+}
+
+export const FRF_UNPAID_STATUSES = new Set(["pending", "partial", "overdue"]);
+
+export interface FrfReminderContributor {
+  fullName: string;
+  amount: number;
+  balance: number;
+  membershipId: string;
+}
+
+export function canSendFrfReminder(
+  activeCaseStatus: string | undefined,
+  contributionStatus: string,
+): boolean {
+  return activeCaseStatus === "approved" && FRF_UNPAID_STATUSES.has(contributionStatus);
+}
+
+export function buildFrfReminderMessage(
+  contributor: FrfReminderContributor,
+  activeCaseTitle: string,
+): string {
+  return `Assalamu Alaikum ${contributor.fullName},
+
+This is a reminder from DKMO regarding your FRF (Family Relief Fund) contribution.
+
+FRF Case: ${activeCaseTitle}
+FRF Fee: ${formatSAR(contributor.amount)}
+Amount Due: ${formatSAR(contributor.balance)}
+DKMO ID: ${contributor.membershipId}
+
+Our records show that your FRF contribution for this case is still unpaid.
+
+Kindly arrange the payment at your earliest convenience.
+
+JazakAllahu Khairan,
+DKMO`;
 }
 
 export interface WhatsAppTarget {

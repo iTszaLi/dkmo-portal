@@ -10,26 +10,21 @@ import {
   UserPlus,
   CreditCard,
   HeartHandshake,
-  Banknote,
-  FileUp,
-  Handshake,
-  CalendarPlus,
-  ReceiptText,
   ChevronDown,
+  ListChecks,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { withReturnTo } from "@/lib/navigation";
 
 type Action = { label: string; icon: typeof UserPlus; to: string; roles: string[]; testId: string };
 
 const ACTIONS: Action[] = [
   { label: "Add Member", icon: UserPlus, to: "/members", roles: ["admin", "finance"], testId: "qa-add-member" },
   { label: "Record Payment", icon: CreditCard, to: "/payments", roles: ["admin", "finance"], testId: "qa-record-payment" },
-  { label: "New FRF Claim", icon: HeartHandshake, to: "/frf", roles: ["admin", "finance"], testId: "qa-new-frf" },
-  { label: "New Loan", icon: Banknote, to: "/loans", roles: ["admin", "finance"], testId: "qa-new-loan" },
-  { label: "Upload Document", icon: FileUp, to: "/documents", roles: ["admin", "finance"], testId: "qa-upload-doc" },
-  { label: "Add Sponsor", icon: Handshake, to: "/sponsors", roles: ["admin", "finance"], testId: "qa-add-sponsor" },
-  { label: "Create Event", icon: CalendarPlus, to: "/events", roles: ["admin", "finance", "event"], testId: "qa-create-event" },
-  { label: "Generate Receipt", icon: ReceiptText, to: "/receipts?tab=generate", roles: ["admin", "finance"], testId: "qa-receipt" },
+  { label: "Review FRF Claims", icon: HeartHandshake, to: "/frf", roles: ["admin", "finance"], testId: "qa-review-frf" },
+  { label: "Create Task", icon: ListChecks, to: "/tasks/new", roles: ["admin", "event", "finance"], testId: "qa-create-task" },
+  { label: "View Pending Membership", icon: CreditCard, to: "/payments?view=unpaid", roles: ["admin", "finance"], testId: "qa-pending-membership" },
+  { label: "View Pending FRF Fees", icon: HeartHandshake, to: "/payments?tab=frf&frfStatus=pending", roles: ["admin", "finance"], testId: "qa-pending-frf" },
 ];
 
 /** Top-right dashboard quick actions dropdown. */
@@ -57,7 +52,7 @@ export function QuickActionsMenu() {
         {actions.map((a) => {
           const Icon = a.icon;
           return (
-            <DropdownMenuItem key={a.label} data-testid={a.testId} onSelect={() => setLocation(a.to)} className="gap-2.5 cursor-pointer">
+            <DropdownMenuItem key={a.label} data-testid={a.testId} onSelect={() => setLocation(withReturnTo(a.to))} className="gap-2.5 cursor-pointer">
               <Icon className="h-4 w-4 text-green-600" />
               {a.label}
             </DropdownMenuItem>

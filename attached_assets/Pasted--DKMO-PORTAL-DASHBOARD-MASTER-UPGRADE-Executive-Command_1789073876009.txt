@@ -1,0 +1,1405 @@
+# DKMO PORTAL — DASHBOARD MASTER UPGRADE
+
+## Executive Command Center, Data Integrity, Navigation & Future-Proofing
+
+I want you to treat the DKMO Dashboard as a production-grade **Executive / Committee Command Center**, not simply a collection of statistic cards.
+
+Do NOT make superficial cosmetic changes only.
+
+First inspect the entire existing application architecture, routes, database schema, API endpoints, dashboard calculations, navigation system, browser history behavior, permissions, audit logging, and all links originating from the dashboard.
+
+Then implement the improvements below carefully without breaking existing DKMO data or business rules.
+
+---
+
+# 1. VERY IMPORTANT — DO NOT BREAK EXISTING DATA OR BUSINESS LOGIC
+
+Before changing anything:
+
+* Inspect the existing database/schema.
+* Inspect all dashboard API queries/calculations.
+* Inspect all existing routes.
+* Inspect all dashboard links.
+* Inspect all Quick Actions.
+* Inspect all permissions.
+* Inspect all FRF logic.
+* Inspect membership fee logic.
+* Inspect committee logic.
+* Inspect loan logic.
+* Inspect welfare logic.
+* Inspect documents logic.
+* Inspect audit logic.
+* Inspect referrals logic.
+
+Do NOT create duplicate calculations or duplicate business rules inside the dashboard.
+
+The dashboard must consume the application's authoritative backend data.
+
+If a metric already has an authoritative calculation elsewhere, reuse that calculation rather than creating a second definition.
+
+---
+
+# 2. FIX THE CURRENT DASHBOARD DATA DEFINITIONS
+
+There are currently suspicious/inconsistent metrics.
+
+For example:
+
+* Active members: 1,102
+* Registered members: 1,140
+* "1,140 new this month"
+* "1,140 joined this month"
+* Active member share: 97%
+
+The dashboard must NEVER imply that all 1,140 members joined during September 2026 unless that is actually true.
+
+Create clearly defined metrics:
+
+### Membership
+
+Show:
+
+* Total registered members
+* Active members
+* Inactive members
+* Pending approval
+* Membership fee paid
+* Membership fee unpaid
+* Membership collection rate
+
+Do NOT use vague wording such as:
+
+"new this month"
+
+unless it is calculated from actual member creation/join dates.
+
+Instead show:
+
+"New members this month: X"
+
+where X is genuinely the number created/approved during the selected period.
+
+Also make sure:
+
+Active + Inactive + other valid member states reconcile correctly with Total Registered.
+
+If they do not reconcile, identify the reason rather than hiding the discrepancy.
+
+---
+
+# 3. ADD A DASHBOARD DATE/PERIOD CONTROL
+
+The dashboard currently says:
+
+"for September 2026"
+
+but many cards appear to mix:
+
+* lifetime totals
+* current balances
+* monthly figures
+* current operational state
+
+This is confusing.
+
+Add a clear distinction between:
+
+### CURRENT STATUS
+
+Lifetime/current-state values:
+
+* Total members
+* Active members
+* Outstanding balances
+* Active FRF case
+* Active loans
+* Current committee
+* Current welfare cases
+* Current document alerts
+
+### PERIOD
+
+For time-based statistics:
+
+* Today
+* This week
+* This month
+* This year
+* Custom period
+
+Do NOT mix lifetime and monthly numbers without explicitly labeling them.
+
+Example:
+
+"Total registered members"
+"1,140"
+"LIFETIME"
+
+and:
+
+"New members this month"
+"24"
+"SEP 2026"
+
+---
+
+# 4. REBUILD THE TOP OF THE DASHBOARD
+
+The first screen should answer:
+
+## "What needs my attention right now?"
+
+Place this immediately below the header.
+
+Create an:
+
+# ATTENTION REQUIRED
+
+section.
+
+Only show things that actually require action.
+
+Examples:
+
+* Pending FRF claim
+* Pending FRF contributions
+* Unpaid membership fees
+* Overdue FRF contributions
+* Pending loan applications
+* Overdue loans
+* Documents expiring soon
+* Expired documents
+* Pending member approvals
+* Pending welfare applications
+* Upcoming committee meeting
+* Overdue tasks
+* Important system alerts
+
+If there are zero items:
+
+Show a positive empty state:
+
+"Everything is up to date"
+"No immediate action is required."
+
+Do NOT make the dashboard look broken just because there is no work pending.
+
+---
+
+# 5. FRF DASHBOARD SECTION — MAKE THIS EXTREMELY CLEAR
+
+FRF is one of the most important modules and must not confuse administrators.
+
+The dashboard currently shows:
+
+FRF Position
+SAR 55,100
+0% collected
+0 claims pending
+
+and later:
+
+Eligible members: 1,102
+Paid members: 0
+Pending contributions: 1,102
+
+Make the terminology extremely clear.
+
+Use:
+
+## Active FRF Collection Case
+
+Show:
+
+* Case name / case number
+* Reason/category
+* Approved date
+* Target amount
+* Eligible contributors
+* Contributors paid
+* Contributors unpaid
+* Total collected
+* Total outstanding
+* Collection percentage
+* Case status
+
+Example:
+
+FRF Case #2026-001
+Death Benefit
+Target: SAR 55,100
+Collected: SAR 0
+Outstanding: SAR 55,100
+Eligible: 1,102
+Paid: 0
+Unpaid: 1,102
+Collection: 0%
+
+Important:
+
+"Eligible members" must mean members who are actually eligible under the DKMO rules.
+
+Membership eligibility MUST be respected:
+
+A member whose membership fee is unpaid must NOT become eligible for FRF contribution.
+
+Therefore:
+
+Membership paid → FRF eligible
+Membership unpaid → FRF inactive/not eligible
+
+Use the existing authoritative FRF eligibility logic.
+
+DO NOT duplicate this logic in the dashboard.
+
+---
+
+# 6. FRF CLAIMS VS FRF FEES MUST REMAIN DISTINCT
+
+Do not merge these concepts.
+
+### FRF Claims
+
+This is the committee/administrative workflow:
+
+* Claim submitted
+* Claim reviewed
+* Claim approved/rejected
+* Approval opens the next collection case when appropriate
+
+### Payments → FRF Fees
+
+This tracks:
+
+* Individual member contribution
+* Current FRF case
+* Paid/unpaid/overdue
+* Amount due
+* Payment history
+
+The dashboard may link to both, but must label them correctly.
+
+Example:
+
+"Review FRF Claims"
+
+and
+
+"Manage Current FRF Collection"
+
+Do NOT create a dashboard button called simply "FRF" if the destination is ambiguous.
+
+---
+
+# 7. FINANCE SECTION — MAKE THE NUMBERS ACCOUNTABLE
+
+The Finance section must distinguish:
+
+### Membership
+
+* Total collected
+* Outstanding
+* Number paid
+* Number unpaid
+* Collection %
+
+### FRF
+
+* Current case target
+* Collected
+* Outstanding
+* Paid contributors
+* Unpaid contributors
+* Collection %
+
+### Loans
+
+* Total loan principal outstanding
+* Active loans
+* Pending applications
+* Overdue loans
+* Available loan budget
+* Amount already committed
+
+### Sponsors
+
+* Total pledged
+* Total collected
+* Outstanding sponsorship commitments
+* Number of active sponsors
+
+Every financial figure must have a clearly defined scope:
+
+"LIFETIME"
+"CURRENT CASE"
+"CURRENT PERIOD"
+or "CURRENT BALANCE".
+
+Never show a SAR amount without making its meaning obvious.
+
+---
+
+# 8. REMOVE MISLEADING ZERO-CARDS
+
+The dashboard currently has many sections showing:
+
+0 programs
+0 cases
+0 beneficiaries
+0 tasks
+0 meetings
+0 sponsors
+etc.
+
+Do NOT remove functionality.
+
+But improve presentation.
+
+If a module has no activity:
+
+Use a compact empty state instead of making it visually compete with important operational information.
+
+Example:
+
+Welfare
+"No active programs"
+
+Tasks
+"No outstanding tasks"
+
+Documents
+"No documents requiring attention"
+
+Committee
+"No meeting currently scheduled"
+
+The dashboard should prioritize information density according to importance.
+
+---
+
+# 9. COMMITTEE SECTION
+
+The Committee dashboard card must use the authoritative current committee.
+
+Current committee:
+
+2026–2027
+30 members
+
+Show:
+
+* Current committee name
+* Term dates
+* 30 members
+* Next meeting
+* Last meeting
+* Attendance from last meeting
+* Pending committee decisions/tasks
+
+If there is no meeting:
+
+"No committee meeting recorded yet."
+
+If there is no upcoming meeting:
+
+"No upcoming committee meeting."
+
+Do not invent dates.
+
+Attendance must ONLY use the committee members for that committee term.
+
+Do not accidentally include all 1,140 members.
+
+---
+
+# 10. MEMBERSHIP / REFERRAL SECTION
+
+Keep referral information, but make it useful.
+
+Show:
+
+* Total referred members
+* Active referred members
+* Active referrers
+* Top 3 referrers
+* New referrals this month
+
+Do NOT call lifetime referral numbers "this month."
+
+Make lifetime vs monthly explicit.
+
+Example:
+
+"850 total referred members"
+
+"12 new referrals this month"
+
+"42 active referrers"
+
+---
+
+# 11. QUICK ACTIONS
+
+Keep Quick Actions but make them smarter.
+
+Current:
+
+* Add Member
+* Record Payment
+* New FRF Claim
+* New Loan
+* Upload Document
+* Add Sponsor
+
+Keep these.
+
+But ensure every action opens the correct page/modal and never loses navigation context.
+
+Add only genuinely useful actions if the application supports them:
+
+* Schedule Committee Meeting
+* Create Task
+* Search Member
+* Record FRF Payment
+
+Do NOT add actions for features that do not exist.
+
+---
+
+# 12. GLOBAL SEARCH
+
+The existing:
+
+"Search anything..."
+
+should become a real global search.
+
+Search across:
+
+* Members
+* DKMO IDs
+* Phone numbers
+* Email
+* Referrals
+* Payments
+* FRF cases
+* FRF contributions
+* Loans
+* Documents
+* Sponsors
+* Tasks
+* Committee members
+* Audit events
+
+Results must be permission-aware.
+
+Example:
+
+Searching "Yousuf Addoor"
+
+should allow the authorized administrator to find the member and open:
+
+Member Profile → correct tab.
+
+Search must NOT expose records that the logged-in user is not authorized to access.
+
+---
+
+# 13. CRITICAL NAVIGATION FIX — BACK BUTTON / RETURN STATE
+
+This is extremely important.
+
+The portal currently has a problem where:
+
+User opens a module
+→ clicks something
+→ goes into a detail page
+→ clicks Back
+→ application sometimes sends the user to a random/unrelated module.
+
+FIX THIS GLOBALLY.
+
+Do NOT patch this only on the dashboard.
+
+Create a consistent navigation/return-state system.
+
+Examples:
+
+Members
+→ open member
+→ Membership Ledger
+→ Back
+= return to Members list with previous filters/page/search.
+
+FRF Fees
+→ open member
+→ payment history
+→ Back
+= return to FRF Fees with same filters/page/case.
+
+Committee
+→ open committee member
+→ Back
+= return to same committee.
+
+Loans
+→ open loan
+→ Back
+= return to same loan list/filter.
+
+Documents
+→ open document
+→ Back
+= return to Documents list.
+
+Reports
+→ open report
+→ Back
+= return to Reports.
+
+Use browser history/state correctly.
+
+Do NOT blindly navigate to /dashboard when clicking Back.
+
+Do NOT create random redirects.
+
+Preserve:
+
+* current module
+* tab
+* search
+* filters
+* sort
+* pagination
+* selected FRF case
+* selected committee term
+* selected report period
+
+Where appropriate, use URL query parameters so state can survive refreshes and direct links.
+
+---
+
+# 14. DASHBOARD URL / ROUTING AUDIT
+
+EVERY dashboard link must be tested.
+
+Audit all:
+
+* hrefs
+* React Router routes
+* dynamic routes
+* query parameters
+* redirects
+* back navigation
+* deep links
+* browser refresh
+* direct URL access
+* 404 handling
+
+Every dashboard card must lead to the correct destination.
+
+Examples:
+
+Members → /members
+
+Membership collection → /payments?view=unpaid
+
+FRF → /frf
+
+Tasks → /tasks
+
+Committee → /committee
+
+Reports → /reports
+
+Events → /events
+
+Welfare → /welfare-programs
+
+Documents → /documents
+
+Audit → /audit
+
+Loans → /loans
+
+BUT do not assume these are correct just because they currently appear correct.
+
+Verify against the application's actual route definitions.
+
+---
+
+# 15. NO BROKEN REDIRECTS
+
+Audit:
+
+* 200 responses
+* 301/302 redirects
+* 404 routes
+* invalid IDs
+* deleted records
+* unauthorized routes
+* expired sessions
+
+If a user clicks a dashboard link to a record that was deleted or is inaccessible:
+
+show a proper error/empty state.
+
+Do NOT silently redirect them to a random module.
+
+Example:
+
+"Member no longer exists or you do not have permission to view this record."
+
+---
+
+# 16. PRESERVE QUERY/FILTER STATE
+
+If a user is on:
+
+/payments?view=unpaid
+
+and opens a member, then returns:
+
+they should return to:
+
+/payments?view=unpaid
+
+not:
+
+/dashboard
+
+Similarly:
+
+/members?status=inactive&search=Ahmed&page=3
+
+must return to the same state.
+
+Use stable URL state wherever practical.
+
+---
+
+# 17. AUDIT TRAIL
+
+The dashboard's Recent Activity section is useful, but improve the event presentation.
+
+Instead of technical events such as:
+
+payment_created
+
+member_fee_status_updated
+
+display human-readable events:
+
+"Yousuf Addoor's payment was recorded"
+
+"Membership fee status updated for Irshad Bajpe"
+
+"Administrator created an FRF payment"
+
+Keep the underlying event type for developers.
+
+Audit entries should contain:
+
+* Who
+* What
+* Which record
+* When
+* Result
+* Relevant module
+
+Important actions to audit include:
+
+* Member created
+* Member edited
+* Member deleted
+* Membership fee changed
+* Payment created
+* Payment edited
+* Payment deleted
+* FRF claim created
+* FRF claim approved/rejected
+* FRF case opened/closed
+* FRF contribution changed
+* Loan created/approved/rejected
+* Document uploaded/deleted
+* Committee membership changed
+* Committee created
+* User/permission changes
+* Data imports/exports
+
+Do NOT log passwords, session tokens, or other unnecessary sensitive information.
+
+---
+
+# 18. SECURITY / AUTHORIZATION
+
+Do not rely on dashboard UI hiding buttons.
+
+All permissions must be enforced server-side.
+
+For every dashboard-linked action verify:
+
+* authentication
+* authorization
+* role
+* resource ownership/permission
+* action permission
+
+A user must not gain access simply by manually changing a URL.
+
+Example:
+
+/members/123
+
+must perform authorization server-side.
+
+Also protect:
+
+* /payments
+* /frf
+* /loans
+* /audit
+* /committee
+* /documents
+* administrative APIs
+
+Do not assume that hiding a button is security.
+
+Implement/verify deny-by-default behavior and least privilege.
+
+---
+
+# 19. DASHBOARD REFRESH BEHAVIOR
+
+Current dashboard says:
+
+"Refreshes every minute"
+
+Do not blindly refresh the entire page every 60 seconds.
+
+Prefer:
+
+* efficient data refresh
+* manual refresh button
+* visible "Last updated: 11:54 PM"
+* automatic refresh only where useful
+* preserve scroll position
+* preserve filters/navigation state
+
+Do not cause the dashboard to jump around while an administrator is reading it.
+
+If real-time updates are available, use them appropriately.
+
+---
+
+# 20. DASHBOARD ERROR HANDLING
+
+Every dashboard data section needs a proper loading/error/empty state.
+
+Examples:
+
+Loading:
+"Loading membership data…"
+
+Error:
+"Membership data could not be loaded."
+"Retry"
+
+Empty:
+"No pending membership approvals."
+
+Do NOT display:
+
+0
+
+when the API actually failed.
+
+This is extremely important.
+
+A failed API request must NEVER be interpreted as zero members, zero payments, zero FRF cases, etc.
+
+---
+
+# 21. RECONCILIATION / DATA HEALTH
+
+Add a small "Data Health" area for administrators.
+
+It should detect impossible/inconsistent states such as:
+
+* Active members > total members
+* Paid members > eligible members
+* FRF collected > FRF target
+* Outstanding amount negative
+* Payment assigned to nonexistent member
+* FRF payment belonging to closed/nonexistent case
+* Loan balance inconsistent with payments
+* Committee member assigned to nonexistent committee
+* Duplicate DKMO IDs
+* Duplicate active FRF collection cases
+* Member marked inactive but still treated as eligible incorrectly
+* Membership unpaid but FRF active
+* Dashboard totals not matching module totals
+
+If something is wrong, show:
+
+"Data integrity issue detected"
+
+with a link to the appropriate admin/data-health page.
+
+Do NOT silently normalize or alter historical data.
+
+---
+
+# 22. FRF BUSINESS RULES MUST BE RESPECTED
+
+The authoritative DKMO rule is:
+
+Membership fee = SAR 100 one-time.
+
+FRF contribution = SAR 50 per member per FRF case.
+
+A member must have an eligible/paid membership before their FRF contribution becomes active.
+
+If membership is unpaid:
+
+* FRF must be inactive/not eligible
+* They must not be counted as a collectible FRF contribution
+
+FRF collection is sequential:
+
+* One active collection case at a time
+* Approving a claim opens the next collection case
+* A new case cannot become active while the previous case is still active
+* When no collection case exists, dashboard must show no active collection case
+* Previous cases remain historical
+* Payments must remain associated with their original FRF case
+
+Do not change these rules while redesigning the dashboard.
+
+---
+
+# 23. MEMBER COUNT DEFINITIONS
+
+Make sure the dashboard distinguishes:
+
+Total registered
+Active
+Inactive
+Pending
+Rejected/archived if applicable
+
+Do not call everyone "active."
+
+Do not count historical/imported records incorrectly.
+
+Use the authoritative member status.
+
+---
+
+# 24. FINANCIAL DATA DEFINITIONS
+
+Every financial card should clearly indicate:
+
+* Current balance
+* Lifetime total
+* Current case
+* Current period
+* Outstanding amount
+* Collected amount
+
+Never mix them.
+
+Example:
+
+BAD:
+
+FRF Collected
+SAR 0
+
+GOOD:
+
+FRF — Current Case #2026-001
+Collected: SAR 0
+Outstanding: SAR 55,100
+Target: SAR 55,100
+Collection: 0%
+
+---
+
+# 25. MAKE THE DASHBOARD RESPONSIVE
+
+Test:
+
+* Desktop
+* Laptop
+* Tablet
+* Mobile
+
+Do not allow cards to become unusably narrow.
+
+Quick Actions should remain easy to use.
+
+Tables should horizontally scroll where appropriate rather than breaking the layout.
+
+---
+
+# 26. ACCESSIBILITY
+
+Ensure:
+
+* keyboard navigation
+* visible focus states
+* proper button labels
+* accessible icons
+* accessible tooltips
+* sufficient contrast
+* semantic headings
+* screen-reader-friendly labels
+* no icon-only critical actions without accessible labels
+
+For example, if a trash icon is used:
+
+aria-label="Delete committee member"
+
+Do not make important functions dependent on hover alone.
+
+---
+
+# 27. VISUAL HIERARCHY
+
+Do not make every card equally prominent.
+
+Priority should be:
+
+1. Attention Required
+2. Financial/FRF risk
+3. Membership
+4. Committee/governance
+5. Loans
+6. Welfare
+7. Documents
+8. Tasks
+9. Audit/activity
+
+Use whitespace and typography to make important information obvious.
+
+Avoid excessive decorative icons.
+
+---
+
+# 28. IMPROVE "HEADLINE SIGNALS"
+
+Rename:
+
+"What needs the room's attention"
+
+to something clearer if appropriate:
+
+"Executive Attention"
+
+or:
+
+"Requires Attention"
+
+Cards should answer:
+
+"What do I need to do?"
+
+not simply:
+
+"What numbers exist?"
+
+---
+
+# 29. ADD "AT A GLANCE" EXECUTIVE SUMMARY
+
+At the top show a compact summary:
+
+MEMBERS
+1,140 registered
+1,102 active
+38 inactive
+
+MEMBERSHIP
+100% paid
+SAR 0 outstanding
+
+FRF
+1 active case
+SAR 55,100 target
+SAR 0 collected
+1,102 eligible contributions pending
+
+LOANS
+0 active
+0 pending
+
+COMMITTEE
+30 members
+2026–2027
+
+TASKS
+0 overdue
+0 due this week
+
+This should be generated dynamically from authoritative data.
+
+---
+
+# 30. DO NOT HIDE IMPORTANT ZERO STATES
+
+Zero is valid information.
+
+Examples:
+
+0 pending claims
+
+0 active loans
+
+0 overdue documents
+
+0 upcoming meetings
+
+But present zero states cleanly.
+
+Never make zero look like an error.
+
+---
+
+# 31. GLOBAL "REFRESH DATA" CONTROL
+
+Add a small refresh control near:
+
+"Last updated"
+
+When clicked:
+
+* refresh dashboard data
+* preserve URL
+* preserve scroll where possible
+* do not reload the entire application unnecessarily
+* show loading state
+* show timestamp after successful refresh
+
+---
+
+# 32. CREATE A DASHBOARD TEST SUITE
+
+This is mandatory.
+
+Create automated tests for:
+
+### Routing
+
+Every dashboard link resolves.
+
+### Navigation
+
+Open module → detail → Back returns to same module/state.
+
+### Deep links
+
+Direct URL works after refresh.
+
+### Permissions
+
+Unauthorized user cannot access protected dashboard destinations by manually entering URLs.
+
+### Metrics
+
+Dashboard values match underlying module values.
+
+### FRF
+
+Membership unpaid → FRF inactive.
+
+Membership paid → FRF eligible.
+
+Only one active FRF collection case.
+
+### Payments
+
+Payment totals match transaction records.
+
+### Committee
+
+Dashboard committee count matches current committee.
+
+### Loans
+
+Dashboard totals match loan module.
+
+### Documents
+
+Dashboard alerts match document expiry state.
+
+### Audit
+
+Important dashboard actions generate audit records.
+
+---
+
+# 33. IMPORTANT — CREATE A ROUTE INVENTORY
+
+Before finishing, generate an internal developer/admin report containing:
+
+Route
+Purpose
+Authentication required
+Role/permission
+Dashboard link
+Expected destination
+Status
+
+Find:
+
+* broken routes
+* duplicate routes
+* orphan routes
+* incorrect redirects
+* routes returning 404
+* routes returning unauthorized errors incorrectly
+* routes that lose query state
+
+Fix them.
+
+---
+
+# 34. IMPORTANT — DO NOT RANDOMLY REDIRECT
+
+There must be NO behavior like:
+
+"If route fails → send user to dashboard."
+
+Instead:
+
+404 → proper not-found page
+
+401 → login
+
+403 → permission denied
+
+Deleted record → record unavailable state
+
+Invalid parameter → validation/error state
+
+This is especially important because random redirects are what make navigation feel broken.
+
+---
+
+# 35. KEEP DASHBOARD LINKS SEMANTIC
+
+Each card should have one obvious purpose.
+
+Examples:
+
+"Open Members"
+
+"Review unpaid membership"
+
+"Manage current FRF case"
+
+"Review FRF claims"
+
+"Open Loans"
+
+"Open Committee"
+
+"Review Documents"
+
+"Open Audit Trail"
+
+Avoid multiple invisible clickable areas inside one card unless the behavior is obvious.
+
+---
+
+# 36. DO NOT CHANGE HISTORICAL DKMO DATA
+
+This dashboard project is NOT a migration cleanup.
+
+Do not:
+
+* delete legacy member records
+* alter historical referrals
+* change historical payments
+* rewrite historical FRF records
+* change committee history
+* change audit history
+
+Only fix presentation/calculation logic unless an actual data-integrity bug is found.
+
+If historical data is inconsistent, surface it instead of silently changing it.
+
+---
+
+# 37. PERFORMANCE
+
+The dashboard should remain fast even when DKMO grows from:
+
+1,140 members
+
+to:
+
+5,000+
+10,000+
+50,000+
+
+Do not load every member, every payment, every audit event and every document into the browser just to calculate dashboard totals.
+
+Use server-side aggregation/database queries.
+
+Paginate lists.
+
+Only load the data required for the dashboard.
+
+---
+
+# 38. FUTURE-PROOF THE DASHBOARD
+
+Design the dashboard so new modules can be added later without rebuilding the entire page.
+
+Potential future modules:
+
+* Donations
+* Events
+* Emergency assistance
+* Scholarships
+* Zakat-related programs
+* Asset management
+* Communications
+* Notifications
+* Committee resolutions
+* Meeting minutes
+* Reports
+* SMS/WhatsApp communication
+* Member engagement
+
+Do not add fake cards for these now.
+
+Keep the dashboard architecture extensible.
+
+---
+
+# 39. FINAL ACCEPTANCE CRITERIA
+
+Do NOT tell me "done" just because the UI renders.
+
+Before completing the task, test the actual application.
+
+Verify:
+
+[ ] Dashboard loads correctly
+
+[ ] All cards show authoritative data
+
+[ ] No misleading monthly/lifetime labels
+
+[ ] Membership totals reconcile
+
+[ ] Membership collection totals reconcile
+
+[ ] FRF totals reconcile
+
+[ ] FRF eligibility respects membership payment
+
+[ ] FRF claim and FRF payment concepts remain separate
+
+[ ] Only one active FRF collection case exists
+
+[ ] Committee count = actual current committee
+
+[ ] Loans match loan module
+
+[ ] Welfare matches welfare module
+
+[ ] Documents match document alerts
+
+[ ] Tasks match task module
+
+[ ] Audit events appear correctly
+
+[ ] Quick Actions work
+
+[ ] Global search works
+
+[ ] Every dashboard link works
+
+[ ] Every query parameter works
+
+[ ] Browser Back works correctly
+
+[ ] Detail → Back returns to previous module/state
+
+[ ] Refresh preserves appropriate URL state
+
+[ ] Direct URLs work
+
+[ ] Unauthorized URLs are blocked server-side
+
+[ ] 404 pages work
+
+[ ] No random redirects
+
+[ ] No broken links
+
+[ ] No console errors
+
+[ ] No failed API requests hidden as zero values
+
+[ ] Mobile layout works
+
+[ ] Keyboard navigation works
+
+[ ] Accessibility labels exist
+
+[ ] Dashboard remains performant with larger datasets
+
+[ ] Existing DKMO data has NOT been unnecessarily modified
+
+---
+
+# 40. MOST IMPORTANT INSTRUCTION
+
+Do not implement this as a visual-only redesign.
+
+Think like:
+
+* a senior product architect
+* a financial systems designer
+* a database engineer
+* a security engineer
+* a UX engineer
+* a QA engineer
+* a committee administrator
+
+The dashboard must become the **single reliable operational view of DKMO**.
+
+If a number is displayed, it must be trustworthy.
+
+If a link is displayed, it must work.
+
+If a button is displayed, it must perform the correct action.
+
+If a user navigates somewhere, Back must return them to where they were.
+
+If a permission is required, it must be enforced server-side.
+
+If data is unavailable because of an API/database error, do NOT show zero.
+
+If there is an inconsistency, expose it rather than hiding it.
+
+Do not break existing DKMO functionality while making these improvements.
+
+After implementation, provide me with a concise audit report:
+
+1. What you changed
+2. What you removed
+3. What you fixed
+4. What routes were tested
+5. What dashboard metrics were reconciled
+6. What security/permission checks were verified
+7. What navigation/back-state tests were verified
+8. Any remaining issues
+9. Any recommended next priority
+
+Do not claim something is tested unless you actually tested it.

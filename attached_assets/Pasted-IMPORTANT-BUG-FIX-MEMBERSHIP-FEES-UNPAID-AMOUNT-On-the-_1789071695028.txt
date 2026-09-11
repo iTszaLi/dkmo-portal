@@ -1,0 +1,173 @@
+IMPORTANT BUG FIX — MEMBERSHIP FEES UNPAID AMOUNT
+
+On the Payments → Membership Fees page, when a member is shown under the "Unpaid" status, the membership fee must show SAR 100.00, NOT SAR 0.00.
+
+I can currently see an example:
+
+Yousuf Addoor
+ID: DKMO-1182
+Status: Unpaid
+Fee: SAR 0.00
+
+This is incorrect.
+
+==================================================
+CORRECT BUSINESS RULE
+==================================================
+
+DKMO membership registration fee is a ONE-TIME fee of:
+
+SAR 100.00
+
+Therefore:
+
+If a member is classified as UNPAID for membership:
+
+Fee = SAR 100.00
+Amount Due = SAR 100.00
+
+If the member is PAID:
+
+Fee = SAR 100.00
+Status = Paid
+Paid On = actual payment date
+
+If there is genuinely no membership fee obligation/evidence for a legacy member, follow the existing evidence-based legacy rules and do NOT incorrectly classify missing information as unpaid.
+
+IMPORTANT:
+Do not treat a missing legacy ledger value as automatically unpaid.
+
+==================================================
+SUMMARY CARDS
+==================================================
+
+The Membership Fees page currently shows:
+
+Paid: 1100
+Unpaid: 1
+Overdue: 0
+Amount Due: SAR 0.00
+
+If there is 1 genuine unpaid membership fee, the dashboard/card must show:
+
+Unpaid: 1
+Amount Due: SAR 100.00
+
+If there are 2 unpaid members:
+
+Amount Due = SAR 200.00
+
+If there are 10 unpaid members:
+
+Amount Due = SAR 1,000.00
+
+Formula:
+
+Amount Due = number of genuine unpaid membership fees × SAR 100
+
+Do NOT calculate unpaid amount from an existing zero-valued payment record.
+
+==================================================
+MEMBER TABLE
+==================================================
+
+For every genuine unpaid membership member:
+
+Fee column:
+SAR 100.00
+
+Status:
+Unpaid
+
+Paid On:
+—
+
+Actions:
+WhatsApp reminder / Remind
+
+For paid members:
+
+Fee:
+SAR 100.00
+
+Status:
+Paid
+
+Paid On:
+actual payment date
+
+==================================================
+WHATSAPP REMINDER
+==================================================
+
+Make sure the WhatsApp membership reminder also uses:
+
+Amount Due: SAR 100.00
+
+It must NOT generate:
+
+SAR 0.00
+
+For example:
+
+Assalamu Alaikum Yousuf Addoor,
+
+This is a gentle reminder from DKMO (Dakshina Karnataka Muslim Okkota — Committed to the Community).
+
+Your one-time membership registration fee of SAR 100.00 is currently unpaid.
+
+Please complete the payment at your earliest convenience to activate your membership.
+
+Jazakallah Khair,
+DKMO
+
+The amount must be dynamically sourced from the configured one-time membership fee, which is SAR 100.
+
+==================================================
+FRF CONNECTION
+==================================================
+
+Do NOT change the FRF logic.
+
+Membership must be paid/eligible before the member becomes eligible for FRF.
+
+Therefore:
+
+Membership unpaid
+→ Membership fee due = SAR 100
+→ Membership not fully paid
+→ FRF inactive/not eligible
+
+Membership paid
+→ Membership fee paid
+→ FRF eligibility can become active according to the existing FRF rules
+
+==================================================
+DATA SAFETY
+==================================================
+
+Do NOT create fake payment records.
+
+Do NOT mark anyone as paid.
+
+Do NOT alter historical Access-imported payment records.
+
+Do NOT convert legacy missing information into an unpaid record.
+
+Only fix the calculation/display of the actual membership fee due for members who are genuinely classified as unpaid.
+
+==================================================
+TEST
+==================================================
+
+After fixing, verify:
+
+1. Yousuf Addoor's genuine unpaid membership shows SAR 100.00.
+2. Unpaid summary shows SAR 100.00 when there is 1 unpaid member.
+3. Paid members remain correctly displayed.
+4. Legacy members with missing ledger evidence are NOT incorrectly converted to unpaid.
+5. WhatsApp reminder says SAR 100.00.
+6. FRF eligibility still depends on membership payment.
+7. No payment records are fabricated or modified.
+
+Also search the codebase for any place where the membership fee amount is incorrectly defaulting to 0 or "0.00" and fix the underlying source/calculation rather than only changing the text on this page.

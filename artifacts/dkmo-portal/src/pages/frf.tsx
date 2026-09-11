@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "wouter";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useSearch } from "wouter";
 import {
   useListFrfClaims,
   useCreateFrfClaim,
@@ -37,6 +37,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRef } from "react";
 import { Camera, ImagePlus, X } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { replaceCurrentQuery, withReturnTo } from "@/lib/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { generateClaimPdf } from "@/lib/frf-claim-pdf";
 
@@ -74,6 +75,9 @@ type FrfClaimFull = {
   claimType: string;
   amountRequested: number;
   amountApproved: number;
+  collectionStatus: "not_created" | "active" | "closed" | "completed";
+  disbursedAmount?: number;
+  disbursementReference?: string;
   status: string;
   claimDate: string | null;
   approvedDate: string | null;
@@ -103,7 +107,6 @@ type FrfClaimInput = {
   claimType: ClaimType;
   amountRequested: number;
   amountApproved: number;
-  contributionAmount: number;
   status: ClaimStatus;
   beneficiaryName: string;
   beneficiaryRelation: string;
@@ -122,7 +125,6 @@ const EMPTY_FORM: FrfClaimInput = {
   claimType: "death_benefit",
   amountRequested: 0,
   amountApproved: 0,
-  contributionAmount: 50,
   status: "pending",
   beneficiaryName: "",
   beneficiaryRelation: "",
@@ -305,9 +307,11 @@ function ClaimPhotoFields({
 export default function Frf() {
   const { canEdit, canDelete } = useAuth();
   const { toast } = useToast();
+  const searchString = useSearch();
+  const initialParams = useMemo(() => new URLSearchParams(searchString), [searchString]);
 
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState(() => initialParams.get("status") ?? "all");
+  const [typeFilter, setTypeFilter] = useState(() => initialParams.get("type") ?? "all");
   const registerRef = useRef<HTMLDivElement>(null);
 
   const showTypeClaims = (type: string) => {
@@ -318,8 +322,8 @@ export default function Frf() {
     setStatusFilter((cur) => (cur === status ? "all" : status));
     registerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
-  const [caseFilter, setCaseFilter] = useState("all");
-  const [searchText, setSearchText] = useState("");
+  const [caseFilter, setCaseFilter] = useState(() => initialParams.get("case") ?? "all");
+  const [searchText, setSearchText] = useState(() => initialParams.get("search") ?? "");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingClaim, setEditingClaim] = useState<FrfClaimFull | null>(null);
   const [deletingClaim, setDeletingClaim] = useState<FrfClaimFull | null>(null);
@@ -331,7 +335,18 @@ export default function Frf() {
   const [rejectingClaim, setRejectingClaim] = useState<FrfClaimFull | null>(null);
   const [rejectNotes, setRejectNotes] = useState("");
   const [disbursingClaim, setDisbursingClaim] = useState<FrfClaimFull | null>(null);
+  const [disbursedAmount, setDisbursedAmount] = useState("");
+  const [disbursementReference, setDisbursementReference] = useState("");
   const [isSubmittingQuick, setIsSubmittingQuick] = useState(false);
+
+  useEffect(() => {
+    replaceCurrentQuery({
+      status: statusFilter === "all" ? null : statusFilter,
+      type: typeFilter === "all" ? null : typeFilter,
+      case: caseFilter === "all" ? null : caseFilter,
+      search: searchText || null,
+    });
+  }, [statusFilter, typeFilter, caseFilter, searchText]);
 
   const { data: rawClaims = [], isLoading, refetch } = useListFrfClaims({
     status: statusFilter !== "all" ? statusFilter : undefined,
@@ -341,7 +356,7 @@ export default function Frf() {
   // One-active-case rule: at most one claim may be "approved" (collecting).
   // Fetched unfiltered so the banner and guards work regardless of filters.
   const { data: allClaims = [] } = useListFrfClaims();
-  const activeCase = (allClaims as unknown as (FrfClaimFull & { collectedAmount?: number; targetProgress?: number })[])
+  const activeCase = (allClaims as unknown as (FrfClaimFull & { collectedAmount?: number; collectionExpectedAmount?: number; collectionRate?: number })[])
     .find((c) => c.status === "approved");
 
   const searched = (searchText.trim()
@@ -355,13 +370,13 @@ export default function Frf() {
           c.description?.toLowerCase().includes(q)
         );
       })
-    : rawClaims) as unknown as (FrfClaimFull & { collectedAmount?: number; targetProgress?: number })[];
+    : rawClaims) as unknown as (FrfClaimFull & { collectedAmount?: number; collectionExpectedAmount?: number; collectionRate?: number })[];
 
   const claims = searched.filter((c) => {
     switch (caseFilter) {
       case "open": return c.caseStatus === "open";
       case "closed": return c.caseStatus === "closed";
-      case "reached_target": return (c.targetProgress ?? 0) >= 100;
+      case "reached_target": return (c.collectionRate ?? 0) >= 100;
       case "recent": return !!c.claimDate && Date.now() - new Date(c.claimDate).getTime() <= 30 * 24 * 60 * 60 * 1000;
       default: return true;
     }
@@ -385,7 +400,6 @@ export default function Frf() {
       claimType: claim.claimType as ClaimType,
       amountRequested: claim.amountRequested,
       amountApproved: claim.amountApproved,
-      contributionAmount: (claim as any).contributionAmount ?? 50,
       status: claim.status as ClaimStatus,
       beneficiaryName: claim.beneficiaryName,
       beneficiaryRelation: claim.beneficiaryRelation,
@@ -409,7 +423,12 @@ export default function Frf() {
     }
   };
 
-  async function handleQuickStatus(claim: FrfClaimFull, status: ClaimStatus, notes?: string) {
+  async function handleQuickStatus(
+    claim: FrfClaimFull,
+    status: ClaimStatus,
+    notes?: string,
+    disbursement?: { amount: number; reference: string },
+  ) {
     // One-active-case rule (also enforced server-side): approving opens a
     // collection case, which requires the current one to be closed first.
     if (status === "approved" && activeCase && activeCase.id !== claim.id) {
@@ -422,7 +441,14 @@ export default function Frf() {
     }
     setIsSubmittingQuick(true);
     try {
-      await updateMutation.mutateAsync({ id: claim.id, data: { status, ...(notes ? { reviewNotes: notes } : {}) } as any });
+      await updateMutation.mutateAsync({
+        id: claim.id,
+        data: {
+          status,
+          ...(notes ? { reviewNotes: notes } : {}),
+          ...(disbursement ? { disbursedAmount: disbursement.amount, disbursementReference: disbursement.reference } : {}),
+        } as any,
+      });
       toast({ title: `Status updated to ${status.replace("_", " ")}` });
       void refetch();
     } catch {
@@ -473,19 +499,19 @@ export default function Frf() {
             </div>
             <div className="sm:w-64 shrink-0">
               <div className="flex justify-between text-xs font-medium text-green-800 dark:text-slate-300 mb-1">
-                <span>{formatSAR(activeCase.collectedAmount ?? 0)} collected</span>
-                <span>Target {formatSAR(activeCase.amountRequested)}</span>
+                 <span>{formatSAR(activeCase.collectedAmount ?? 0)} contributions collected</span>
+                 <span>Expected {formatSAR(activeCase.collectionExpectedAmount ?? 0)}</span>
               </div>
               <div className="h-2.5 rounded-full bg-green-100 dark:bg-slate-800 overflow-hidden">
-                <div className="h-full rounded-full bg-green-600 dark:bg-green-500 transition-all" style={{ width: `${Math.min(100, activeCase.targetProgress ?? 0)}%` }} />
+                 <div className="h-full rounded-full bg-green-600 dark:bg-green-500 transition-all" style={{ width: `${Math.min(100, activeCase.collectionRate ?? 0)}%` }} />
               </div>
-              <p className="text-right text-xs text-green-700 dark:text-green-400 font-semibold mt-1">{activeCase.targetProgress ?? 0}%</p>
+               <p className="text-right text-xs text-green-700 dark:text-green-400 font-semibold mt-1">{activeCase.collectionRate ?? 0}% of member contributions</p>
             </div>
           </div>
         </div>
       ) : (
         <div className="rounded-2xl border border-emerald-200 dark:border-slate-800 bg-emerald-50/60 dark:bg-slate-900 p-4 text-sm text-emerald-800 dark:text-slate-300" data-testid="banner-no-active-case">
-          No collection case is currently active — approving a claim will open the next collection case (SAR 50 per member).
+           No active FRF collection case exists. Pending, under-review, rejected, and disbursed claims do not collect new member obligations; approving the next claim opens one at SAR 50 per eligible member.
         </div>
       )}
 
@@ -495,7 +521,7 @@ export default function Frf() {
           {[
             { title: "Total Claims", value: stats.total, icon: Users, color: "text-green-700 dark:text-green-400", sub: "All time", filter: "all" },
             { title: "Pending", value: stats.pendingCount, icon: Clock, color: "text-orange-600 dark:text-orange-400", sub: "Awaiting review", border: "border-orange-100 dark:border-orange-900/40", filter: "pending" },
-            { title: "Approved", value: stats.approvedCount, icon: CheckCircle2, color: "text-green-700 dark:text-green-400", sub: "Approved & disbursed", filter: "approved" },
+            { title: "Approved / Collecting", value: stats.approvedCount, icon: CheckCircle2, color: "text-green-700 dark:text-green-400", sub: "Active relief case", filter: "approved" },
             { title: "Total Disbursed", value: formatSAR(stats.totalDisbursed), icon: DollarSign, color: "text-green-700 dark:text-green-400", sub: "Relief provided", filter: "disbursed" },
           ].map(({ title, value, icon: Icon, color, sub, border, filter }) => {
             const isActive = filter === "all" ? statusFilter === "all" : statusFilter === filter;
@@ -603,7 +629,7 @@ export default function Frf() {
                   <TableHead className="dark:text-slate-300">Type</TableHead>
                   <TableHead className="dark:text-slate-300">Beneficiary</TableHead>
                   <TableHead className="text-right dark:text-slate-300">Requested</TableHead>
-                  <TableHead className="dark:text-slate-300 min-w-[130px]">Collected</TableHead>
+                   <TableHead className="dark:text-slate-300 min-w-[150px]">Member Contributions</TableHead>
                   <TableHead className="text-right dark:text-slate-300">Approved</TableHead>
                   <TableHead className="dark:text-slate-300">Status</TableHead>
                   <TableHead className="dark:text-slate-300">Date</TableHead>
@@ -630,7 +656,7 @@ export default function Frf() {
                   claims.map((claim) => (
                     <TableRow key={claim.id} className="hover:bg-green-50/30 dark:hover:bg-slate-800/50 dark:border-slate-800 transition-colors">
                       <TableCell>
-                        <Link href={`/frf/${claim.id}`} className="flex items-center gap-3 hover:underline">
+                        <Link href={withReturnTo(`/frf/${claim.id}`)} className="flex items-center gap-3 hover:underline">
                           <Avatar className="h-9 w-9 shrink-0 ring-1 ring-green-200 dark:ring-slate-700">
                             <AvatarImage src={claim.photoUrl ?? undefined} alt={claim.beneficiaryName || claim.claimantName} className="object-cover" />
                             <AvatarFallback className="bg-green-100 dark:bg-slate-800 text-green-700 dark:text-green-400">
@@ -659,18 +685,21 @@ export default function Frf() {
                       <TableCell>
                         <div className="space-y-1">
                           <div className="flex items-center justify-between gap-2 text-xs">
-                            <span className="font-semibold text-green-800 dark:text-green-300">{formatSAR((claim as any).collectedAmount ?? 0)}</span>
-                            {claim.amountRequested > 0 && (
-                              <span className={cn("font-medium", ((claim as any).targetProgress ?? 0) >= 100 ? "text-green-700 dark:text-green-400" : "text-green-700/60 dark:text-slate-500")}>
-                                {(claim as any).targetProgress ?? 0}%
+                             <span className="font-semibold text-green-800 dark:text-green-300">{formatSAR((claim as any).collectedAmount ?? 0)}</span>
+                             {claim.collectionStatus !== "not_created" && (
+                               <span className={cn("font-medium", ((claim as any).collectionRate ?? 0) >= 100 ? "text-green-700 dark:text-green-400" : "text-green-700/60 dark:text-slate-500")}>
+                                 {(claim as any).collectionRate ?? 0}%
                               </span>
                             )}
                           </div>
-                          {claim.amountRequested > 0 && (
+                           {claim.collectionStatus !== "not_created" && (
                             <div className="h-1.5 w-full rounded-full bg-green-100 dark:bg-slate-800 overflow-hidden">
-                              <div className="h-full rounded-full bg-green-600 dark:bg-green-500 transition-all" style={{ width: `${Math.min(100, (claim as any).targetProgress ?? 0)}%` }} />
+                               <div className="h-full rounded-full bg-green-600 dark:bg-green-500 transition-all" style={{ width: `${Math.min(100, (claim as any).collectionRate ?? 0)}%` }} />
                             </div>
                           )}
+                           <span className="text-[11px] text-green-700/70 dark:text-slate-500">
+                             {claim.collectionStatus === "not_created" ? "No case" : claim.collectionStatus === "active" ? "Active case" : claim.collectionStatus === "completed" ? "Completed case" : "Closed case"}
+                           </span>
                         </div>
                       </TableCell>
                       <TableCell className="text-right font-bold text-green-900 dark:text-green-300">
@@ -696,7 +725,7 @@ export default function Frf() {
                               <Eye className="h-3.5 w-3.5 text-green-600" /> View Details
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild className="gap-2 cursor-pointer dark:text-slate-300 dark:focus:bg-slate-800">
-                              <Link href={`/frf/${claim.id}`}>
+                              <Link href={withReturnTo(`/frf/${claim.id}`)}>
                                 <Users className="h-3.5 w-3.5 text-green-600" /> Collection Details
                               </Link>
                             </DropdownMenuItem>
@@ -722,7 +751,7 @@ export default function Frf() {
                               </DropdownMenuItem>
                             )}
                             {canEdit && claim.status === "approved" && (
-                              <DropdownMenuItem onClick={() => setDisbursingClaim(claim)} className="gap-2 cursor-pointer dark:text-slate-300 dark:focus:bg-slate-800">
+                               <DropdownMenuItem onClick={() => { setDisbursingClaim(claim); setDisbursedAmount(String(claim.amountApproved)); setDisbursementReference(""); }} className="gap-2 cursor-pointer dark:text-slate-300 dark:focus:bg-slate-800">
                                 <DollarSign className="h-3.5 w-3.5 text-emerald-600" /> Mark Disbursed
                               </DropdownMenuItem>
                             )}
@@ -802,7 +831,7 @@ export default function Frf() {
                   </Button>
                 )}
                 {canEdit && viewingClaim.status === "approved" && (
-                  <Button size="sm" className="bg-emerald-700 hover:bg-emerald-800 text-white" onClick={() => { setDisbursingClaim(viewingClaim); setViewingClaim(null); }}>
+                   <Button size="sm" className="bg-emerald-700 hover:bg-emerald-800 text-white" onClick={() => { setDisbursingClaim(viewingClaim); setDisbursedAmount(String(viewingClaim.amountApproved)); setDisbursementReference(""); setViewingClaim(null); }}>
                     <DollarSign className="h-3.5 w-3.5 mr-1.5" /> Mark Disbursed
                   </Button>
                 )}
@@ -863,13 +892,28 @@ export default function Frf() {
           <AlertDialogHeader>
             <AlertDialogTitle className="text-emerald-700 dark:text-emerald-400">Mark as Disbursed?</AlertDialogTitle>
             <AlertDialogDescription>
-              Confirm that the approved amount of <strong>{formatSAR(disbursingClaim?.amountApproved ?? 0)}</strong> has been disbursed to <strong>{disbursingClaim?.claimantName}</strong>.
+              Record the actual relief amount disbursed to <strong>{disbursingClaim?.claimantName}</strong>. This is separate from the member contributions collected for the case.
             </AlertDialogDescription>
+            <div className="grid gap-3 py-2">
+              <div>
+                <Label>Actual relief disbursed (SAR)</Label>
+                <Input type="number" min="0" value={disbursedAmount} onChange={(e) => setDisbursedAmount(e.target.value)} className="mt-1 dark:bg-slate-800 dark:border-slate-700" />
+              </div>
+              <div>
+                <Label>Disbursement reference (optional)</Label>
+                <Input value={disbursementReference} onChange={(e) => setDisbursementReference(e.target.value)} placeholder="Receipt, transfer, or voucher reference" className="mt-1 dark:bg-slate-800 dark:border-slate-700" />
+              </div>
+            </div>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="dark:border-slate-700">Cancel</AlertDialogCancel>
             <AlertDialogAction className="bg-emerald-700 hover:bg-emerald-800 text-white" disabled={isSubmittingQuick}
-              onClick={async () => { if (disbursingClaim) { await handleQuickStatus(disbursingClaim, "disbursed"); setDisbursingClaim(null); } }}>
+              onClick={async () => {
+                if (disbursingClaim && Number(disbursedAmount) >= 0) {
+                  await handleQuickStatus(disbursingClaim, "disbursed", undefined, { amount: Number(disbursedAmount), reference: disbursementReference.trim() });
+                  setDisbursingClaim(null);
+                }
+              }}>
               {isSubmittingQuick ? "Updating…" : "Confirm Disbursement"}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -935,7 +979,8 @@ export default function Frf() {
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-medium text-green-800 dark:text-slate-400">Contribution per Member (SAR)</label>
-                <Input type="number" min={0} value={form.contributionAmount} onChange={(e) => setForm((f) => ({ ...f, contributionAmount: Number(e.target.value) }))} className="dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200" />
+                <Input type="number" value={50} disabled className="dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 disabled:opacity-70" />
+                <p className="text-[11px] text-slate-500 dark:text-slate-500">Fixed at SAR 50 per eligible member for each FRF case.</p>
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-medium text-green-800 dark:text-slate-400">Status</label>

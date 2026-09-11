@@ -1,0 +1,83 @@
+Bro, make ONLY this UI/UX change in the **Loan → New Loan** form.
+
+### MEMBER SELECTION — SEARCHABLE
+
+Currently the **Member** field shows a huge dropdown containing the entire member list at once:
+
+“Select member…”
+followed by hundreds/thousands of members.
+
+I do NOT want the full member list displayed like this.
+
+Change the Member field into a **searchable member selector/combobox**.
+
+Required behavior:
+
+1. Initially show only:
+   **Member**
+   **Search and select member…**
+
+2. When I click the field, allow me to type/search a member by:
+
+   * Member name
+   * DKMO ID
+   * Ideally partial name as well
+
+3. While typing, dynamically show matching members only.
+
+4. Each search result should clearly display:
+   **Member Name — DKMO-XXXX**
+
+   Example:
+
+   * Nazeer Hassan — DKMO-1186
+   * Yousuf Addoor — DKMO-1182
+   * Irshad Bajpe — DKMO-1177
+
+5. After selecting a member, the field should show the selected member clearly and remain selected.
+
+6. I should be able to clear the selection and search for another member.
+
+7. The search must work properly across the entire DKMO member database, not just the currently visible/loaded members.
+
+### VERY IMPORTANT — DO NOT CHANGE ANYTHING ELSE
+
+This is a **UI improvement ONLY** for the Member selector in **Loan → New Loan**.
+
+DO NOT modify:
+
+* Loan eligibility logic
+* Loan amount
+* Monthly payment
+* Purpose
+* Disbursement date
+* Convenor
+* Responsible Staff / Committee Member
+* Notes
+* Loan creation API
+* Loan calculations
+* Loan database/schema
+* Loan permissions
+* Existing loan records
+* Committee data
+* Member data
+* Dashboard
+* FRF
+* Membership
+* Payments
+* Any other module
+* Any existing functionality
+
+The selected member must still be submitted to the existing loan creation flow exactly as it is currently.
+
+### IMPORTANT
+
+Do not redesign the New Loan form.
+
+Do not change the styling/layout of the other fields.
+
+Do not change the member data or DKMO IDs.
+
+Only replace the current massive Member dropdown with a clean, searchable selector while preserving all existing functionality.
+
+After implementing it, run the relevant typecheck/build/tests and confirm that the existing loan creation flow still works.

@@ -58,7 +58,10 @@ export function createSessionMiddleware(): RequestHandler {
     max: process.env.VERCEL ? 1 : 10,
   });
 
-  void ensureSessionTable(pool);
+  // Do not let an unavailable database create an unhandled rejection during
+  // process startup. Requests still fail through the wrapped middleware until
+  // the session store becomes available.
+  void ensureSessionTable(pool).catch(() => undefined);
 
   const options: SessionOptions = {
     name: "dkmo.sid",

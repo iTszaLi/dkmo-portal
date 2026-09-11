@@ -1,0 +1,1042 @@
+I need you to completely review and improve the logic and UI relationship between the **FRF Claims module** and the **Finance → FRF Fees module** in the DKMO Portal.
+
+IMPORTANT:
+Do NOT redesign the entire DKMO Portal.
+Do NOT delete existing members, membership payments, historical data, or existing FRF records.
+Do NOT create duplicate member records.
+Preserve the existing database structure wherever possible and make the changes safely.
+
+The main problem right now is that the relationship between **FRF Claims** and **FRF Fees** is confusing.
+
+The correct business logic should be:
+
+# 1. UNDERSTAND THE TWO MODULES
+
+## FRF CLAIMS = BENEFICIARY / RELIEF SIDE
+
+The FRF Claims module is for managing families/members who are requesting assistance from the Family Relief Fund.
+
+It answers:
+
+**"Who needs FRF assistance, why, and how much was approved?"**
+
+It should manage:
+
+* Claimant/member
+* Beneficiary
+* Beneficiary relationship
+* Claim type
+* Requested amount
+* Approved amount
+* Supporting documents/photos
+* Description
+* Notes
+* Review notes
+* Claim status
+* Approval
+* Disbursement
+* Associated FRF Collection Case
+
+---
+
+## FRF FEES = MEMBER CONTRIBUTION SIDE
+
+Finance → FRF Fees is NOT for creating claims.
+
+It answers:
+
+**"For this approved FRF case, which eligible DKMO members have paid their SAR 50 contribution?"**
+
+It should manage:
+
+* FRF Collection Case
+* Eligible members
+* SAR 50 contribution per eligible member
+* Paid
+* Unpaid
+* Overdue
+* Payment date
+* Receipt number
+* Payment record
+
+The two modules must be connected, but they must NOT duplicate each other's purpose.
+
+---
+
+# 2. CORRECT COMPLETE FRF WORKFLOW
+
+Implement this workflow:
+
+### STEP 1 — Create FRF Claim
+
+Admin creates a new claim from:
+
+Community → FRF Claims → New Claim
+
+The form should contain:
+
+* Beneficiary Photo
+* Supporting Photos
+* Case/Claim Title
+* Claimant Name
+* Membership ID
+* Claim Type
+* Amount Requested
+* Amount Approved
+* Status
+* Closing Date
+* Beneficiary Name
+* Relation
+* Description
+* Notes
+* Review Notes
+
+Do NOT make "Contribution per Member" something the admin needs to manually configure inside the claim.
+
+The contribution is a system rule:
+
+**SAR 50 per eligible member per approved FRF case.**
+
+Therefore remove the unnecessary editable-looking "Contribution per Member" field from the claim creation form, or display it only as an informational system value if needed.
+
+---
+
+# 3. CLAIM STATUS
+
+Use a clear claim lifecycle:
+
+### Pending
+
+Claim has been submitted and is awaiting review.
+
+### Approved
+
+Claim has been approved by DKMO.
+
+### Rejected
+
+Claim has been rejected.
+
+### Disbursed
+
+Approved relief has actually been paid/disbursed to the beneficiary.
+
+Do not show "Approved & disbursed" as if approval automatically means disbursement.
+
+Approval and disbursement are separate actions.
+
+---
+
+# 4. VERY IMPORTANT — APPROVING A CLAIM CREATES AN FRF COLLECTION CASE
+
+When an FRF claim is approved:
+
+Automatically create a corresponding **FRF Collection Case**.
+
+Example:
+
+Claim:
+
+**FRF-2026-001 — Ahmed Family Relief**
+
+Requested Amount:
+SAR 300,000
+
+Approved Amount:
+SAR 300,000
+
+After approval, automatically create:
+
+**Collection Case: FRF-2026-001**
+
+Contribution:
+**SAR 50 per eligible member**
+
+This collection case becomes available inside:
+
+Finance → FRF Fees
+
+There must NOT be an independent unrelated FRF case created manually from the FRF Fees page.
+
+The source of truth for an FRF Collection Case must be the approved FRF Claim.
+
+---
+
+# 5. FRF COLLECTION CASE
+
+Each approved claim should have exactly one associated collection case.
+
+Example:
+
+## FRF-2026-001
+
+Ahmed Family Relief
+
+Claim Type:
+Death Benefit
+
+Approved Relief:
+SAR 300,000
+
+Collection Contribution:
+SAR 50/member
+
+Eligible Members:
+1,097
+
+Expected Collection:
+SAR 54,850
+
+Status:
+Active
+
+This Collection Case ID should be linked to the original FRF Claim.
+
+Use a proper database relationship/foreign key/reference rather than matching names manually.
+
+---
+
+# 6. MEMBER ELIGIBILITY
+
+This is extremely important.
+
+Only members whose **membership fee is PAID** should be eligible to contribute to an FRF case.
+
+The logic must be:
+
+### Membership Paid
+
+→ FRF Eligible
+
+### Membership Unpaid / Pending / Not Paid
+
+→ FRF Not Eligible
+
+Therefore:
+
+If a member has not paid the one-time SAR 100 membership fee:
+
+* They should NOT receive an FRF SAR 50 obligation.
+* They should NOT appear as payable in the FRF Fees case.
+* They should show as "Not FRF Eligible" if displayed in the member database.
+
+If membership later becomes Paid, the member can become eligible according to the current active FRF case rules.
+
+Do NOT confuse the one-time SAR 100 membership fee with the SAR 50 FRF contribution.
+
+They are completely separate.
+
+---
+
+# 7. FRF FEES PAGE
+
+Finance → FRF Fees should become a payment/collection ledger.
+
+At the top, show:
+
+## FRF Collection
+
+Have a dropdown:
+
+**Select FRF Collection Case**
+
+The dropdown should only show valid collection cases generated from approved FRF claims.
+
+Example:
+
+FRF-2026-001 — Ahmed Family Relief
+FRF-2026-002 — Mohammed Family Relief
+
+Do NOT allow random unrelated cases.
+
+---
+
+# 8. FRF FEES SUMMARY
+
+After selecting a case, show a clean summary.
+
+Example:
+
+### FRF-2026-001
+
+Ahmed Family Relief
+
+| Metric                |      Value |
+| --------------------- | ---------: |
+| Eligible Members      |      1,097 |
+| Contribution / Member |     SAR 50 |
+| Expected Collection   | SAR 54,850 |
+| Paid Members          |        850 |
+| Unpaid Members        |        247 |
+| Overdue Members       |          0 |
+| Collected             | SAR 42,500 |
+| Remaining             | SAR 12,350 |
+
+The calculations must be automatic.
+
+Expected Collection:
+
+Eligible Members × SAR 50
+
+Collected:
+
+Number of Paid Members × SAR 50
+
+Remaining:
+
+Expected Collection − Collected
+
+Do not manually type these numbers.
+
+---
+
+# 9. FRF FEE STATUSES
+
+For each eligible member:
+
+### Unpaid
+
+Member is eligible but has not paid.
+
+### Paid
+
+Member has paid the SAR 50 FRF contribution.
+
+### Overdue
+
+Member remains unpaid after the collection due period.
+
+Use the existing 30-day rule if that is already implemented.
+
+Example:
+
+Approval/Case Opening:
+1 September
+
+Due:
+30 September
+
+After the due date:
+Unpaid → Overdue
+
+Do NOT mark members overdue before the due date.
+
+---
+
+# 10. FRF PAYMENT RECORD
+
+When an eligible member pays SAR 50:
+
+Create/update the payment record with:
+
+* Member
+* Membership ID
+* FRF Case
+* Amount = SAR 50
+* Status = Paid
+* Paid On
+* Receipt Number
+* Responsible/Referred By if already supported
+* Payment method if already supported
+
+The payment should be connected to:
+
+1. The member
+2. The FRF collection case
+
+Do not create a generic payment that cannot be traced to a specific FRF case.
+
+---
+
+# 11. FRF CLAIM PAGE SHOULD SHOW COLLECTION STATUS
+
+On each approved FRF claim, add a clear section:
+
+## FRF Collection
+
+Example:
+
+**Collection Case**
+FRF-2026-001
+
+**Contribution**
+SAR 50/member
+
+**Eligible Members**
+1,097
+
+**Paid**
+850
+
+**Unpaid**
+247
+
+**Collected**
+SAR 42,500
+
+**Expected**
+SAR 54,850
+
+**Status**
+Active
+
+Add a button:
+
+### View Collection
+
+Clicking "View Collection" should take the admin directly to:
+
+Finance → FRF Fees
+
+with the correct FRF Collection Case already selected.
+
+This creates a clear connection between the two modules.
+
+---
+
+# 12. FRF FEES PAGE SHOULD LINK BACK TO CLAIM
+
+On the selected FRF Collection Case, show:
+
+**Source Claim: FRF-2026-001 — Ahmed Family Relief**
+
+Add a button:
+
+### View Claim
+
+Clicking it should take the admin back to the original FRF claim.
+
+Therefore navigation works both ways:
+
+FRF Claim
+↓
+View Collection
+↓
+FRF Fees
+
+and:
+
+FRF Fees
+↓
+View Claim
+↓
+FRF Claim
+
+---
+
+# 13. DO NOT MAKE THE SAR 50 LOOK LIKE THE BENEFIT AMOUNT
+
+This is very important for the UI.
+
+The beneficiary's approved relief amount and the member contribution are two completely different financial values.
+
+Example:
+
+Beneficiary:
+
+**Approved Relief: SAR 300,000**
+
+Member contribution:
+
+**SAR 50 per eligible member**
+
+Do not combine these into one "Amount" field.
+
+Use clear labels:
+
+### Relief Amount
+
+SAR 300,000
+
+### Member Contribution
+
+SAR 50
+
+This avoids confusion.
+
+---
+
+# 14. IMPROVE THE FRF CLAIM DASHBOARD
+
+Current cards are:
+
+Total Claims
+Pending
+Approved
+Total Disbursed
+
+Keep the useful statistics but improve them.
+
+Recommended:
+
+### Total Claims
+
+All submitted claims
+
+### Pending Review
+
+Claims waiting for review
+
+### Approved
+
+Approved claims
+
+### Disbursed
+
+Claims where relief has actually been paid
+
+### Total Relief Disbursed
+
+Actual amount paid to beneficiaries
+
+Then optionally show:
+
+### Active Collections
+
+Number of active FRF collection cases
+
+### Total FRF Contributions
+
+Total SAR 50 contributions collected
+
+Do NOT mix contribution money with relief disbursement money.
+
+---
+
+# 15. IMPROVE THE CLAIMS REGISTER
+
+The Claims Register should show something like:
+
+| Claim | Claimant | Beneficiary | Type | Requested | Approved | Collection | Status | Date |
+| ----- | -------- | ----------- | ---- | --------: | -------: | ---------- | ------ | ---- |
+
+For Collection, show:
+
+* Not Created
+* Active
+* Closed
+* Completed
+
+Example:
+
+FRF-2026-001
+Ahmed Family
+Death Benefit
+SAR 300,000
+SAR 300,000
+Active
+Approved
+
+Clicking the claim should open the full claim profile.
+
+---
+
+# 16. IMPROVE THE FRF FEES MEMBER TABLE
+
+After selecting a collection case:
+
+| Member | Membership | FRF Case | Contribution | Status | Paid On | Receipt | Actions |
+| ------ | ---------- | -------- | -----------: | ------ | ------- | ------- | ------- |
+
+Example:
+
+Mohammed Ashraf
+DKMO-0815
+FRF-2026-001
+SAR 50
+Paid
+05/09/2026
+FRF-0001
+
+For unpaid:
+
+Mohammed Ali
+DKMO-1234
+FRF-2026-001
+SAR 50
+Unpaid
+—
+—
+
+For overdue:
+
+Member
+FRF-2026-001
+SAR 50
+Overdue
+
+---
+
+# 17. CURRENT MEMBERS DATABASE
+
+The current FRF Fees page says:
+
+"The Members database contains 1140 current members. 1097 have a paid membership fee..."
+
+Keep the concept, but make it dynamic.
+
+Do NOT hardcode 1140 or 1097.
+
+The system should calculate these numbers directly from the current Members database.
+
+Also remember the DKMO historical migration requirements:
+
+The legacy Access data remains authoritative for historical information.
+
+Do not delete or overwrite historical member/payment/referral records while fixing this module.
+
+---
+
+# 18. IMPORTANT — DO NOT CREATE FRF FEES FOR ALL MEMBERS BEFORE A CASE EXISTS
+
+Before there is an approved FRF claim:
+
+FRF Fees should show:
+
+**No active FRF collection case**
+
+and:
+
+"No FRF fee obligations have been created because there is no approved FRF case."
+
+Do NOT create SAR 50 payment obligations for members just because they exist in the Members database.
+
+Only create obligations when an approved FRF claim creates an actual collection case.
+
+---
+
+# 19. WHAT THE CURRENT "NO COLLECTION CASE" MESSAGE SHOULD SAY
+
+Instead of:
+
+"No collection case is currently active — approving a claim will open the next collection case (SAR 50 per member)."
+
+Use a clearer message:
+
+**No active FRF collection case**
+
+There is currently no approved FRF claim requiring member contributions.
+
+When an FRF claim is approved, the system will automatically create an FRF Collection Case and generate a SAR 50 contribution obligation for eligible members.
+
+This is much clearer.
+
+---
+
+# 20. FRF CASE CLOSING
+
+An FRF Collection Case should have a lifecycle:
+
+### Active
+
+Members can pay SAR 50.
+
+### Closed
+
+No further contributions should normally be accepted.
+
+### Completed
+
+Collection has been finalized and the case is archived.
+
+The original FRF claim remains permanently linked to the collection case.
+
+Do not delete old cases.
+
+Historical FRF cases must remain available for reporting.
+
+---
+
+# 21. IMPORTANT DATABASE REQUIREMENT
+
+Do NOT implement this only visually.
+
+The relationship must exist at the database level.
+
+Recommended conceptual relationships:
+
+Member
+→ Membership Payment
+
+FRF Claim
+→ Claimant/Beneficiary Member
+
+FRF Claim
+→ FRF Collection Case
+
+FRF Collection Case
+→ FRF Member Contributions
+
+FRF Member Contribution
+→ Member
+
+FRF Member Contribution
+→ FRF Collection Case
+
+Each contribution must be uniquely identifiable by:
+
+**Member + FRF Case**
+
+A member can contribute SAR 50 once for each FRF case.
+
+The same member must NOT accidentally receive two SAR 50 obligations for the same case.
+
+---
+
+# 22. PREVENT DUPLICATES
+
+This is critical.
+
+If the admin opens an FRF case twice, the system must NOT create duplicate SAR 50 obligations.
+
+Use a unique constraint or equivalent safe database logic:
+
+**member_id + frf_case_id**
+
+must be unique.
+
+If the system retries a case creation operation, it should safely reuse/update existing records rather than creating duplicates.
+
+---
+
+# 23. DO NOT DELETE EXISTING DATA
+
+Before making database changes:
+
+* Inspect the existing FRF tables/models.
+* Inspect existing payment records.
+* Inspect existing member IDs.
+* Inspect existing relationships.
+* Make migrations safely.
+* Preserve existing data.
+
+If old FRF data exists, migrate it into the improved structure where possible.
+
+Do NOT simply drop and recreate FRF tables.
+
+Do NOT reset the database.
+
+Do NOT delete legacy records.
+
+---
+
+# 24. UI IMPROVEMENT
+
+Make the UI easier to understand.
+
+Use clear headings:
+
+## Community → FRF Claims
+
+**Manage FRF assistance requests and beneficiary claims**
+
+Then:
+
+Claims Dashboard
+Claims Register
+Claim Details
+
+And:
+
+## Finance → FRF Fees
+
+**Manage SAR 50 member contributions for approved FRF cases**
+
+Then:
+
+Select Collection Case
+Collection Summary
+Member Contribution Ledger
+
+The user should immediately understand why there are two separate pages.
+
+---
+
+# 25. CLAIM DETAILS PAGE
+
+When opening a claim, organize information into sections:
+
+### Claim Information
+
+* Claim ID
+* Claim title
+* Claimant
+* Membership ID
+* Claim type
+* Requested amount
+* Approved amount
+* Status
+
+### Beneficiary
+
+* Name
+* Relationship
+* Photo
+* Supporting photos
+
+### Description & Notes
+
+* Description
+* Notes
+* Review Notes
+
+### FRF Collection
+
+* Collection Case ID
+* Eligible members
+* Paid
+* Unpaid
+* Overdue
+* Expected collection
+* Amount collected
+* Collection status
+
+### Disbursement
+
+* Approved amount
+* Disbursed amount
+* Disbursement date
+* Payment/reference information if available
+
+---
+
+# 26. IMPORTANT FINANCIAL SEPARATION
+
+Keep these two figures completely separate in all dashboards and reports:
+
+### FRF Contributions
+
+Money collected from DKMO members at SAR 50 each.
+
+### FRF Relief Disbursement
+
+Money paid to the beneficiary/family.
+
+Do not call member contributions "disbursed".
+
+Do not call beneficiary relief "collected".
+
+Use:
+
+**Collected Contributions**
+
+and
+
+**Relief Disbursed**
+
+---
+
+# 27. REPORTING
+
+FRF Claims reports should focus on:
+
+* Number of claims
+* Claim types
+* Requested amounts
+* Approved amounts
+* Disbursed amounts
+* Pending/rejected/approved/disbursed
+
+FRF Fees reports should focus on:
+
+* FRF case
+* Eligible members
+* Paid members
+* Unpaid members
+* Overdue members
+* SAR 50 contributions
+* Total collected
+* Outstanding amount
+
+Do not combine them into one confusing total.
+
+---
+
+# 28. EXISTING MEMBERSHIP FEE LOGIC MUST REMAIN
+
+The existing rule must remain:
+
+Membership fee:
+**SAR 100 one-time**
+
+FRF contribution:
+**SAR 50 per FRF case**
+
+They are separate financial records.
+
+A member must first have a paid membership before becoming eligible for FRF contributions.
+
+---
+
+# 29. SAMPLE DATA / EMPTY STATE
+
+Do not generate fake financial transactions or fake FRF claims if the database currently has none.
+
+If there are currently:
+
+0 claims
+0 approved claims
+0 FRF cases
+0 FRF payments
+
+keep those values at zero.
+
+Do not create fake paid members or fake receipts.
+
+The member list itself should come from the real Members database.
+
+---
+
+# 30. FINAL USER EXPERIENCE
+
+The final workflow should feel like this:
+
+ADMIN:
+
+Community → FRF Claims
+
+↓
+
+Create Claim
+
+↓
+
+Review Claim
+
+↓
+
+Approve Claim
+
+↓
+
+System automatically creates:
+
+FRF Collection Case
+
+↓
+
+Finance → FRF Fees
+
+↓
+
+Select Collection Case
+
+↓
+
+System identifies all members with PAID membership
+
+↓
+
+Creates one SAR 50 contribution obligation per eligible member
+
+↓
+
+Members pay
+
+↓
+
+Admin records/updates payments
+
+↓
+
+Paid / Unpaid / Overdue automatically tracked
+
+↓
+
+Collection summary updates automatically
+
+↓
+
+Claim page displays collection progress
+
+↓
+
+Once relief is actually paid:
+
+Claim status → Disbursed
+
+↓
+
+Disbursement amount/date recorded
+
+---
+
+# 31. VERY IMPORTANT — DO NOT CONFUSE APPROVAL WITH PAYMENT
+
+Approving an FRF claim should:
+
+1. Approve the beneficiary's claim.
+2. Create the FRF collection case.
+3. Generate SAR 50 obligations for eligible members.
+
+It should NOT:
+
+* Automatically mark members as Paid.
+* Automatically mark the beneficiary as Disbursed.
+* Automatically create fake payment receipts.
+* Automatically assume the relief has been paid.
+
+Those are separate actions.
+
+---
+
+# 32. BEFORE YOU FINISH
+
+Please inspect the existing implementation first and identify:
+
+* Existing FRF Claim model/table
+* Existing FRF Fee model/table
+* Existing payment model/table
+* Member model
+* Membership payment relationship
+* Existing FRF routes/pages
+* Existing APIs
+* Existing database migrations
+* Existing status values
+
+Then implement the changes using the existing architecture wherever possible.
+
+Do not unnecessarily create duplicate models or duplicate payment systems.
+
+After implementation:
+
+### Test these scenarios:
+
+1. Create pending claim.
+2. Reject claim.
+3. Approve claim.
+4. Verify exactly one FRF Collection Case is created.
+5. Verify only members with PAID membership become eligible.
+6. Verify unpaid members do not receive an FRF contribution obligation.
+7. Verify each eligible member gets exactly one SAR 50 obligation for that case.
+8. Verify duplicate case creation cannot duplicate payments.
+9. Mark one member Paid and verify the collection summary updates.
+10. Verify Unpaid status.
+11. Verify Overdue status after the due date.
+12. Verify the claim page shows collection progress.
+13. Verify "View Collection" opens the correct FRF Fees case.
+14. Verify "View Claim" from FRF Fees opens the correct claim.
+15. Verify disbursement is separate from member contributions.
+16. Verify old/historical data is preserved.
+17. Verify no fake/sample financial data is introduced.
+
+Finally, give me a short summary of:
+
+* What database changes you made
+* What UI changes you made
+* How FRF Claims now connects to FRF Fees
+* How member eligibility works
+* How duplicate SAR 50 obligations are prevented
+* What existing data was preserved
+
+The goal is a clean, production-ready FRF system where:
+
+**FRF Claims = who needs help**
+
+**FRF Collection Case = which approved claim is collecting contributions**
+
+**FRF Fees = which eligible members paid SAR 50 for that case**
+
+**Disbursement = what DKMO actually paid to the beneficiary**
+
+These four concepts must remain clearly separated but properly connected.

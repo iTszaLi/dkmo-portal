@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatSAR } from "@/lib/utils";
 import { initialsOf } from "@/lib/committee";
+import { withReturnTo } from "@/lib/navigation";
 import { MemberAvatar } from "@/components/MemberAvatar";
 import { Activity, ArrowRight, Coins, HeartHandshake, Landmark, Trophy, UserPlus } from "lucide-react";
 
@@ -60,7 +61,7 @@ export function CommitteeActivitySummary() {
           </CardDescription>
         </div>
         <Button asChild variant="outline" size="sm" className="border-green-300 text-green-800 dark:border-slate-700 dark:text-green-300 shrink-0" data-testid="button-full-activity-report">
-          <Link href="/reports/committee-performance">
+          <Link href={withReturnTo("/reports/committee-performance")}>
             View Full Activity Report <ArrowRight className="h-3.5 w-3.5 ml-1" />
           </Link>
         </Button>
@@ -115,7 +116,7 @@ export function CommitteeActivitySummary() {
                     </div>
                     {info ? (
                       <Button asChild variant="ghost" size="sm" className="text-green-700 dark:text-green-400 shrink-0 h-8 px-2" data-testid={`button-view-member-${i}`}>
-                        <Link href={`/members/${info.id}`}>View Details</Link>
+                        <Link href={withReturnTo(`/members/${info.id}`)}>View Details</Link>
                       </Button>
                     ) : null}
                   </li>

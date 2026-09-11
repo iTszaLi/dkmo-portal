@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth, defaultLandingForRole, type Role } from "@/lib/auth";
 import { ThemeProvider } from "@/lib/theme";
+import { currentPath } from "@/lib/navigation";
 
 // Pages
 import LoginPage from "@/pages/login";
@@ -89,7 +90,9 @@ function FullPageSpinner() {
 function HomeRedirect() {
   const { isLoading, isAuthenticated, user } = useAuth();
   if (isLoading) return <FullPageSpinner />;
-  if (!isAuthenticated || !user) return <Redirect to="/login" />;
+  if (!isAuthenticated || !user) {
+    return <Redirect to={`/login?returnTo=${encodeURIComponent(currentPath())}`} />;
+  }
   return <Redirect to={defaultLandingForRole(user.role)} />;
 }
 
@@ -173,6 +176,8 @@ function AppRoutes() {
       <Route path="/committee-performance" component={() => <LegacyRedirect to="/reports/committee-performance" keepQuery />} />
       <Route path="/meetings" component={() => <AuthenticatedRoute component={Meetings} />} />
       <Route path="/services" component={() => <AuthenticatedRoute component={CommunityServices} />} />
+       <Route path="/welfare-programs" component={() => <AuthenticatedRoute component={CommunityServices} />} />
+       <Route path="/welfare" component={() => <LegacyRedirect to="/services" keepQuery />} />
       <Route path="/services/:type" component={() => <AuthenticatedRoute component={WelfareService} />} />
       <Route path="/frf" component={() => <AuthenticatedRoute component={Frf} />} />
       <Route path="/frf/:id" component={() => <AuthenticatedRoute component={FrfClaimDetail} />} />

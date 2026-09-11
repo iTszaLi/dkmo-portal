@@ -1,0 +1,94 @@
+IMPORTANT — USE THE OLD ACCESS DATABASE AS THE HISTORICAL SOURCE OF TRUTH
+
+For this migration, I want the old Microsoft Access database
+2022_New_Okkuta_02282022.accdb
+to be treated as the AUTHORITATIVE SOURCE for all historical DKMO data.
+
+Do NOT discard, exclude, or ignore any legacy records simply because they do not currently match a portal member.
+
+The purpose of this migration is to bring the OLD ACCESS DATABASE HISTORY into the new DKMO Portal while preserving the original historical data and relationships.
+
+CRITICAL REQUIREMENT:
+
+The 7 currently flagged match candidates MUST ALSO remain included in the migration/reconciliation dataset:
+
+7101 — Abdul Azeez Bajpe
+7112 — Fazlu Rahman
+7115 — Haneef N.S
+11485 — Mohammed Ali
+11568 — Majid Parampally
+16842 — Sulaiman Thonse
+19062 — Sameen Khan Ummer
+
+Do NOT remove these 7 records from the migration just because their identity match is uncertain.
+
+Instead:
+
+1. Keep every one of these 7 legacy records in the reconciliation.
+2. Preserve their original Access legacy IDs exactly.
+3. Preserve all historical information associated with those legacy IDs.
+4. Show whether each record is:
+   - Matched to an existing portal member
+   - Unmatched/new member
+   - Possible duplicate
+   - Needs manual review
+5. Do NOT automatically merge a legacy record into the wrong portal member.
+6. If identity cannot be confirmed, keep the legacy record separate and mark it "Needs Review / Unresolved".
+7. Do not delete or alter the original Access data.
+8. Do not lose historical payments, membership records, referrals, loans, FRF records, or other history associated with these IDs.
+
+VERY IMPORTANT:
+
+The OLD ACCESS DATABASE should be used to reconstruct historical relationships wherever possible.
+
+For example:
+
+Legacy Member ID
+→ historical payment records
+→ membership/payment status
+→ referrals/member relationships
+→ FRF history
+→ loan records
+→ loan repayments
+→ any other historical records
+
+Use the legacy ID / Access ID as the primary relationship key whenever the old database provides one.
+
+Do NOT rely only on name or mobile-number matching when a legacy ID relationship exists.
+
+For the 7 candidates, do NOT force a match.
+
+Instead, create a permanent legacy mapping/crosswalk such as:
+
+legacy_member_id
+portal_member_id
+portal_membership_id
+match_status
+match_confidence
+match_reason
+decision
+decision_notes
+
+If a legacy record cannot safely be linked to a current portal member, preserve it as a legacy/unmatched member record rather than losing it.
+
+IMPORTANT:
+"Needs Review" must NOT mean "exclude from migration."
+
+It means:
+"Preserve the legacy data, but do not attach its historical records to a portal member until the identity is confirmed."
+
+Also make sure the migration report clearly separates:
+
+A. CONFIRMED MATCHES
+B. CONFIRMED DIFFERENT PEOPLE
+C. UNMATCHED LEGACY MEMBERS
+D. NEEDS REVIEW
+E. POSSIBLE DUPLICATES
+
+For the seven candidates, retain their full legacy data and all associated historical records regardless of their current match status.
+
+DO NOT start destructive production changes.
+
+First update the migration engine/reconciliation logic and generate a new dry-run report showing that all 7 candidates are included and where their historical records would go.
+
+I want the old Access database history preserved completely, with no silent exclusions.

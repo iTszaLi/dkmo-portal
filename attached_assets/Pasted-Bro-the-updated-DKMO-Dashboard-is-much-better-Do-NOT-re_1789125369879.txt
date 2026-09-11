@@ -1,0 +1,123 @@
+Bro, the updated DKMO Dashboard is much better. Do NOT redesign the dashboard.
+
+I want you to perform a **data-integrity audit of the dashboard metrics only**.
+
+### Important discrepancy I noticed
+
+The dashboard currently shows:
+
+**Membership**
+
+* 1,140 registered members
+* 1,103 fee-paid
+* 0 fee-unpaid
+* 37 fee-unassessed
+* 100% assessed fee collection
+
+But under **Finance → Cash and commitments**, it shows:
+
+**Membership collected · lifetime**
+
+* SAR 700.00
+
+These figures appear inconsistent.
+
+If 1,103 members are actually recorded as having paid the SAR 100 membership fee, the lifetime membership collection should reflect the **actual membership payment ledger total**, not an unrelated or incomplete amount.
+
+### Required audit
+
+Check the backend/source data used for every dashboard financial metric and make sure the dashboard is using the correct authoritative calculations for:
+
+1. **Membership collected · lifetime**
+
+   * Sum actual recorded membership-fee payments.
+   * Do not calculate this from member count.
+   * Do not use test/demo values.
+   * Do not use FRF payments.
+   * Do not use other payment types.
+
+2. **Membership outstanding · current balance**
+
+   * Must reflect the actual currently outstanding membership amount according to the portal's membership-fee rules.
+
+3. **FRF collected · current case**
+
+   * Only the currently active FRF collection case.
+   * If there is no active case, collected = SAR 0 and outstanding = SAR 0.
+
+4. **Loan book outstanding · current balance**
+
+   * Must come from actual active loan balances.
+   * Do not include closed loans.
+   * Do not double-count payments.
+
+5. **Sponsors**
+
+   * Pledged, collected and outstanding must use the actual sponsor ledger/status.
+
+### Membership status rules
+
+Keep these concepts separate:
+
+* Registered members = total registered members
+* Fee paid = members with confirmed membership payment/paid status
+* Fee unpaid = assessed members who still owe the membership fee
+* Fee unassessed = members whose membership fee has not yet been assessed
+* Lifetime membership collected = actual SAR amount recorded in membership payment records
+
+Do NOT assume these numbers are interchangeable.
+
+### New-member metric
+
+The dashboard correctly now shows:
+
+**22 new this month**
+
+Keep this based on the actual member creation/approval date for September 2026.
+
+Do NOT calculate “new this month” as total registered members.
+
+### FRF
+
+Keep the current **No active FRF collection case** behavior exactly as it is.
+
+When there is no active case:
+
+* Eligible contributors = 0
+* Contributors paid = 0
+* Contributors unpaid = 0
+* Collected = SAR 0
+* Outstanding = SAR 0
+
+Do not bring historical/closed/exempt/cancelled FRF records into the current-case totals.
+
+### Very important
+
+Do NOT change:
+
+* Dashboard layout
+* Dashboard design
+* Cards
+* Navigation
+* Quick Actions
+* Member counts
+* FRF workflow
+* Loan workflow
+* Payment workflow
+* Sponsor workflow
+* Database schema
+* Existing records
+* Any other module
+
+ONLY fix a metric if its displayed value is not coming from the correct authoritative backend calculation.
+
+Before changing anything, trace each metric from the dashboard → API → calculation → database/payment records.
+
+Then report exactly:
+
+1. Which metrics were already correct.
+2. Which metrics were wrong.
+3. Why they were wrong.
+4. What calculation/source was corrected.
+
+Run typecheck/build/tests after the audit.

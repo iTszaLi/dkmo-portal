@@ -1,4 +1,5 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
+import { useSearch } from "wouter";
 import { format } from "date-fns";
 import {
   FolderOpen, Upload, Search, Eye, Trash2, Edit, History,
@@ -132,12 +133,14 @@ export default function DocumentsPage() {
   const { toast } = useToast();
   const { user, canEdit, hasRole } = useAuth();
   const isAdmin = hasRole("admin");
+  const searchString = useSearch();
+  const initialParams = useMemo(() => new URLSearchParams(searchString), [searchString]);
 
-  const [search, setSearch]                 = useState("");
+  const [search, setSearch]                 = useState(() => initialParams.get("search") ?? "");
   const [categoryFilter, setCategory]       = useState("all");
-  const [statusFilter, setStatus]           = useState("all");
+  const [statusFilter, setStatus]           = useState(() => initialParams.get("status") ?? "all");
   const [visibilityFilter, setVisibility]   = useState("all");
-  const [expiringOnly, setExpiringOnly]     = useState(false);
+  const [expiringOnly, setExpiringOnly]     = useState(() => initialParams.get("expiring") === "true");
   const [showUpload, setShowUpload]         = useState(false);
   const [editingDoc, setEditingDoc]         = useState<DocumentRecord | null>(null);
   const [versionDocId, setVersionDocId]     = useState<string | null>(null);

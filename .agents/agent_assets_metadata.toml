@@ -1,8 +1,105 @@
 uploads = []
-outputs = []
 
 [[generated]]
 id = "U_5NEwdbrAQYqUS8N6kiB"
 uri = "file://artifacts/dkmo-portal/public/logo.png"
 type = "image"
 title = "DKMO Logo green and white"
+
+[[outputs]]
+id = "GI8qRAWzXTNB7oSZ82JOs"
+uri = "file://.agents/outputs/dkmo-access-migration-audit/DKMO_Access_Migration_Audit_Report.html"
+type = "text"
+title = "DKMO Access Migration Audit Report"
+description = "Read-only audit and dry-run preparation for the uploaded Microsoft Access database. No production data was modified."
+logical_id = "83a3250d-fd0b-4978-8588-aacde286cdd2"
+content_hash = "sha256:a1310722b75d67fde03e375799f4c23ad6ff4a3a04706b6f045d365a479388e6"
+size = 12604
+mtime_ms = 1788530160407
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:a24a40ce-cf58-4531-b781-69839223986b/83a3250d-fd0b-4978-8588-aacde286cdd2/3e60380e-c4d9-4d7d-a042-9da158ff6942"
+storage_version_token = "1788530166926557"
+content_type = "text/html"
+
+[[outputs]]
+id = "ilOt-WiyEgJq0r8ZhAbYm"
+uri = "file://.agents/outputs/dkmo-access-migration-audit/DKMO_Member_Reconciliation_Report.html"
+type = "text"
+title = "DKMO Member Reconciliation Report"
+description = "Self-contained dry-run report covering all 1,118 legacy members, current 46-member comparison, payment classification, referrals, duplicates, FRF, loans, and the full member appendix."
+logical_id = "74fb2cbd-7ae8-49d7-8ab8-20d845cb5f77"
+content_hash = "sha256:b376c3e51130d56adaecb725e1ffb6e84ab681f15c995bf348f3361547828d6e"
+size = 256316
+mtime_ms = 1788530548533
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:a24a40ce-cf58-4531-b781-69839223986b/74fb2cbd-7ae8-49d7-8ab8-20d845cb5f77/ab22370f-d112-4f3b-8ed8-9fbd86787184"
+storage_version_token = "1788530587856512"
+content_type = "text/html"
+
+[[outputs]]
+id = "UC-bBW7mUoSQl_qozOZYV"
+uri = "file://.agents/outputs/dkmo-access-migration-audit/migration_master_reconciliation.csv"
+type = "table"
+title = "DKMO Master Member Reconciliation CSV"
+description = "Complete row-level reconciliation for all 1,118 legacy member records; production-safe review output only."
+logical_id = "e2e19565-3bb1-46f9-adec-38c2f4892d5f"
+content_hash = "sha256:65de6dc3354d12e5f9f46482cd4fc62f76331c646ce6c21ae2fab32e45543762"
+size = 383133
+mtime_ms = 1788530482704
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:a24a40ce-cf58-4531-b781-69839223986b/e2e19565-3bb1-46f9-adec-38c2f4892d5f/771ed018-7ec3-4d8e-af0d-660233c0b841"
+storage_version_token = "1788530589130763"
+content_type = "text/csv"
+
+[[outputs]]
+id = "c9J6X_JP8l2bGf_ym71Ir"
+uri = "file://.agents/outputs/dkmo-access-migration-audit/DKMO_Portal_Match_Manual_Resolution.html"
+type = "text"
+title = "DKMO Portal Match Manual Resolution"
+description = "Review-only packet for all seven candidates, including legacy and portal identity fields, corroborating information, confidence, and the three allowed decisions."
+logical_id = "67f65e83-25cd-4980-a207-7bc6d1e9d86e"
+content_hash = "sha256:ab90632ec12aeabd7461aa3cee399af7671ac391902a249b4f9148c628e44e10"
+size = 17651
+mtime_ms = 1788530824235
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:a24a40ce-cf58-4531-b781-69839223986b/67f65e83-25cd-4980-a207-7bc6d1e9d86e/b5c03bbd-9db6-4540-a4c8-57306539c3fa"
+storage_version_token = "1788530856057640"
+content_type = "text/html"
+
+[[outputs]]
+id = "enkZeaMt8kwHymWBfew1W"
+uri = "file://.agents/outputs/dkmo-access-migration-audit/migration_portal_match_resolution.csv"
+type = "table"
+title = "DKMO Portal Match Resolution Worksheet"
+description = "Seven-row decision worksheet. All decisions are currently blank and historical imports remain blocked until every candidate is resolved."
+logical_id = "90262685-482b-46aa-8aaa-b7b6b3699f31"
+content_hash = "sha256:05f7321fedd41a565946397e893c4c61c475308d77ec647b7e825ab75e5cff1e"
+size = 12617
+mtime_ms = 1788530824233
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:a24a40ce-cf58-4531-b781-69839223986b/90262685-482b-46aa-8aaa-b7b6b3699f31/b2ee65ec-37f2-4aa9-a11a-4e5420d6408f"
+storage_version_token = "1788530857303602"
+content_type = "text/csv"
+
+[[outputs]]
+id = "XN1nhYVA-Xbw5LsCIwUTt"
+uri = "file://.agents/outputs/dkmo-access-migration-audit/DKMO_Historical_Import_Dry_Run_Report.html"
+type = "text"
+title = "DKMO Historical Import Dry-Run Plan"
+description = "Dry-run report using the old Access database as the authoritative historical source; all 1,118 legacy rows are preserved and all seven candidate routes are shown."
+logical_id = "383267b5-5ad2-4d60-8f76-bab89dfe4b7e"
+content_hash = "sha256:d9f6070626f38441c6eb1f1f1fbff90e0a128ec372923cc989f1371f764aa68e"
+size = 7248
+mtime_ms = 1788531147985
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:a24a40ce-cf58-4531-b781-69839223986b/383267b5-5ad2-4d60-8f76-bab89dfe4b7e/96881cb4-ce5c-4cd2-91a7-9690a76b963d"
+storage_version_token = "1788531213743427"
+content_type = "text/html"
+
+[[outputs]]
+id = "KaDxBcYri0LItqd4Bxb-6"
+uri = "file://.agents/outputs/dkmo-access-migration-audit/migration_historical_import_plan.csv"
+type = "table"
+title = "DKMO Historical Import Destination Plan"
+description = "Complete 1,118-row plan preserving every Access legacy ID and showing whether history is confirmed, separate, unmatched, or held for review."
+logical_id = "f6b7e816-426e-4224-b916-bd4b92da7f89"
+content_hash = "sha256:ec0f85d8b2b9e51bdf91539a006eefecb60d5d85e09be85c899226e3190d5f9b"
+size = 224819
+mtime_ms = 1788531166644
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:a24a40ce-cf58-4531-b781-69839223986b/f6b7e816-426e-4224-b916-bd4b92da7f89/6aa2a83a-9ade-4d33-9c0c-191f7d9e1f5d"
+storage_version_token = "1788531215017918"
+content_type = "text/csv"

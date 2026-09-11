@@ -1,11 +1,12 @@
-import { useState, useEffect, useRef } from "react";
-import { Link, useLocation } from "wouter";
-import { useListMembers, useCreateMember, useUpdateMember, useDeleteMember, useUpdateMemberFeeStatus, useUpdateMemberCommitteeStatus, useUpdateMemberFrfStatus, getListMembersQueryKey } from "@workspace/api-client-react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { Link, useLocation, useSearch } from "wouter";
+import { useListMembers, useCreateMember, useUpdateMember, useDeleteMember, useUpdateMemberFeeStatus, useUpdateMemberCommitteeStatus, useCreatePayment, getListMembersQueryKey } from "@workspace/api-client-react";
 import { celebrate } from "@/lib/confetti";
-import { MemberInput, type Member, type FeeStatusInputFeeStatus, type CommitteeStatusInput } from "@workspace/api-client-react";
+import { MemberInput, type FeeStatusInputFeeStatus, type CommitteeStatusInput } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { MemberForm } from "@/components/MemberForm";
@@ -19,6 +20,7 @@ import { ReferralAnalytics } from "@/components/ReferralAnalytics";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { replaceCurrentQuery, withReturnTo } from "@/lib/navigation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,25 +34,39 @@ import {
 
 export default function Members() {
   const memberIndex = useMemberIndex();
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [feeFilter, setFeeFilter] = useState<string>("all");
-  const [frfDueFilter, setFrfDueFilter] = useState<string>("all");
+  const searchString = useSearch();
+  const initialParams = useMemo(() => new URLSearchParams(searchString), [searchString]);
+  const [search, setSearch] = useState(() => initialParams.get("search") ?? "");
+  const [statusFilter, setStatusFilter] = useState<string>(() => initialParams.get("status") ?? "all");
+  const [legacyFilter, setLegacyFilter] = useState<string>(() => initialParams.get("legacy") ?? "all");
+  const [feeFilter, setFeeFilter] = useState<string>(() => initialParams.get("fee") ?? "all");
+  const [frfDueFilter, setFrfDueFilter] = useState<string>(() => initialParams.get("frfDue") ?? "all");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<any>(null);
   const [deletingMember, setDeletingMember] = useState<any>(null);
 
   const { data: members, isLoading } = useListMembers({ search: search.length > 2 ? search : undefined });
+  const { data: allMembers, isLoading: isTotalLoading } = useListMembers();
   const createMember = useCreateMember();
   const updateMember = useUpdateMember();
   const deleteMember = useDeleteMember();
   const updateFeeStatus = useUpdateMemberFeeStatus();
-  const updateFrfStatus = useUpdateMemberFrfStatus();
+  const createPayment = useCreatePayment();
   const updateCommitteeStatus = useUpdateMemberCommitteeStatus();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const lastNavigatedRef = useRef<string>("");
+
+  useEffect(() => {
+    replaceCurrentQuery({
+      search: search || null,
+      status: statusFilter === "all" ? null : statusFilter,
+      legacy: legacyFilter === "all" ? null : legacyFilter,
+      fee: feeFilter === "all" ? null : feeFilter,
+      frfDue: frfDueFilter === "all" ? null : frfDueFilter,
+    });
+  }, [search, statusFilter, legacyFilter, feeFilter, frfDueFilter]);
 
   // Auto-load: when a valid Member ID or mobile number is entered, open the
   // member record immediately (mirrors the old MS Access lookup workflow).
@@ -69,7 +85,7 @@ export default function Members() {
     });
     if (exact.length === 1 && lastNavigatedRef.current !== exact[0].id) {
       lastNavigatedRef.current = exact[0].id;
-      navigate(`/members/${exact[0].id}`);
+      navigate(withReturnTo(`/members/${exact[0].id}`));
     }
   }, [search, members, navigate]);
 
@@ -150,6 +166,33 @@ export default function Members() {
   };
 
   const handleFeeStatus = (id: string, feeStatus: FeeStatusInputFeeStatus) => {
+    if (feeStatus === "paid") {
+      const member = members?.find((m) => m.id === id);
+      if (!member) return;
+      const membershipFeeAmount =
+        Number(member.membershipFee) > 0 ? Number(member.membershipFee) : 100;
+      createPayment.mutate({
+        data: {
+          memberId: member.id,
+          paymentType: "membership_fee",
+          amountDue: membershipFeeAmount,
+          amountPaid: membershipFeeAmount,
+          status: "paid",
+          paymentMethod: "cash",
+          receiptNumber: `DKMO-MEM-${Date.now().toString().slice(-8)}`,
+          notes: "Membership fee recorded from the Members module",
+        },
+      }, {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListMembersQueryKey() });
+          toast({ title: "Membership fee payment recorded" });
+        },
+        onError: (err: any) => {
+          toast({ title: "Failed to record membership payment", description: err.message, variant: "destructive" });
+        },
+      });
+      return;
+    }
     updateFeeStatus.mutate({ id, data: { feeStatus } }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListMembersQueryKey() });
@@ -158,18 +201,6 @@ export default function Members() {
       onError: (err: any) => {
         toast({ title: "Failed to update fee status", description: err.message, variant: "destructive" });
       }
-    });
-  };
-
-  const handleFrfStatus = (member: Member, frfStatus: "active" | "inactive") => {
-    updateFrfStatus.mutate({ id: member.id, data: { frfStatus } }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getListMembersQueryKey() });
-        toast({ title: frfStatus === "active" ? "FRF membership activated" : "FRF membership deactivated", description: member.fullName });
-      },
-      onError: (err: any) => {
-        toast({ title: "Failed to update FRF membership", description: err.message, variant: "destructive" });
-      },
     });
   };
 
@@ -190,7 +221,10 @@ export default function Members() {
   };
 
   const filteredMembers = members?.filter((m) => {
-    if (statusFilter !== "all" && ((m as any).frfStatus ?? "active") !== statusFilter) return false;
+    const legacyStatus = (m as any).legacyRecordStatus ?? ((m as any).legacyMemberId ? "legacy_record" : "portal_member");
+    if (legacyFilter !== "all" && legacyStatus !== legacyFilter) return false;
+    const effectiveFrfStatus = m.feeStatus === "paid" ? "active" : "inactive";
+    if (statusFilter !== "all" && effectiveFrfStatus !== statusFilter) return false;
     if (feeFilter !== "all" && m.feeStatus !== feeFilter) return false;
     if (frfDueFilter !== "all") {
       const outstanding = (m as any).frfOutstanding ?? 0;
@@ -225,13 +259,31 @@ export default function Members() {
         </Dialog>
       </div>
 
+      <div className="w-full sm:max-w-xs rounded-2xl border border-emerald-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm" data-testid="card-total-members">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+            <Users className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-emerald-700 dark:text-slate-400">Total Members</p>
+            {isTotalLoading ? (
+              <Skeleton className="mt-1 h-8 w-20" />
+            ) : (
+              <p className="text-3xl font-bold tracking-tight text-emerald-950 dark:text-white" data-testid="text-total-members">
+                {(allMembers?.length ?? 0).toLocaleString()}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
       <ReferralAnalytics />
 
       <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
         <div className="flex items-center space-x-2 bg-white dark:bg-slate-900 p-2 rounded-lg border border-emerald-100 dark:border-slate-800 shadow-sm w-full sm:max-w-md">
           <Search className="h-5 w-5 text-emerald-400 dark:text-slate-500 ml-2 shrink-0" />
           <Input
-            placeholder="Search by DKMO ID, name, mobile, Iqama, application no, Jamaath, or place..."
+            placeholder="Search by Portal ID, Access ID, name, mobile, Iqama, Jamaath, or place..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="border-0 focus-visible:ring-0 shadow-none px-2 h-9 dark:bg-transparent dark:text-slate-200 dark:placeholder:text-slate-500"
@@ -244,8 +296,21 @@ export default function Members() {
           <SelectContent>
             <SelectItem value="all">All statuses</SelectItem>
             <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="suspended">Suspended</SelectItem>
             <SelectItem value="inactive">Inactive</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={legacyFilter} onValueChange={setLegacyFilter}>
+          <SelectTrigger className="w-full sm:w-[190px] bg-white dark:bg-slate-900 border-emerald-100 dark:border-slate-800" data-testid="select-legacy-filter">
+            <SelectValue placeholder="Member source" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All member sources</SelectItem>
+            <SelectItem value="portal_member">Portal members</SelectItem>
+            <SelectItem value="legacy_record">Legacy / Unmatched</SelectItem>
+            <SelectItem value="confirmed_match">Confirmed matches</SelectItem>
+            <SelectItem value="confirmed_different_person">Confirmed different people</SelectItem>
+            <SelectItem value="needs_review">Needs review</SelectItem>
+            <SelectItem value="possible_duplicate">Possible duplicates</SelectItem>
           </SelectContent>
         </Select>
         <Select value={feeFilter} onValueChange={setFeeFilter}>
@@ -259,6 +324,8 @@ export default function Members() {
             <SelectItem value="pending">Fee pending</SelectItem>
             <SelectItem value="unpaid">Fee unpaid</SelectItem>
             <SelectItem value="exempt">Fee exempt</SelectItem>
+            <SelectItem value="review">Legacy fee record needs review</SelectItem>
+            <SelectItem value="not_applicable">No Access fee information</SelectItem>
           </SelectContent>
         </Select>
         <Select value={frfDueFilter} onValueChange={setFrfDueFilter}>
@@ -272,9 +339,9 @@ export default function Members() {
             <SelectItem value="overdue">Overdue FRF</SelectItem>
           </SelectContent>
         </Select>
-        {(statusFilter !== "all" || feeFilter !== "all" || frfDueFilter !== "all") && (
+        {(statusFilter !== "all" || legacyFilter !== "all" || feeFilter !== "all" || frfDueFilter !== "all") && (
           <button
-            onClick={() => { setStatusFilter("all"); setFeeFilter("all"); setFrfDueFilter("all"); }}
+            onClick={() => { setStatusFilter("all"); setLegacyFilter("all"); setFeeFilter("all"); setFrfDueFilter("all"); }}
             className="text-sm text-emerald-700 dark:text-emerald-400 hover:underline whitespace-nowrap"
             data-testid="button-clear-filters"
           >
@@ -292,7 +359,7 @@ export default function Members() {
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Location</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Reference Member</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300">Status</TableHead>
-              <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">FRF Membership</TableHead>
+              <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">Membership</TableHead>
               <TableHead className="font-semibold text-emerald-900 dark:text-slate-300 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -319,13 +386,15 @@ export default function Members() {
               filteredMembers?.map((member) => (
                 <TableRow key={member.id} className="hover:bg-emerald-50/30 dark:hover:bg-slate-800/50 cursor-pointer dark:border-slate-800 transition-colors">
                   <TableCell>
-                    <Link href={`/members/${member.id}`} className="flex items-center gap-3 w-full">
+                    <Link href={withReturnTo(`/members/${member.id}`)} className="flex items-center gap-3 w-full">
                       <MemberAvatar photoUrl={member.photoUrl} name={member.fullName} size="md" />
                       <div>
                         <div className="font-medium text-emerald-950 dark:text-slate-200">{member.fullName}</div>
                         <div className="text-xs text-emerald-600 dark:text-slate-500">ID: {member.membershipId}</div>
-                        {(member as any).applicationNumber ? (
-                          <div className="text-xs text-emerald-500/80 dark:text-slate-500">App: {(member as any).applicationNumber}</div>
+                        {(member as any).legacyMemberId ? (
+                          <div className="text-xs text-amber-700 dark:text-amber-300">
+                            Access ID: {(member as any).legacyMemberId}
+                          </div>
                         ) : null}
                         <MemberBadges
                           designation={(member as any).designation}
@@ -333,6 +402,38 @@ export default function Members() {
                           isCoreCommittee={(member as any).isCoreCommittee}
                           className="mt-1"
                         />
+                        {(() => {
+                          const source = (member as any).legacyRecordStatus ?? ((member as any).legacyMemberId ? "legacy_record" : "portal_member");
+                          if (source === "portal_member") return null;
+                          const confirmed = source === "confirmed_match";
+                          const needsReview = source === "needs_review";
+                          const possibleDuplicate = source === "possible_duplicate";
+                          const confirmedDifferent = source === "confirmed_different_person";
+                          const label = confirmed
+                            ? "Confirmed Access match"
+                            : needsReview
+                              ? "Needs Review"
+                              : possibleDuplicate
+                                ? "Possible Duplicate"
+                                : confirmedDifferent
+                                  ? "Confirmed Different Person"
+                                  : "Legacy / Unmatched";
+                          return (
+                            <Badge
+                              variant="outline"
+                              className={`mt-1 text-[10px] ${
+                                confirmed
+                                  ? "border-sky-300 text-sky-700 dark:border-sky-700 dark:text-sky-300"
+                                  : needsReview || possibleDuplicate
+                                    ? "border-rose-300 text-rose-700 dark:border-rose-700 dark:text-rose-300"
+                                    : "border-amber-300 text-amber-800 dark:border-amber-700 dark:text-amber-300"
+                              }`}
+                              data-testid={`badge-legacy-status-${member.id}`}
+                            >
+                              {label}
+                            </Badge>
+                          );
+                        })()}
                       </div>
                     </Link>
                   </TableCell>
@@ -353,18 +454,18 @@ export default function Members() {
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-1 items-start">
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${feeStatusBadgeClass(member.feeStatus)}`} data-testid={`badge-fee-status-${member.id}`}>
-                        {member.feeStatus === "paid" ? <CheckCircle2 className="h-3 w-3" /> : member.feeStatus === "exempt" ? <MinusCircle className="h-3 w-3" /> : member.feeStatus === "pending" || member.feeStatus === "partial" ? <Clock className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-                        Membership: {feeStatusLabel(member.feeStatus)}
-                      </span>
+                      {member.feeStatus !== "not_applicable" ? (
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${feeStatusBadgeClass(member.feeStatus)}`} data-testid={`badge-fee-status-${member.id}`}>
+                          {member.feeStatus === "paid" ? <CheckCircle2 className="h-3 w-3" /> : member.feeStatus === "exempt" ? <MinusCircle className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+                          Membership: {feeStatusLabel(member.feeStatus)}
+                        </span>
+                      ) : null}
                       {(() => {
-                        const s = (member as any).frfStatus ?? "active";
+                        const s = member.feeStatus === "paid" ? "active" : "inactive";
                         const cls =
                           s === "active"
                             ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
-                            : s === "suspended"
-                            ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
-                            : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-400";
+                             : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-400";
                         return (
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize ${cls}`} data-testid={`badge-frf-status-${member.id}`}>
                             FRF: {s}
@@ -375,7 +476,7 @@ export default function Members() {
                   </TableCell>
                   <TableCell className="text-right">
                     {(() => {
-                      const active = ((member as any).frfStatus ?? "active") === "active";
+                       const active = member.feeStatus === "paid";
                       return (
                         <span
                           className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold ${active ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-400"}`}
@@ -397,7 +498,7 @@ export default function Members() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="dark:bg-slate-900 dark:border-slate-800">
                         <DropdownMenuItem asChild>
-                          <Link href={`/members/${member.id}`} className="cursor-pointer flex w-full items-center dark:text-slate-300 dark:focus:bg-slate-800">
+                          <Link href={withReturnTo(`/members/${member.id}`)} className="cursor-pointer flex w-full items-center dark:text-slate-300 dark:focus:bg-slate-800">
                             View Details
                           </Link>
                         </DropdownMenuItem>
@@ -430,15 +531,6 @@ export default function Members() {
                             </>
                           );
                         })()}
-                        {((member as any).frfStatus ?? "active") === "active" ? (
-                          <DropdownMenuItem onClick={() => handleFrfStatus(member, "inactive")} className="text-amber-700 dark:text-amber-400 dark:focus:bg-slate-800" data-testid={`menu-frf-deactivate-${member.id}`}>
-                            <XCircle className="mr-2 h-4 w-4" /> Deactivate FRF Membership
-                          </DropdownMenuItem>
-                        ) : (
-                          <DropdownMenuItem onClick={() => handleFrfStatus(member, "active")} className="text-emerald-700 dark:text-emerald-400 dark:focus:bg-slate-800" data-testid={`menu-frf-activate-${member.id}`}>
-                            <CheckCircle2 className="mr-2 h-4 w-4" /> Activate FRF Membership
-                          </DropdownMenuItem>
-                        )}
                         {member.feeStatus !== "paid" && (
                           <DropdownMenuItem onClick={() => handleFeeStatus(member.id, "paid")} className="text-emerald-700 dark:text-emerald-400 dark:focus:bg-slate-800">
                             <CheckCircle2 className="mr-2 h-4 w-4" /> Mark Fee Paid

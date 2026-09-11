@@ -1,0 +1,1563 @@
+Yes bro. If you are **almost ready to publish**, I would do one proper **pre-production release audit** rather than continuing to add features.
+
+The biggest thing is: **don't just test whether pages open. Test whether every action actually works, every redirect returns to the correct place, permissions cannot be bypassed, and bad/edge-case data cannot break the system.**
+
+Give Replit AI this full prompt:
+
+# DKMO PORTAL — FINAL PRE-PUBLICATION FULL SYSTEM AUDIT
+
+The DKMO Portal is now almost complete.
+
+Before we publish/deploy it to production, I want you to perform a **complete professional pre-production audit** of the entire application.
+
+This is NOT a feature-development task.
+
+The goal is to find and fix:
+
+* Bugs
+* Broken functionality
+* Broken redirects
+* Navigation problems
+* Permission/security problems
+* API errors
+* Database/data-integrity problems
+* UI glitches
+* Form problems
+* Validation problems
+* Empty/error/loading states
+* FRF calculation problems
+* Membership calculation problems
+* Loan calculation problems
+* Dashboard metric problems
+* Authentication problems
+* Production configuration problems
+* Broken links/routes
+* Mobile/responsive issues
+* Browser console errors
+* API failures
+* Regression issues
+
+Then fix all confirmed issues that are safe to fix.
+
+---
+
+# VERY IMPORTANT
+
+Do NOT redesign the application.
+
+Do NOT introduce new unnecessary features.
+
+Do NOT change the existing DKMO business rules.
+
+Do NOT change valid existing data.
+
+Do NOT alter:
+
+* DKMO IDs
+* member records
+* referrals
+* membership history
+* FRF history
+* FRF cases
+* loan balances
+* committee records
+* meeting records
+* documents
+* audit history
+
+unless the audit proves there is an actual data-integrity bug requiring correction.
+
+Use the existing architecture wherever possible.
+
+Before changing anything, inspect the relevant code and understand the existing behavior.
+
+---
+
+# PHASE 1 — COMPLETE ROUTE AUDIT
+
+Create a complete inventory of every application route.
+
+Check every route manually/automatically.
+
+At minimum verify:
+
+* Dashboard
+* Members
+* Member Profile
+* Membership
+* Payments
+* FRF Claims
+* FRF Fees
+* Loans
+* Documents
+* Committee
+* Meetings / Attendance
+* Referrals
+* Sponsors
+* Events
+* Tasks
+* Settings
+* Users
+* Roles & Permissions
+* Security
+* Audit Trail
+* Any other existing route
+
+For every route verify:
+
+1. Route loads successfully.
+2. No 404.
+3. No 500.
+4. No blank page.
+5. No React/runtime crash.
+6. No infinite loading.
+7. No broken API request.
+8. No missing data.
+9. Correct page title/header.
+10. Correct navigation.
+11. Correct permissions.
+12. Correct Back behavior.
+13. Correct refresh behavior.
+14. Correct direct URL behavior.
+
+---
+
+# PHASE 2 — GLOBAL NAVIGATION / REDIRECT AUDIT
+
+This is extremely important.
+
+There has already been a major navigation problem where:
+
+User opens a module → opens a record → clicks Back → gets sent to a random module/page.
+
+Fix this globally.
+
+## REQUIRED BEHAVIOR
+
+If I am on:
+
+Members → search "Yousuf" → page 2 → open member
+
+and then click Back,
+
+I must return to:
+
+Members → search "Yousuf" → page 2
+
+NOT:
+
+Dashboard
+Loans
+Random module
+Members page 1
+Members without the filter
+
+---
+
+# PRESERVE LIST CONTEXT
+
+When navigating from a list into a detail/edit/create page, preserve:
+
+* Original module
+* Tab
+* Search
+* Filters
+* Sort order
+* Pagination
+* Selected status
+* Selected case
+* Selected committee term
+* Selected FRF case
+* Any other relevant list state
+
+---
+
+# TEST BACK BEHAVIOR EVERYWHERE
+
+Test:
+
+### Members
+
+List → Profile → Back
+
+### Payments
+
+List → Payment → Back
+
+### FRF Claims
+
+List → Claim → Back
+
+### FRF Fees
+
+List → Member → Back
+
+### Loans
+
+List → Loan → Back
+
+### Documents
+
+List → Document → Back
+
+### Committee
+
+Committee → Member → Back
+
+### Meetings
+
+Meetings → Meeting → Back
+
+### Referrals
+
+Referral list → Member → Back
+
+### Sponsors
+
+Sponsor list → Sponsor → Back
+
+### Events
+
+Event list → Event → Back
+
+### Tasks
+
+Task list → Task → Back
+
+### Settings
+
+Users → User → Back
+
+Make sure browser Back and application Back behave predictably.
+
+Do not create navigation loops.
+
+---
+
+# PHASE 3 — CREATE / EDIT / SAVE / CANCEL / DELETE FLOWS
+
+Test every form in the system.
+
+For every create/edit form verify:
+
+### Create
+
+* Valid submission works.
+* Record is actually saved.
+* Success message appears.
+* User is redirected to the correct location.
+* New record appears immediately.
+* Dashboard/list metrics update where applicable.
+
+### Edit
+
+* Existing data loads correctly.
+* Changes save.
+* Changes persist after refresh.
+* Audit event is created if required.
+* Return navigation is correct.
+
+### Cancel
+
+* Does not save changes.
+* Returns to the previous context.
+* Does not create an empty record.
+
+### Delete
+
+* Confirmation appears.
+* Cancel confirmation does nothing.
+* Confirm deletes only intended record.
+* User returns to correct list.
+* Deleted item disappears.
+* Related data is not accidentally destroyed.
+
+Do this for every module.
+
+---
+
+# PHASE 4 — FORM VALIDATION
+
+Test:
+
+* Empty required fields
+* Invalid numbers
+* Negative amounts
+* Zero amounts where invalid
+* Extremely large amounts
+* Invalid dates
+* Future dates where prohibited
+* Duplicate records
+* Invalid member IDs
+* Invalid DKMO IDs
+* Invalid email addresses
+* Invalid phone numbers
+* Long text
+* Special characters
+* Leading/trailing spaces
+* Duplicate submissions
+* Double-clicking Submit
+* Refresh during submission
+
+The system must reject invalid data gracefully.
+
+Never allow malformed data into the database.
+
+---
+
+# PHASE 5 — DOUBLE-SUBMISSION PROTECTION
+
+Test every important financial/action button.
+
+For example:
+
+* Record Payment
+* Create Loan
+* Create FRF Claim
+* Approve Claim
+* Create Meeting
+* Add Member
+* Upload Document
+* Add Sponsor
+
+Rapidly click the button multiple times.
+
+Ensure only ONE record is created.
+
+There must be no duplicate:
+
+* payments
+* loans
+* claims
+* audit events
+* documents
+* members
+* meetings
+
+where duplicate creation is not intended.
+
+---
+
+# PHASE 6 — MEMBERSHIP AUDIT
+
+Verify the membership system end-to-end.
+
+Rules:
+
+* Membership fee = SAR 100 one-time.
+* Accepted/approved members must have correct membership status.
+* Actual payment records determine payment status.
+* Unpaid membership must show SAR 100 outstanding where appropriate.
+* Never display SAR 0.00 when SAR 100 is actually due.
+* Paid members must not continue appearing as unpaid.
+* Duplicate membership payment must not incorrectly mark the member twice.
+* Payment history must remain accurate.
+* Member profile must match payment records.
+* Dashboard totals must match authoritative payment data.
+
+Test:
+
+* Paid member
+* Unpaid member
+* Unassessed member
+* Newly accepted member
+* Member with historical payment
+* Member with multiple payment records
+
+---
+
+# PHASE 7 — FRF FULL AUDIT
+
+FRF is one of the most important areas.
+
+Verify the complete workflow:
+
+Claim → Approval → Active Case → Contributor Eligibility → Payment → Outstanding → Completion → Next Case
+
+## MEMBERSHIP DEPENDENCY
+
+If membership is unpaid:
+
+FRF must be:
+
+* inactive
+* not eligible
+* not included in active collection results
+
+A member with unpaid membership must NOT appear as an eligible FRF contributor.
+
+---
+
+# FRF ACTIVE CASE
+
+Only one active FRF collection case may exist at a time.
+
+If there is no active case:
+
+* Eligible contributors = 0
+* Paid = 0
+* Unpaid = 0
+* Collected = SAR 0
+* Outstanding = SAR 0
+
+Display:
+
+"No active FRF collection case."
+
+---
+
+# FRF CONTRIBUTION
+
+FRF contribution = SAR 50 per eligible member per case.
+
+Verify:
+
+* Full payment
+* Partial payment
+* Unpaid
+* Overdue
+* Exempt
+* Cancelled
+* Historical case
+* Closed case
+
+---
+
+# EXEMPT / CANCELLED
+
+Exempt and cancelled members must:
+
+* remain visible historically where appropriate
+* NOT count as payable
+* NOT count as unpaid
+* NOT increase outstanding balance
+* NOT increase collection denominator
+* NOT trigger payment reminders
+* NOT appear as active collection obligations
+
+Verify this at the API/database calculation layer, not only the UI.
+
+---
+
+# PARTIAL PAYMENTS
+
+Verify that:
+
+Paid amount < SAR 50
+
+results in:
+
+* correct remaining balance
+* correct unpaid/partial status
+* correct collection percentage
+* correct dashboard count
+* correct reminder wording
+
+Do NOT treat a partial payment as fully paid.
+
+---
+
+# OVERDUE
+
+Verify overdue members:
+
+* appear correctly
+* have correct outstanding amount
+* do not get counted twice
+* remain linked to the correct FRF case
+* reminders show correct remaining balance
+
+---
+
+# FRF MULTIPLE CASE HISTORY
+
+Test at least:
+
+Case 1 → payment → closed
+
+Case 2 → payment → active
+
+Verify Case 1 history does not contaminate Case 2.
+
+Do not carry old unpaid balances into a new case incorrectly.
+
+---
+
+# PHASE 8 — FRF API BOUNDARY
+
+Inspect all FRF API endpoints.
+
+Make sure excluded records cannot accidentally enter:
+
+* eligible contributor calculations
+* unpaid contributor calculations
+* outstanding calculations
+* collection totals
+* reminders
+* dashboard metrics
+* exports
+
+The backend/API must enforce the exclusion.
+
+Do not rely on frontend filtering.
+
+---
+
+# PHASE 9 — LOAN AUDIT
+
+Verify:
+
+* Loan application
+* Approval
+* Disbursement
+* Monthly payment
+* Payment recording
+* Outstanding balance
+* Due this month
+* Overdue
+* Closed loan
+* Responsible staff
+* Loan budget
+
+Check mathematical consistency.
+
+For every loan:
+
+Outstanding must equal the actual remaining balance based on the authoritative payment/loan ledger.
+
+Verify:
+
+Total Budget
+
+* Total Disbursed
+  = Remaining Budget
+
+where applicable under the existing business rules.
+
+Do not allow unauthorized users to manipulate loan financial data.
+
+---
+
+# PHASE 10 — LOAN SEARCH
+
+Test member search in New Loan.
+
+Search must:
+
+* Search full database
+* Search by name
+* Search by DKMO ID
+* Support partial matches
+* Be case-insensitive
+* Trim spaces
+* Return only matching members
+* Show "No members found" when appropriate
+
+Typing:
+
+"Yusuf Adoor"
+
+must NOT display unrelated members.
+
+---
+
+# PHASE 11 — DASHBOARD AUDIT
+
+Every dashboard number must come from authoritative backend data.
+
+Check:
+
+* Total members
+* Active members
+* New members
+* Membership paid
+* Membership unpaid
+* Membership outstanding
+* Membership collected
+* Referrals
+* Committee count
+* FRF status
+* FRF collected
+* FRF outstanding
+* Loan budget
+* Loan disbursed
+* Loan outstanding
+* Sponsors
+* Documents
+* Tasks
+* Attention Required
+
+No hard-coded production metrics.
+
+---
+
+# ATTENTION REQUIRED
+
+This must not simply say:
+
+"Everything is up to date"
+
+because an API failed.
+
+If the underlying check fails, show an error state:
+
+"Unable to load attention items"
+
+with Retry.
+
+Only show "Everything is up to date" after successful evaluation.
+
+---
+
+# PHASE 12 — DASHBOARD METRIC RECONCILIATION
+
+For every financial dashboard metric:
+
+Trace:
+
+Dashboard UI
+→ API
+→ calculation
+→ database
+→ authoritative records
+
+Do not assume two metrics should match just because they sound similar.
+
+Confirm:
+
+* Membership collected = actual membership payment records.
+* Membership outstanding = actual current outstanding balance.
+* FRF current case metrics = current active case only.
+* Loan outstanding = actual active loan balances.
+* Sponsor metrics = actual sponsor ledger/status.
+
+---
+
+# PHASE 13 — COMMITTEE AUDIT
+
+Verify the authoritative committee:
+
+2026–2027
+
+Exactly 30 members.
+
+Do not accidentally include all members.
+
+Check:
+
+* Add member
+* Remove member
+* Edit member
+* Create new committee/term
+* Department
+* Historical committee
+
+The trash icon/removal action must only affect committee membership.
+
+It must NOT delete the member.
+
+---
+
+# PHASE 14 — MEETING ATTENDANCE AUDIT
+
+Meetings should operate against the meeting's participant snapshot.
+
+Test:
+
+Create meeting
+→ defaults to current committee
+→ edit meeting members
+→ add member
+→ remove member
+→ record attendance
+
+Verify:
+
+Changing meeting participants does NOT modify the official committee.
+
+Changing the official committee does NOT rewrite historical meeting participants.
+
+Prevent duplicate attendance records.
+
+---
+
+# PHASE 15 — DOCUMENTS AUDIT
+
+Test:
+
+* Upload
+* View
+* Edit metadata
+* Archive
+* Delete
+* Search/filter
+* Download/open if supported
+
+Check:
+
+* invalid file
+* oversized file
+* unsupported type
+* missing file
+* duplicate submission
+
+No broken document links.
+
+---
+
+# PHASE 16 — REFERRALS AUDIT
+
+Verify the original migrated referral relationships remain intact.
+
+Do NOT regenerate or randomly assign referrals.
+
+Check:
+
+* Referrer
+* Referred member
+* Active status
+* Counts
+* Leaderboard
+* Historical relationships
+
+Dashboard referral totals must match the authoritative referral records.
+
+---
+
+# PHASE 17 — USER / ROLE SECURITY AUDIT
+
+Test all four roles:
+
+### Administrator
+
+Full access.
+
+### Finance Officer
+
+Financial access only.
+
+### Committee / Operations
+
+Operational/community access.
+
+### Viewer
+
+Read-only.
+
+Test each role against:
+
+* UI
+* API
+* Direct URL
+* POST
+* PUT/PATCH
+* DELETE
+
+Do not rely on hidden buttons.
+
+A user who manually calls an unauthorized API endpoint must receive HTTP 403.
+
+---
+
+# DISABLED USERS
+
+Disabled users:
+
+* cannot log in
+* cannot continue making API requests
+* cannot access protected pages
+
+Verify sessions are invalidated or rejected appropriately.
+
+---
+
+# LAST ADMINISTRATOR PROTECTION
+
+Never allow the final active Administrator to be:
+
+* disabled
+* deleted
+* demoted
+
+unless another active Administrator exists.
+
+---
+
+# PHASE 18 — AUTHENTICATION / SESSION SECURITY
+
+Audit:
+
+* Login
+* Logout
+* Session expiration
+* Refresh
+* Multiple tabs
+* Disabled account
+* Invalid credentials
+* Unauthorized routes
+
+Check that:
+
+* Passwords are never exposed in API responses.
+* Passwords are never displayed in the UI.
+* Passwords are not stored in plaintext.
+* Session tokens are handled securely.
+* Logout invalidates the session appropriately.
+* Protected APIs require authentication.
+
+Do not expose secrets in frontend code.
+
+---
+
+# PHASE 19 — API SECURITY
+
+Inspect all API endpoints for:
+
+* Missing authentication
+* Missing authorization
+* IDOR/insecure direct object references
+* Missing ownership/resource checks
+* Unsafe parameter handling
+* Mass assignment
+* SQL injection risk
+* Unsafe database queries
+* Missing validation
+* Excessive data exposure
+* Sensitive information in responses
+
+Try changing record IDs manually in API requests.
+
+A user must not be able to access or modify records they are not authorized to access.
+
+---
+
+# PHASE 20 — ERROR HANDLING
+
+Every API should fail gracefully.
+
+Test:
+
+* Database unavailable
+* Invalid ID
+* Missing record
+* Unauthorized
+* Forbidden
+* Invalid request
+* Duplicate request
+* Server error
+
+Do not expose:
+
+* stack traces
+* database credentials
+* internal secrets
+* environment variables
+* SQL details
+* filesystem paths
+
+to normal users.
+
+---
+
+# PHASE 21 — FRONTEND ERROR STATES
+
+Every major page should have proper:
+
+* Loading state
+* Empty state
+* Error state
+* Retry state
+
+Do not show an empty list when the API failed.
+
+Example:
+
+Bad:
+
+"No members found"
+
+when API failed.
+
+Correct:
+
+"Unable to load members. Retry."
+
+---
+
+# PHASE 22 — BROWSER CONSOLE AUDIT
+
+Run the application in the browser and inspect:
+
+* Console errors
+* Console warnings
+* Failed network requests
+* 404 assets
+* 500 API calls
+* CORS errors
+* hydration errors
+* React errors
+* broken images/icons
+* failed fonts
+* failed JavaScript bundles
+
+Fix real errors.
+
+Do not simply hide warnings.
+
+---
+
+# PHASE 23 — NETWORK AUDIT
+
+Use browser/network inspection to identify:
+
+* failed API requests
+* unnecessary repeated requests
+* requests returning incorrect status
+* unauthorized endpoints returning data
+* broken API URLs
+* incorrect production URLs
+* development URLs leaking into production
+
+Make sure production frontend communicates with the correct production backend.
+
+---
+
+# PHASE 24 — REDIRECT AUDIT
+
+Test every action that redirects.
+
+Examples:
+
+Create Member
+→ correct destination
+
+Record Payment
+→ correct payment/member context
+
+Create FRF Claim
+→ correct FRF page
+
+Approve FRF Claim
+→ correct case/context
+
+Create Loan
+→ correct loan list/detail
+
+Create Meeting
+→ correct meeting page
+
+Upload Document
+→ correct document list/detail
+
+Create User
+→ correct Users page
+
+Edit User
+→ correct Users page
+
+Cancel
+→ original page/context
+
+Delete
+→ correct parent list/context
+
+No redirect should randomly send the user to Dashboard or another unrelated module.
+
+---
+
+# PHASE 25 — REFRESH / DEEP LINK TEST
+
+Test refreshing every important page.
+
+For example:
+
+* /dashboard
+* /members
+* /members/:id
+* /payments
+* /frf
+* /loans
+* /documents
+* /committee
+* /meetings
+* /settings/users
+
+Refresh each page.
+
+Verify:
+
+* no crash
+* no lost data
+* no incorrect redirect
+* authentication remains correct
+* correct page loads
+
+---
+
+# PHASE 26 — BACK/FORWARD BROWSER TEST
+
+Test:
+
+Open list
+→ detail
+→ edit
+→ save
+→ Back
+
+Then:
+
+Back
+Forward
+Refresh
+
+Verify the application remains stable.
+
+Test browser:
+
+Back
+Forward
+Reload
+
+across all major modules.
+
+---
+
+# PHASE 27 — RESPONSIVE UI AUDIT
+
+Test at least:
+
+* Desktop
+* Laptop
+* Tablet
+* Mobile width
+
+Check:
+
+* navigation
+* tables
+* forms
+* buttons
+* dialogs
+* dropdowns
+* search
+* cards
+* dashboard
+* Settings
+
+No horizontal overflow unless intentionally required.
+
+No buttons hidden off-screen.
+
+No text overlapping.
+
+---
+
+# PHASE 28 — ACCESSIBILITY QUICK AUDIT
+
+Check:
+
+* buttons have labels
+* icon-only buttons have accessible labels/tooltips
+* form fields have labels
+* keyboard navigation works
+* dialogs can be closed
+* focus is not trapped incorrectly
+* color is not the only indication of status
+* error messages are visible
+
+Pay particular attention to the small red trash icons and other icon-only controls.
+
+---
+
+# PHASE 29 — DATA INTEGRITY / DUPLICATE AUDIT
+
+Look for accidental duplicates in:
+
+* members
+* DKMO IDs
+* payments
+* FRF payments
+* FRF cases
+* loans
+* documents
+* committee membership
+* meeting attendance
+* referrals
+* users
+
+Do not automatically delete duplicates.
+
+First identify whether they are legitimate historical records or actual duplicates.
+
+---
+
+# PHASE 30 — DATE / TIME AUDIT
+
+Verify all dates use the intended timezone.
+
+DKMO operates in Saudi Arabia.
+
+Check:
+
+* created dates
+* payment dates
+* meeting dates
+* loan due dates
+* FRF case dates
+* dashboard "today"
+* "this month"
+* "this week"
+* reminders
+* audit timestamps
+
+Be especially careful around midnight.
+
+---
+
+# PHASE 31 — SEARCH / FILTER AUDIT
+
+Every search/filter should:
+
+* actually filter
+* be case-insensitive where appropriate
+* trim whitespace
+* handle no results
+* handle special characters
+* preserve state when navigating back
+* not show unrelated results
+
+Test large result sets and pagination.
+
+---
+
+# PHASE 32 — EXPORT AUDIT
+
+For every export:
+
+* Excel
+* CSV
+* PDF
+* reports
+
+verify:
+
+* correct records
+* correct totals
+* correct dates
+* correct member names
+* correct DKMO IDs
+* correct financial amounts
+* no unauthorized records
+
+For FRF exports, clearly distinguish:
+
+* Paid
+* Partial
+* Unpaid
+* Exempt
+* Cancelled
+
+Exempt and cancelled members must not be represented as normal unpaid obligations.
+
+---
+
+# PHASE 33 — WHATSAPP / REMINDER AUDIT
+
+Test membership reminders.
+
+Test FRF reminders.
+
+Test loan responsible-person reminders.
+
+Verify:
+
+* correct recipient
+* correct member
+* correct amount
+* correct outstanding balance
+* correct case
+* correct language
+* English/Kannada selection where implemented
+* preview matches final message
+
+Never send a reminder for:
+
+* exempt FRF member
+* cancelled FRF member
+* unpaid membership member who is not FRF eligible
+* already fully paid FRF contribution
+
+---
+
+# PHASE 34 — AUDIT TRAIL
+
+Verify important actions generate correct audit entries.
+
+Check:
+
+* actor
+* action
+* module
+* target
+* timestamp
+* relevant metadata
+
+Do NOT create audit entries for every harmless UI click.
+
+Do create them for meaningful mutations.
+
+Make sure automated tests do not pollute production audit history.
+
+---
+
+# PHASE 35 — PRODUCTION ENVIRONMENT AUDIT
+
+Before publishing, search the codebase for:
+
+* localhost
+* 127.0.0.1
+* development URLs
+* Replit preview URLs
+* temporary URLs
+* test credentials
+* hard-coded passwords
+* API keys
+* secrets
+* debug flags
+* test-only endpoints
+
+Do NOT expose secrets.
+
+Verify all environment variables required by production are present.
+
+---
+
+# PHASE 36 — DATABASE / MIGRATION SAFETY
+
+Verify:
+
+* production database connection
+* migrations
+* indexes
+* constraints
+* foreign keys
+* unique constraints
+* required fields
+* transaction handling
+
+Do not run destructive migrations against production data.
+
+Take a backup/snapshot if the platform supports it before deployment.
+
+---
+
+# PHASE 37 — PERFORMANCE AUDIT
+
+Check for obvious problems:
+
+* repeated API requests
+* infinite API loops
+* unnecessary database queries
+* giant member dropdowns
+* loading entire datasets unnecessarily
+* slow dashboard
+* slow member search
+* slow FRF lists
+* slow loan lists
+
+Searchable fields should use appropriate backend filtering/pagination rather than loading thousands of records unnecessarily.
+
+---
+
+# PHASE 38 — BUILD / TYPECHECK / TESTS
+
+Run:
+
+* TypeScript/typecheck
+* lint if configured
+* unit tests
+* API tests
+* integration tests
+* production build
+
+Fix all real failures.
+
+Do not ignore failing tests.
+
+If browser tests cannot run because the browser executable/environment is missing, clearly report that.
+
+Do NOT claim browser tests passed unless they actually ran.
+
+---
+
+# PHASE 39 — REGRESSION TEST
+
+After all fixes, retest the most important workflows from start to finish:
+
+## Workflow 1
+
+Login
+→ Dashboard
+→ Members
+→ Member Profile
+→ Back
+
+## Workflow 2
+
+Member
+→ Membership Payment
+→ Payment History
+→ Dashboard
+
+## Workflow 3
+
+Member
+→ FRF Claim
+→ Approve
+→ Active Case
+→ Payment
+→ Outstanding
+
+## Workflow 4
+
+FRF
+→ Partial Payment
+→ Remaining Balance
+→ Reminder
+
+## Workflow 5
+
+Loan
+→ Create
+→ Assign Responsible Person
+→ Payment
+→ Outstanding
+
+## Workflow 6
+
+Committee
+→ Create/Edit Committee
+→ Meeting
+→ Edit Meeting Members
+→ Attendance
+
+## Workflow 7
+
+Documents
+→ Upload
+→ View
+→ Edit
+→ Archive/Delete
+
+## Workflow 8
+
+Settings
+→ Users
+→ Change Role
+→ Login as that role
+→ Verify permissions
+
+---
+
+# PHASE 40 — FINAL SECURITY CHECK
+
+Before declaring production-ready, specifically verify:
+
+### Authentication
+
+* Login secure
+* Logout works
+* Disabled users blocked
+* Sessions handled correctly
+
+### Authorization
+
+* Server-side permission checks
+* No privilege escalation
+* No IDOR
+* No unauthorized API access
+* No unauthorized direct URL access
+
+### Data
+
+* No sensitive data leakage
+* No passwords in responses
+* No secrets in frontend
+* No test data in production
+
+### Financial
+
+* No unauthorized payment manipulation
+* No FRF eligibility bypass
+* No loan balance manipulation
+* No dashboard calculation corruption
+
+---
+
+# PHASE 41 — DO NOT AUTO-FIX UNCERTAIN ISSUES
+
+If you find something that might be intentional business behavior, do NOT randomly change it.
+
+Classify findings as:
+
+### CRITICAL
+
+Security vulnerability, data corruption, financial calculation error, broken authentication, unauthorized access.
+
+### HIGH
+
+Major workflow broken, incorrect financial/FRF/loan behavior, broken redirect, data loss.
+
+### MEDIUM
+
+Important UI/UX bug or non-critical workflow issue.
+
+### LOW
+
+Minor visual issue, wording, cosmetic issue.
+
+Fix confirmed Critical/High issues.
+
+Fix Medium issues when safe and clearly within scope.
+
+Do not spend time redesigning cosmetic details.
+
+---
+
+# PHASE 42 — FINAL PRODUCTION CHECKLIST
+
+Before saying "READY", verify:
+
+[ ] All routes work
+[ ] All APIs work
+[ ] No critical console errors
+[ ] No critical network errors
+[ ] Authentication works
+[ ] Logout works
+[ ] Role permissions work
+[ ] API authorization works
+[ ] Direct URLs are protected
+[ ] Disabled users are blocked
+[ ] Members work
+[ ] Membership payments work
+[ ] FRF claims work
+[ ] FRF collection works
+[ ] FRF exclusions work
+[ ] FRF partial payments work
+[ ] FRF overdue logic works
+[ ] FRF multi-case history works
+[ ] Loans work
+[ ] Loan calculations work
+[ ] Committee works
+[ ] Meetings work
+[ ] Attendance works
+[ ] Documents work
+[ ] Referrals work
+[ ] Sponsors work
+[ ] Events work
+[ ] Tasks work
+[ ] Dashboard metrics are authoritative
+[ ] Attention Required works
+[ ] Exports work
+[ ] Reminders work
+[ ] Audit trail works
+[ ] Back navigation works
+[ ] Redirects work
+[ ] Browser refresh works
+[ ] Deep links work
+[ ] Mobile layout works
+[ ] Forms validate correctly
+[ ] Duplicate submissions are prevented
+[ ] Error states work
+[ ] Loading states work
+[ ] Empty states work
+[ ] Production URLs are correct
+[ ] No test credentials exposed
+[ ] No secrets exposed
+[ ] Database migrations safe
+[ ] Build succeeds
+[ ] Typecheck succeeds
+[ ] Automated tests succeed
+[ ] Production data is untouched except for intentional fixes
+
+---
+
+# FINAL REPORT TO ME
+
+When finished, do NOT simply say "everything works."
+
+Give me a structured report:
+
+## 1. CRITICAL ISSUES FOUND
+
+List each one and what was fixed.
+
+## 2. HIGH ISSUES FOUND
+
+List each one and what was fixed.
+
+## 3. MEDIUM/LOW ISSUES
+
+List remaining items if any.
+
+## 4. SECURITY AUDIT
+
+Tell me exactly what authentication/authorization/API checks were tested.
+
+## 5. NAVIGATION / REDIRECT AUDIT
+
+Tell me which modules were tested and whether Back/Cancel/Save/Delete redirects preserve context.
+
+## 6. FINANCIAL AUDIT
+
+Confirm membership, FRF, loans and dashboard calculations were checked.
+
+## 7. TEST RESULTS
+
+Report:
+
+* Typecheck
+* Lint
+* Unit tests
+* API tests
+* Integration tests
+* Browser tests
+* Production build
+
+Use actual results.
+
+Do not claim a test passed if it was not actually executed.
+
+## 8. PRODUCTION READINESS
+
+Give exactly one final status:
+
+### READY FOR PRODUCTION
+
+or
+
+### NOT READY FOR PRODUCTION
+
+If NOT READY, list the exact blockers.
+
+---
+
+# FINAL RULE
+
+This is a **release audit**, not a redesign.
+
+Fix bugs and security issues.
+
+Preserve the existing DKMO business logic and data.
+
+Do not introduce unnecessary features.
+
+Do not change unrelated modules.
+
+Do not hide errors just to make tests pass.
+
+Do not mark something as working without actually testing it.
+
+The objective is:
+
+**A stable, secure, fully functioning DKMO Portal where every button, form, API, permission, calculation, redirect, Back action, search, filter, export and workflow works correctly before production deployment.**

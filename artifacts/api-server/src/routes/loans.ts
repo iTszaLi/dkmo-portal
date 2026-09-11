@@ -1,9 +1,19 @@
 import { Router, type IRouter } from "express";
-import { db, loansTable, loanPaymentsTable, membersTable } from "@workspace/db";
-import { eq, ilike, and, or, desc, sql } from "drizzle-orm";
+import {
+  db,
+  loansTable,
+  loanPaymentsTable,
+  membersTable,
+  loanBudgetsTable,
+  loanBudgetHistoryTable,
+  committeeAssignmentsTable,
+  committeeTermsTable,
+} from "@workspace/db";
+import { eq, ilike, and, or, desc, sql, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth, requireRole, type AuthedRequest } from "../middlewares/requireAuth";
 import { getUserById } from "../lib/users";
+import { logAudit } from "../lib/audit";
 
 const router: IRouter = Router();
 
@@ -25,10 +35,14 @@ const LoanCreateSchema = z
   .object({
     memberId: z.string().uuid(),
     loanType: z.enum(LOAN_TYPES).default("personal"),
-    principalAmount: z.coerce.number().positive("Loan amount must be greater than 0"),
+    principalAmount: z.coerce
+      .number()
+      .positive("Loan amount must be greater than 0")
+      .max(999_999_999_999.99),
     emiAmount: z.coerce.number().positive("Monthly payment must be greater than 0"),
     disbursedDate: z.string().min(1),
     convenorName: z.string().default(""),
+    responsibleCommitteeAssignmentId: z.string().uuid().nullable().optional(),
     notes: z.string().default(""),
   })
   .refine((d) => d.emiAmount <= d.principalAmount, {
@@ -39,10 +53,11 @@ const LoanCreateSchema = z
 const LoanUpdateSchema = z.object({
   memberId: z.string().uuid().nullable().optional(),
   loanType: z.enum(LOAN_TYPES).optional(),
-  principalAmount: z.coerce.number().positive().optional(),
+  principalAmount: z.coerce.number().positive().max(999_999_999_999.99).optional(),
   disbursedDate: z.string().nullable().optional(),
   emiAmount: z.coerce.number().positive().optional(),
   convenorName: z.string().optional(),
+  responsibleCommitteeAssignmentId: z.string().uuid().nullable().optional(),
   description: z.string().optional(),
   notes: z.string().optional(),
 });
@@ -65,6 +80,88 @@ const ListQuerySchema = z.object({
 });
 
 type LoanRow = typeof loansTable.$inferSelect;
+type ResponsibleStaff = {
+  assignmentId: string;
+  memberId: string;
+  membershipId: string;
+  fullName: string;
+  position: string;
+  committeeYear: string;
+};
+
+class InsufficientBudgetError extends Error {}
+class InvalidAssignmentError extends Error {}
+
+function moneyString(amount: number): string {
+  return (Math.round((amount + Number.EPSILON) * 100) / 100).toFixed(2);
+}
+
+function moneyCents(value: string | number): bigint {
+  const normalized = typeof value === "number" ? moneyString(value) : value;
+  const match = /^(-?)(\d+)(?:\.(\d{1,2}))?$/.exec(normalized);
+  if (!match) throw new Error(`Invalid monetary value: ${normalized}`);
+  const cents = BigInt(match[2]!) * 100n + BigInt((match[3] ?? "").padEnd(2, "0"));
+  return match[1] ? -cents : cents;
+}
+
+function centsToNumber(value: bigint): number {
+  return Number(value) / 100;
+}
+
+async function validateResponsibleAssignment(
+  executor: any,
+  assignmentId: string | null | undefined,
+): Promise<void> {
+  if (!assignmentId) return;
+  const [assignment] = await executor
+    .select({ id: committeeAssignmentsTable.id })
+    .from(committeeAssignmentsTable)
+    .innerJoin(
+      committeeTermsTable,
+      and(
+        eq(committeeAssignmentsTable.termId, committeeTermsTable.id),
+        eq(committeeTermsTable.isActive, true),
+      ),
+    )
+    .where(
+      and(
+        eq(committeeAssignmentsTable.id, assignmentId),
+        eq(committeeAssignmentsTable.isActive, true),
+      ),
+    );
+  if (!assignment) {
+    throw new InvalidAssignmentError(
+      "Responsible staff must be an active assignment in the active committee term.",
+    );
+  }
+}
+
+async function responsibleStaffForLoans(rows: LoanRow[]): Promise<Map<string, ResponsibleStaff>> {
+  const assignmentIds = [
+    ...new Set(
+      rows
+        .map((row) => row.responsibleCommitteeAssignmentId)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  ];
+  const result = new Map<string, ResponsibleStaff>();
+  if (!assignmentIds.length) return result;
+  const assignments = await db
+    .select({
+      assignmentId: committeeAssignmentsTable.id,
+      memberId: committeeAssignmentsTable.memberId,
+      position: committeeAssignmentsTable.position,
+      committeeYear: committeeTermsTable.committeeYear,
+      fullName: membersTable.fullName,
+      membershipId: membersTable.membershipId,
+    })
+    .from(committeeAssignmentsTable)
+    .innerJoin(committeeTermsTable, eq(committeeAssignmentsTable.termId, committeeTermsTable.id))
+    .innerJoin(membersTable, eq(committeeAssignmentsTable.memberId, membersTable.id))
+    .where(inArray(committeeAssignmentsTable.id, assignmentIds));
+  for (const assignment of assignments) result.set(assignment.assignmentId, assignment);
+  return result;
+}
 
 /**
  * Installments due so far. Installment k falls due k full months after the
@@ -123,6 +220,7 @@ function rowToApi(
   r: LoanRow,
   paymentsTotal: number,
   member?: { fullName: string; membershipId: string } | null,
+  responsibleStaff?: ResponsibleStaff | null,
 ) {
   const d = deriveLoan(r, paymentsTotal);
   return {
@@ -140,6 +238,8 @@ function rowToApi(
     outstandingBalance: d.outstanding,
     status: d.status,
     convenorName: r.convenorName,
+    responsibleCommitteeAssignmentId: r.responsibleCommitteeAssignmentId,
+    responsibleStaff: responsibleStaff ?? null,
     description: r.description,
     notes: r.notes,
     createdAt: r.createdAt.toISOString(),
@@ -176,6 +276,106 @@ async function paymentTotals(loanIds?: string[]): Promise<Map<string, number>> {
 }
 
 router.use("/loans", requireAuth);
+
+router.get("/loans/budget", async (_req, res): Promise<void> => {
+  const [budget] = await db.select().from(loanBudgetsTable).where(eq(loanBudgetsTable.id, 1));
+  if (!budget) {
+    res.status(503).json({ error: "Loan budget has not been initialized. Run the database migration." });
+    return;
+  }
+  const [{ total }] = await db
+    .select({ total: sql<string>`coalesce(sum(${loansTable.principalAmount}), 0)::text` })
+    .from(loansTable);
+  const loanRows = await db.select().from(loansTable);
+  const totals = await paymentTotals();
+  const activeLoans = loanRows.reduce((count, loan) => {
+    const status = deriveLoan(loan, totals.get(loan.id) ?? 0).status;
+    return count + (status === "active" || status === "overdue" ? 1 : 0);
+  }, 0);
+  const totalBudget = Number(budget.amount);
+  const totalDisbursed = Number(total);
+  const remainingCents = moneyCents(budget.amount) - moneyCents(total);
+  res.json({
+    totalBudget,
+    totalDisbursed,
+    remainingBudget: Math.max(centsToNumber(remainingCents), 0),
+    activeLoans,
+    pendingApplications: 0,
+    updatedAt: budget.updatedAt.toISOString(),
+  });
+});
+
+router.put("/loans/budget", requireRole("admin"), async (req, res): Promise<void> => {
+  const parsed = z
+    .object({ amount: z.coerce.number().finite().nonnegative().max(999_999_999_999.99) })
+    .safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const actor = getUserById((req as AuthedRequest).userId);
+  try {
+    const updated = await db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT id FROM loan_budgets WHERE id = 1 FOR UPDATE`);
+      const [current] = await tx.select().from(loanBudgetsTable).where(eq(loanBudgetsTable.id, 1));
+      if (!current) throw new Error("Loan budget has not been initialized.");
+      const [{ total }] = await tx
+        .select({ total: sql<string>`coalesce(sum(${loansTable.principalAmount}), 0)::text` })
+        .from(loansTable);
+      if (moneyCents(parsed.data.amount) < moneyCents(total)) {
+        throw new InsufficientBudgetError(
+          `Budget cannot be below the total amount disbursed (SAR ${Number(total).toFixed(2)}).`,
+        );
+      }
+      const [next] = await tx
+        .update(loanBudgetsTable)
+        .set({ amount: moneyString(parsed.data.amount), updatedAt: new Date() })
+        .where(eq(loanBudgetsTable.id, 1))
+        .returning();
+      await tx.insert(loanBudgetHistoryTable).values({
+        oldAmount: current.amount,
+        newAmount: moneyString(parsed.data.amount),
+        actorId: (req as AuthedRequest).userId,
+        actorName: actor?.displayName ?? (req as AuthedRequest).userId,
+      });
+      return { next, oldAmount: current.amount };
+    });
+    await logAudit(req, "loan_budget_updated", "loans", {
+      entityId: "1",
+      details: JSON.stringify({
+        oldAmount: Number(updated.oldAmount),
+        newAmount: Number(updated.next.amount),
+      }),
+    });
+    res.json({
+      totalBudget: Number(updated.next.amount),
+      updatedAt: updated.next.updatedAt.toISOString(),
+    });
+  } catch (error) {
+    if (error instanceof InsufficientBudgetError) {
+      res.status(409).json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
+});
+
+router.get("/loans/budget/history", requireRole("admin"), async (_req, res): Promise<void> => {
+  const history = await db
+    .select()
+    .from(loanBudgetHistoryTable)
+    .orderBy(desc(loanBudgetHistoryTable.createdAt));
+  res.json(
+    history.map((item) => ({
+      id: item.id,
+      oldAmount: Number(item.oldAmount),
+      newAmount: Number(item.newAmount),
+      actorId: item.actorId,
+      actorName: item.actorName,
+      timestamp: item.createdAt.toISOString(),
+    })),
+  );
+});
 
 // GET /loans/stats — must be before /:id
 router.get("/loans/stats", async (_req, res): Promise<void> => {
@@ -265,12 +465,16 @@ router.get("/loans", async (req, res): Promise<void> => {
     .orderBy(desc(loansTable.createdAt));
 
   const totals = await paymentTotals();
+  const staff = await responsibleStaffForLoans(rows.map((row) => row.loan));
   let pairs = rows.map((r) => ({
     raw: r.loan,
     api: rowToApi(
       r.loan,
       totals.get(r.loan.id) ?? 0,
       r.memberName ? { fullName: r.memberName, membershipId: r.membershipId ?? "" } : null,
+      r.loan.responsibleCommitteeAssignmentId
+        ? staff.get(r.loan.responsibleCommitteeAssignmentId)
+        : null,
     ),
   }));
   if (status === "open") {
@@ -312,11 +516,15 @@ router.get("/loans/:id", async (req, res): Promise<void> => {
     return;
   }
   const totals = await paymentTotals([id.data]);
+  const staff = await responsibleStaffForLoans([row.loan]);
   res.json(
     rowToApi(
       row.loan,
       totals.get(id.data) ?? 0,
       row.memberName ? { fullName: row.memberName, membershipId: row.membershipId ?? "" } : null,
+      row.loan.responsibleCommitteeAssignmentId
+        ? staff.get(row.loan.responsibleCommitteeAssignmentId)
+        : null,
     ),
   );
 });
@@ -442,28 +650,75 @@ router.post("/loans", requireRole("admin", "finance"), async (req, res): Promise
     authed.userRole === "admin" && d.convenorName
       ? d.convenorName
       : (creator?.displayName ?? d.convenorName);
-  const [created] = await db
-    .insert(loansTable)
-    .values({
-      memberId: d.memberId,
-      loanType: d.loanType,
-      principalAmount: String(d.principalAmount),
-      disbursedDate: d.disbursedDate,
-      emiAmount: String(d.emiAmount),
-      emiCount,
-      paidEmis: 0,
-      status: "active",
-      convenorName,
-      description: "",
-      notes: d.notes,
-    })
-    .returning();
+  let created: LoanRow;
+  try {
+    created = await db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT id FROM loan_budgets WHERE id = 1 FOR UPDATE`);
+      const [budget] = await tx.select().from(loanBudgetsTable).where(eq(loanBudgetsTable.id, 1));
+      if (!budget) throw new Error("Loan budget has not been initialized.");
+      const [{ total }] = await tx
+        .select({ total: sql<string>`coalesce(sum(${loansTable.principalAmount}), 0)::text` })
+        .from(loansTable);
+      const availableCents = moneyCents(budget.amount) - moneyCents(total);
+      if (moneyCents(d.principalAmount) > availableCents) {
+        throw new InsufficientBudgetError(
+          `Insufficient remaining loan budget. Available: SAR ${Math.max(centsToNumber(availableCents), 0).toFixed(2)}.`,
+        );
+      }
+      await validateResponsibleAssignment(tx, d.responsibleCommitteeAssignmentId);
+      const [inserted] = await tx
+        .insert(loansTable)
+        .values({
+          memberId: d.memberId,
+          loanType: d.loanType,
+          principalAmount: moneyString(d.principalAmount),
+          disbursedDate: d.disbursedDate,
+          emiAmount: moneyString(d.emiAmount),
+          emiCount,
+          paidEmis: 0,
+          status: "active",
+          convenorName,
+          responsibleCommitteeAssignmentId: d.responsibleCommitteeAssignmentId ?? null,
+          description: "",
+          notes: d.notes,
+        })
+        .returning();
+      return inserted;
+    });
+  } catch (error) {
+    if (error instanceof InsufficientBudgetError) {
+      res.status(409).json({ error: error.message });
+      return;
+    }
+    if (error instanceof InvalidAssignmentError) {
+      res.status(400).json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
 
   const member = created.memberId
     ? await db.select().from(membersTable).where(eq(membersTable.id, created.memberId)).then((r) => r[0])
     : null;
 
-  res.status(201).json(rowToApi(created, 0, member ?? null));
+  const staff = await responsibleStaffForLoans([created]);
+  await logAudit(req, "loan_created", "loans", {
+    entityId: created.id,
+    details: JSON.stringify({
+      principalAmount: Number(created.principalAmount),
+      responsibleCommitteeAssignmentId: created.responsibleCommitteeAssignmentId,
+    }),
+  });
+  res.status(201).json(
+    rowToApi(
+      created,
+      0,
+      member ?? null,
+      created.responsibleCommitteeAssignmentId
+        ? staff.get(created.responsibleCommitteeAssignmentId)
+        : null,
+    ),
+  );
 });
 
 // PUT /loans/:id — admin only
@@ -486,26 +741,58 @@ router.put("/loans/:id", requireRole("admin"), async (req, res): Promise<void> =
   if (d.disbursedDate !== undefined) updates.disbursedDate = d.disbursedDate ?? null;
   if (d.emiAmount !== undefined) updates.emiAmount = String(d.emiAmount);
   if (d.convenorName !== undefined) updates.convenorName = d.convenorName;
+  if (d.responsibleCommitteeAssignmentId !== undefined) {
+    updates.responsibleCommitteeAssignmentId = d.responsibleCommitteeAssignmentId;
+  }
   if (d.description !== undefined) updates.description = d.description;
   if (d.notes !== undefined) updates.notes = d.notes;
 
-  // Re-derive duration when amounts change.
-  if (d.principalAmount !== undefined || d.emiAmount !== undefined) {
-    const [existing] = await db.select().from(loansTable).where(eq(loansTable.id, id.data));
-    if (!existing) {
-      res.status(404).json({ error: "Loan not found" });
+  let existing: LoanRow | undefined;
+  let updated: LoanRow | undefined;
+  try {
+    updated = await db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT id FROM loan_budgets WHERE id = 1 FOR UPDATE`);
+      [existing] = await tx.select().from(loansTable).where(eq(loansTable.id, id.data));
+      if (!existing) return undefined;
+      await validateResponsibleAssignment(tx, d.responsibleCommitteeAssignmentId);
+      const principal = d.principalAmount ?? Number(existing.principalAmount);
+      const emi = d.emiAmount ?? Number(existing.emiAmount);
+      if (d.principalAmount !== undefined || d.emiAmount !== undefined) {
+        updates.emiCount = Math.ceil(principal / emi);
+      }
+      if (d.principalAmount !== undefined && d.principalAmount > Number(existing.principalAmount)) {
+        const [budget] = await tx.select().from(loanBudgetsTable).where(eq(loanBudgetsTable.id, 1));
+        if (!budget) throw new Error("Loan budget has not been initialized.");
+        const [{ total }] = await tx
+          .select({ total: sql<string>`coalesce(sum(${loansTable.principalAmount}), 0)::text` })
+          .from(loansTable);
+        const increaseCents =
+          moneyCents(d.principalAmount) - moneyCents(existing.principalAmount);
+        const availableCents = moneyCents(budget.amount) - moneyCents(total);
+        if (increaseCents > availableCents) {
+          throw new InsufficientBudgetError(
+            `Insufficient remaining loan budget. Available: SAR ${Math.max(centsToNumber(availableCents), 0).toFixed(2)}.`,
+          );
+        }
+      }
+      const [changed] = await tx
+        .update(loansTable)
+        .set(updates)
+        .where(eq(loansTable.id, id.data))
+        .returning();
+      return changed;
+    });
+  } catch (error) {
+    if (error instanceof InsufficientBudgetError) {
+      res.status(409).json({ error: error.message });
       return;
     }
-    const principal = d.principalAmount ?? Number(existing.principalAmount);
-    const emi = d.emiAmount ?? Number(existing.emiAmount);
-    if (emi > 0) updates.emiCount = Math.ceil(principal / emi);
+    if (error instanceof InvalidAssignmentError) {
+      res.status(400).json({ error: error.message });
+      return;
+    }
+    throw error;
   }
-
-  const [updated] = await db
-    .update(loansTable)
-    .set(updates)
-    .where(eq(loansTable.id, id.data))
-    .returning();
 
   if (!updated) {
     res.status(404).json({ error: "Loan not found" });
@@ -523,7 +810,30 @@ router.put("/loans/:id", requireRole("admin"), async (req, res): Promise<void> =
     ? await db.select().from(membersTable).where(eq(membersTable.id, updated.memberId)).then((r) => r[0])
     : null;
 
-  res.json(rowToApi(updated, totals.get(id.data) ?? 0, member ?? null));
+  const staff = await responsibleStaffForLoans([updated]);
+  await logAudit(req, "loan_updated", "loans", {
+    entityId: updated.id,
+    details: JSON.stringify({
+      principalAmount: {
+        old: existing ? Number(existing.principalAmount) : null,
+        new: Number(updated.principalAmount),
+      },
+      responsibleCommitteeAssignmentId: {
+        old: existing?.responsibleCommitteeAssignmentId ?? null,
+        new: updated.responsibleCommitteeAssignmentId,
+      },
+    }),
+  });
+  res.json(
+    rowToApi(
+      updated,
+      totals.get(id.data) ?? 0,
+      member ?? null,
+      updated.responsibleCommitteeAssignmentId
+        ? staff.get(updated.responsibleCommitteeAssignmentId)
+        : null,
+    ),
+  );
 });
 
 // DELETE /loans/:id — admin only

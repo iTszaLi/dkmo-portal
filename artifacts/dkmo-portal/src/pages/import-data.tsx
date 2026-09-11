@@ -239,7 +239,7 @@ export default function ImportDataPage() {
 
   async function handleFile(f: File) {
     if (f.size > 15 * 1024 * 1024) { toast({ title: "File too large (max 15 MB)", variant: "destructive" }); return; }
-    if (!/\.(txt|csv|tsv|xlsx?)$/i.test(f.name)) { toast({ title: "Unsupported file type", description: "Upload a TXT, CSV or XLSX file.", variant: "destructive" }); return; }
+    if (!/\.(txt|csv|tsv|xlsx)$/i.test(f.name)) { toast({ title: "Unsupported file type", description: "Upload a TXT, CSV or XLSX file.", variant: "destructive" }); return; }
     setBusy(true);
     try {
       const parsed = await parseImportFile(f);
@@ -349,7 +349,7 @@ export default function ImportDataPage() {
               {busy ? <Loader2 className="h-8 w-8 animate-spin text-primary" /> : <Upload className="h-8 w-8 text-muted-foreground" />}
               <p className="font-medium">Drop your file here, or click to browse</p>
               <p className="text-sm text-muted-foreground">TXT, CSV or Excel — up to 20,000 rows</p>
-              <input ref={fileInput} type="file" accept=".txt,.csv,.tsv,.xls,.xlsx" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleFile(f); e.target.value = ""; }} data-testid="input-file" />
+              <input ref={fileInput} type="file" accept=".txt,.csv,.tsv,.xlsx" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleFile(f); e.target.value = ""; }} data-testid="input-file" />
             </div>
             <div className="rounded-lg border bg-muted/30 p-3 text-sm">
               <span className="font-medium">{mod.title} accepts:</span> {mod.accepts}

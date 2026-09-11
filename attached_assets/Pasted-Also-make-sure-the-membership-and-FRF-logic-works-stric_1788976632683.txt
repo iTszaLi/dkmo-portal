@@ -1,0 +1,40 @@
+Also make sure the membership and FRF logic works strictly like this:
+
+1. **When a member is accepted/admitted**
+
+   * Their membership status should be shown clearly as **Paid** once the membership fee has actually been recorded as paid.
+   * Do not automatically mark it paid just because the member was accepted. It must reflect the actual membership payment status.
+
+2. **FRF eligibility depends on Membership Fee**
+
+   * If **Membership Fee = PAID** → the member becomes **eligible for FRF** and their FRF status becomes **Active/Eligible**.
+   * If **Membership Fee = UNPAID/PENDING** → the member is **NOT eligible for FRF**.
+   * Their FRF status must remain **Inactive/Not Eligible**.
+   * They must NOT be allowed to pay or be charged the SAR 50 FRF fee while their membership fee is unpaid.
+
+3. **FRF payment controls**
+
+   * Disable/hide the FRF payment option for members who have not paid their membership fee.
+   * If someone tries to add an FRF payment manually, the system should block it and show a clear message such as:
+     **"FRF payment is unavailable because the membership fee has not been paid."**
+
+4. **Automatic status update**
+
+   * Once the membership fee is recorded as paid, automatically make the member **FRF Eligible/Active**.
+   * Then they can be included in the current FRF case and charged the **SAR 50 per case**.
+   * If a membership payment is later reversed/refunded or marked unpaid, FRF eligibility should automatically become inactive again, while preserving the historical payment records.
+
+5. **Member profile**
+   Clearly show:
+
+   * Membership Fee: **PAID / UNPAID**
+   * FRF Eligibility: **ACTIVE / INACTIVE**
+   * FRF Case Payments: **PAID / UNPAID** for each individual FRF case
+
+The key rule is:
+
+**Membership Fee Paid → FRF Active → Eligible to pay SAR 50 FRF**
+
+**Membership Fee Unpaid → FRF Inactive → NOT eligible to pay FRF**
+
+Make this rule consistent everywhere in the portal — Members list, Member Profile, FRF module, payment screens, imports, and reports.

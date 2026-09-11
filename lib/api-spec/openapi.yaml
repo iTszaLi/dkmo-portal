@@ -374,6 +374,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/DashboardSummary"
 
+  /dashboard/command-center:
+    get:
+      operationId: getDashboardCommandCenter
+      tags: [dashboard]
+      summary: Executive dashboard command center
+      responses:
+        "200":
+          description: Authoritative executive dashboard aggregates
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardCommandCenter"
+
   /dashboard/pending:
     get:
       operationId: getPendingMembers
@@ -1980,7 +1993,7 @@ components:
           type: number
         feeStatus:
           type: string
-          enum: [paid, partial, pending, unpaid, exempt]
+          enum: [paid, partial, pending, unpaid, exempt, review, not_applicable]
         feePaidAt:
           type: ["string", "null"]
           format: date-time
@@ -2003,6 +2016,24 @@ components:
           type: string
         refMemberId:
           type: string
+        legacyMemberId:
+          type: string
+        legacyRecordStatus:
+          type: string
+          enum: [portal_member, legacy_record, confirmed_match, confirmed_different_person, needs_review, possible_duplicate]
+        legacyImportBatchId:
+          type: ["string", "null"]
+          format: uuid
+        legacyMemberStatus:
+          type: string
+        legacyReferenceCode:
+          type: string
+        legacyReferenceName:
+          type: string
+        legacyMembershipFeeRecords:
+          type: array
+          items:
+            $ref: "#/components/schemas/LegacyMembershipFeeRecord"
         createdAt:
           type: string
           format: date-time
@@ -2070,7 +2101,7 @@ components:
           type: number
         feeStatus:
           type: string
-          enum: [paid, partial, pending, unpaid, exempt]
+          enum: [paid, partial, pending, unpaid, exempt, review, not_applicable]
         feePaidAt:
           type: ["string", "null"]
           format: date-time
@@ -2088,6 +2119,24 @@ components:
           type: string
         refMemberId:
           type: string
+        legacyMemberId:
+          type: string
+        legacyRecordStatus:
+          type: string
+          enum: [portal_member, legacy_record, confirmed_match, confirmed_different_person, needs_review, possible_duplicate]
+        legacyImportBatchId:
+          type: ["string", "null"]
+          format: uuid
+        legacyMemberStatus:
+          type: string
+        legacyReferenceCode:
+          type: string
+        legacyReferenceName:
+          type: string
+        legacyMembershipFeeRecords:
+          type: array
+          items:
+            $ref: "#/components/schemas/LegacyMembershipFeeRecord"
         createdAt:
           type: string
           format: date-time
@@ -2118,6 +2167,34 @@ components:
         - refMemberId
         - createdAt
         - updatedAt
+
+    LegacyMembershipFeeRecord:
+      type: object
+      properties:
+        sourceTable: { type: string }
+        sourceRow: { type: string }
+        legacyMemberId: { type: string }
+        paymentDate: { type: string }
+        entryDate: { type: string }
+        details: { type: string }
+        amount:
+          type: ["number", "null"]
+        billNumber: { type: string }
+        remarks: { type: string }
+        historicalStatus: { type: string }
+        reviewIssue: { type: string }
+      required:
+        - sourceTable
+        - sourceRow
+        - legacyMemberId
+        - paymentDate
+        - entryDate
+        - details
+        - amount
+        - billNumber
+        - remarks
+        - historicalStatus
+        - reviewIssue
 
     MemberInput:
       type: object
@@ -2158,7 +2235,7 @@ components:
           type: number
         feeStatus:
           type: string
-          enum: [paid, partial, pending, unpaid, exempt]
+          enum: [paid, partial, pending, unpaid, exempt, review, not_applicable]
         frfStatus:
           type: string
           enum: [active, suspended, inactive]
@@ -2184,7 +2261,7 @@ components:
       properties:
         feeStatus:
           type: string
-          enum: [paid, partial, pending, unpaid, exempt]
+          enum: [paid, partial, pending, unpaid, exempt, review, not_applicable]
       required:
         - feeStatus
 
@@ -2235,7 +2312,7 @@ components:
           type: ["string", "null"]
         feeStatus:
           type: string
-          enum: [paid, partial, pending, unpaid, exempt]
+          enum: [paid, partial, pending, unpaid, exempt, review, not_applicable]
       required:
         - id
         - fullName
@@ -2353,6 +2430,319 @@ components:
         - paymentMethod
         - receiptNumber
 
+    DashboardCommandCenterGrowth:
+      type: object
+      properties:
+        month:
+          type: string
+        count:
+          type: integer
+      required: [month, count]
+
+    DashboardCommandCenterMembership:
+      type: object
+      properties:
+        total:
+          type: integer
+        active:
+          type: integer
+        inactive:
+          type: integer
+        paidFees:
+          type: integer
+        unpaidFees:
+          type: integer
+        unassessedFees:
+          type: integer
+        newThisMonth:
+          type: integer
+        awaitingApproval:
+          type: integer
+        collectionRate:
+          type: integer
+        growth:
+          type: array
+          items:
+            $ref: "#/components/schemas/DashboardCommandCenterGrowth"
+      required: [total, active, inactive, paidFees, unpaidFees, unassessedFees, newThisMonth, awaitingApproval, collectionRate, growth]
+
+    DashboardCommandCenterReferrer:
+      type: object
+      properties:
+        memberId:
+          type: string
+        fullName:
+          type: string
+        membershipId:
+          type: string
+        count:
+          type: integer
+        activeCount:
+          type: integer
+        referrerActive:
+          type: boolean
+      required: [memberId, fullName, membershipId, count, activeCount, referrerActive]
+
+    DashboardCommandCenterReferrals:
+      type: object
+      properties:
+        totalReferred:
+          type: integer
+        activeReferred:
+          type: integer
+        activeReferrers:
+          type: integer
+        topReferrers:
+          type: array
+          items:
+            $ref: "#/components/schemas/DashboardCommandCenterReferrer"
+      required: [totalReferred, activeReferred, activeReferrers, topReferrers]
+
+    DashboardCommandCenterActiveFrfCase:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        approvedDate:
+          type: ["string", "null"]
+          format: date-time
+        targetAmount:
+          type: number
+      required: [id, title, approvedDate, targetAmount]
+
+    DashboardCommandCenterFrf:
+      type: object
+      properties:
+        pendingClaims:
+          type: integer
+        activeCase:
+          oneOf:
+            - $ref: "#/components/schemas/DashboardCommandCenterActiveFrfCase"
+            - type: "null"
+        collected:
+          type: number
+        outstanding:
+          type: number
+        eligibleMembers:
+          type: integer
+        paidMembers:
+          type: integer
+        unpaidMembers:
+          type: integer
+        collectionPercentage:
+          type: integer
+      required: [pendingClaims, activeCase, collected, outstanding, eligibleMembers, paidMembers, unpaidMembers, collectionPercentage]
+
+    DashboardCommandCenterMeeting:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        meetingDate:
+          type: string
+          format: date-time
+      required: [id, title, meetingDate]
+
+    DashboardCommandCenterLastMeeting:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        meetingDate:
+          type: string
+          format: date-time
+        present:
+          type: integer
+        eligible:
+          type: integer
+        attendanceRecorded:
+          type: boolean
+        attendancePercentage:
+          type: integer
+      required: [id, title, meetingDate, present, eligible, attendanceRecorded, attendancePercentage]
+
+    DashboardCommandCenterCommittee:
+      type: object
+      properties:
+        memberCount:
+          type: integer
+        term:
+          type: ["string", "null"]
+        startDate:
+          type: ["string", "null"]
+        endDate:
+          type: ["string", "null"]
+        upcomingMeeting:
+          oneOf:
+            - $ref: "#/components/schemas/DashboardCommandCenterMeeting"
+            - type: "null"
+        lastMeeting:
+          oneOf:
+            - $ref: "#/components/schemas/DashboardCommandCenterLastMeeting"
+            - type: "null"
+      required: [memberCount, term, startDate, endDate, upcomingMeeting, lastMeeting]
+
+    DashboardCommandCenterFinance:
+      type: object
+      properties:
+        membershipCollected:
+          type: number
+        membershipOutstanding:
+          type: number
+        frfCollected:
+          type: number
+        frfOutstanding:
+          type: number
+        activeLoans:
+          type: integer
+        loanOutstanding:
+          type: number
+        pendingLoanApplications:
+          type: integer
+        sponsorCollected:
+          type: number
+        sponsorPledged:
+          type: number
+        sponsorOutstanding:
+          type: number
+        totalSponsors:
+          type: integer
+      required: [membershipCollected, membershipOutstanding, frfCollected, frfOutstanding, activeLoans, loanOutstanding, pendingLoanApplications, sponsorCollected, sponsorPledged, sponsorOutstanding, totalSponsors]
+
+    DashboardCommandCenterUpcomingItem:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        date:
+          type: string
+          format: date-time
+        kind:
+          type: string
+        href:
+          type: string
+      required: [id, title, date, kind, href]
+
+    DashboardCommandCenterTask:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        date:
+          type: string
+          format: date-time
+        status:
+          type: string
+        priority:
+          type: string
+        href:
+          type: string
+      required: [id, title, date, status, priority, href]
+
+    DashboardCommandCenterTasks:
+      type: object
+      properties:
+        overdue:
+          type: integer
+        dueToday:
+          type: integer
+        dueThisWeek:
+          type: integer
+        recentlyCompleted:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/DashboardCommandCenterTask"
+      required: [overdue, dueToday, dueThisWeek, recentlyCompleted, items]
+
+    DashboardCommandCenterWelfare:
+      type: object
+      properties:
+        activePrograms:
+          type: integer
+        pendingApplications:
+          type: integer
+        activeCases:
+          type: integer
+        completedCases:
+          type: integer
+        beneficiaries:
+          type: integer
+        amountDistributed:
+          type: number
+      required: [activePrograms, pendingApplications, activeCases, completedCases, beneficiaries, amountDistributed]
+
+    DashboardCommandCenterDocuments:
+      type: object
+      properties:
+        pendingReview:
+          type: integer
+        expiringSoon:
+          type: integer
+        expired:
+          type: integer
+      required: [pendingReview, expiringSoon, expired]
+
+    DashboardCommandCenterActivity:
+      type: object
+      properties:
+        id:
+          type: string
+        action:
+          type: string
+        module:
+          type: string
+        entityName:
+          type: string
+        details:
+          type: string
+        userName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, action, module, entityName, details, userName, createdAt]
+
+    DashboardCommandCenter:
+      type: object
+      properties:
+        membership:
+          $ref: "#/components/schemas/DashboardCommandCenterMembership"
+        referrals:
+          $ref: "#/components/schemas/DashboardCommandCenterReferrals"
+        frf:
+          $ref: "#/components/schemas/DashboardCommandCenterFrf"
+        committee:
+          $ref: "#/components/schemas/DashboardCommandCenterCommittee"
+        finance:
+          $ref: "#/components/schemas/DashboardCommandCenterFinance"
+        upcoming:
+          type: array
+          items:
+            $ref: "#/components/schemas/DashboardCommandCenterUpcomingItem"
+        tasks:
+          $ref: "#/components/schemas/DashboardCommandCenterTasks"
+        welfare:
+          $ref: "#/components/schemas/DashboardCommandCenterWelfare"
+        documents:
+          $ref: "#/components/schemas/DashboardCommandCenterDocuments"
+        recentActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/DashboardCommandCenterActivity"
+      required: [membership, referrals, frf, committee, finance, upcoming, tasks, welfare, documents, recentActivity]
+
     DashboardSummary:
       type: object
       properties:
@@ -2365,6 +2755,10 @@ components:
         unpaidMembersCount:
           type: integer
         totalFeesCollected:
+          type: number
+        totalMembershipFeesCollected:
+          type: number
+        loanMoneyOutstanding:
           type: number
         outstandingFees:
           type: number
@@ -2400,6 +2794,8 @@ components:
         - pendingMembersCount
         - unpaidMembersCount
         - totalFeesCollected
+        - totalMembershipFeesCollected
+        - loanMoneyOutstanding
         - outstandingFees
         - membershipFeeTotal
         - activeMembersCount
@@ -2932,6 +3328,9 @@ components:
         caseStatus:
           type: string
           enum: [open, closed]
+        collectionStatus:
+          type: string
+          enum: [not_created, active, closed, completed]
         closingDate:
           type: ["string", "null"]
           format: date-time
@@ -2943,12 +3342,23 @@ components:
         amountRequested: { type: number }
         amountApproved: { type: number }
         contributionAmount: { type: number }
+        disbursedAmount: { type: number }
+        disbursementReference: { type: string }
         collectedAmount:
           type: number
-          description: Live collected total (list endpoint only)
+          description: Live FRF member-contribution total (list endpoint only)
+        collectionExpectedAmount:
+          type: number
+          description: Expected FRF member contributions for this case
+        collectionOutstandingAmount:
+          type: number
+          description: Outstanding FRF member contributions for this case
+        collectionRate:
+          type: number
+          description: Percent of FRF member contributions collected, 0-100
         targetProgress:
           type: number
-          description: Percent of target collected, 0-100 (list endpoint only)
+          description: Compatibility alias for collectionRate
         status:
           type: string
           enum: [pending, under_review, approved, rejected, disbursed]
@@ -2969,6 +3379,7 @@ components:
         - id
         - title
         - caseStatus
+        - collectionStatus
         - claimantName
         - membershipId
         - claimType
@@ -3010,7 +3421,8 @@ components:
           enum: [death_benefit, emergency, air_ticket, other]
         amountRequested: { type: number, minimum: 0 }
         amountApproved: { type: number, minimum: 0 }
-        contributionAmount: { type: number, minimum: 0 }
+        disbursedAmount: { type: number, minimum: 0 }
+        disbursementReference: { type: string }
         status:
           type: string
           enum: [pending, under_review, approved, rejected, disbursed]
@@ -3033,9 +3445,16 @@ components:
         total: { type: integer }
         pendingCount: { type: integer }
         approvedCount: { type: integer }
+        disbursedCount: { type: integer }
         rejectedCount: { type: integer }
         totalDisbursed: { type: number }
         totalRequested: { type: number }
+        totalApproved: { type: number }
+        totalContributionsCollected: { type: number }
+        activeCollectionCount: { type: integer }
+        activeCollectionExpected: { type: number }
+        activeCollectionCollected: { type: number }
+        activeCollectionOutstanding: { type: number }
         byType:
           type: array
           items:
@@ -3045,7 +3464,7 @@ components:
               count: { type: integer }
               totalAmount: { type: number }
             required: [type, count, totalAmount]
-      required: [total, pendingCount, approvedCount, rejectedCount, totalDisbursed, totalRequested, byType]
+      required: [total, pendingCount, approvedCount, disbursedCount, rejectedCount, totalDisbursed, totalRequested, totalApproved, totalContributionsCollected, activeCollectionCount, activeCollectionExpected, activeCollectionCollected, activeCollectionOutstanding, byType]
 
     FrfContributor:
       type: object
@@ -3085,6 +3504,12 @@ components:
         collectedAmount: { type: number }
         outstandingAmount: { type: number }
         targetAmount: { type: number }
+        reliefRequestedAmount: { type: number }
+        reliefApprovedAmount: { type: number }
+        reliefDisbursedAmount: { type: number }
+        collectionStatus:
+          type: string
+          enum: [not_created, active, closed, completed]
         remainingToTarget: { type: number }
         targetProgress: { type: number }
         collectionRate: { type: number }

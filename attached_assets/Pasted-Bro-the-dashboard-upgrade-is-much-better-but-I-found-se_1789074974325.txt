@@ -1,0 +1,636 @@
+Bro, the dashboard upgrade is much better, but I found several issues that must be fixed before we consider the Dashboard Master Upgrade complete.
+
+Do NOT redesign everything again.
+
+This is now a focused DATA INTEGRITY + PRODUCTION CLEANUP + TESTING task.
+
+# 1. FIX THE "NEW THIS MONTH" MEMBERSHIP METRIC — CRITICAL
+
+The dashboard currently displays:
+
+"1,140 new this month"
+
+in multiple places.
+
+This is misleading because 1,140 is the current total registered member count, not necessarily the number of members created during September 2026.
+
+Fix this everywhere.
+
+Use:
+
+"1,140 registered members · current total"
+
+and separately calculate:
+
+"New members this month: X"
+
+X MUST come from the authoritative member creation/approval date.
+
+Do not simply reuse totalMembers.
+
+If the system cannot determine the actual creation date for legacy/imported members, do NOT pretend they were created this month.
+
+For legacy records where creation date is unavailable:
+
+* exclude them from "new this month"
+* keep them in total registered members
+* do not fabricate dates
+
+Also make sure:
+
+Current total ≠ New this month
+
+unless the data genuinely supports that.
+
+Add a regression test specifically preventing total registered members from being displayed as monthly new members.
+
+---
+
+# 2. VERIFY FRF ELIGIBILITY AGAINST MEMBERSHIP STATUS — CRITICAL
+
+Current dashboard:
+
+Membership:
+
+* Registered: 1,140
+* Active: 1,103
+* Fee paid: 1,103
+* Fee unpaid: 0
+* Fee unassessed: 37
+
+FRF:
+
+* Eligible contributors: 1,103
+* Contributors unpaid: 1,103
+* SAR 55,150 outstanding
+
+This appears mathematically correct:
+
+1,103 × SAR 50 = SAR 55,150.
+
+BUT do not rely only on the matching numbers.
+
+Verify that the FRF eligible contributor query uses the authoritative membership eligibility/business rule.
+
+The rule is:
+
+Membership paid/eligible → FRF eligible
+
+Membership unpaid → FRF inactive/not eligible
+
+Membership unassessed → FRF inactive/not eligible
+
+Exempt FRF → not payable
+
+Cancelled FRF → not payable
+
+Only genuinely eligible members should be included in:
+
+* Eligible contributors
+* Contributors unpaid
+* FRF outstanding amount
+* Collection percentage denominator
+
+Add automated regression tests for:
+
+1. Paid membership + unpaid FRF
+2. Paid membership + paid FRF
+3. Unpaid membership + FRF
+4. Unassessed membership + FRF
+5. Exempt FRF
+6. Cancelled FRF
+
+Expected behavior must be enforced at the backend/API level, not just the dashboard.
+
+---
+
+# 3. FIX TEST DATA APPEARING IN THE REAL AUDIT TRAIL — CRITICAL
+
+The current dashboard Recent Activity contains entries such as:
+
+"api-regression-87eeda37-4400-4a02-a6c4-3ee0f3b6e3d0"
+
+with:
+
+* Document Created
+* Document Updated
+* Document Deleted
+
+These appear to be automated regression-test records.
+
+DO NOT allow automated test data to pollute the production/admin dashboard.
+
+Find out why the Playwright/API regression tests are writing to the same operational database.
+
+Implement the safest appropriate approach:
+
+Preferred:
+
+Use an isolated test database/environment for automated tests.
+
+If that is not currently possible:
+
+Ensure test-created records are tagged as test data and cleaned up reliably after tests.
+
+The production dashboard Recent Activity should contain genuine operational activity only.
+
+Do NOT simply hide these records from the UI while leaving them in the production audit database.
+
+The underlying data separation must be correct.
+
+IMPORTANT:
+
+Do not delete genuine historical audit records.
+
+Only remove/clean records that are definitively identified as test-generated.
+
+---
+
+# 4. AUDIT TRAIL SHOULD SHOW HUMAN-READABLE ACTIVITY
+
+Keep the technical event type internally.
+
+But the dashboard should display useful wording.
+
+For example:
+
+Instead of:
+
+payment_created
+
+show:
+
+"Nazeer Hassan · Payment Created"
+
+Details:
+
+"Membership fee payment of SAR 100 recorded"
+
+Keep the raw event type available in the audit detail page for administrators/developers.
+
+---
+
+# 5. FIX DASHBOARD PERIOD LANGUAGE
+
+The header currently says:
+
+"A clear read on membership, funds, committee work and community response for September 2026."
+
+But much of the dashboard is CURRENT STATUS or LIFETIME.
+
+Do not imply everything is September-only.
+
+Change the wording to something like:
+
+"Current operational status and September 2026 activity."
+
+Then clearly label individual metrics:
+
+CURRENT TOTAL
+
+LIFETIME
+
+CURRENT CASE
+
+CURRENT BALANCE
+
+THIS MONTH
+
+LAST 12 MONTHS
+
+This is important for financial accuracy.
+
+---
+
+# 6. FIX THE MEMBERSHIP SECTION
+
+Use this structure:
+
+## Membership
+
+### Current membership
+
+1,140
+Registered members
+
+1,103
+Active members
+
+37
+Fee-unassessed
+
+0
+Fee-unpaid
+
+0
+Awaiting approval
+
+### Membership fees
+
+1,103
+Fee paid
+
+0
+Fee unpaid
+
+37
+Fee unassessed
+
+100%
+Assessed collection rate
+
+### Growth
+
+New members this month: X
+
+New members last 12 months: X
+
+Do not label the 1,140 total as "new."
+
+---
+
+# 7. MAKE THE 37 UNASSESSED MEMBERS CLEAR
+
+"Fee unassessed" should not be visually treated as "unpaid."
+
+These are different states.
+
+Use:
+
+Fee paid
+Fee unpaid
+Fee unassessed
+
+And explain with a tooltip:
+
+"Unassessed means the membership fee status has not yet been confirmed. It is not counted as unpaid until assessed."
+
+Do NOT include unassessed members in outstanding membership balances.
+
+Do NOT include them as FRF-eligible contributors.
+
+---
+
+# 8. FRF DASHBOARD SHOULD SAY "CURRENT CASE"
+
+The current display is good, but make the scope impossible to misunderstand.
+
+Use:
+
+## FRF — Current Collection Case
+
+Death Benefit
+
+Status: Approved / Active
+
+Target:
+SAR 55,150
+
+Collected:
+SAR 0
+
+Outstanding:
+SAR 55,150
+
+Eligible contributors:
+1,103
+
+Contributors paid:
+0
+
+Contributors unpaid:
+1,103
+
+Collection:
+0%
+
+Do not make "FRF Position" look like the organization's entire lifetime FRF balance.
+
+---
+
+# 9. FRF ARITHMETIC REGRESSION TEST
+
+Add an automated assertion:
+
+eligible contributors × contribution amount = expected outstanding amount
+
+Example:
+
+1,103 × SAR 50 = SAR 55,150
+
+But calculate dynamically from the actual contribution amount.
+
+Do not hardcode 50 into the dashboard.
+
+The dashboard should obtain the current case contribution amount from the authoritative case/business rule.
+
+---
+
+# 10. EXEMPT AND CANCELLED FRF TEST
+
+This is especially important.
+
+For every FRF case:
+
+EXEMPT:
+
+* visible in member history
+* status = Exempt
+* amount due = 0 for current collection purposes
+* excluded from outstanding
+* excluded from unpaid contributor count
+* excluded from collection denominator
+
+CANCELLED:
+
+* visible in history
+* status = Cancelled
+* excluded from outstanding
+* excluded from unpaid contributor count
+* excluded from collection denominator
+
+Do not delete the historical record.
+
+---
+
+# 11. MANUAL REFRESH
+
+The new:
+
+"Refresh data"
+
+button is good.
+
+Verify:
+
+* it actually requests fresh authoritative data
+* loading state appears
+* last-updated timestamp changes
+* no stale cached values remain
+* current URL remains unchanged
+* filters/navigation state are preserved
+* page does not jump to the top unnecessarily
+
+If refresh fails:
+
+show:
+
+"Unable to refresh dashboard data"
+
+with:
+
+"Retry"
+
+Do not replace failed values with zero.
+
+---
+
+# 12. ATTENTION REQUIRED
+
+Current:
+
+"1,103 FRF contributions pending, SAR 55,150 outstanding"
+
+This is good IF the number comes directly from the current active FRF case.
+
+Verify that:
+
+* exempt rows are excluded
+* cancelled rows are excluded
+* members with unpaid/unassessed membership are excluded
+* paid contributors are excluded
+* only the current active collection case is included
+
+Clicking the alert should open the correct FRF page and preserve:
+
+returnTo=/dashboard
+
+When the user returns, they should return to the dashboard.
+
+---
+
+# 13. NAVIGATION / BACK BUTTON — DO NOT REGRESS
+
+Continue testing the global navigation problem.
+
+Test:
+
+Dashboard
+→ Members
+→ Member Profile
+→ Back
+
+Dashboard
+→ FRF
+→ FRF Case
+→ Back
+
+Dashboard
+→ Payments
+→ Member/payment
+→ Back
+
+Dashboard
+→ Loans
+→ Loan
+→ Back
+
+Dashboard
+→ Committee
+→ Committee Member
+→ Back
+
+Dashboard
+→ Documents
+→ Document
+→ Back
+
+Dashboard
+→ Welfare
+→ Case
+→ Back
+
+Dashboard
+→ Calendar
+→ Event
+→ Back
+
+The user must return to the previous context, not a random module.
+
+Preserve:
+
+* filters
+* search
+* pagination
+* tabs
+* query parameters
+* selected case
+* selected committee term
+
+---
+
+# 14. ROUTE VERIFICATION
+
+Continue the route audit.
+
+Verify every dashboard destination:
+
+Members
+Payments
+FRF
+Tasks
+Reports
+Committee
+Calendar
+Welfare
+Documents
+Audit
+Loans
+Sponsors
+Quick Actions
+
+Test:
+
+* normal click
+* direct URL
+* browser refresh
+* browser Back
+* browser Forward
+* invalid ID
+* unauthorized user
+* deleted record
+* missing record
+
+Do not silently redirect errors to /dashboard.
+
+---
+
+# 15. PLAYWRIGHT BROWSER VERIFICATION
+
+The current Playwright suite is discoverable but Chromium is missing.
+
+Do NOT claim browser tests passed.
+
+Once Chromium is available, run the complete dashboard suite.
+
+At minimum verify:
+
+1. Dashboard loads
+2. Attention Required works
+3. Membership metrics are correct
+4. FRF metrics are correct
+5. Manual refresh works
+6. Calendar destination works
+7. Welfare destination works
+8. All dashboard links work
+9. Back navigation works
+10. URL/query state is preserved
+11. Unauthorized routes are blocked
+12. No console errors
+13. No unexpected API failures
+14. No random redirects
+
+Until Chromium is available, clearly report:
+
+"Browser execution pending — Chromium unavailable."
+
+---
+
+# 16. IMPORTANT — DO NOT CHANGE HISTORICAL DKMO DATA
+
+Do not modify:
+
+* legacy members
+* historical referrals
+* historical membership payments
+* historical FRF records
+* committee history
+* historical audit records
+
+unless a record is definitively identified as test-generated.
+
+---
+
+# 17. FINAL DASHBOARD ACCEPTANCE TEST
+
+Before saying complete, verify:
+
+[ ] Registered member total is not incorrectly labelled "new this month"
+
+[ ] New-member count uses actual creation/approval dates
+
+[ ] Fee paid/unpaid/unassessed reconcile
+
+[ ] Unassessed is not treated as unpaid
+
+[ ] Unassessed is not FRF eligible
+
+[ ] Unpaid membership is not FRF eligible
+
+[ ] Paid membership is FRF eligible when other eligibility rules permit
+
+[ ] Exempt FRF rows excluded from totals
+
+[ ] Cancelled FRF rows excluded from totals
+
+[ ] Paid FRF rows excluded from outstanding
+
+[ ] FRF outstanding = eligible unpaid contributors × case contribution amount
+
+[ ] Dashboard FRF values match FRF module
+
+[ ] Dashboard membership values match Payments module
+
+[ ] Test data does not pollute production audit activity
+
+[ ] Manual refresh works
+
+[ ] Last updated timestamp works
+
+[ ] Attention Required works
+
+[ ] All dashboard routes work
+
+[ ] Calendar route works
+
+[ ] Welfare route works
+
+[ ] Browser Back works
+
+[ ] Browser Forward works
+
+[ ] Deep links work
+
+[ ] Query parameters survive navigation
+
+[ ] Permissions are enforced server-side
+
+[ ] Failed API calls do not appear as zero
+
+[ ] No unexpected redirects
+
+[ ] No console errors
+
+[ ] Production build passes
+
+[ ] Typechecks pass
+
+[ ] API tests pass
+
+[ ] Playwright suite is ready
+
+[ ] Browser-based Playwright execution is only reported as passed if Chromium actually ran
+
+# FINAL REPORT
+
+When finished, report only what was actually verified.
+
+Separate:
+
+PASSING
+
+PENDING BROWSER VERIFICATION
+
+REMAINING ISSUES
+
+Do not claim browser verification if Chromium is unavailable.

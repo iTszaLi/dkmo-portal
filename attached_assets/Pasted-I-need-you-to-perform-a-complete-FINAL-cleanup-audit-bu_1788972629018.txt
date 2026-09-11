@@ -1,0 +1,569 @@
+I need you to perform a complete FINAL cleanup, audit, bug-fix, and production-readiness pass on the entire DKMO Portal.
+
+IMPORTANT DATA RULE:
+
+* DELETE/REMOVE ALL SAMPLE, DEMO, TEST, MOCK, SEED, OR FAKE TRANSACTIONAL DATA that I have entered/generated in the portal.
+* DO NOT delete or modify the real 1,140 member records.
+* DO NOT delete or modify the 30 real committee member records.
+* The ONLY data that should remain from the current dataset is:
+
+  1. 1,140 DKMO members
+  2. 30 committee members
+* Everything else that is sample/test/demo data must be removed.
+* Do not invent replacement data.
+* Do not reset or alter the real member/committee information.
+
+Before making any destructive changes:
+
+* Create a secure backup or export of the current database if the environment supports it.
+* Identify and preserve the 1,140 real members.
+* Identify and preserve the 30 real committee members.
+* Remove only records that are clearly confirmed as sample, demo, test, mock, seed, or fake data.
+* If you are unsure whether a record is real or sample data, do not delete it automatically. Report it for review instead.
+
+After cleaning the data, do a FULL end-to-end audit of the application.
+
+### 1. MEMBERS MODULE
+
+Check the complete member lifecycle:
+
+* Creating a new member must work correctly.
+* Editing a member must work.
+* Deleting/deactivating a member must work according to the system's rules.
+* Member IDs must remain unique and consistent.
+* Newly created members must immediately appear everywhere they are supposed to appear.
+* Search, filters, pagination and member counts must work.
+* Member status must remain consistent across all modules.
+* Membership fee status must be correctly connected to the member.
+* FRF status must be correctly connected to the member.
+* Referral information must work.
+* No duplicate members should be accidentally created.
+* Make sure the 1,140 existing real members are not corrupted or duplicated.
+* New member creation must use server-side validation and enforce uniqueness.
+* Member records must not be exposed to unauthorized users.
+
+### 2. COMMITTEE / EXECUTIVE MODULE
+
+Check the complete promotion/demotion workflow.
+
+When an existing member is promoted/made an Executive/Committee member:
+
+* It must actually appear in the Committee/Executive module.
+* The relationship between the member and committee record must be correct.
+* The same person must not accidentally become a duplicate member.
+* Their member profile should clearly show their committee/executive role.
+* Removing/demoting an executive should correctly update their role.
+* Committee counts must update automatically.
+* The existing 30 committee members must remain intact.
+* Creating a new committee member from an existing member must use the existing member record rather than creating a second person.
+* Committee-only actions must require appropriate authorization.
+
+### 3. MEETING & ATTENDANCE
+
+Verify that:
+
+* Meetings can be created.
+* Committee attendance works.
+* Attendance is linked to the correct committee members.
+* Attendance records do not create duplicate members.
+* Meeting history works.
+* Editing/deleting meetings does not corrupt attendance data.
+* The committee attendance should be based on the actual committee list.
+* Unauthorized users cannot modify meetings or attendance.
+
+### 4. MEMBERSHIP FEES
+
+Test the entire membership-fee workflow:
+
+* Mark membership fee as paid.
+* Mark it pending/unpaid where applicable.
+* Record payment method.
+* Record payment date/time and responsible user where applicable.
+* Payment must update the correct member.
+* Dashboard totals must update correctly.
+* Pending-fee counts must update correctly.
+* Reminder pages must use the actual outstanding members.
+* No fake payment records should remain.
+* Make sure membership fee data is not accidentally mixed with FRF payments.
+* Validate payment amounts, dates, methods and member references on the server.
+* Prevent duplicate submissions and duplicate payment records.
+
+### 5. FRF
+
+Test the COMPLETE FRF workflow:
+
+* Create/open an FRF case.
+* Set the target amount.
+* Identify members who owe the FRF contribution.
+* Record FRF payments.
+* Support paid/partial/pending status correctly.
+* Show each member's actual outstanding FRF amount.
+* Close an FRF case correctly.
+* Make sure closing one case does not affect another case.
+* FRF reminders must work.
+* Dashboard FRF totals must match the underlying payment records.
+* FRF contributions must be separate from membership fees.
+* Validate all FRF amounts, statuses, dates and relationships server-side.
+* Prevent unauthorized access to FRF records.
+
+### 6. PAYMENTS & RECEIPTS
+
+Audit:
+
+* Payment creation.
+* Payment editing.
+* Payment validation.
+* Payment deletion/rollback rules.
+* Payment methods.
+* Receipts.
+* Receipt numbers/IDs.
+* Receipt generation.
+* Receipt/member linkage.
+* Payment/member linkage.
+* Totals and reports.
+
+Make sure a payment can NEVER accidentally be assigned to the wrong member.
+
+Also verify:
+
+* Receipt identifiers are unique.
+* Payment operations are atomic and cannot leave partial or inconsistent records.
+* Payment edits and reversals are recorded in the audit trail.
+* Sensitive payment information is not exposed in URLs, logs or client-side code.
+* Only authorized users can create, edit, reverse or delete payments.
+
+### 7. LOANS
+
+Test the complete loan workflow:
+
+* Create loan.
+* Assign correct member.
+* Record amount.
+* Record repayments where supported.
+* Calculate outstanding balance correctly.
+* Update loan status.
+* Loan history.
+* Loan reports.
+* Dashboard statistics.
+* Make sure sample loans are removed.
+* Validate loan amounts, repayment amounts, dates and member references.
+* Prevent repayments from exceeding the valid outstanding balance unless the system explicitly supports overpayments.
+* Ensure loan calculations are consistent across the UI, API and reports.
+
+### 8. SPONSORS
+
+Check:
+
+* Sponsor creation/editing.
+* Commitment amount.
+* Collected amount.
+* Outstanding balance.
+* Payment/collection status.
+* Responsible committee member.
+* Sponsor reports.
+* Dashboard totals.
+
+Remove all sample sponsor records.
+
+Validate all sponsor amounts, statuses, dates and committee references server-side.
+
+### 9. FRF CLAIMS / COMMUNITY
+
+Check:
+
+* FRF claim creation.
+* Claim review/status.
+* Approval/rejection.
+* Beneficiary information.
+* Disbursement.
+* Claim history.
+* Correct dashboard statistics.
+
+Remove all sample/demo claims and transactional data.
+
+Ensure claim approval, rejection and disbursement actions require appropriate authorization and are recorded in the audit trail.
+
+### 10. WELFARE / SERVICES / EVENTS / TASKS
+
+Check every workflow:
+
+* Create.
+* Edit.
+* Delete/archive.
+* Status changes.
+* Member linkage.
+* Committee linkage.
+* Dates.
+* Search/filter.
+* Dashboard/report integration.
+
+Remove all sample/demo records.
+
+Ensure all inputs are validated, all relationships are checked, and unauthorized users cannot modify protected records.
+
+### 11. DOCUMENTS
+
+Check:
+
+* Upload.
+* View.
+* Download.
+* Delete/archive.
+* Correct entity/member linkage.
+* No broken document links.
+* File type and file size validation.
+* Secure file storage.
+* Authorization checks for every document access.
+* No direct public access to private documents unless explicitly intended.
+* No executable or dangerous file uploads.
+* No sensitive file paths or storage credentials exposed.
+
+### 12. AUDIT TRAIL
+
+The audit trail must correctly record important actions such as:
+
+* Member creation/update.
+* Committee promotion/demotion.
+* Payment creation/update.
+* FRF changes.
+* Loan changes.
+* Settings/security changes.
+* Imports/rollbacks.
+* Claim approvals/rejections.
+* Document uploads/deletions.
+* User and permission changes.
+
+Make sure audit records identify the correct user, action, entity and timestamp.
+
+Audit records should be protected from unauthorized modification or deletion.
+
+### 13. DASHBOARD
+
+The dashboard MUST NOT contain hardcoded/demo statistics.
+
+Every number must come from the actual database.
+
+Verify:
+
+* Total Members = actual member count.
+* Active Members = actual active count.
+* Committee count = actual committee count.
+* Membership fees = actual payment records.
+* FRF totals = actual FRF records.
+* Loans = actual loan records.
+* Claims = actual claim records.
+* Sponsors = actual sponsor records.
+* Recent activity = actual audit records.
+* Charts = actual database data.
+
+IMPORTANT:
+
+Do not display fake numbers such as 1,102 recruited, SAR 108,500 collections, fake sponsors, fake claims, fake loans, etc. unless those records genuinely exist after cleanup.
+
+If there is no real data for a statistic, display 0 / empty state instead of inventing sample data.
+
+Dashboard queries must be efficient, accurate and protected from unauthorized data exposure.
+
+### 14. LINKS & NAVIGATION
+
+Test EVERY navigation link in the application.
+
+Check:
+
+* Sidebar links.
+* Dashboard cards.
+* Quick actions.
+* Buttons.
+* View Details.
+* View All.
+* Edit buttons.
+* Create buttons.
+* Back buttons.
+* Breadcrumbs.
+* Filters.
+* Search results.
+* Member profile links.
+* Committee links.
+* Payment links.
+* FRF links.
+* Loan links.
+* Report links.
+
+No broken routes, 404 pages, dead buttons, incorrect redirects or links pointing to the wrong record.
+
+Verify that protected routes enforce authentication and authorization on the server, not only in the frontend.
+
+### 15. DATABASE / DATA INTEGRITY
+
+Perform a database integrity audit.
+
+Check for:
+
+* Duplicate records.
+* Orphaned records.
+* Broken foreign keys/relationships.
+* Invalid IDs.
+* Null values where required.
+* Incorrect member references.
+* Incorrect committee references.
+* Duplicate payment records.
+* Duplicate transactions.
+* Inconsistent statuses.
+* Incorrect totals.
+* Broken relationships between modules.
+
+DO NOT silently delete real data to fix inconsistencies. If something is ambiguous, preserve the real data and fix the application logic instead.
+
+Add or verify appropriate database constraints, indexes, foreign keys and unique rules where safe and compatible with the existing real data.
+
+### 16. SECURITY / PRIVACY / LEAKS
+
+Perform a complete security audit.
+
+Check for:
+
+* Unauthorized access to admin pages.
+* Broken authentication/authorization.
+* API endpoints accessible without proper permissions.
+* IDOR/insecure direct object access.
+* Sensitive data exposed in frontend code.
+* Database credentials/secrets exposed.
+* Environment variables exposed.
+* Admin-only actions available to normal users.
+* Unsafe API routes.
+* Missing server-side validation.
+* Client-side-only security checks.
+* Sensitive information appearing in URLs unnecessarily.
+* Error messages exposing database/internal information.
+* Unsafe file/document access.
+* Injection vulnerabilities.
+* XSS risks.
+* CSRF/security issues where applicable.
+* Weak password/session handling.
+* Missing secure cookie settings.
+* Missing rate limiting on sensitive endpoints.
+* Missing security headers.
+* Insecure CORS configuration.
+* Dependency vulnerabilities.
+* Debug mode or development-only endpoints enabled in production.
+
+Fix any security issues you find.
+
+Do NOT expose or print any secrets, passwords, API keys or credentials in the UI, logs or responses.
+
+Never commit secrets, `.env` files containing credentials, database dumps, private keys or sensitive personal data to GitHub.
+
+### 17. ERROR HANDLING
+
+Test the application intentionally with:
+
+* Empty fields.
+* Invalid values.
+* Duplicate values.
+* Invalid IDs.
+* Missing records.
+* Unauthorized actions.
+* Very long inputs.
+* Invalid payment amounts.
+* Invalid dates.
+* Broken/missing relationships.
+* Malformed API requests.
+* Expired or invalid sessions.
+* Network failures.
+* Database failures where safely testable.
+
+The application should show proper user-friendly errors instead of crashing.
+
+Ensure production responses do not expose stack traces, SQL queries, secrets or internal implementation details.
+
+### 18. RESPONSIVENESS
+
+Check the entire portal on:
+
+* Desktop.
+* Tablet.
+* Mobile.
+
+Fix:
+
+* Overflow.
+* Broken tables.
+* Buttons going off-screen.
+* Navigation problems.
+* Modal issues.
+* Incorrect spacing.
+* Unreadable text.
+* Broken forms.
+* Keyboard navigation issues.
+* Accessibility problems.
+* Missing labels or poor focus states.
+
+### 19. PERFORMANCE
+
+Check for:
+
+* Slow database queries.
+* Unnecessary repeated API calls.
+* N+1 queries.
+* Large unnecessary frontend loads.
+* Slow dashboard queries.
+* Slow member search.
+* Slow member lists.
+* Pagination problems.
+* Missing indexes.
+* Excessive client-side rendering.
+* Unoptimized images or assets.
+
+Optimize where necessary without changing the intended functionality.
+
+### 20. DATA IMPORT / EXPORT
+
+Check that:
+
+* Member imports do not duplicate existing members.
+* IDs remain unique.
+* Invalid records are properly rejected/reported.
+* Imports can be safely rolled back where intended.
+* Exported data matches the database.
+* Importing the same file twice does not create duplicates.
+* Import files are validated securely.
+* Unauthorized users cannot import or export protected data.
+* Exported files do not include unnecessary sensitive information.
+
+### 21. REAL-DATA PROTECTION
+
+THIS IS CRITICAL.
+
+Before making destructive database changes:
+
+* Identify the 1,140 real members.
+* Identify the 30 real committee members.
+* Preserve them.
+* Remove only confirmed sample/demo/test records.
+* Do not reset the database.
+* Do not recreate the member database from scratch.
+* Do not generate fake replacement records.
+* Preserve all real member IDs, names, contact information, statuses and relationships.
+* Preserve all real committee member information and roles.
+
+If you are unsure whether a record is real or sample data, DO NOT delete it automatically. Preserve it and report it for review.
+
+### 22. FINAL TEST
+
+After all fixes:
+
+* Build the application.
+* Run all available tests.
+* Check server logs.
+* Check browser console for errors.
+* Check API errors.
+* Check database errors.
+* Test the major workflows manually/end-to-end.
+* Fix every error you find.
+* Re-test after fixing.
+* Do not stop at identifying problems — actually fix them.
+
+### 23. VERCEL PRODUCTION READINESS
+
+Prepare the application for reliable Vercel hosting.
+
+Check and configure:
+
+* Production build commands.
+* Correct framework and Vercel configuration.
+* Serverless-compatible API routes or backend deployment architecture.
+* Environment variable usage.
+* Production database connection handling.
+* Connection pooling and serverless-safe database access.
+* Secure production cookies and session handling.
+* CORS configuration.
+* Rewrites and redirects.
+* Static assets.
+* File/document storage compatibility with Vercel.
+* Cron jobs or scheduled tasks, if used.
+* Background jobs or long-running processes that are not compatible with serverless hosting.
+* Database migrations and deployment safety.
+* Error monitoring and logging compatibility.
+* Node.js/runtime version.
+* Build-time versus runtime environment variables.
+* Preview and production environment separation.
+* No localhost URLs or development-only configuration in production.
+* No secrets committed to the repository.
+* No hardcoded credentials.
+* No reliance on local filesystem persistence for production data.
+* Correct handling of Vercel serverless function timeouts and request limits.
+
+Create or update the necessary Vercel configuration files and deployment documentation without exposing secrets.
+
+If any feature is not compatible with Vercel hosting, adapt it to a production-safe alternative or clearly document the required external service.
+
+### 24. GITHUB REPOSITORY AND DEPLOYMENT
+
+After completing the cleanup, fixes, testing and Vercel preparation:
+
+* Review the entire repository for unnecessary files, temporary files, test artifacts, local database files, build output, secrets and sensitive data.
+* Add or update `.gitignore` appropriately.
+* Ensure `.env`, credential files, private keys, database dumps and personal sensitive data are not committed.
+* Add or update a production-ready `README` with setup, environment variables, database migration instructions, testing instructions and Vercel deployment instructions.
+* Commit all final changes with a clear commit message.
+* Push the completed project to the GitHub repository:
+  `dkmo2026/itzali256`
+* Verify that the push completed successfully.
+* Make the repository ready to connect to Vercel for hosting.
+* If GitHub or Vercel credentials are not available in the environment, do not fabricate them or expose them. Instead, prepare everything completely and provide the exact remaining commands or steps required.
+* Do not include secrets in the repository, commit history, logs or final report.
+
+### FINAL ACCEPTANCE CRITERIA
+
+I want this portal to be genuinely READY FOR REAL USE.
+
+It should have:
+
+* Only the real 1,140 members.
+* Only the real 30 committee members.
+* No sample/demo transactional data.
+* No fake dashboard statistics.
+* No broken links.
+* No broken workflows.
+* No duplicate records.
+* No broken relationships.
+* No obvious security vulnerabilities.
+* No console/API/database errors.
+* Correct calculations.
+* Correct member/committee relationships.
+* Correct membership fee workflow.
+* Correct FRF workflow.
+* Correct payment workflow.
+* Correct receipt workflow.
+* Correct loan workflow.
+* Correct sponsor workflow.
+* Correct claims workflow.
+* Correct reports.
+* Correct audit trail.
+* Correct dashboard.
+* Working mobile/desktop UI.
+* Production-safe configuration.
+* Vercel-ready deployment setup.
+* Clean GitHub repository with no secrets or sensitive files.
+* Final code pushed to `dkmo2026/itzali256`.
+
+Do a COMPLETE final inspection of the codebase, database, frontend, backend, API routes, authentication, authorization, deployment configuration and UI.
+
+Do not simply tell me what is wrong. FIX the issues yourself wherever possible.
+
+At the end, give me a concise FINAL QA REPORT showing:
+
+1. What sample data was removed.
+2. Confirmation that the 1,140 members were preserved.
+3. Confirmation that the 30 committee members were preserved.
+4. Bugs/errors found and fixed.
+5. Security issues found and fixed.
+6. Broken links/routes found and fixed.
+7. Data integrity issues found and fixed.
+8. Workflows tested.
+9. Vercel-readiness changes completed.
+10. GitHub repository and push status for `dkmo2026/itzali256`.
+11. Any remaining issues that genuinely cannot be fixed automatically.
+12. Exact manual steps still required, if any.
+
+Do not add new sample data after the cleanup. The portal should be left clean, secure, production-ready, Vercel-ready and ready for actual DKMO operations.

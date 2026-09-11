@@ -1,0 +1,246 @@
+IMPORTANT FRF FEES FEATURE:
+
+Add the SAME WhatsApp reminder functionality that already exists in the Membership Fees section to the FRF Fees page.
+
+DO NOT create a completely separate or inconsistent reminder system.
+
+First inspect how WhatsApp reminders currently work in:
+Payments → Membership Fees
+
+Then implement the same functionality in:
+Payments → FRF Fees
+
+==================================================
+FRF WHATSAPP REMINDER
+==================================================
+
+On the FRF Fees page, unpaid FRF members must have an option to send a WhatsApp payment reminder.
+
+The reminder must be specifically for the CURRENT ACTIVE FRF COLLECTION CASE.
+
+The WhatsApp reminder should clearly tell the member:
+
+- Their name
+- DKMO membership/ID number
+- FRF fee amount: SAR 50
+- The active FRF case name/reference
+- That the FRF contribution is currently unpaid
+- A polite request to make the payment
+- DKMO contact/payment information using the same information already configured for Membership Fee WhatsApp reminders
+
+Example message:
+
+"Assalamu Alaikum [Member Name],
+
+This is a reminder from DKMO regarding your FRF (Family Relief Fund) contribution.
+
+FRF Case: [Case Name]
+Amount Due: SAR 50
+DKMO ID: [DKMO ID]
+
+Our records show that your FRF contribution for this case is still unpaid.
+
+Kindly arrange the payment at your earliest convenience.
+
+JazakAllahu Khairan,
+DKMO"
+
+Use the existing WhatsApp message generation/formatting logic from Membership Fees wherever possible.
+
+==================================================
+WHERE IT SHOULD APPEAR
+==================================================
+
+On the FRF Fees member table, add a WhatsApp reminder action for members whose status is:
+
+UNPAID
+
+The action can be:
+- WhatsApp icon/button
+- "Remind" action
+- or inside the existing Actions (...) menu
+
+Follow the SAME UI pattern already used in Membership Fees.
+
+Do not make the FRF page visually inconsistent.
+
+For example:
+
+Actions (...)
+→ Send WhatsApp Reminder
+
+or, if Membership Fees already has a WhatsApp button directly in the table, use the same approach here.
+
+==================================================
+PAID MEMBERS
+==================================================
+
+If a member has already paid the FRF fee for the current case:
+
+DO NOT show an unpaid reminder action.
+
+Instead, the member should show:
+
+Paid
+
+and no payment reminder should be available.
+
+==================================================
+MEMBERSHIP ELIGIBILITY
+==================================================
+
+VERY IMPORTANT:
+
+FRF eligibility is dependent on membership fee payment.
+
+If a member has NOT paid their required membership fee:
+
+- They are NOT eligible for FRF
+- They should NOT receive an FRF payment reminder
+- Their FRF fee must not be treated as an amount they owe
+- Do not send a WhatsApp message asking them to pay FRF
+
+Only members who are eligible for the current FRF case should receive FRF reminders.
+
+==================================================
+NO ACTIVE FRF CASE
+==================================================
+
+If there is NO active FRF collection case:
+
+- Do not show FRF WhatsApp payment reminders
+- Do not allow sending reminders
+- FRF Outstanding must remain SAR 0.00
+- Show the existing empty state:
+
+"No active FRF collection case"
+
+"Approving an FRF claim will open the next collection case."
+
+==================================================
+ACTIVE CASE ONLY
+==================================================
+
+The reminder must always be tied to the CURRENT ACTIVE FRF CASE.
+
+Do NOT accidentally send a reminder for:
+- an old FRF case
+- a closed case
+- a completed case
+- a future case
+
+The message must dynamically use the active case name/reference.
+
+==================================================
+PHONE NUMBER
+==================================================
+
+Use the member's actual mobile/WhatsApp number already stored in the DKMO member record.
+
+Do not invent or modify phone numbers.
+
+If a member does not have a valid mobile number:
+
+- Disable the WhatsApp reminder action
+- Clearly indicate "No WhatsApp/mobile number"
+- Do not generate a broken WhatsApp link
+
+Use the same phone-number formatting/validation logic already used by Membership Fees.
+
+==================================================
+REMINDER TRACKING
+==================================================
+
+If the existing Membership Fees system tracks when a WhatsApp reminder was sent, use the same mechanism for FRF.
+
+If possible, show:
+
+- Last reminder sent
+- Date/time
+- Number of reminders sent
+
+Do NOT create duplicate tracking systems if an existing reusable reminder system already exists.
+
+==================================================
+SECURITY / PERMISSIONS
+==================================================
+
+Only users who are authorized to manage/payment reminders should be able to send them.
+
+Follow the existing permission system from Membership Fees.
+
+Do not expose administrative actions to unauthorized users.
+
+==================================================
+IMPORTANT DATA RULE
+==================================================
+
+Do NOT change:
+
+- FRF payment records
+- Membership payment records
+- Historical FRF cases
+- Historical referral data
+- Member data
+- FRF claim data
+
+This feature is ONLY for sending reminders.
+
+Sending a WhatsApp reminder must NEVER automatically mark a member as paid.
+
+==================================================
+UI CONSISTENCY
+==================================================
+
+Make the FRF WhatsApp reminder look and behave exactly like the existing Membership Fees WhatsApp reminder.
+
+Inspect the Membership Fees implementation first and reuse its:
+
+- WhatsApp button
+- Icon
+- Message generation
+- Phone formatting
+- Permission checks
+- Confirmation behavior
+- Success/error notifications
+- Reminder tracking
+- Styling
+
+Only change the message content and payment context to FRF.
+
+==================================================
+TESTING
+==================================================
+
+Test all of these:
+
+1. Active FRF case + unpaid eligible member → WhatsApp reminder available.
+
+2. Active FRF case + paid member → reminder unavailable/not shown.
+
+3. No active FRF case → no reminder available.
+
+4. Unpaid membership member → no FRF reminder.
+
+5. Eligible member with no mobile number → reminder disabled with clear explanation.
+
+6. WhatsApp link opens with the correct member phone number.
+
+7. Message contains SAR 50.
+
+8. Message contains the correct active FRF case.
+
+9. Message contains the correct DKMO/member ID.
+
+10. Sending a reminder does NOT change payment status.
+
+11. Existing Membership Fees WhatsApp reminders continue working.
+
+12. No historical FRF data is modified.
+
+13. Test on desktop and mobile/responsive layout.
+
+IMPORTANT:
+Do not just add a visual button.
+
+Connect it to the same real WhatsApp reminder logic used by Membership Fees and ensure the FRF reminder always uses the correct active FRF case and correct member data.

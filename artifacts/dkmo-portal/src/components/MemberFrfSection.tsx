@@ -1,5 +1,8 @@
 import { Link } from "wouter";
-import { useGetMemberFrfSummary } from "@workspace/api-client-react";
+import { customFetch, useGetMemberFrfSummary } from "@workspace/api-client-react";
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -8,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HeartHandshake, Users, ShieldCheck, ShieldAlert, ShieldX, Clock } from "lucide-react";
 import { cn, formatSAR, formatDate } from "@/lib/utils";
+import { withReturnTo } from "@/lib/navigation";
 
 const CLAIM_TYPE_LABEL: Record<string, string> = {
   death_benefit: "Death Benefit",
@@ -26,6 +30,10 @@ const STATUS_STYLE: Record<string, string> = {
   none: "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-500",
 };
 
+function isNonPayableStatus(status: string) {
+  return status === "exempt" || status === "cancelled";
+}
+
 const ELIGIBILITY_META: Record<string, { label: string; cls: string; icon: typeof ShieldCheck }> = {
   eligible: { label: "Eligible", cls: "bg-green-100 text-green-800 dark:bg-green-950/40 dark:text-green-300", icon: ShieldCheck },
   pending_activation: { label: "Pending Activation", cls: "bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300", icon: Clock },
@@ -37,8 +45,23 @@ function initials(name: string) {
   return name.split(" ").filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("");
 }
 
-export function MemberFrfSection({ memberId }: { memberId: string }) {
+export function MemberFrfSection({ memberId, onRecordPayment }: { memberId: string; onRecordPayment?: () => void }) {
   const { data, isLoading } = useGetMemberFrfSummary(memberId);
+  const queryClient = useQueryClient();
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+
+  const changeContributionStatus = async (claimId: string, contributionId: string, status: "exempt" | "pending") => {
+    setUpdatingId(contributionId);
+    try {
+      await customFetch(`/api/frf/claims/${claimId}/contributions/${contributionId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      });
+      await queryClient.invalidateQueries({ queryKey: [`/api/members/${memberId}/frf-summary`] });
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -75,6 +98,17 @@ export function MemberFrfSection({ memberId }: { memberId: string }) {
             </span>
           </div>
           <CardDescription className="dark:text-slate-400">{data.eligibility.reason}</CardDescription>
+            {onRecordPayment ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onRecordPayment}
+                disabled={data.eligibility.status !== "eligible"}
+                title={data.eligibility.status !== "eligible" ? "FRF payment is unavailable because the membership fee has not been paid." : undefined}
+              >
+                Record contribution
+              </Button>
+            ) : null}
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -125,7 +159,7 @@ export function MemberFrfSection({ memberId }: { memberId: string }) {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <Link href={`/frf/${bc.claimId}`} className="font-semibold text-emerald-900 dark:text-emerald-200 hover:underline">
+                      <Link href={withReturnTo(`/frf/${bc.claimId}`)} className="font-semibold text-emerald-900 dark:text-emerald-200 hover:underline">
                         {bc.title || bc.claimantName}
                       </Link>
                       <p className="text-xs text-slate-500">
@@ -186,33 +220,34 @@ export function MemberFrfSection({ memberId }: { memberId: string }) {
                 <TableHead>Method</TableHead>
                 <TableHead>Receipt / Ref</TableHead>
                 <TableHead>Remarks</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {data.history.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={12} className="h-20 text-center text-slate-500">No FRF contributions recorded yet.</TableCell>
+                  <TableCell colSpan={13} className="h-20 text-center text-slate-500">No FRF contributions recorded yet.</TableCell>
                 </TableRow>
               ) : (
                 (() => {
                   let running = 0;
                   return data.history.map((h) => {
-                    if (h.status !== "exempt" && h.status !== "cancelled") running += Math.max(h.balance, 0);
+                    if (!isNonPayableStatus(h.status)) running += Math.max(h.balance, 0);
                     return { h, running };
                   });
                 })().map(({ h, running }) => (
                   <TableRow key={h.contributionId} className="dark:border-slate-800">
                     <TableCell>
-                      <Link href={`/frf/${h.claimId}`} className="font-medium text-emerald-800 dark:text-emerald-300 hover:underline">
+                      <Link href={withReturnTo(`/frf/${h.claimId}`)} className="font-medium text-emerald-800 dark:text-emerald-300 hover:underline">
                         {h.title || h.claimantName}
                       </Link>
                       {h.title && <div className="text-xs text-slate-500">{h.claimantName}</div>}
                     </TableCell>
                     <TableCell className="text-sm">{CLAIM_TYPE_LABEL[h.claimType] ?? h.claimType}</TableCell>
-                    <TableCell className="text-right font-medium">{h.status === "exempt" ? "—" : formatSAR(h.amount)}</TableCell>
-                    <TableCell className="text-right font-medium text-green-700 dark:text-green-300">{h.status === "exempt" ? "—" : formatSAR(h.amountPaid)}</TableCell>
-                    <TableCell className={cn("text-right font-medium", h.status === "exempt" ? "text-slate-400" : h.balance > 0 ? "text-red-600 dark:text-red-400" : "text-green-700 dark:text-green-300")}>
-                      {h.status === "exempt" ? "—" : formatSAR(h.balance)}
+                    <TableCell className="text-right font-medium">{isNonPayableStatus(h.status) ? "—" : formatSAR(h.amount)}</TableCell>
+                    <TableCell className="text-right font-medium text-green-700 dark:text-green-300">{isNonPayableStatus(h.status) ? "—" : formatSAR(h.amountPaid)}</TableCell>
+                    <TableCell className={cn("text-right font-medium", isNonPayableStatus(h.status) ? "text-slate-400" : h.balance > 0 ? "text-red-600 dark:text-red-400" : "text-green-700 dark:text-green-300")}>
+                      {isNonPayableStatus(h.status) ? "—" : formatSAR(h.balance)}
                     </TableCell>
                     <TableCell className={cn("text-right font-semibold", running > 0 ? "text-red-600 dark:text-red-400" : "text-green-700 dark:text-green-300")}>
                       {formatSAR(running)}
@@ -223,6 +258,13 @@ export function MemberFrfSection({ memberId }: { memberId: string }) {
                     <TableCell className="text-sm text-slate-500 capitalize">{h.paymentMethod ? h.paymentMethod.replace(/_/g, " ") : "—"}</TableCell>
                     <TableCell className="text-sm text-slate-500">{h.receiptNumber || "—"}</TableCell>
                     <TableCell className="text-sm text-slate-500 max-w-[160px] truncate" title={h.remarks ?? undefined}>{h.remarks || "—"}</TableCell>
+                    <TableCell>
+                      {h.status === "pending" ? (
+                        <Button size="sm" variant="ghost" className="text-amber-700" disabled={updatingId === h.contributionId} onClick={() => void changeContributionStatus(h.claimId, h.contributionId, "exempt")}>Exempt</Button>
+                      ) : h.status === "exempt" ? (
+                        <Button size="sm" variant="ghost" className="text-emerald-700" disabled={updatingId === h.contributionId} onClick={() => void changeContributionStatus(h.claimId, h.contributionId, "pending")}>Reopen</Button>
+                      ) : <span className="text-xs text-slate-400">Ledger protected</span>}
+                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -274,7 +316,7 @@ export function MemberFrfSection({ memberId }: { memberId: string }) {
                   {ref.members.map((m) => (
                     <TableRow key={m.id} className="dark:border-slate-800">
                       <TableCell>
-                        <Link href={`/members/${m.id}`} className="flex items-center gap-2 hover:underline">
+                        <Link href={withReturnTo(`/members/${m.id}`)} className="flex items-center gap-2 hover:underline">
                           <Avatar className="h-7 w-7">
                             <AvatarImage src={m.photoUrl ?? undefined} />
                             <AvatarFallback className="text-[10px] bg-emerald-100 text-emerald-800">{initials(m.fullName)}</AvatarFallback>

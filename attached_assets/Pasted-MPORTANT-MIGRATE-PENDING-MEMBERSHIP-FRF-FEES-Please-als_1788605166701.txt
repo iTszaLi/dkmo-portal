@@ -1,0 +1,57 @@
+MPORTANT — MIGRATE PENDING MEMBERSHIP & FRF FEES
+
+Please also check the old Access database for the actual historical payment status of every member.
+
+I specifically need you to identify:
+
+Members whose Membership Fee is pending/unpaid
+Members whose FRF Fee is pending/unpaid
+Members who have both Membership Fee and FRF Fee pending
+Members who have already paid, so their status remains Paid
+
+These statuses must then be migrated into the new DKMO Portal.
+
+Do NOT assume that a member is Paid just because the member exists in the current Portal.
+
+The old Access database should be checked and used as the historical source of truth for the payment status.
+
+Required migration
+
+Access Database
+→ Legacy Member ID
+→ Membership Fee Status
+→ FRF Fee Status
+→ Historical Payment Records
+→ New DKMO Portal
+
+The Members page should then correctly show things like:
+
+Membership: Paid / Pending
+FRF: Paid / Pending
+
+If the Access database contains an actual payment record, preserve that historical payment information rather than simply changing the status.
+
+If a member has a pending fee, do not create a fake payment or payment date. Just migrate the actual status as pending/unpaid.
+
+Also make sure this works for legacy/unmatched members. They should still retain their historical fee status even if they haven't yet been matched to a current Portal member.
+
+Very important
+
+Before making any production changes, include this in the dry-run reconciliation report:
+
+Total members with Membership Fee pending
+Total members with Membership Fee paid
+Total members with FRF pending
+Total members with FRF paid
+Members with both fees pending
+Legacy Member ID
+Member Name
+Current Portal Member ID (if matched)
+Membership Fee Status
+FRF Fee Status
+Historical payment information
+Match/reconciliation status
+
+Do not invent missing payment information. If the Access database does not provide evidence of payment, keep the status as unknown/pending according to the source data rather than assuming it was paid.
+
+The goal is that after migration, the new DKMO Portal reflects the actual historical membership and FRF fee situation from the Access database, not just the current Portal data.

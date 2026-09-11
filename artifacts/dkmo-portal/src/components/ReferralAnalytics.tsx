@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy, Users, UserPlus, ChevronDown, ChevronUp } from "lucide-react";
+import { withReturnTo } from "@/lib/navigation";
 
 /**
  * Referral Analytics — the former Recruitment Leaderboard, now embedded in the
@@ -83,7 +84,7 @@ export function ReferralAnalytics() {
               {top.map((row, i) => (
                 <div key={row.memberId} className="flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-green-50/50 dark:hover:bg-slate-800/50" data-testid={`row-referrer-${row.memberId}`}>
                   <span className="w-6 text-xs font-bold text-green-700/60 dark:text-slate-500 text-right shrink-0">{i + 1}.</span>
-                  <Link href={`/members/${row.memberId}`} className="min-w-0 flex-1 group">
+                  <Link href={withReturnTo(`/members/${row.memberId}`)} className="min-w-0 flex-1 group">
                     <span className="text-sm font-semibold text-green-950 dark:text-slate-100 group-hover:underline truncate block">
                       {row.name}
                       <span className="ml-2 text-xs font-normal text-orange-600 dark:text-orange-400">{row.membershipId}</span>

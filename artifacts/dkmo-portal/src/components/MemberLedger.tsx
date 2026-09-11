@@ -2,10 +2,13 @@ import { useMemo } from "react";
 import { Link } from "wouter";
 import type { Member, MemberFrfHistoryItem } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatSAR, formatDate } from "@/lib/utils";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, CircleDot, XCircle, MinusCircle, BookOpen, AlertTriangle } from "lucide-react";
+import { withReturnTo } from "@/lib/navigation";
+import { getMembershipFeeAmount } from "@/lib/membership-fee";
+import { CheckCircle2, CircleDot, XCircle, MinusCircle, BookOpen, AlertTriangle, Pencil, Trash2, Plus } from "lucide-react";
 
 interface LedgerEntry {
   key: string;
@@ -16,6 +19,7 @@ interface LedgerEntry {
   amountPaid: number;
   status: "paid" | "partial" | "outstanding" | "exempt";
   date?: string | null;
+  paymentId?: string;
 }
 
 function entryIcon(status: LedgerEntry["status"]) {
@@ -38,25 +42,34 @@ function entryIcon(status: LedgerEntry["status"]) {
 export function MemberLedger({
   member,
   frfHistory,
+  payments,
+  onAddPayment,
+  onEditPayment,
+  onDeletePayment,
   isLoading,
 }: {
   member: Member;
   frfHistory: MemberFrfHistoryItem[] | undefined;
+  payments?: any[];
+  onAddPayment?: () => void;
+  onEditPayment?: (payment: any) => void;
+  onDeletePayment?: (paymentId: string) => void;
   isLoading?: boolean;
 }) {
   const { groups, outstanding, totalOutstanding, totalPaid } = useMemo(() => {
     const entries: LedgerEntry[] = [];
 
     // Membership fee entry
-    const fee = Number(member.membershipFee || 0);
+    const fee = getMembershipFeeAmount(member.membershipFee);
     const fs = member.feeStatus;
     entries.push({
       key: "membership-fee",
       label: "Membership Fee",
-      amountDue: fs === "exempt" ? 0 : fee,
+      amountDue: ["exempt", "not_applicable", "review"].includes(fs) ? 0 : fee,
       amountPaid: fs === "paid" ? fee : 0, // partial amount for membership fee is not tracked; treated as due
       status: fs === "paid" ? "paid" : fs === "exempt" ? "exempt" : fs === "partial" ? "partial" : "outstanding",
       date: member.feePaidAt ?? null,
+      paymentId: payments?.find((p) => p.paymentType === "membership_fee")?.id,
     });
 
     // FRF contributions — one line per case. Cancelled contributions are not
@@ -75,11 +88,25 @@ export function MemberLedger({
         key: h.contributionId,
         label: h.title || `FRF Case`,
         sub: h.claimantName ? `Claimant: ${h.claimantName}` : undefined,
-        href: `/frf/${h.claimId}`,
+        href: withReturnTo(`/frf/${h.claimId}`),
         amountDue: status === "exempt" ? 0 : Number(h.amount),
         amountPaid: paidAmt,
         status,
         date: h.paidAt ?? null,
+        paymentId: payments?.find((p) => p.paymentType === "frf_contribution" && p.frfClaimId === h.claimId)?.id,
+      });
+    }
+    for (const p of payments ?? []) {
+      if (p.paymentType === "membership_fee" || p.paymentType === "frf_contribution") continue;
+      entries.push({
+        key: `payment-${p.id}`,
+        paymentId: p.id,
+        label: `${String(p.paymentType).replace(/_/g, " ")} payment`,
+        sub: p.receiptNumber ? `Receipt ${p.receiptNumber}` : undefined,
+        amountDue: Number(p.amountDue || p.amountPaid || 0),
+        amountPaid: Number(p.amountPaid || 0),
+        status: p.status === "paid" ? "paid" : p.status === "cancelled" || p.status === "refunded" ? "exempt" : "partial",
+        date: p.paidAt ?? p.createdAt ?? null,
       });
     }
 
@@ -104,7 +131,7 @@ export function MemberLedger({
     const totOut = owing.reduce((acc, e) => acc + Math.max(0, e.amountDue - e.amountPaid), 0);
     const totPaid = entries.reduce((acc, e) => acc + e.amountPaid, 0);
     return { groups: sortedGroups, outstanding: owing, totalOutstanding: totOut, totalPaid: totPaid };
-  }, [member, frfHistory]);
+  }, [member, frfHistory, payments]);
 
   return (
     <Card className="rounded-2xl border-green-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm" data-testid="card-member-ledger">
@@ -131,7 +158,7 @@ export function MemberLedger({
                   <h3 className="text-xs font-bold uppercase tracking-wide text-orange-700 dark:text-orange-400">Outstanding</h3>
                 </div>
                 <div className="rounded-xl border border-orange-100 dark:border-orange-900/40 divide-y divide-orange-50 dark:divide-slate-800 overflow-hidden">
-                  {outstanding.map((e) => <LedgerRow key={e.key} entry={e} />)}
+                      {outstanding.map((e) => <LedgerRow key={e.key} entry={e} payments={payments} onEditPayment={onEditPayment} onDeletePayment={onDeletePayment} />)}
                 </div>
               </div>
             )}
@@ -139,7 +166,7 @@ export function MemberLedger({
               <div key={year}>
                 <h3 className="text-xs font-bold uppercase tracking-wide text-green-700/70 dark:text-slate-500 mb-2">{year}</h3>
                 <div className="rounded-xl border border-green-100 dark:border-slate-800 divide-y divide-green-50 dark:divide-slate-800 overflow-hidden">
-                  {items.map((e) => <LedgerRow key={e.key} entry={e} />)}
+                  {items.map((e) => <LedgerRow key={e.key} entry={e} payments={payments} onEditPayment={onEditPayment} onDeletePayment={onDeletePayment} />)}
                 </div>
               </div>
             ))}
@@ -157,6 +184,7 @@ export function MemberLedger({
                 </strong>
               </span>
             </div>
+            {onAddPayment ? <Button size="sm" variant="outline" onClick={onAddPayment}><Plus className="mr-1.5 h-4 w-4" /> Add payment</Button> : null}
           </>
         )}
       </CardContent>
@@ -164,7 +192,12 @@ export function MemberLedger({
   );
 }
 
-function LedgerRow({ entry }: { entry: LedgerEntry }) {
+function LedgerRow({ entry, payments, onEditPayment, onDeletePayment }: {
+  entry: LedgerEntry;
+  payments?: any[];
+  onEditPayment?: (payment: any) => void;
+  onDeletePayment?: (paymentId: string) => void;
+}) {
   const remaining = Math.max(0, entry.amountDue - entry.amountPaid);
   const inner = (
     <div className="flex items-start gap-3 px-3 py-2.5 bg-white dark:bg-slate-900" data-testid={`row-ledger-${entry.key}`}>
@@ -194,6 +227,12 @@ function LedgerRow({ entry }: { entry: LedgerEntry }) {
           {entry.status === "outstanding" ? "due" : entry.date ? formatDate(entry.date) : ""}
         </p>
       </div>
+      {entry.paymentId && (onEditPayment || onDeletePayment) ? (
+        <div className="flex items-center gap-0.5 shrink-0">
+          {onEditPayment ? <Button size="icon" variant="ghost" className="h-7 w-7" title="Edit payment" onClick={(event) => { event.preventDefault(); event.stopPropagation(); const p = payments?.find((item) => item.id === entry.paymentId); if (p) onEditPayment(p); }}><Pencil className="h-3.5 w-3.5" /></Button> : null}
+          {onDeletePayment ? <Button size="icon" variant="ghost" className="h-7 w-7 text-red-600" title="Delete payment" onClick={(event) => { event.preventDefault(); event.stopPropagation(); onDeletePayment(entry.paymentId!); }}><Trash2 className="h-3.5 w-3.5" /></Button> : null}
+        </div>
+      ) : null}
     </div>
   );
   return entry.href ? <Link href={entry.href} className="block group">{inner}</Link> : inner;

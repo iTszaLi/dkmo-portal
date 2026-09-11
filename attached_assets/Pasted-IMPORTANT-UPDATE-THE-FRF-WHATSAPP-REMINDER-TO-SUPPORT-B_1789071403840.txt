@@ -1,0 +1,126 @@
+IMPORTANT: UPDATE THE FRF WHATSAPP REMINDER TO SUPPORT BOTH ENGLISH AND KANNADA.
+
+When the admin clicks "Send WhatsApp Reminder" for an unpaid eligible FRF member, give an option to choose:
+
+- English
+- Kannada
+
+The English message should be:
+
+Assalamu Alaikum Yusuf Hyder (Saqafi Baithar),
+
+This is a reminder from DKMO regarding your FRF (Family Relief Fund) contribution.
+
+FRF Case: case of mamdani
+FRF Fee: SAR 50.00
+Amount Due: SAR 50.00
+DKMO ID: DKMO-0058
+
+Our records show that your FRF contribution for this case is still unpaid.
+
+Kindly arrange the payment at your earliest convenience.
+
+JazakAllahu Khairan,
+DKMO
+
+IMPORTANT:
+All values must be dynamic.
+
+For example:
+[Member Name]
+[FRF Case Name]
+[SAR 50.00]
+[Amount Due]
+[DKMO ID]
+
+==================================================
+KANNADA MESSAGE
+==================================================
+
+Also provide a Kannada version.
+
+The Kannada MUST sound like a real person naturally speaking to a DKMO member.
+
+DO NOT make it a stiff, word-for-word Google-style translation.
+
+Use polite, simple, everyday Kannada that a Kannada-speaking community member in Karnataka would naturally understand.
+
+Example Kannada message:
+
+ಅಸ್ಸಲಾಮು ಅಲೈಕುಮ್ ಯೂಸುಫ್ ಹೈದರ್ (ಸಖಾಫಿ ಬೈತಾರ್),
+
+DKMO ವತಿಯಿಂದ ನಿಮ್ಮ FRF (Family Relief Fund) ಕೊಡುಗೆ ಬಗ್ಗೆ ಒಂದು ನೆನಪಿನ ಸಂದೇಶ.
+
+FRF ಕೇಸ್: case of mamdani
+FRF ಶುಲ್ಕ: SAR 50.00
+ಪಾವತಿಸಬೇಕಾದ ಮೊತ್ತ: SAR 50.00
+DKMO ID: DKMO-0058
+
+ನಿಮ್ಮ ಈ ಕೇಸ್‌ನ FRF ಕೊಡುಗೆ ಇನ್ನೂ ಪಾವತಿಯಾಗಿಲ್ಲ ಎಂದು ನಮ್ಮ ದಾಖಲೆಗಳಲ್ಲಿ ತೋರಿಸುತ್ತಿದೆ.
+
+ದಯವಿಟ್ಟು ಸಾಧ್ಯವಾದಷ್ಟು ಬೇಗ ಈ ಮೊತ್ತವನ್ನು ಪಾವತಿಸಲು ವಿನಂತಿ.
+
+ಜಝಾಕಲ್ಲಾಹು ಖೈರನ್,
+DKMO
+
+IMPORTANT KANNADA LANGUAGE REQUIREMENT:
+
+The Kannada should be:
+- Natural
+- Human-speakable
+- Polite
+- Simple
+- Community-friendly
+- Easy for people from Karnataka to understand
+
+Avoid overly formal, literary, or difficult Kannada.
+
+Do NOT translate names, DKMO ID, FRF Case name, or payment amounts.
+
+Keep:
+- "Assalamu Alaikum" naturally in the message
+- FRF / Family Relief Fund
+- DKMO
+- DKMO ID
+- Case name
+- SAR amount
+
+==================================================
+WHATSAPP FLOW
+==================================================
+
+When clicking the WhatsApp reminder action:
+
+1. Show:
+   "Send FRF WhatsApp Reminder"
+
+2. Let the admin select:
+   ○ English
+   ○ ಕನ್ನಡ (Kannada)
+
+3. Show a preview of the actual message before opening WhatsApp.
+
+4. The preview must use the REAL member's:
+   - Name
+   - DKMO ID
+   - Mobile number
+   - Current active FRF case
+   - Actual amount due
+
+5. When the admin confirms, open WhatsApp with the correctly formatted message.
+
+6. Do not automatically mark the FRF fee as paid.
+
+7. Do not modify the FRF payment record.
+
+==================================================
+VERY IMPORTANT
+==================================================
+
+The Kannada message must be written naturally, as if a DKMO committee member is personally reminding another Kannada-speaking member.
+
+Do not use robotic or highly formal Kannada.
+
+Also make sure the same dynamic message system works for every member, not just Yusuf Hyder.
+
+Test both English and Kannada messages with multiple members and make sure the correct member name, DKMO ID, FRF case and amount are inserted automatically.

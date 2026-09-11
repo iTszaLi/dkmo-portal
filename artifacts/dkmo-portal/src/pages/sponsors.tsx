@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import {
   useListSponsors,
@@ -42,6 +42,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { replaceCurrentQuery, withReturnTo } from "@/lib/navigation";
 
 const TIERS = ["platinum", "gold", "silver", "bronze"] as const;
 const STATUSES = ["pending", "partial", "paid", "overdue"] as const;
@@ -73,18 +74,29 @@ export default function Sponsors() {
   const { canEdit, canDelete } = useAuth();
   const { toast } = useToast();
 
+  const initialParams = useMemo(() => new URLSearchParams(searchString), [searchString]);
   const initialTier = useMemo(() => {
     const params = new URLSearchParams(searchString);
     const t = params.get("tier");
     return t && ["platinum", "gold", "silver", "bronze"].includes(t) ? t : "all";
-  }, []);
+  }, [searchString]);
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => initialParams.get("search") ?? "");
   const [tier, setTier] = useState<string>(initialTier);
-  const [status, setStatus] = useState<string>("all");
-  const [sort, setSort] = useState<string>("recent");
-  const [page, setPage] = useState(1);
+  const [status, setStatus] = useState<string>(() => initialParams.get("status") ?? "all");
+  const [sort, setSort] = useState<string>(() => initialParams.get("sort") ?? "recent");
+  const [page, setPage] = useState(() => Math.max(1, Number(initialParams.get("page")) || 1));
   const pageSize = 25;
+
+  useEffect(() => {
+    replaceCurrentQuery({
+      search: search || null,
+      tier: tier === "all" ? null : tier,
+      status: status === "all" ? null : status,
+      sort: sort === "recent" ? null : sort,
+      page: page > 1 ? page : null,
+    });
+  }, [search, tier, status, sort, page]);
 
   const queryParams = useMemo(
     () => ({
@@ -246,20 +258,20 @@ export default function Sponsors() {
                       key={s.id}
                       className="hover:bg-green-50/40 dark:hover:bg-slate-800/50 dark:border-slate-800 transition-colors cursor-pointer"
                       data-testid={`row-sponsor-${s.id}`}
-                      onClick={() => setLocation(`/sponsors/${s.id}`)}
+                      onClick={() => setLocation(withReturnTo(`/sponsors/${s.id}`))}
                       tabIndex={0}
                       role="link"
                       aria-label={`View ${s.sponsorName}`}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
                           e.preventDefault();
-                          setLocation(`/sponsors/${s.id}`);
+                          setLocation(withReturnTo(`/sponsors/${s.id}`));
                         }
                       }}
                     >
                       <TableCell>
                         <Link
-                          href={`/sponsors/${s.id}`}
+                          href={withReturnTo(`/sponsors/${s.id}`)}
                           className="font-medium text-green-950 dark:text-slate-200 hover:text-green-700 dark:hover:text-green-300 hover:underline"
                         >
                           {s.sponsorName}
@@ -295,7 +307,7 @@ export default function Sponsors() {
                       </TableCell>
                       <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-1">
-                          <Link href={`/sponsors/${s.id}`}>
+                          <Link href={withReturnTo(`/sponsors/${s.id}`)}>
                             <Button variant="ghost" size="sm" className="text-green-800 dark:text-slate-300 hover:text-green-900 dark:hover:text-slate-100 hover:bg-green-50 dark:hover:bg-slate-800">
                               View <ArrowRight className="h-3.5 w-3.5 ml-1" />
                             </Button>

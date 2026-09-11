@@ -3,11 +3,13 @@ import {
   uuid,
   text,
   timestamp,
+  boolean,
   unique,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { membersTable } from "./members";
+import { committeeTermsTable } from "./committee";
 
 export const meetingsTable = pgTable("meetings", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -15,6 +17,8 @@ export const meetingsTable = pgTable("meetings", {
   meetingDate: timestamp("meeting_date", { withTimezone: true }).notNull(),
   location: text("location").notNull().default(""),
   notes: text("notes").notNull().default(""),
+  committeeTermId: uuid("committee_term_id").references(() => committeeTermsTable.id, { onDelete: "set null" }),
+  participantsInitialized: boolean("participants_initialized").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

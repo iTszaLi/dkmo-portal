@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, ilike, or, desc, sql, type SQL } from "drizzle-orm";
+import { eq, ilike, or, desc, sql, and, type SQL } from "drizzle-orm";
 import { db, membersTable, frfClaimsTable, frfContributionsTable, paymentsTable } from "@workspace/db";
 import {
   CreateMemberBody,
@@ -24,6 +24,7 @@ import {
   aggregateMemberFrf,
   deriveContributionStatus,
   frfEligibility,
+  syncMemberFrfEligibility,
 } from "../lib/frf-ledger";
 
 const router: IRouter = Router();
@@ -45,12 +46,14 @@ router.get("/members", async (req, res): Promise<void> => {
       ilike(membersTable.fullName, like),
       ilike(membersTable.mobileNumber, like),
       ilike(membersTable.membershipId, like),
-      ilike(membersTable.applicationNumber, like),
       ilike(membersTable.iqamaNumber, like),
       ilike(membersTable.jamaath, like),
       ilike(membersTable.city, like),
       ilike(membersTable.country, like),
       ilike(membersTable.refMemberName, like),
+      ilike(membersTable.legacyMemberId, like),
+      ilike(membersTable.legacyReferenceName, like),
+      ilike(membersTable.legacyReferenceCode, like),
       // Match members whose referrer's DKMO ID matches the search term.
       sql`${membersTable.refMemberId} IN (SELECT ref.id::text FROM members ref WHERE ref.membership_id ILIKE ${like})`,
     ];
@@ -113,6 +116,12 @@ router.post("/members", async (req, res): Promise<void> => {
 
   try {
     const feeStatus = parsed.data.feeStatus ?? "unpaid";
+    if (feeStatus === "paid") {
+      res.status(400).json({
+        error: "Record an actual membership-fee payment before marking the membership fee paid.",
+      });
+      return;
+    }
     const actor = (req as AuthedRequest).userId ?? "";
     // Membership IDs are always allocated by the server so they stay
     // sequential and unique; any client-provided value is ignored.
@@ -123,7 +132,6 @@ router.post("/members", async (req, res): Promise<void> => {
         fullName: parsed.data.fullName,
         mobileNumber: parsed.data.mobileNumber,
         membershipId,
-        applicationNumber: parsed.data.applicationNumber ?? "",
         iqamaNumber: parsed.data.iqamaNumber ?? "",
         jamaath: parsed.data.jamaath ?? "",
         city: parsed.data.city ?? "",
@@ -134,8 +142,9 @@ router.post("/members", async (req, res): Promise<void> => {
         isCoreCommittee: parsed.data.isCoreCommittee ?? false,
         membershipFee: String(parsed.data.membershipFee ?? 100),
         feeStatus,
-        feePaidAt: feeStatus === "paid" ? new Date() : null,
-        feeUpdatedBy: feeStatus === "paid" ? actor : "",
+        feePaidAt: null,
+        feeUpdatedBy: actor,
+        frfStatus: "inactive",
         responsibility: parsed.data.responsibility ?? "not_responsible",
         notes: parsed.data.notes ?? "",
         refMemberName: parsed.data.refMemberName ?? "",
@@ -203,7 +212,31 @@ router.patch("/members/:id", async (req, res): Promise<void> => {
     }
 
     const actor = (req as unknown as AuthedRequest).userId ?? "";
-    const nextFeeStatus = parsed.data.feeStatus ?? existing.feeStatus;
+    // Access-imported fee evidence is immutable through generic member edits.
+    // A real payment can still update the summary through the payments route.
+    const nextFeeStatus = existing.legacyMemberId
+      ? existing.feeStatus
+      : parsed.data.feeStatus ?? existing.feeStatus;
+    if (nextFeeStatus === "paid" && existing.feeStatus !== "paid") {
+      const [payment] = await db
+        .select({ id: paymentsTable.id })
+        .from(paymentsTable)
+        .where(
+          and(
+            eq(paymentsTable.memberId, existing.id),
+            eq(paymentsTable.paymentType, "membership_fee"),
+            eq(paymentsTable.status, "paid"),
+            sql`${paymentsTable.amountPaid} >= ${paymentsTable.amountDue}`,
+          ),
+        )
+        .limit(1);
+      if (!payment) {
+        res.status(409).json({
+          error: "Record an actual membership-fee payment before marking the membership fee paid.",
+        });
+        return;
+      }
+    }
     const feeChanged = nextFeeStatus !== existing.feeStatus;
     const feeAudit = feeChanged
       ? {
@@ -220,7 +253,6 @@ router.patch("/members/:id", async (req, res): Promise<void> => {
         mobileNumber: parsed.data.mobileNumber,
         // Membership IDs are permanent; ignore any client-provided change.
         membershipId: existing.membershipId,
-        applicationNumber: parsed.data.applicationNumber ?? "",
         iqamaNumber: parsed.data.iqamaNumber ?? "",
         jamaath: parsed.data.jamaath ?? "",
         city: parsed.data.city ?? "",
@@ -231,7 +263,9 @@ router.patch("/members/:id", async (req, res): Promise<void> => {
           parsed.data.isExecutiveCommittee ?? existing.isExecutiveCommittee,
         isCoreCommittee:
           parsed.data.isCoreCommittee ?? existing.isCoreCommittee,
-        membershipFee: String(parsed.data.membershipFee ?? existing.membershipFee),
+        membershipFee: existing.legacyMemberId
+          ? existing.membershipFee
+          : String(parsed.data.membershipFee ?? existing.membershipFee),
         responsibility: parsed.data.responsibility ?? existing.responsibility,
         notes: parsed.data.notes ?? existing.notes,
         refMemberName: parsed.data.refMemberName ?? "",
@@ -246,6 +280,9 @@ router.patch("/members/:id", async (req, res): Promise<void> => {
     if (!updated) {
       res.status(404).json({ error: "Member not found" });
       return;
+    }
+    if (feeChanged) {
+      await syncMemberFrfEligibility(updated.id, updated.feeStatus);
     }
     logAudit(req, "member_updated", "members", { entityId: updated.id, entityName: updated.fullName, details: `ID: ${updated.membershipId}` });
     res.json(memberToApi(updated));
@@ -273,6 +310,40 @@ router.patch("/members/:id/fee-status", async (req, res): Promise<void> => {
 
   const actor = (req as unknown as AuthedRequest).userId ?? "";
   const feeStatus = parsed.data.feeStatus;
+  const [existing] = await db
+    .select({ legacyMemberId: membersTable.legacyMemberId, feeStatus: membersTable.feeStatus })
+    .from(membersTable)
+    .where(eq(membersTable.id, params.data.id));
+  if (!existing) {
+    res.status(404).json({ error: "Member not found" });
+    return;
+  }
+  if (existing.legacyMemberId) {
+    res.status(409).json({
+      error: "Access-imported fee evidence cannot be changed as a manual status. Record an actual payment or complete a reviewed reconciliation instead.",
+    });
+    return;
+  }
+  if (feeStatus === "paid" && existing.feeStatus !== "paid") {
+    const [payment] = await db
+      .select({ id: paymentsTable.id })
+      .from(paymentsTable)
+      .where(
+        and(
+          eq(paymentsTable.memberId, params.data.id),
+          eq(paymentsTable.paymentType, "membership_fee"),
+          eq(paymentsTable.status, "paid"),
+          sql`${paymentsTable.amountPaid} >= ${paymentsTable.amountDue}`,
+        ),
+      )
+      .limit(1);
+    if (!payment) {
+      res.status(409).json({
+        error: "Record an actual membership-fee payment before marking the membership fee paid.",
+      });
+      return;
+    }
+  }
   const [updated] = await db
     .update(membersTable)
     .set({
@@ -286,6 +357,7 @@ router.patch("/members/:id/fee-status", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Member not found" });
     return;
   }
+  await syncMemberFrfEligibility(updated.id, updated.feeStatus);
   logAudit(req, "member_fee_status_updated", "members", {
     entityId: updated.id,
     entityName: updated.fullName,
@@ -305,9 +377,24 @@ router.patch("/members/:id/frf-status", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
+  const [existing] = await db
+    .select({ feeStatus: membersTable.feeStatus })
+    .from(membersTable)
+    .where(eq(membersTable.id, params.data.id));
+  if (!existing) {
+    res.status(404).json({ error: "Member not found" });
+    return;
+  }
+  if (parsed.data.frfStatus === "active" && existing.feeStatus !== "paid") {
+    res.status(409).json({
+      error: "FRF membership is unavailable because the membership fee has not been paid.",
+    });
+    return;
+  }
+  const canonicalFrfStatus = existing.feeStatus === "paid" ? "active" : "inactive";
   const [updated] = await db
     .update(membersTable)
-    .set({ frfStatus: parsed.data.frfStatus })
+    .set({ frfStatus: canonicalFrfStatus })
     .where(eq(membersTable.id, params.data.id))
     .returning();
   if (!updated) {
@@ -317,7 +404,7 @@ router.patch("/members/:id/frf-status", async (req, res): Promise<void> => {
   logAudit(req, "member_frf_status_updated", "members", {
     entityId: updated.id,
     entityName: updated.fullName,
-    details: `FRF membership: ${parsed.data.frfStatus}`,
+    details: `FRF membership derived from fee status: ${canonicalFrfStatus}`,
   });
   res.json(memberToApi(updated));
 });

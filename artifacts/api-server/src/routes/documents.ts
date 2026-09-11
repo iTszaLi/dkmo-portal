@@ -11,6 +11,7 @@ import {
 import { requireAuth, requireRole, type AuthedRequest } from "../middlewares/requireAuth";
 import { getUserById } from "../lib/users";
 import { streamStoredFile, isApiFileUrl } from "../lib/documentFiles";
+import { logAudit } from "../lib/audit";
 
 /** FRF case documents are managed by admins only; other document mutations are admin/finance. */
 function canMutateDoc(role: string | undefined, linkedEntityType: string | null | undefined): boolean {
@@ -319,6 +320,9 @@ router.post("/documents", requireRole("admin", "finance"), async (req, res): Pro
       .values({ ...parsed.data, uploadedBy: name })
       .returning();
     await logActivity(row!.id, "uploaded", name, row!.fileName || row!.title);
+    await logAudit(req, "document_created", "documents", {
+      entityId: row!.id, entityName: row!.title, details: `Member link: ${row!.linkedEntityId}`,
+    });
     res.status(201).json(docToApi(row!));
   } catch (err) {
     req.log.error({ err }, "createDocument failed");
@@ -361,6 +365,9 @@ router.put("/documents/:id", requireRole("admin", "finance"), async (req, res): 
       .returning();
     if (!row) { res.status(404).json({ error: "Document not found" }); return; }
     await logActivity(row.id, "edited", actorName(req));
+    await logAudit(req, "document_updated", "documents", {
+      entityId: row.id, entityName: row.title, details: "Document metadata updated",
+    });
     res.json(docToApi(row));
   } catch (err) {
     req.log.error({ err }, "updateDocument failed");
@@ -379,6 +386,9 @@ router.delete("/documents/:id", requireRole("admin", "finance"), async (req, res
       return;
     }
     await db.delete(documentsTable).where(eq(documentsTable.id, String(req.params.id)));
+    await logAudit(req, "document_deleted", "documents", {
+      entityId: String(req.params.id), details: "Document deleted",
+    });
     res.status(204).end();
   } catch (err) {
     req.log.error({ err }, "deleteDocument failed");

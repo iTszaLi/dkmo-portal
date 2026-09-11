@@ -31,6 +31,7 @@ import { ArrowLeft, Save, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { getReturnTarget, useReturnNavigation, withReturnTo } from "@/lib/navigation";
 
 const TIERS = ["platinum", "gold", "silver", "bronze"] as const;
 const STATUSES = ["pending", "partial", "paid", "overdue"] as const;
@@ -80,13 +81,15 @@ function formatSAR(n: number) {
 export default function SponsorDetail() {
   const [, params] = useRoute("/sponsors/:id");
   const [, setLocation] = useLocation();
+  const goBack = useReturnNavigation("/sponsors");
+  const backHref = getReturnTarget("/sponsors");
   const { canEdit, canDelete } = useAuth();
   const { toast } = useToast();
 
   const id = params?.id;
   const isNew = id === "new";
 
-  const { data: sponsor, isLoading, refetch } = useGetSponsor(id ?? "", {
+  const { data: sponsor, isLoading } = useGetSponsor(id ?? "", {
     query: { enabled: !!id && !isNew, queryKey: getGetSponsorQueryKey(id ?? "") },
   });
 
@@ -117,7 +120,7 @@ export default function SponsorDetail() {
     mutation: {
       onSuccess: (created) => {
         toast({ title: "Sponsor created" });
-        setLocation(`/sponsors/${created.id}`);
+        setLocation(withReturnTo(`/sponsors/${created.id}`, getReturnTarget("/sponsors")));
       },
       onError: (err) =>
         toast({
@@ -132,8 +135,7 @@ export default function SponsorDetail() {
     mutation: {
       onSuccess: () => {
         toast({ title: "Saved" });
-        setEditing(false);
-        refetch();
+        goBack();
       },
       onError: (err) =>
         toast({
@@ -148,7 +150,7 @@ export default function SponsorDetail() {
     mutation: {
       onSuccess: () => {
         toast({ title: "Sponsor deleted" });
-        setLocation("/sponsors");
+        setLocation(getReturnTarget("/sponsors"));
       },
       onError: (err) =>
         toast({
@@ -214,7 +216,7 @@ export default function SponsorDetail() {
     return (
       <div className="text-center py-12 text-green-700/70">
         Sponsor not found.{" "}
-        <Link href="/sponsors" className="text-green-800 underline">
+        <Link href={backHref} className="text-green-800 underline">
           Back
         </Link>
       </div>
@@ -225,11 +227,9 @@ export default function SponsorDetail() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Link href="/sponsors">
-            <Button variant="ghost" size="sm" className="text-green-800">
-              <ArrowLeft className="h-4 w-4 mr-1" /> Back
-            </Button>
-          </Link>
+          <Button variant="ghost" size="sm" className="text-green-800" onClick={goBack}>
+            <ArrowLeft className="h-4 w-4 mr-1" /> Back
+          </Button>
           <div>
             <h1 className="text-2xl font-bold text-green-950">
               {isNew ? "New Sponsor" : sponsor!.sponsorName}

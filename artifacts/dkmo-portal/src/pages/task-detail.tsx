@@ -27,6 +27,7 @@ import { ArrowLeft, Save, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { getReturnTarget, useReturnNavigation, withReturnTo } from "@/lib/navigation";
 
 const PRIORITIES = ["low", "medium", "high", "urgent"] as const;
 const TASK_STATUSES = ["pending", "in_progress", "completed", "cancelled"] as const;
@@ -72,6 +73,8 @@ const EMPTY: FormState = {
 export default function TaskDetail() {
   const [, params] = useRoute("/tasks/:id");
   const [, setLocation] = useLocation();
+  const goBack = useReturnNavigation("/tasks");
+  const backHref = getReturnTarget("/tasks");
   const search = useSearch();
   const { canEdit, canDelete } = useAuth();
   const { toast } = useToast();
@@ -83,7 +86,7 @@ export default function TaskDetail() {
   const prefilledSponsorId = qs.get("sponsorId") ?? "";
   const prefilledEventId = qs.get("eventId") ?? "";
 
-  const { data: task, isLoading, refetch } = useGetTask(id ?? "", {
+  const { data: task, isLoading } = useGetTask(id ?? "", {
     query: { enabled: !!id && !isNew, queryKey: getGetTaskQueryKey(id ?? "") },
   });
 
@@ -116,7 +119,7 @@ export default function TaskDetail() {
     mutation: {
       onSuccess: (created) => {
         toast({ title: "Task created" });
-        setLocation(`/tasks/${created.id}`);
+        setLocation(withReturnTo(`/tasks/${created.id}`, getReturnTarget("/tasks")));
       },
       onError: (err) =>
         toast({ title: "Could not create", description: String(err), variant: "destructive" }),
@@ -127,8 +130,7 @@ export default function TaskDetail() {
     mutation: {
       onSuccess: () => {
         toast({ title: "Saved" });
-        setEditing(false);
-        refetch();
+        goBack();
       },
       onError: (err) =>
         toast({ title: "Could not save", description: String(err), variant: "destructive" }),
@@ -139,7 +141,7 @@ export default function TaskDetail() {
     mutation: {
       onSuccess: () => {
         toast({ title: "Task deleted" });
-        setLocation("/tasks");
+        setLocation(getReturnTarget("/tasks"));
       },
       onError: (err) =>
         toast({ title: "Could not delete", description: String(err), variant: "destructive" }),
@@ -190,7 +192,7 @@ export default function TaskDetail() {
     return (
       <div className="text-center py-12 text-green-700/70 dark:text-slate-500">
         Task not found.{" "}
-        <Link href="/tasks" className="text-green-800 dark:text-green-400 underline">Back</Link>
+        <Link href={backHref} className="text-green-800 dark:text-green-400 underline">Back</Link>
       </div>
     );
   }
@@ -202,12 +204,10 @@ export default function TaskDetail() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Link href="/tasks">
-            <Button variant="ghost" size="sm"
-              className="text-green-800 dark:text-green-400 hover:bg-green-50 dark:hover:bg-slate-800">
-              <ArrowLeft className="h-4 w-4 mr-1" /> Back
-            </Button>
-          </Link>
+          <Button variant="ghost" size="sm" onClick={goBack}
+            className="text-green-800 dark:text-green-400 hover:bg-green-50 dark:hover:bg-slate-800">
+            <ArrowLeft className="h-4 w-4 mr-1" /> Back
+          </Button>
           <div>
             <h1 className="text-2xl font-bold text-green-950 dark:text-green-100">
               {isNew ? "New Task" : task!.title}
@@ -328,7 +328,7 @@ export default function TaskDetail() {
               ) : (
                 <p className="mt-1 text-sm text-green-900 dark:text-slate-200">
                   {task?.sponsorName ? (
-                    <Link href={`/sponsors/${task.sponsorId}`}
+                    <Link href={withReturnTo(`/sponsors/${task.sponsorId}`)}
                       className="underline text-green-800 dark:text-green-400 hover:text-green-600">
                       {task.sponsorName}
                     </Link>
@@ -351,7 +351,7 @@ export default function TaskDetail() {
               ) : (
                 <p className="mt-1 text-sm text-green-900 dark:text-slate-200">
                   {task?.eventName ? (
-                    <Link href={`/events/${task.eventId}`}
+                    <Link href={withReturnTo(`/events/${task.eventId}`)}
                       className="underline text-green-800 dark:text-green-400 hover:text-green-600">
                       {task.eventName}
                     </Link>

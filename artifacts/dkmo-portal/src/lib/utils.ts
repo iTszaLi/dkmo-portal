@@ -55,6 +55,10 @@ export function feeStatusLabel(status: string | undefined | null): string {
       return "Pending";
     case "exempt":
       return "Exempt";
+    case "not_applicable":
+      return "Not applicable";
+    case "review":
+      return "Review legacy record";
     default:
       return "Unpaid";
   }
@@ -69,7 +73,10 @@ export function feeStatusBadgeClass(status: string | undefined | null): string {
     case "pending":
       return "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300";
     case "exempt":
+    case "not_applicable":
       return "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400";
+    case "review":
+      return "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300";
     default:
       return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
   }

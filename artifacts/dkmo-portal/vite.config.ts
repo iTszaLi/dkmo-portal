@@ -55,7 +55,7 @@ export default defineConfig({
           react: ["react", "react-dom"],
           charts: ["recharts"],
           pdf: ["jspdf", "jspdf-autotable"],
-          xlsx: ["xlsx"],
+          spreadsheets: ["exceljs"],
         },
       },
     },

@@ -21,15 +21,15 @@ const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 // ── Target fields & auto-detection ───────────────────────────────────────────
 const TARGET_FIELDS = [
-  { key: "legacyMemberId", label: "Legacy ID", patterns: [/^(id|sl|sino|si no|legacy|member ?id|id ?no)\b/i] },
-  { key: "oldApplicationNumber", label: "Old Application Number", patterns: [/old\s+app/i] },
-  { key: "applicationNumber", label: "Application Number", patterns: [/^app(lication)?\s*(no|num|number)?\.?$/i] },
-  { key: "ppName", label: "Passport / Preferred Name", patterns: [/^pp ?name|passport ?name|preferred ?name/i] },
-  { key: "firstName", label: "First Name", patterns: [/^first ?name/i, /^fname/i] },
-  { key: "lastName", label: "Last Name", patterns: [/^last ?name/i, /^lname/i, /^surname/i] },
-  { key: "fullName", label: "Full Name", patterns: [/^(full ?)?name$/i, /^member ?name/i] },
-  { key: "whatsappNumber", label: "WhatsApp Number", patterns: [/whats ?app/i] },
-  { key: "homeContactNumber", label: "Home Contact Number", patterns: [/mobile\s*home|home\s*(mobile|contact|phone)/i] },
+  { key: "legacyMemberId", label: "Legacy ID", patterns: [/^(id|sl|sino|si no|member ?id|id ?no)(\b|[_-])/i, /^legacy[_ -]?(?:member[_ -]?)?id$/i] },
+  { key: "oldApplicationNumber", label: "Old Application Number", patterns: [/old[_ ]+app/i] },
+  { key: "applicationNumber", label: "Historical Application No (raw only)", patterns: [/^app(?:lication)?[_ ]*(?:no|num|number)?\.?$/i] },
+  { key: "ppName", label: "Passport / Preferred Name", patterns: [/^pp[_ ]?name|passport[_ ]?name|preferred[_ ]?name/i] },
+  { key: "firstName", label: "First Name", patterns: [/^first[_ ]?name/i, /^fname/i] },
+  { key: "lastName", label: "Last Name", patterns: [/^last[_ ]?name/i, /^lname/i, /^surname/i] },
+  { key: "fullName", label: "Full Name", patterns: [/^(full[_ -]?)?name$/i, /^member[_ ]?name/i, /^legacy[_ ]?name$/i] },
+  { key: "whatsappNumber", label: "WhatsApp Number", patterns: [/whats?[_ ]?app/i] },
+  { key: "homeContactNumber", label: "Home Contact Number", patterns: [/mobile[_ ]*home|home[_ ]*(mobile|contact|phone)/i] },
   { key: "telephone", label: "Telephone", patterns: [/telephone/i] },
   { key: "email", label: "Email", patterns: [/e-?mail/i] },
   { key: "mobileNumber", label: "Mobile Number", patterns: [/mobile|phone|contact/i] },
@@ -42,14 +42,22 @@ const TARGET_FIELDS = [
   { key: "membershipDate", label: "Membership Date (Joining)", patterns: [/join/i] },
   { key: "legacyEntryDate", label: "Record Created Date (Entry)", patterns: [/entry/i] },
   { key: "company", label: "Company", patterns: [/^company/i, /employer/i] },
-  { key: "designation", label: "Occupation / Job Title", patterns: [/job ?title|occupation|^post$/i] },
+  { key: "designation", label: "Occupation / Job Title", patterns: [/job[_ ]?title|occupation|^post$/i] },
   { key: "maritalStatus", label: "Marital Status", patterns: [/marital/i] },
   { key: "familyStatus", label: "Family Status", patterns: [/family ?status/i] },
   { key: "dependents", label: "Dependents", patterns: [/dependent/i] },
   { key: "bloodGroup", label: "Blood Group", patterns: [/blood/i] },
   { key: "district", label: "District", patterns: [/^dist(rict)?\b/i] },
-  { key: "legacyMemberStatus", label: "Membership Status", patterns: [/member ?status|^status$/i] },
-  { key: "referredBy", label: "Referred By / Sponsor", patterns: [/member ?under|referred|sponsor/i] },
+  { key: "legacyMemberStatus", label: "Membership Status", patterns: [/member[_ ]?status|^status$/i] },
+  { key: "referrerLegacyId", label: "Referrer Legacy ID", patterns: [/referrer.*legacy|legacy.*referrer/i] },
+  { key: "migrationMatchStatus", label: "Legacy / Match Status", patterns: [/member.*dataset.*status|migration.*match.*status/i] },
+  { key: "migrationReferralStatus", label: "Referral Migration Status", patterns: [/^referral[_ ]?status$|migration.*referral.*status/i] },
+  { key: "plannedMemberDestination", label: "Planned Member Destination", patterns: [/planned.*member.*destination/i] },
+  { key: "membershipPaymentRecords", label: "Historical Membership Payment Records", patterns: [/membership.*payment.*records/i] },
+  { key: "membershipAmountPaid", label: "Historical Membership Amount Paid", patterns: [/membership.*amount.*paid/i] },
+  { key: "frfRecords", label: "Historical FRF Records", patterns: [/^frf[_ ]?records$/i] },
+  { key: "frfAmountRecorded", label: "Historical FRF Amount", patterns: [/frf.*amount.*recorded/i] },
+  { key: "referredBy", label: "Referred By / Sponsor", patterns: [/member[_ ]?under|referred|sponsor/i] },
   { key: "memberGroup", label: "Legacy Group (Sponsor / Reference)", patterns: [/^group/i] },
   { key: "availContribution", label: "FRF Contribution Eligible", patterns: [/avail|contribution/i] },
   { key: "notes", label: "Remarks / Notes", patterns: [/remarks?|^notes?$/i] },
@@ -276,19 +284,11 @@ function decodeText(buf: ArrayBuffer): string {
 }
 
 async function parseFile(file: File): Promise<string[][]> {
-  if (/\.xlsx?$/i.test(file.name)) {
+  if (/\.xlsx$/i.test(file.name)) {
     const buf = await file.arrayBuffer();
     const head = new Uint8Array(buf.slice(0, 4));
-    // Old binary .xls files start with D0 CF 11 E0 — read them with SheetJS
     if (head[0] === 0xd0 && head[1] === 0xcf) {
-      const XLSX = await import("xlsx");
-      const wb = XLSX.read(buf, { type: "array", cellDates: true });
-      const ws = wb.Sheets[wb.SheetNames[0]!];
-      if (!ws) return [];
-      const raw = XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1, raw: false, defval: "" });
-      return raw
-        .map((r) => (r ?? []).map((v) => (v == null ? "" : String(v))))
-        .filter((r) => r.some((x) => x.trim()));
+      throw new Error("Legacy .xls files are not supported. Save the workbook as .xlsx and try again.");
     }
     const ExcelJS = (await import("exceljs")).default;
     const wb = new ExcelJS.Workbook();
@@ -383,6 +383,16 @@ export default function ImportMembersPage() {
 
   const header = grid[0] ?? [];
   const dataRows = useMemo(() => grid.slice(1), [grid]);
+  const isAccessManifestFile = useMemo(() => {
+    const normalizedHeaders = new Set(header.map((value) => value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_")));
+    return [
+      "legacy_id",
+      "member_dataset_status",
+      "planned_member_destination",
+      "legacy_referrer_id",
+      "referral_status",
+    ].every((value) => normalizedHeaders.has(value));
+  }, [header]);
 
   // Hard lock: non-member file detected with ≥80% confidence — no override.
   const detectionLocked =
@@ -481,6 +491,7 @@ export default function ImportMembersPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fileName: file?.name ?? "", fileSize: file?.size ?? 0,
+          importMode: isAccessManifestFile ? "dkmo_access_2022" : "generic",
           rows: buildRows(),
           resolutions: Object.fromEntries(Object.entries(resolutions).map(([k, v]) => [String(k), v])),
         }),
@@ -570,7 +581,7 @@ export default function ImportMembersPage() {
                   <p className="font-medium">Drop your legacy member file here, or click to browse</p>
                   <p className="text-sm text-muted-foreground">TXT (tab separated), CSV or XLSX — delimiter detected automatically. Max 15 MB / 20,000 rows.</p>
                 </div>
-                <input ref={fileInput} type="file" accept=".txt,.csv,.tsv,.xlsx,.xls" className="hidden"
+                <input ref={fileInput} type="file" accept=".txt,.csv,.tsv,.xlsx" className="hidden"
                   onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleFile(f); e.target.value = ""; }} data-testid="input-file" />
                 <div className="mt-6 grid gap-4 sm:grid-cols-2 text-sm">
                   <div className="rounded-lg border bg-muted/30 p-4">

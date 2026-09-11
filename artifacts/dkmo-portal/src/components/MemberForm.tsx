@@ -67,7 +67,7 @@ const DESIGNATION_OPTIONS = [
   "Member",
 ];
 
-const FEE_STATUS_OPTIONS = ["unpaid", "pending", "partial", "paid", "exempt"] as const;
+const FEE_STATUS_OPTIONS = ["unpaid", "pending", "partial", "paid", "exempt", "review", "not_applicable"] as const;
 
 // Saudi mobile: optional +966 / 966 / leading 0, then a 5 and 8 more digits.
 const SAUDI_MOBILE_RE = /^(\+?966|0)?5\d{8}$/;
@@ -82,7 +82,6 @@ const formSchema = z.object({
       "Enter a valid Saudi mobile (e.g. +966 5XXXXXXXX)",
     ),
   membershipId: z.string().optional(),
-  applicationNumber: z.string().optional(),
   iqamaNumber: z.string().optional(),
   jamaath: z.string().optional(),
   city: z.string().optional(),
@@ -128,7 +127,6 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
       fullName: defaultValues?.fullName || "",
       mobileNumber: defaultValues?.mobileNumber || "",
       membershipId: defaultValues?.membershipId || "",
-      applicationNumber: (defaultValues as any)?.applicationNumber || "",
       iqamaNumber: (defaultValues as any)?.iqamaNumber || "",
       jamaath: (defaultValues as any)?.jamaath || "",
       city: defaultValues?.city || "",
@@ -150,7 +148,6 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
         fullName: defaultValues.fullName || "",
         mobileNumber: defaultValues.mobileNumber || "",
         membershipId: defaultValues.membershipId || "",
-        applicationNumber: (defaultValues as any).applicationNumber || "",
         iqamaNumber: (defaultValues as any).iqamaNumber || "",
         jamaath: (defaultValues as any).jamaath || "",
         city: defaultValues.city || "",
@@ -234,20 +231,7 @@ export function MemberForm({ defaultValues, onSubmit, isSubmitting }: MemberForm
             )}
           />
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="applicationNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Application No</FormLabel>
-                <FormControl>
-                  <Input placeholder="APP-12345" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <div className="grid grid-cols-1 gap-4">
           <FormField
             control={form.control}
             name="iqamaNumber"

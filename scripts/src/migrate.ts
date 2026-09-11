@@ -220,14 +220,29 @@ async function main() {
 
     ALTER TABLE payments DROP COLUMN IF EXISTS month;
 
+    -- FRF eligibility is derived from membership-fee status. Repair only the
+    -- cached status field; Access/payment history is intentionally untouched.
+    UPDATE members
+      SET frf_status = CASE WHEN fee_status = 'paid' THEN 'active' ELSE 'inactive' END
+      WHERE frf_status IS DISTINCT FROM CASE
+        WHEN fee_status = 'paid' THEN 'active'
+        ELSE 'inactive'
+      END;
+
     ALTER TABLE frf_claims
       ADD COLUMN IF NOT EXISTS under_review_at TIMESTAMPTZ,
       ADD COLUMN IF NOT EXISTS under_review_by TEXT NOT NULL DEFAULT '',
       ADD COLUMN IF NOT EXISTS disbursed_at TIMESTAMPTZ,
       ADD COLUMN IF NOT EXISTS disbursed_by TEXT NOT NULL DEFAULT '',
+      ADD COLUMN IF NOT EXISTS disbursed_amount NUMERIC(12,2) NOT NULL DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS disbursement_reference TEXT NOT NULL DEFAULT '',
       ADD COLUMN IF NOT EXISTS rejected_by TEXT NOT NULL DEFAULT '',
       ADD COLUMN IF NOT EXISTS rejected_at TIMESTAMPTZ,
       ADD COLUMN IF NOT EXISTS review_notes TEXT NOT NULL DEFAULT '';
+
+    UPDATE frf_claims
+      SET disbursed_amount = amount_approved
+      WHERE status = 'disbursed' AND disbursed_amount = 0 AND amount_approved > 0;
 
     CREATE TABLE IF NOT EXISTS audit_logs (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -685,6 +700,150 @@ async function main() {
     ALTER TABLE frf_contributions ADD COLUMN IF NOT EXISTS import_batch_id UUID;
     ALTER TABLE sponsors ADD COLUMN IF NOT EXISTS import_batch_id UUID;
     ALTER TABLE events ADD COLUMN IF NOT EXISTS import_batch_id UUID;
+  `);
+
+  // Versioned committee rosters preserve prior terms and their assignments.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS committee_terms (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      committee_year TEXT NOT NULL UNIQUE,
+      start_date DATE NOT NULL,
+      end_date DATE,
+      is_active BOOLEAN NOT NULL DEFAULT FALSE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS committee_assignments (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      term_id UUID NOT NULL REFERENCES committee_terms(id) ON DELETE CASCADE,
+      member_id UUID NOT NULL REFERENCES members(id) ON DELETE RESTRICT,
+      position TEXT NOT NULL,
+      start_date DATE NOT NULL,
+      end_date DATE,
+      is_active BOOLEAN NOT NULL DEFAULT TRUE,
+      permissions JSONB NOT NULL DEFAULT '[]'::jsonb,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      CONSTRAINT committee_assignments_term_member_unique UNIQUE (term_id, member_id)
+    );
+
+    CREATE INDEX IF NOT EXISTS committee_terms_active_idx
+      ON committee_terms (is_active);
+    CREATE UNIQUE INDEX IF NOT EXISTS committee_terms_one_active_idx
+      ON committee_terms (is_active)
+      WHERE is_active = TRUE;
+    CREATE INDEX IF NOT EXISTS committee_assignments_term_idx
+      ON committee_assignments (term_id);
+    CREATE INDEX IF NOT EXISTS committee_assignments_member_idx
+      ON committee_assignments (member_id);
+
+    CREATE TABLE IF NOT EXISTS member_timeline_entries (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      member_id UUID NOT NULL REFERENCES members(id) ON DELETE CASCADE,
+      title TEXT NOT NULL,
+      detail TEXT NOT NULL DEFAULT '',
+      event_date TIMESTAMPTZ,
+      created_by TEXT NOT NULL DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS member_timeline_entries_member_idx
+      ON member_timeline_entries (member_id, event_date DESC);
+  `);
+
+  // Committee meetings are scoped to the authoritative term roster. Existing
+  // meetings are attached to the current active term when one exists; their
+  // attendance rows remain preserved, while API reads/writes enforce eligibility.
+  await pool.query(`
+    ALTER TABLE meetings
+      ADD COLUMN IF NOT EXISTS committee_term_id UUID
+      REFERENCES committee_terms(id) ON DELETE SET NULL;
+    ALTER TABLE meetings
+      ADD COLUMN IF NOT EXISTS participants_initialized BOOLEAN NOT NULL DEFAULT FALSE;
+
+    UPDATE meetings m
+    SET committee_term_id = active.id
+    FROM (
+      SELECT id FROM committee_terms
+      WHERE is_active = TRUE
+      ORDER BY start_date DESC
+      LIMIT 1
+    ) active
+    WHERE m.committee_term_id IS NULL;
+
+    CREATE INDEX IF NOT EXISTS meetings_committee_term_idx
+      ON meetings (committee_term_id);
+  `);
+
+  // Loan allocation is a singleton. Its baseline is derived from the ledger so
+  // an existing installation can never start with a negative available amount.
+  await pool.query(`
+    ALTER TABLE loans
+      ADD COLUMN IF NOT EXISTS responsible_committee_assignment_id UUID
+      REFERENCES committee_assignments(id) ON DELETE SET NULL;
+
+    CREATE INDEX IF NOT EXISTS loans_responsible_assignment_idx
+      ON loans (responsible_committee_assignment_id);
+
+    CREATE TABLE IF NOT EXISTS loan_budgets (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      amount NUMERIC(14,2) NOT NULL CHECK (amount >= 0),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS loan_budget_history (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      old_amount NUMERIC(14,2) NOT NULL,
+      new_amount NUMERIC(14,2) NOT NULL,
+      actor_id TEXT NOT NULL,
+      actor_name TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE OR REPLACE FUNCTION reject_loan_budget_history_mutation()
+    RETURNS TRIGGER AS $fn$
+    BEGIN
+      RAISE EXCEPTION 'loan budget history is immutable';
+    END;
+    $fn$ LANGUAGE plpgsql;
+
+    DROP TRIGGER IF EXISTS loan_budget_history_immutable ON loan_budget_history;
+    CREATE TRIGGER loan_budget_history_immutable
+      BEFORE UPDATE OR DELETE ON loan_budget_history
+      FOR EACH ROW EXECUTE FUNCTION reject_loan_budget_history_mutation();
+
+    WITH baseline AS (
+      SELECT COALESCE(SUM(principal_amount), 0)::NUMERIC(14,2) AS amount FROM loans
+    ), inserted AS (
+      INSERT INTO loan_budgets (id, amount)
+      SELECT 1, amount FROM baseline
+      ON CONFLICT (id) DO NOTHING
+      RETURNING amount
+    )
+    INSERT INTO loan_budget_history (old_amount, new_amount, actor_id, actor_name)
+      SELECT 0, amount, 'system', 'System migration' FROM inserted;
+
+    WITH totals AS (
+      SELECT COALESCE(SUM(principal_amount), 0)::NUMERIC(14,2) AS disbursed FROM loans
+    ), candidate AS MATERIALIZED (
+      SELECT b.id, b.amount AS old_amount, totals.disbursed AS new_amount
+      FROM loan_budgets b, totals
+      WHERE b.id = 1 AND b.amount < totals.disbursed
+    ), adjusted AS (
+      UPDATE loan_budgets b
+      SET amount = candidate.new_amount, updated_at = NOW()
+      FROM candidate
+      WHERE b.id = candidate.id
+      RETURNING candidate.old_amount, candidate.new_amount
+    )
+    INSERT INTO loan_budget_history (old_amount, new_amount, actor_id, actor_name)
+      SELECT old_amount, new_amount, 'system', 'System migration' FROM adjusted;
+
+    INSERT INTO loan_budget_history (old_amount, new_amount, actor_id, actor_name)
+      SELECT 0, b.amount, 'system', 'System migration'
+      FROM loan_budgets b
+      WHERE b.id = 1 AND NOT EXISTS (SELECT 1 FROM loan_budget_history);
   `);
 
   console.log("✅  All tables created.");

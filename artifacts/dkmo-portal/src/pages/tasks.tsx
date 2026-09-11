@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Link, useLocation } from "wouter";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useLocation, useSearch } from "wouter";
 import { useListTasks, useDeleteTask, useUpdateTask } from "@workspace/api-client-react";
 import {
   Card,
@@ -37,6 +37,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { replaceCurrentQuery, withReturnTo } from "@/lib/navigation";
 
 const PRIORITIES = ["low", "medium", "high", "urgent"] as const;
 const TASK_STATUSES = ["pending", "in_progress", "completed", "cancelled"] as const;
@@ -74,15 +75,27 @@ function formatDate(s: string | null | undefined): string {
 
 export default function Tasks() {
   const [, setLocation] = useLocation();
+  const searchString = useSearch();
+  const initialParams = useMemo(() => new URLSearchParams(searchString), [searchString]);
   const { canEdit, canDelete } = useAuth();
   const { toast } = useToast();
 
-  const [statusFilter, setStatusFilter] = useState<string>("active");
-  const [priorityFilter, setPriorityFilter] = useState<string>("all");
-  const [sort, setSort] = useState<string>("priority");
-  const [searchText, setSearchText] = useState("");
-  const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<string>(() => initialParams.get("status") ?? "active");
+  const [priorityFilter, setPriorityFilter] = useState<string>(() => initialParams.get("priority") ?? "all");
+  const [sort, setSort] = useState<string>(() => initialParams.get("sort") ?? "priority");
+  const [searchText, setSearchText] = useState(() => initialParams.get("search") ?? "");
+  const [page, setPage] = useState(() => Math.max(1, Number(initialParams.get("page")) || 1));
   const pageSize = 50;
+
+  useEffect(() => {
+    replaceCurrentQuery({
+      status: statusFilter === "active" ? null : statusFilter,
+      priority: priorityFilter === "all" ? null : priorityFilter,
+      sort: sort === "priority" ? null : sort,
+      search: searchText || null,
+      page: page > 1 ? page : null,
+    });
+  }, [statusFilter, priorityFilter, sort, searchText, page]);
 
   const queryParams = useMemo(
     () => ({
@@ -287,7 +300,7 @@ export default function Tasks() {
                   <div
                     key={t.id}
                     className="flex items-start gap-3 py-3 cursor-pointer hover:bg-green-50/40 dark:hover:bg-slate-800/40 -mx-2 px-2 rounded-lg transition-colors group"
-                    onClick={() => setLocation(`/tasks/${t.id}`)}
+                    onClick={() => setLocation(withReturnTo(`/tasks/${t.id}`))}
                   >
                     {/* Status toggle */}
                     <button
@@ -340,7 +353,7 @@ export default function Tasks() {
                     </div>
 
                     <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Link href={`/tasks/${t.id}`} onClick={(e) => e.stopPropagation()}>
+                      <Link href={withReturnTo(`/tasks/${t.id}`)} onClick={(e) => e.stopPropagation()}>
                         <Button size="icon" variant="ghost" className="h-7 w-7 text-green-700 dark:text-green-400">
                           <ArrowRight className="h-3.5 w-3.5" />
                         </Button>

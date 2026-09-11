@@ -31,7 +31,9 @@ export async function logAudit(
       module,
       entityId: opts?.entityId ?? null,
       entityName: opts?.entityName ?? null,
-      details: opts?.details ?? null,
+      details: process.env.NODE_ENV === "test" && req.headers["x-dkmo-test-run"]
+        ? `[test-run:${String(req.headers["x-dkmo-test-run"]).slice(0, 120)}] ${opts?.details ?? ""}`.trim()
+        : opts?.details ?? null,
       ipAddress: getIp(req),
       userAgent: (req.headers["user-agent"] ?? "").slice(0, 512) || null,
     });

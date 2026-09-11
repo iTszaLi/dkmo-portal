@@ -1,4 +1,5 @@
 import { Router, type IRouter } from "express";
+import { createHash } from "node:crypto";
 import { desc, eq, sql } from "drizzle-orm";
 import { db, membersTable, importBatchesTable, paymentsTable, frfContributionsTable, loansTable } from "@workspace/db";
 import { z } from "zod";
@@ -20,6 +21,9 @@ router.use(requireAuth);
 
 const MAX_ROWS = 20_000;
 const BATCH_SIZE = 500;
+const DKMO_ACCESS_MANIFEST_ID_HASH = "b189e555cf62a3b2d12f53c74c9c4cca3ad6cf98bb8cce2e226980e077d6ce18";
+const DKMO_ACCESS_MANIFEST_DATA_HASH = "10f69d0f27e8605d9b2d978db0758f99eb88ab682321fae298b14c2facf573ab";
+const DKMO_ACCESS_REVIEW_IDS = ["7101", "7112", "7115", "11485", "11568", "16842", "19062"];
 
 // ── Row schema (all optional strings; server cleans/validates) ───────────────
 const RawRow = z.object({
@@ -53,6 +57,28 @@ const RawRow = z.object({
   district: z.string().max(200).optional(),
   legacyMemberStatus: z.string().max(100).optional(),
   referredBy: z.string().max(300).optional(),
+  referrerLegacyId: z.string().max(100).optional(),
+  migrationMatchStatus: z.enum([
+    "UNMATCHED_LEGACY",
+    "NEEDS_REVIEW",
+    "POSSIBLE_DUPLICATE",
+    "CONFIRMED_MATCH",
+    "CONFIRMED_DIFFERENT_PERSON",
+  ]).optional(),
+  migrationReferralStatus: z.enum([
+    "LEGACY_ID_RESOLVED",
+    "LEGACY_ID_RESOLVED_REVIEW",
+    "NEEDS_REVIEW_FREE_TEXT",
+    "NO_REFERRAL_SOURCE",
+  ]).optional(),
+  plannedMemberDestination: z.enum([
+    "new_legacy_member_record",
+    "existing_portal_member",
+  ]).optional(),
+  membershipPaymentRecords: z.string().max(50).optional(),
+  membershipAmountPaid: z.string().max(50).optional(),
+  frfRecords: z.string().max(50).optional(),
+  frfAmountRecorded: z.string().max(50).optional(),
   availContribution: z.string().max(50).optional(),
   notes: z.string().max(2000).optional(),
 });
@@ -63,6 +89,7 @@ const AnalyzeBody = z.object({ rows: z.array(RawRow).min(1).max(MAX_ROWS) });
 const CommitBody = z.object({
   fileName: z.string().max(300).default(""),
   fileSize: z.number().int().min(0).default(0),
+  importMode: z.enum(["generic", "dkmo_access_2022"]).default("generic"),
   rows: z.array(RawRow).min(1).max(MAX_ROWS),
   // rowNumber → how to handle a duplicate row. Default: skip.
   resolutions: z.record(z.string(), z.enum(["skip", "update", "import"])).default({}),
@@ -143,6 +170,13 @@ function normKey(v: string): string {
   return v.replace(/\s+/g, " ").trim().toLowerCase();
 }
 
+/** Normalize a numeric Access ID for relationship lookup without changing its stored value. */
+function normalizeLegacyId(v: string): string {
+  const value = cleanText(v);
+  if (/^\d+$/.test(value)) return String(Number(value));
+  return normKey(value);
+}
+
 // ── Cleaning + validation ────────────────────────────────────────────────────
 interface CleanRow {
   rowNumber: number;
@@ -177,7 +211,15 @@ interface CleanRow {
   referredBy: string;
   availContribution: string;
   notes: string;
+  migrationMatchStatus: string;
+  migrationReferralStatus: string;
+  plannedMemberDestination: string;
+  membershipPaymentRecords: number;
+  membershipAmountPaid: number;
+  frfRecords: number;
+  frfAmountRecorded: number;
   referenceCode: string;
+  referenceLegacyId: string;
   referenceName: string;
   referenceMobile: string;
   /** How complete the record is: complete / partial / needsReview. */
@@ -197,7 +239,12 @@ function cleanAndValidate(raw: RawRowT): CleanRow {
   const transforms: string[] = [];
 
   const nameRaw = cleanText(raw.fullName);
-  const fullName = properCase(nameRaw);
+  let fullName = properCase(nameRaw);
+  const legacyMemberId = cleanText(raw.legacyMemberId);
+  if (!fullName && legacyMemberId) {
+    fullName = `Legacy member ${legacyMemberId}`;
+    warnings.push("Missing name — generated a legacy ID placeholder so the record is not excluded");
+  }
   if (fullName && fullName !== nameRaw) transforms.push(`Name: ${nameRaw} → ${fullName}`);
   const mobileRaw = cleanText(raw.mobileNumber);
   const mobileNumber = mobileRaw ? normalizeSaudiMobile(mobileRaw) : "";
@@ -263,10 +310,15 @@ function cleanAndValidate(raw: RawRowT): CleanRow {
   } else if (groupRaw) {
     transforms.push(`Sponsor: ${groupRaw} → (no sponsor assigned)`);
   }
+  const referenceLegacyId = normalizeLegacyId(cleanText(raw.referrerLegacyId) || referenceCode);
+  const numericValue = (value: string | undefined): number => {
+    const parsed = Number(cleanText(value));
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+  };
 
   const row: CleanRow = {
     rowNumber: raw.rowNumber,
-    legacyMemberId: cleanText(raw.legacyMemberId),
+    legacyMemberId,
     applicationNumber: cleanText(raw.applicationNumber),
     oldApplicationNumber: cleanText(raw.oldApplicationNumber),
     fullName,
@@ -297,7 +349,15 @@ function cleanAndValidate(raw: RawRowT): CleanRow {
     referredBy: properCase(cleanText(raw.referredBy)),
     availContribution,
     notes: cleanText(raw.notes),
+    migrationMatchStatus: cleanText(raw.migrationMatchStatus),
+    migrationReferralStatus: cleanText(raw.migrationReferralStatus),
+    plannedMemberDestination: cleanText(raw.plannedMemberDestination),
+    membershipPaymentRecords: numericValue(raw.membershipPaymentRecords),
+    membershipAmountPaid: numericValue(raw.membershipAmountPaid),
+    frfRecords: numericValue(raw.frfRecords),
+    frfAmountRecorded: numericValue(raw.frfAmountRecorded),
     referenceCode,
+    referenceLegacyId,
     referenceName,
     referenceMobile,
     classification: "partial",
@@ -313,9 +373,9 @@ function cleanAndValidate(raw: RawRowT): CleanRow {
   row.isBlank = !row.fullName && !mobileRaw && !row.iqamaNumber && !row.legacyMemberId;
   if (row.isBlank) return row;
 
-  if (!row.fullName) errors.push("Missing name");
-  if (!mobileRaw) errors.push("Missing mobile number");
-  else if (!mobileNumber) errors.push(`Invalid mobile number "${mobileRaw}"`);
+  if (!row.fullName) errors.push("Missing name and legacy ID");
+  if (!mobileRaw) warnings.push("Missing mobile number — record will be retained with a blank mobile");
+  else if (!mobileNumber) warnings.push(`Invalid mobile number "${mobileRaw}" — left blank`);
   if (dobRaw && !dateOfBirth) warnings.push(`Unrecognized date of birth "${dobRaw}" — left blank`);
   if (joinRaw && !membershipDate) warnings.push(`Unrecognized joining date "${joinRaw}" — left blank`);
   if (entryRaw && !legacyEntryDate) warnings.push(`Unrecognized entry date "${entryRaw}" — left blank`);
@@ -348,7 +408,6 @@ async function buildExistingIndexes() {
       mobileNumber: membersTable.mobileNumber,
       iqamaNumber: membersTable.iqamaNumber,
       passportNumber: membersTable.passportNumber,
-      applicationNumber: membersTable.applicationNumber,
       legacyMemberId: membersTable.legacyMemberId,
       email: membersTable.email,
       jamaath: membersTable.jamaath,
@@ -358,7 +417,6 @@ async function buildExistingIndexes() {
   const byMobile = new Map<string, (typeof existing)[number]>();
   const byIqama = new Map<string, (typeof existing)[number]>();
   const byPassport = new Map<string, (typeof existing)[number]>();
-  const byAppNo = new Map<string, (typeof existing)[number]>();
   const byLegacy = new Map<string, (typeof existing)[number]>();
   const byEmail = new Map<string, (typeof existing)[number]>();
   const jamaaths = new Map<string, string>();
@@ -368,13 +426,12 @@ async function buildExistingIndexes() {
     if (mob) byMobile.set(mob, m);
     if (m.iqamaNumber) byIqama.set(normKey(m.iqamaNumber), m);
     if (m.passportNumber) byPassport.set(normKey(m.passportNumber), m);
-    if (m.applicationNumber) byAppNo.set(normKey(m.applicationNumber), m);
     if (m.legacyMemberId) byLegacy.set(normKey(m.legacyMemberId), m);
     if (m.email) byEmail.set(normKey(m.email), m);
     if (m.jamaath) jamaaths.set(normKey(m.jamaath), m.jamaath);
     if (m.memberGroup) groups.set(normKey(m.memberGroup), m.memberGroup);
   }
-  return { byMobile, byIqama, byPassport, byAppNo, byLegacy, byEmail, jamaaths, groups };
+  return { byMobile, byIqama, byPassport, byLegacy, byEmail, jamaaths, groups };
 }
 
 /** Very light fuzzy match: names share ≥60% of normalized tokens. */
@@ -397,7 +454,6 @@ function findDuplicate(
     [row.mobileNumber, idx.byMobile, "Same mobile number"],
     [row.iqamaNumber ? normKey(row.iqamaNumber) : "", idx.byIqama, "Same Iqama number"],
     [row.passportNumber ? normKey(row.passportNumber) : "", idx.byPassport, "Same passport number"],
-    [row.applicationNumber ? normKey(row.applicationNumber) : "", idx.byAppNo, "Same application number"],
     [row.legacyMemberId ? normKey(row.legacyMemberId) : "", idx.byLegacy, "Same legacy member ID"],
     [row.email ? normKey(row.email) : "", idx.byEmail, "Same email"],
   ];
@@ -442,8 +498,8 @@ function analyzeRows(
       out.push({ row, duplicate: null, fileDuplicateOfRow: null, status: "invalid" });
       continue;
     }
-    const fileDupOf = seenMobiles.get(row.mobileNumber) ?? null;
-    if (fileDupOf === null) seenMobiles.set(row.mobileNumber, row.rowNumber);
+    const fileDupOf = row.mobileNumber ? (seenMobiles.get(row.mobileNumber) ?? null) : null;
+    if (row.mobileNumber && fileDupOf === null) seenMobiles.set(row.mobileNumber, row.rowNumber);
     const duplicate = findDuplicate(row, idx);
     // Normalize Jamaath / Group casing against existing values; new Jamaaths
     // are stored in Proper Case so "surthkal"/"SURTHKAL" become "Surthkal".
@@ -524,14 +580,65 @@ router.post("/members/import/commit", requireRole("admin"), async (req: AuthedRe
     res.status(400).json({ error: "Invalid import payload" });
     return;
   }
-  const { fileName, fileSize, rows, resolutions } = parsed.data;
+  const { fileName, fileSize, importMode, rows, resolutions } = parsed.data;
   const startedAt = Date.now();
 
   const idx = await buildExistingIndexes();
   const analyzed = analyzeRows(rows, idx);
+  const submittedLegacyIds = new Set(analyzed.map((entry) => entry.row.legacyMemberId).filter(Boolean));
+  const submittedIdHash = createHash("sha256")
+    .update([...submittedLegacyIds].sort().join("\n"))
+    .digest("hex");
+  const normalizedFileName = fileName.toLowerCase().replace(/[^a-z0-9]+/g, "_");
+  const isAccessManifest =
+    importMode === "dkmo_access_2022" ||
+    analyzed.some((entry) => Boolean(entry.row.migrationMatchStatus)) ||
+    submittedIdHash === DKMO_ACCESS_MANIFEST_ID_HASH ||
+    normalizedFileName.includes("migration_legacy_member_dataset") ||
+    normalizedFileName.includes("2022_new_okkuta_02282022");
+  if (isAccessManifest) {
+    const reviewIds = new Set(
+      analyzed
+        .filter((entry) => entry.row.migrationMatchStatus === "NEEDS_REVIEW")
+        .map((entry) => entry.row.legacyMemberId),
+    );
+    const dataHash = createHash("sha256")
+      .update(
+        analyzed
+          .map(({ row }) => [
+            row.legacyMemberId,
+            row.migrationMatchStatus,
+            row.plannedMemberDestination,
+            row.referenceLegacyId,
+            row.migrationReferralStatus,
+            String(row.membershipPaymentRecords),
+            String(row.membershipAmountPaid),
+            String(row.frfRecords),
+            String(row.frfAmountRecorded),
+          ].join("|"))
+          .sort()
+          .join("\n"),
+      )
+      .digest("hex");
+    if (
+      analyzed.length !== 1118 ||
+      submittedLegacyIds.size !== 1118 ||
+      submittedIdHash !== DKMO_ACCESS_MANIFEST_ID_HASH ||
+      dataHash !== DKMO_ACCESS_MANIFEST_DATA_HASH ||
+      reviewIds.size !== DKMO_ACCESS_REVIEW_IDS.length ||
+      DKMO_ACCESS_REVIEW_IDS.some((id) => !reviewIds.has(id)) ||
+      analyzed.some((entry) => entry.status === "invalid" || entry.status === "blank")
+    ) {
+      res.status(400).json({
+        error: "Access migration manifest does not match the audited 1,118-member identity, referral, and status manifest.",
+      });
+      return;
+    }
+  }
 
   const failedRows: Array<{ rowNumber: number; reason: string }> = [];
   let imported = 0, updated = 0, skipped = 0, duplicates = 0;
+  let resolvedReferrals = 0, unresolvedReferrals = 0;
 
   const user = req.userId ? getUserById(req.userId) : null;
 
@@ -551,11 +658,29 @@ router.post("/members/import/commit", requireRole("admin"), async (req: AuthedRe
   const toInsert: CleanRow[] = [];
   const toUpdate: Array<{ row: CleanRow; memberId: string }> = [];
   const seenFileMobiles = new Set<string>();
+  const legacyMemberMap = new Map<string, { id: string; fullName: string }>();
+  for (const member of idx.byLegacy.values()) {
+    legacyMemberMap.set(normalizeLegacyId(member.legacyMemberId), {
+      id: member.id,
+      fullName: member.fullName,
+    });
+  }
 
   for (const a of analyzed) {
     if (a.status === "blank") continue;
     if (a.status === "invalid") {
       failedRows.push({ rowNumber: a.row.rowNumber, reason: a.row.errors.join("; ") });
+      continue;
+    }
+    if (isAccessManifest) {
+      const exactLegacyMatch = idx.byLegacy.get(normKey(a.row.legacyMemberId));
+      if (exactLegacyMatch) {
+        duplicates++;
+        toUpdate.push({ row: a.row, memberId: exactLegacyMatch.id });
+      } else {
+        if (a.status === "duplicate") duplicates++;
+        toInsert.push(a.row);
+      }
       continue;
     }
     if (a.status === "duplicate") {
@@ -567,8 +692,8 @@ router.post("/members/import/commit", requireRole("admin"), async (req: AuthedRe
       // "import" falls through to insert
     }
     // Guard: never insert the same mobile twice within one run.
-    if (seenFileMobiles.has(a.row.mobileNumber)) { skipped++; continue; }
-    seenFileMobiles.add(a.row.mobileNumber);
+    if (a.row.mobileNumber && seenFileMobiles.has(a.row.mobileNumber)) { skipped++; continue; }
+    if (a.row.mobileNumber) seenFileMobiles.add(a.row.mobileNumber);
     toInsert.push(a.row);
   }
 
@@ -586,18 +711,28 @@ router.post("/members/import/commit", requireRole("admin"), async (req: AuthedRe
             fullName: row.fullName,
             mobileNumber: row.mobileNumber,
             membershipId,
-            applicationNumber: row.applicationNumber,
             iqamaNumber: row.iqamaNumber,
             jamaath: row.jamaath,
             city: row.city,
             country: row.country,
             dateOfBirth: row.dateOfBirth,
             designation: row.designation || "Member",
-            feeStatus: "paid",
-            feePaidAt: new Date(),
+            membershipFee: String(row.membershipAmountPaid),
+            feeStatus:
+              row.membershipAmountPaid > 0
+                ? "paid"
+                : row.membershipPaymentRecords > 0
+                  ? "review"
+                  : "not_applicable",
+            feePaidAt: null,
             feeUpdatedBy: req.userId ?? "import",
-            frfStatus: "active",
-            notes: row.notes ? `${row.notes} — Imported from legacy database` : "Imported from legacy database",
+            frfStatus:
+              row.membershipAmountPaid > 0
+                ? "active"
+                : "inactive",
+            notes: row.notes
+              ? `${row.notes} — Imported from legacy database; no due amounts inferred`
+              : "Imported from legacy database; no due amounts inferred",
             legacyMemberId: row.legacyMemberId,
             oldApplicationNumber: row.oldApplicationNumber,
             ppName: row.ppName,
@@ -627,7 +762,22 @@ router.post("/members/import/commit", requireRole("admin"), async (req: AuthedRe
           });
         }
         if (values.length > 0) {
-          await tx.insert(membersTable).values(values);
+          const insertedRows = await tx
+            .insert(membersTable)
+            .values(values)
+            .returning({
+              id: membersTable.id,
+              legacyMemberId: membersTable.legacyMemberId,
+              fullName: membersTable.fullName,
+            });
+          for (const inserted of insertedRows) {
+            if (inserted.legacyMemberId) {
+              legacyMemberMap.set(normalizeLegacyId(inserted.legacyMemberId), {
+                id: inserted.id,
+                fullName: inserted.fullName,
+              });
+            }
+          }
           imported += values.length;
         }
       }
@@ -646,7 +796,6 @@ router.post("/members/import/commit", requireRole("admin"), async (req: AuthedRe
             legacy_reference_code = CASE WHEN legacy_reference_code = '' THEN ${row.referenceCode} ELSE legacy_reference_code END,
             legacy_reference_name = CASE WHEN legacy_reference_name = '' THEN ${row.referenceName} ELSE legacy_reference_name END,
             legacy_reference_mobile = CASE WHEN legacy_reference_mobile = '' THEN ${row.referenceMobile} ELSE legacy_reference_mobile END,
-            application_number = CASE WHEN application_number = '' THEN ${row.applicationNumber} ELSE application_number END,
             iqama_number = CASE WHEN iqama_number = '' THEN ${row.iqamaNumber} ELSE iqama_number END,
             jamaath = CASE WHEN jamaath = '' THEN ${row.jamaath} ELSE jamaath END,
             date_of_birth = CASE WHEN date_of_birth = '' THEN ${row.dateOfBirth} ELSE date_of_birth END,
@@ -664,12 +813,42 @@ router.post("/members/import/commit", requireRole("admin"), async (req: AuthedRe
             legacy_member_status = CASE WHEN legacy_member_status = '' THEN ${row.legacyMemberStatus} ELSE legacy_member_status END,
             referred_by = CASE WHEN referred_by = '' THEN ${row.referredBy} ELSE referred_by END,
             avail_contribution = CASE WHEN avail_contribution = '' THEN ${row.availContribution} ELSE avail_contribution END,
+            legacy_raw_record = COALESCE(legacy_raw_record, '{}'::jsonb) || ${JSON.stringify(row.rawRecord)}::jsonb,
             designation = CASE WHEN designation IN ('', 'Member') AND ${row.designation} <> '' THEN ${row.designation} ELSE designation END,
             notes = CASE WHEN notes IN ('', 'Imported from legacy database') AND ${row.notes} <> '' THEN ${row.notes} ELSE notes END,
             updated_at = NOW()
           WHERE id = ${memberId}::uuid
         `);
         updated++;
+      }
+
+      // Resolve referrals only after every legacy member in this import has an
+      // internal UUID. Numeric Access IDs are the authoritative key; free text
+      // is retained as a name but never guessed into a different member.
+      const referralRows = [
+        ...toInsert.map((row) => ({
+          row,
+          memberId: row.legacyMemberId
+            ? legacyMemberMap.get(normalizeLegacyId(row.legacyMemberId))?.id ?? ""
+            : "",
+        })),
+        ...toUpdate,
+      ];
+      for (const { row, memberId } of referralRows) {
+        if (!row.referenceLegacyId && !row.referenceName) continue;
+        const referrer = row.referenceLegacyId
+          ? legacyMemberMap.get(row.referenceLegacyId)
+          : undefined;
+        const safeReferrer = referrer && referrer.id !== memberId ? referrer : undefined;
+        await tx.execute(sql`
+          UPDATE members SET
+            ref_member_id = ${safeReferrer?.id ?? ""},
+            ref_member_name = ${safeReferrer?.fullName ?? row.referenceName},
+            updated_at = NOW()
+          WHERE id = ${memberId}::uuid
+        `);
+        if (safeReferrer) resolvedReferrals++;
+        else unresolvedReferrals++;
       }
     });
   } catch (err) {
@@ -684,7 +863,15 @@ router.post("/members/import/commit", requireRole("admin"), async (req: AuthedRe
   const durationMs = Date.now() - startedAt;
   await db
     .update(importBatchesTable)
-    .set({ imported, updated, skipped, failed: failedRows.length, duplicates, durationMs })
+    .set({
+      imported,
+      updated,
+      skipped,
+      failed: failedRows.length,
+      duplicates,
+      durationMs,
+      notes: `Referrals resolved: ${resolvedReferrals}; unresolved/raw-only: ${unresolvedReferrals}`,
+    })
     .where(eq(importBatchesTable.id, batchId));
 
   logAudit(req, "members_imported", "members", {
@@ -693,7 +880,18 @@ router.post("/members/import/commit", requireRole("admin"), async (req: AuthedRe
     details: `Imported ${imported}, updated ${updated}, skipped ${skipped}, failed ${failedRows.length}`,
   });
 
-  res.json({ batchId, imported, updated, skipped, failed: failedRows.length, duplicates, durationMs, failedRows });
+  res.json({
+    batchId,
+    imported,
+    updated,
+    skipped,
+    failed: failedRows.length,
+    duplicates,
+    resolvedReferrals,
+    unresolvedReferrals,
+    durationMs,
+    failedRows,
+  });
 });
 
 // ── History ──────────────────────────────────────────────────────────────────

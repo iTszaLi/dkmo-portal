@@ -1,0 +1,408 @@
+# DKMO Portal — Safe Migration of Legacy Microsoft Access Database
+
+I have a legacy Microsoft Access database file:
+
+`2022_New_Okkuta_02282022.accdb`
+
+I also have an existing **new DKMO Portal web application** with its own database and data.
+
+## CRITICAL RULE
+
+**DO NOT IMPORT, MODIFY, DELETE, OVERWRITE, OR MERGE ANY DATA YET.**
+
+The first phase is **READ-ONLY INSPECTION ONLY**.
+
+I want you to inspect the legacy Access database and prepare a complete migration plan before making any changes to the new DKMO Portal.
+
+---
+
+## PHASE 1 — LOCATE AND INSPECT THE ACCESS FILE
+
+Find the uploaded:
+
+`2022_New_Okkuta_02282022.accdb`
+
+Determine whether the Replit environment can read `.accdb` directly.
+
+If necessary, use an appropriate read-only method/tool/library to extract the Access database structure.
+
+Do NOT modify the original `.accdb` file.
+
+Create a temporary working copy if necessary.
+
+---
+
+## PHASE 2 — FULL DATABASE AUDIT
+
+Extract and report:
+
+### 1. Tables
+
+List every table in the Access database.
+
+For each table provide:
+
+* Table name
+* Number of records
+* Purpose/likely meaning
+* Primary key, if identifiable
+
+### 2. Columns
+
+For every table, identify:
+
+* Column/field name
+* Data type
+* Required/optional
+* Unique/indexed status where available
+* Example values
+* Number of NULL/blank values
+
+### 3. Relationships
+
+Identify:
+
+* Foreign keys
+* Relationships between tables
+* Member-to-payment relationships
+* Member-to-FRF relationships
+* Member-to-claim relationships
+* Any other relevant relationships
+
+### 4. Data quality
+
+Check for:
+
+* Duplicate members
+* Duplicate IDs
+* Missing names
+* Missing phone numbers
+* Invalid phone numbers
+* Invalid dates
+* Duplicate payment records
+* Duplicate FRF records
+* Empty/unused fields
+* Inconsistent spellings
+* Different formats for the same type of information
+
+DO NOT automatically fix any of these yet.
+
+---
+
+# PHASE 3 — INSPECT THE CURRENT DKMO PORTAL
+
+Before proposing migration mappings, inspect the existing DKMO Portal application's database/schema.
+
+Identify the current:
+
+* Member table
+* Member ID system
+* Payment tables
+* Membership fee records
+* FRF records
+* Claims/cases
+* User/admin tables
+* Audit/history tables
+* Any other relevant tables
+
+DO NOT modify the existing database.
+
+---
+
+# PHASE 4 — CREATE A FIELD-BY-FIELD MAPPING
+
+Create a migration mapping table in your report:
+
+| Legacy Access Table | Legacy Field | Current DKMO Field | Transformation Needed | Confidence |
+| ------------------- | ------------ | ------------------ | --------------------- | ---------- |
+| Example             | MemberName   | members.full_name  | Trim whitespace       | High       |
+| Example             | Phone        | members.mobile     | Normalize format      | Medium     |
+
+For every legacy field, classify it as:
+
+### MIGRATE
+
+Data should be transferred.
+
+### TRANSFORM
+
+Data can be transferred after a clearly defined transformation.
+
+### REVIEW
+
+Human review is required before importing.
+
+### IGNORE
+
+Field is obsolete or irrelevant.
+
+Do NOT make assumptions about ambiguous fields.
+
+---
+
+# MEMBER ID RULE
+
+The new DKMO Portal currently uses its own member ID system.
+
+**DO NOT replace existing new member IDs with old IDs.**
+
+If the legacy database has an old membership/member number, preserve it in a dedicated legacy field such as:
+
+`legacy_member_id`
+
+ONLY create such a field if it does not already exist.
+
+The old ID should remain available for historical reference.
+
+---
+
+# DUPLICATE MATCHING
+
+Before importing members, determine whether a legacy member already exists in the new portal.
+
+Use a cautious matching strategy, preferably:
+
+1. Existing member ID where reliable
+2. Exact/normalized mobile number
+3. Exact/normalized name + other identifying non-sensitive membership information
+4. Manual review for uncertain matches
+
+Do NOT automatically merge uncertain matches.
+
+Create a duplicate/matching report showing:
+
+* Legacy member
+* Possible current member
+* Matching reason
+* Confidence
+* Recommended action
+
+---
+
+# PAYMENT / MEMBERSHIP HISTORY
+
+Preserve historical payment information wherever possible.
+
+Do not convert historical records into simply:
+
+`paid = true`
+
+if the legacy database contains actual payment history.
+
+Preserve, where available:
+
+* Payment date
+* Amount
+* Payment type
+* Payment method
+* Member
+* Receipt/reference number
+* Responsible person
+* Notes
+* Historical status
+
+Historical information must not be lost merely because the new portal uses a different structure.
+
+---
+
+# FRF DATA
+
+If the legacy database contains Family Relief Fund (FRF) information, identify and map:
+
+* FRF cases
+* Member contributions
+* Contribution dates
+* Amounts
+* Case/reference numbers
+* Beneficiary/family information where applicable
+* Payment status
+* Historical records
+
+Do not combine separate FRF transactions into a single total unless the new schema specifically requires it.
+
+Preserve the original transaction history.
+
+---
+
+# CLAIMS / CASES
+
+If the old database contains claims or cases, identify and map:
+
+* Claim/case ID
+* Member
+* Date
+* Status
+* Amount
+* Approval information
+* Payment/disbursement information
+* Notes
+* Historical details
+
+Again, preserve history rather than reducing it to a simple current status.
+
+---
+
+# DATA NORMALIZATION
+
+Prepare transformations where necessary, such as:
+
+* Removing accidental whitespace
+* Standardizing capitalization
+* Standardizing date formats
+* Normalizing phone numbers
+* Converting old yes/no values to the current format
+* Converting old status values to the new portal's status values
+
+BUT:
+
+Never silently change potentially meaningful historical data.
+
+Keep original values available when a transformation changes the value.
+
+---
+
+# IMPORTANT: DO NOT IMPORT YET
+
+After completing the inspection, generate a report containing:
+
+## A. Legacy database structure
+
+All tables, fields, record counts and relationships.
+
+## B. Current DKMO database structure
+
+Relevant tables and fields.
+
+## C. Migration mapping
+
+Field-by-field mapping.
+
+## D. Duplicate analysis
+
+Potential duplicate members and records.
+
+## E. Data-quality report
+
+Problems discovered.
+
+## F. Migration risks
+
+Anything that could cause data loss or incorrect associations.
+
+## G. Proposed migration order
+
+For example:
+
+1. Members
+2. Historical membership information
+3. Membership payments
+4. FRF cases
+5. FRF contributions
+6. Claims
+7. Other historical records
+8. Validation
+
+Adjust this order based on the actual database relationships.
+
+## H. Estimated migration statistics
+
+Report:
+
+* Total legacy members
+* Total current members
+* Expected new members
+* Expected matched members
+* Records requiring manual review
+* Total payment records
+* Total FRF records
+* Total claim/case records
+* Records that cannot be mapped
+
+---
+
+# PHASE 5 — CREATE A DRY-RUN MIGRATION
+
+After the audit, create a **DRY RUN ONLY**.
+
+The dry run must:
+
+* Read the Access database
+* Perform the proposed transformations
+* Match legacy records against current records
+* Generate the records that WOULD be inserted/updated
+* Produce a migration report
+
+It must NOT modify the production/current DKMO database.
+
+If possible, generate files such as:
+
+`migration_members_preview.csv`
+
+`migration_payments_preview.csv`
+
+`migration_frf_preview.csv`
+
+`migration_claims_preview.csv`
+
+`migration_duplicates.csv`
+
+`migration_errors.csv`
+
+`migration_summary.json`
+
+---
+
+# PHASE 6 — VALIDATION CHECKS
+
+Before any real migration is allowed, verify:
+
+* No existing current members will be accidentally overwritten
+* No member will receive another member's payment history
+* No FRF transaction is attached to the wrong member
+* No claim is attached to the wrong member
+* No duplicate payment is created
+* No historical records disappear
+* Foreign-key relationships remain valid
+* Record counts reconcile between source and destination
+* Amount totals reconcile where applicable
+
+Produce before/after reconciliation totals.
+
+---
+
+# PRODUCTION MIGRATION — NOT AUTHORIZED YET
+
+DO NOT perform the actual migration until I explicitly approve the dry-run report.
+
+When I eventually approve it, the migration must:
+
+1. Create a complete backup/export of the current DKMO database.
+2. Never modify the original Access file.
+3. Use a transaction where possible.
+4. Log every inserted/updated record.
+5. Keep legacy IDs for traceability.
+6. Prevent duplicate imports.
+7. Provide a rollback strategy.
+8. Produce a final reconciliation report.
+
+If anything unexpected happens, STOP rather than guessing.
+
+---
+
+## FINAL REQUIREMENT
+
+For now, I want **ONLY the inspection/audit and dry-run preparation**.
+
+Do not import anything.
+
+Do not delete anything.
+
+Do not overwrite anything.
+
+Do not modify the production DKMO database.
+
+At the end, clearly state:
+
+**"AUDIT COMPLETE — NO PRODUCTION DATA MODIFIED."**
+
+Then show me the complete migration findings and wait for my approval.

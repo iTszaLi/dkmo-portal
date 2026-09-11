@@ -1,0 +1,395 @@
+Bro, now I want you to properly audit, improve, and verify the **Attention Required** panel on the DKMO Dashboard.
+
+This panel is important because it should function as the dashboard's **real-time action queue** — showing only issues that genuinely require administrator or committee attention.
+
+## Current panel
+
+It currently shows:
+
+**Attention Required**
+Only items that need admin or committee action
+
+**Everything is up to date**
+No immediate action is required.
+
+This is good when there are genuinely no outstanding actions, but I want you to make sure the underlying detection and functioning are robust.
+
+---
+
+# 1. Make the Attention Required logic authoritative
+
+Do NOT hard-code the panel.
+
+It must calculate its items from the actual backend/database state.
+
+Every attention item must represent something that genuinely requires action.
+
+Do not create false alerts simply because a record exists.
+
+---
+
+# 2. What should trigger Attention Required
+
+Audit and support the appropriate alerts for these areas:
+
+### Membership
+
+Show an attention item when there are members who genuinely require membership-related action, such as:
+
+* Members awaiting approval
+* Assessed membership fees that are actually unpaid
+* Other genuine membership exceptions requiring administrator action
+
+Do NOT treat **fee-unassessed** as automatically unpaid.
+
+Do NOT show an alert when the only state is informational.
+
+---
+
+### FRF
+
+Show an attention item when there is an actual FRF action required, such as:
+
+* Pending FRF claims requiring review
+* An active FRF collection case with unpaid contributors
+* Other genuine FRF exceptions requiring action
+
+Important:
+
+If there is **NO active FRF collection case**, do NOT show an FRF collection alert.
+
+The correct empty state is:
+
+**Everything is up to date**
+
+when there are no other issues.
+
+Also keep the existing FRF rules:
+
+* Exempt rows must not create payable alerts.
+* Cancelled rows must not create payable alerts.
+* Closed/historical cases must not create current-case alerts.
+* Only the active collection case can generate current FRF collection attention.
+
+---
+
+### Loans
+
+Show attention when there is a genuine loan action, for example:
+
+* Pending loan applications
+* Overdue loan payments
+* Missed payments
+* Other loan exceptions that actually require administrator/committee follow-up
+
+Do NOT show an alert merely because a loan is active.
+
+An active loan with payments up to date is normal and should NOT appear in Attention Required.
+
+---
+
+### Documents
+
+Show attention when documents genuinely require action, such as:
+
+* Expired documents
+* Documents expiring soon
+* Other document compliance issues
+
+Do NOT show an alert when the document room is completely healthy.
+
+---
+
+### Tasks
+
+Show:
+
+* Overdue tasks
+* Tasks due today when appropriate
+* Other tasks that genuinely require follow-through
+
+Do not turn normal completed tasks into alerts.
+
+---
+
+### Committee / Meetings
+
+Only show an alert if there is an actual committee-related action required, such as an upcoming meeting requiring preparation/attendance action if the existing system supports that state.
+
+Do not show a committee alert merely because the committee exists.
+
+---
+
+# 3. Every alert must be actionable
+
+This is VERY important.
+
+Each Attention Required item should contain:
+
+**What needs attention**
+→ short explanation
+→ relevant count/amount if applicable
+→ appropriate priority
+→ action button/link
+
+For example:
+
+**3 loan payments overdue**
+Members require payment follow-up.
+
+**Review loans →**
+
+Clicking the action should take the administrator directly to the relevant module/filter/view.
+
+Examples:
+
+* Unpaid membership → Payments filtered to unpaid membership
+* Pending claims → FRF Claims pending view
+* Overdue loans → Loans overdue view
+* Expiring documents → Documents expiring view
+* Overdue tasks → Tasks overdue view
+
+Do not simply send the user to a generic dashboard/module page if a relevant filtered view already exists.
+
+---
+
+# 4. Priority levels
+
+Use sensible priority levels:
+
+### Critical
+
+Requires immediate attention.
+
+Examples:
+
+* Serious overdue/exception conditions
+* Critical compliance issue
+
+### High
+
+Requires prompt action.
+
+Examples:
+
+* Pending FRF claim
+* Multiple overdue loan payments
+* Expired important document
+
+### Medium
+
+Requires follow-up but is not urgent.
+
+Examples:
+
+* Documents expiring soon
+* Upcoming task
+
+Do NOT overuse Critical/High.
+
+---
+
+# 5. Avoid alert spam
+
+This panel should NOT become a giant notification list.
+
+Group related items.
+
+For example, instead of:
+
+* Yusuf payment overdue
+* Ahmed payment overdue
+* Mohammed payment overdue
+* etc.
+
+show:
+
+**3 loan payments overdue**
+
+Then allow the user to click through to the relevant filtered list.
+
+Likewise:
+
+**37 members have unassessed membership fees**
+
+is better than 37 individual alerts.
+
+---
+
+# 6. Empty state
+
+When there are genuinely no actionable issues, keep the current clean state:
+
+**Everything is up to date**
+
+**No immediate action is required.**
+
+This should be based on the actual backend state, not hard-coded.
+
+---
+
+# 7. Real-time refresh
+
+Make sure Attention Required updates correctly after actions.
+
+For example:
+
+If there are 3 overdue loans and the admin resolves one:
+
+Before:
+**3 loan payments overdue**
+
+After the successful update:
+**2 loan payments overdue**
+
+Likewise:
+
+* Approving a pending FRF claim should remove the pending-claim alert.
+* Recording a required payment should update the relevant payment alert.
+* Resolving a document issue should remove/update the document alert.
+* Completing a task should remove it from the actionable queue.
+
+The panel must not continue showing stale information after a successful action.
+
+Use the existing dashboard refresh/data-fetch architecture where possible.
+
+---
+
+# 8. Error handling
+
+If the Attention Required API/data source fails:
+
+DO NOT show:
+
+**Everything is up to date**
+
+because that could falsely imply there are no issues.
+
+Instead show a clear state such as:
+
+**Unable to load attention items**
+
+with:
+
+**Retry**
+
+The dashboard must distinguish between:
+
+* Successfully checked and nothing requires attention
+* Data failed to load
+
+This is important for administrative reliability.
+
+---
+
+# 9. Permissions
+
+Respect the existing DKMO permissions.
+
+Only show actions the logged-in administrator/committee user is actually authorized to perform.
+
+Do not introduce new permissions.
+
+---
+
+# 10. Audit the backend
+
+Before changing the UI, trace:
+
+**Dashboard Attention Required → API → calculation logic → database**
+
+Make sure the API is using authoritative current data.
+
+Do not calculate important financial/actionable states from stale frontend state.
+
+---
+
+# 11. Test all important states
+
+Create/run tests for at least:
+
+### Empty state
+
+No actionable issues →
+**Everything is up to date**
+
+### Membership
+
+Create/identify a genuine unpaid/approval-required condition → correct alert appears.
+
+### FRF
+
+Pending claim → correct alert appears.
+
+Active FRF case with unpaid contributors → correct collection alert appears.
+
+No active FRF case → NO FRF collection alert.
+
+Exempt/cancelled FRF rows → must NOT create payable alerts.
+
+### Loans
+
+Pending application → alert.
+
+Overdue payment → alert.
+
+Normal active loan → NO alert.
+
+### Documents
+
+Expired document → alert.
+
+Expiring-soon document → alert.
+
+Healthy documents → NO alert.
+
+### Tasks
+
+Overdue task → alert.
+
+Completed task → no alert.
+
+### Error state
+
+Attention API failure → error/retry state, NOT “Everything is up to date”.
+
+### Refresh
+
+Resolve an issue → dashboard updates and removes the alert without requiring a full browser restart.
+
+---
+
+# VERY IMPORTANT — DO NOT CHANGE ANYTHING ELSE
+
+Do NOT redesign the entire dashboard.
+
+Do NOT change:
+
+* Dashboard layout
+* Membership calculations
+* FRF calculations
+* Loan calculations
+* Payment calculations
+* Sponsor calculations
+* Committee structure
+* Member records
+* FRF workflow
+* Loan workflow
+* Documents workflow
+* Task workflow
+* Navigation
+* Quick Actions
+
+Only improve the **Attention Required panel, its backend detection, actionable links, refresh behavior, error handling, and tests**.
+
+Keep the current visual style consistent with the dashboard.
+
+After implementation:
+
+1. Run typecheck.
+2. Run production build.
+3. Run relevant automated tests.
+4. Test the Attention Required states above.
+5. Report exactly what was changed and what was verified.
+
+Do not claim browser testing passed unless an actual browser test was successfully executed.

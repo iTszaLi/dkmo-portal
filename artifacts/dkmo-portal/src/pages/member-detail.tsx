@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { useParams, Link } from "wouter";
+import { useParams, Link, useSearch } from "wouter";
 import {
   useGetMember,
   useUpdateMember,
@@ -11,6 +11,7 @@ import {
   useGetCommitteePerformance,
   useListDocuments,
   useCreateDocument,
+  useListMembers,
   customFetch,
   getListPaymentsQueryKey,
   getGetMemberQueryKey,
@@ -20,13 +21,13 @@ import {
   getGetCommitteePerformanceQueryKey,
 } from "@workspace/api-client-react";
 import type { FeeStatusInputFeeStatus, MemberInput } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { MemberForm } from "@/components/MemberForm";
 import { MemberFrfSection } from "@/components/MemberFrfSection";
 import { RefMemberCell, useMemberIndex } from "@/components/RefMemberCell";
@@ -45,6 +46,8 @@ import {
 import { MemberAvatar } from "@/components/MemberAvatar";
 import { MemberTimeline } from "@/components/MemberTimeline";
 import { MemberPhotoDialog } from "@/components/MemberPhotoDialog";
+import { getReturnTarget, useReturnNavigation, withReturnTo } from "@/lib/navigation";
+import { getMembershipFeeAmount } from "@/lib/membership-fee";
 
 const STANDARD_DOCS = ["Passport", "Iqama", "Photo", "Membership Form"] as const;
 
@@ -108,14 +111,34 @@ function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string;
 export default function MemberDetail() {
   const memberIndex = useMemberIndex();
   const { id } = useParams();
+  const searchString = useSearch();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  const returnHref = useMemo(() => {
+    const params = new URLSearchParams(searchString);
+    if (params.get("from") !== "committee") return "/members";
+    const committeeParams = new URLSearchParams();
+    for (const key of ["committeeYear", "committeeSearch", "committeeDepartment"]) {
+      const value = params.get(key);
+      if (value) committeeParams.set(key, value);
+    }
+    const suffix = committeeParams.toString();
+    return suffix ? `/committee?${suffix}` : "/committee";
+  }, [searchString]);
+  const goBack = useReturnNavigation(returnHref);
 
   const [tab, setTab] = useState("membership");
   const [referralsExpanded, setReferralsExpanded] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
   const [photoOpen, setPhotoOpen] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<any | null>(null);
+  const [referralOpen, setReferralOpen] = useState(false);
+  const [selectedReferralMemberId, setSelectedReferralMemberId] = useState("");
+  const [committeeDialogOpen, setCommitteeDialogOpen] = useState(false);
+  const [committeeAssignment, setCommitteeAssignment] = useState<any | null>(null);
+  const [committeeForm, setCommitteeForm] = useState({ termId: "", position: "", startDate: "", endDate: "" });
 
   const { data: member, isLoading: isMemberLoading } = useGetMember(id || "", {
     query: { enabled: !!id, queryKey: getGetMemberQueryKey(id || "") },
@@ -125,6 +148,7 @@ export default function MemberDetail() {
   const updateMember = useUpdateMember();
   const updateFeeStatus = useUpdateMemberFeeStatus();
   const createPayment = useCreatePayment();
+  const { data: allMembers } = useListMembers({});
 
   const { data: assistance, isLoading: isAssistanceLoading } = useGetMemberAssistanceHistory(id || "", {
     query: { enabled: !!id, queryKey: getGetMemberAssistanceHistoryQueryKey(id || "") },
@@ -152,6 +176,7 @@ export default function MemberDetail() {
       (a, b) => new Date(b.paidAt ?? 0).getTime() - new Date(a.paidAt ?? 0).getTime(),
     )[0]!;
   }, [payments]);
+  const legacyMembershipFeeRecords = member?.legacyMembershipFeeRecords ?? [];
 
   const isCommittee = !!member?.designation;
 
@@ -160,10 +185,21 @@ export default function MemberDetail() {
   const { data: committeePerf } = useGetCommitteePerformance(undefined, {
     query: { enabled: isCommittee, queryKey: getGetCommitteePerformanceQueryKey() },
   });
+  const committeeAssignmentsQuery = useQuery({
+    queryKey: ["committee-member-assignments", id],
+    enabled: Boolean(id),
+    queryFn: () => customFetch<any[]>(`/api/committee/members/${id}`),
+  });
+  const committeeTermsQuery = useQuery({
+    queryKey: ["committee-terms"],
+    enabled: Boolean(id),
+    queryFn: () => customFetch<any[]>("/api/committee/terms"),
+  });
   const committeeEntry = useMemo(() => {
     if (!member?.fullName) return undefined;
     return (committeePerf?.entries ?? []).find((e) => e.name === member.fullName);
   }, [committeePerf, member?.fullName]);
+  const showCommittee = isCommittee || (committeeAssignmentsQuery.data?.length ?? 0) > 0;
 
   // Documents linked to this member (item 15)
   const { data: docsResp, isLoading: isDocsLoading, refetch: refetchDocs } = useListDocuments({
@@ -236,6 +272,118 @@ export default function MemberDetail() {
     }
   };
 
+  const invalidateProfile = () => {
+    invalidateMember();
+    queryClient.invalidateQueries({ queryKey: getListPaymentsQueryKey({ memberId: id || "" }) });
+    queryClient.invalidateQueries({ queryKey: ["member-timeline", id] });
+    queryClient.invalidateQueries({ queryKey: ["documents"] });
+    queryClient.invalidateQueries({ queryKey: getGetMemberReferralsQueryKey(id || "") });
+    queryClient.invalidateQueries({ queryKey: getGetMemberAssistanceHistoryQueryKey(id || "") });
+  };
+
+  const deletePayment = async (paymentId: string) => {
+    if (!window.confirm("Delete this payment? The FRF contribution ledger will be recalculated and the action will be audit logged.")) return;
+    try {
+      await customFetch(`/api/payments/${paymentId}`, { method: "DELETE" });
+      invalidateProfile();
+      toast({ title: "Payment deleted" });
+    } catch (err: any) {
+      toast({ title: "Failed to delete payment", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const saveReferral = async () => {
+    if (!selectedReferralMemberId || !member) return;
+    const child = (allMembers ?? []).find((m) => m.id === selectedReferralMemberId);
+    if (!child) return;
+    try {
+      await customFetch(`/api/members/${child.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          fullName: child.fullName,
+          mobileNumber: child.mobileNumber,
+          refMemberId: member.id,
+          refMemberName: member.fullName,
+        }),
+      });
+      invalidateProfile();
+      setReferralOpen(false);
+      setSelectedReferralMemberId("");
+      toast({ title: "Referral link saved" });
+    } catch (err: any) {
+      toast({ title: "Failed to save referral", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const clearReferral = async (child: any) => {
+    if (!window.confirm(`Remove ${child.fullName} from this member's referrals?`)) return;
+    try {
+      await customFetch(`/api/members/${child.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ fullName: child.fullName, mobileNumber: child.mobileNumber, refMemberId: "", refMemberName: "" }),
+      });
+      invalidateProfile();
+      toast({ title: "Referral link removed" });
+    } catch (err: any) {
+      toast({ title: "Failed to remove referral", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const editDocument = async (doc: any) => {
+    const title = window.prompt("Document title", doc.title);
+    if (!title?.trim() || title.trim() === doc.title) return;
+    try {
+      await customFetch(`/api/documents/${doc.id}`, { method: "PUT", body: JSON.stringify({ title: title.trim() }) });
+      await refetchDocs();
+      toast({ title: "Document updated" });
+    } catch (err: any) {
+      toast({ title: "Failed to update document", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const removeDocument = async (doc: any) => {
+    if (!window.confirm(`Delete "${doc.title}"? The file and its document record will be removed and the action will be audit logged.`)) return;
+    try {
+      await customFetch(`/api/documents/${doc.id}`, { method: "DELETE" });
+      await refetchDocs();
+      toast({ title: "Document deleted" });
+    } catch (err: any) {
+      toast({ title: "Failed to delete document", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const saveCommitteeAssignment = async () => {
+    if (!id || !committeeForm.termId || !committeeForm.position || !committeeForm.startDate) return;
+    try {
+      await customFetch(`/api/committee/assignments${committeeAssignment ? `/${committeeAssignment.assignmentId}` : ""}`, {
+        method: committeeAssignment ? "PUT" : "POST",
+        body: JSON.stringify({
+          ...(committeeAssignment ? {} : { termId: committeeForm.termId, memberId: id }),
+          position: committeeForm.position,
+          startDate: committeeForm.startDate,
+          endDate: committeeForm.endDate || null,
+        }),
+      });
+      await committeeAssignmentsQuery.refetch();
+      setCommitteeDialogOpen(false);
+      setCommitteeAssignment(null);
+      toast({ title: committeeAssignment ? "Committee assignment updated" : "Committee assignment added" });
+    } catch (err: any) {
+      toast({ title: "Failed to save committee assignment", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const removeCommitteeAssignment = async (assignment: any) => {
+    if (!window.confirm("Remove this committee assignment? This changes the authoritative committee roster and is audit logged.")) return;
+    try {
+      await customFetch(`/api/committee/assignments/${assignment.assignmentId}`, { method: "DELETE" });
+      await committeeAssignmentsQuery.refetch();
+      toast({ title: "Committee assignment removed" });
+    } catch (err: any) {
+      toast({ title: "Failed to remove assignment", description: err.message, variant: "destructive" });
+    }
+  };
+
   const invalidateMember = () => {
     if (!id) return;
     queryClient.invalidateQueries({ queryKey: getGetMemberQueryKey(id) });
@@ -244,6 +392,31 @@ export default function MemberDetail() {
 
   const handleFeeStatus = (feeStatus: FeeStatusInputFeeStatus) => {
     if (!id) return;
+    if (feeStatus === "paid") {
+      if (!member) return;
+      const membershipFeeAmount = getMembershipFeeAmount(member.membershipFee);
+      createPayment.mutate({
+        data: {
+          memberId: member.id,
+          paymentType: "membership_fee",
+          amountDue: membershipFeeAmount,
+          amountPaid: membershipFeeAmount,
+          status: "paid",
+          paymentMethod: "cash",
+          receiptNumber: `DKMO-MEM-${Date.now().toString().slice(-8)}`,
+          notes: "Membership fee recorded from the member profile",
+        },
+      }, {
+        onSuccess: () => {
+          invalidateProfile();
+          toast({ title: "Membership fee payment recorded" });
+        },
+        onError: (err: any) => {
+          toast({ title: "Failed to record membership payment", description: err.message, variant: "destructive" });
+        },
+      });
+      return;
+    }
     updateFeeStatus.mutate({ id, data: { feeStatus } }, {
       onSuccess: () => {
         invalidateMember();
@@ -262,6 +435,7 @@ export default function MemberDetail() {
         invalidateMember();
         setEditOpen(false);
         toast({ title: "Member updated" });
+        goBack();
       },
       onError: (err: any) => {
         toast({ title: "Failed to update member", description: err.message, variant: "destructive" });
@@ -284,7 +458,6 @@ export default function MemberDetail() {
       ["Location", [member.city, member.country].filter(Boolean).join(", ")],
     ];
     if (m.iqamaNumber) rows.push(["Iqama No", m.iqamaNumber]);
-    if (m.applicationNumber) rows.push(["Application No", m.applicationNumber]);
     if (m.jamaath) rows.push(["Jamaath", m.jamaath]);
     if (member.designation) rows.push(["Role", member.designation]);
     rows.push(["Joined", formatDate(member.createdAt)]);
@@ -348,7 +521,7 @@ export default function MemberDetail() {
     return (
       <div className="text-center py-12">
         <h2 className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">Member not found</h2>
-        <Link href="/members" className="text-emerald-600 hover:underline mt-4 inline-block">
+        <Link href={getReturnTarget(returnHref)} className="text-emerald-600 hover:underline mt-4 inline-block">
           Back to Members
         </Link>
       </div>
@@ -361,11 +534,15 @@ export default function MemberDetail() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-4">
-          <Link href="/members">
-            <Button variant="outline" size="icon" className="h-9 w-9 border-emerald-200 dark:border-slate-700">
-              <ArrowLeft className="h-4 w-4 text-emerald-700 dark:text-slate-300" />
-            </Button>
-          </Link>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-9 w-9 border-emerald-200 dark:border-slate-700"
+            onClick={goBack}
+            aria-label="Back to previous context"
+          >
+            <ArrowLeft className="h-4 w-4 text-emerald-700 dark:text-slate-300" />
+          </Button>
           <h1 className="text-2xl font-bold tracking-tight text-emerald-950 dark:text-emerald-100">Member Profile</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -419,10 +596,10 @@ export default function MemberDetail() {
                 />
               </div>
               <div className="flex flex-wrap items-center justify-center gap-2">
-                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${feeStatusBadgeClass(member.feeStatus)}`}>
+                {member.feeStatus !== "not_applicable" ? <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${feeStatusBadgeClass(member.feeStatus)}`}>
                   {member.feeStatus === "paid" ? <CheckCircle2 className="h-3 w-3" /> : member.feeStatus === "exempt" ? <MinusCircle className="h-3 w-3" /> : member.feeStatus === "pending" || member.feeStatus === "partial" ? <Clock className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
                   Fee {feeStatusLabel(member.feeStatus)}
-                </span>
+                </span> : null}
                 {/* Derived member tags: loans, assistance, recruitment */}
                 {(() => {
                   const tags: { label: string; cls: string }[] = [];
@@ -465,7 +642,6 @@ export default function MemberDetail() {
             <div className="mt-6 space-y-3">
               <InfoRow icon={<Phone className="h-4 w-4" />} label="Mobile" value={member.mobileNumber} />
               <InfoRow icon={<MapPin className="h-4 w-4" />} label="Location" value={`${member.city}${member.country ? `, ${member.country}` : ""}`} />
-              {m.applicationNumber ? <InfoRow icon={<FileText className="h-4 w-4" />} label="Application No" value={m.applicationNumber} /> : null}
               {m.iqamaNumber ? <InfoRow icon={<IdCard className="h-4 w-4" />} label="Iqama No" value={m.iqamaNumber} /> : null}
               {m.jamaath ? <InfoRow icon={<Building2 className="h-4 w-4" />} label="Jamaath" value={m.jamaath} /> : null}
               <InfoRow icon={<CalendarDays className="h-4 w-4" />} label="Joined" value={formatDate(member.createdAt)} />
@@ -486,7 +662,9 @@ export default function MemberDetail() {
 
             {/* Outstanding dues at a glance */}
             {(() => {
-              const feeDue = member.feeStatus !== "paid" && member.feeStatus !== "exempt" ? Number(member.membershipFee) : 0;
+              const feeDue = !["paid", "exempt", "not_applicable", "review"].includes(member.feeStatus)
+                ? getMembershipFeeAmount(member.membershipFee)
+                : 0;
               const frfDue = frfSummary?.totalOutstanding ?? 0;
               const totalDue = feeDue + frfDue;
               return (
@@ -558,13 +736,19 @@ export default function MemberDetail() {
               <Card className="rounded-2xl border-emerald-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
                 <CardHeader>
                   <CardTitle className="text-lg text-emerald-900 dark:text-slate-100">Membership Fee</CardTitle>
-                  <CardDescription className="dark:text-slate-400">One-time registration fee for this member.</CardDescription>
+                   <CardDescription className="dark:text-slate-400">Recorded fee information and preserved Access evidence for this member.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
+                  {member.feeStatus === "not_applicable" ? (
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4 text-sm text-slate-600 dark:text-slate-300">
+                      No membership-fee information was found for this member in the Access database.
+                    </div>
+                  ) : <><div className="grid grid-cols-2 gap-4">
                     <div className="rounded-xl bg-emerald-50/60 dark:bg-slate-800/50 p-4">
                       <p className="text-xs font-medium text-emerald-600 dark:text-slate-500">Fee Amount</p>
-                      <p className="mt-1 text-2xl font-bold text-emerald-900 dark:text-green-300">{formatSAR(member.membershipFee)}</p>
+                        <p className="mt-1 text-2xl font-bold text-emerald-900 dark:text-green-300">
+                          {member.feeStatus === "review" ? "—" : formatSAR(getMembershipFeeAmount(member.membershipFee))}
+                        </p>
                     </div>
                     <div className="rounded-xl bg-emerald-50/60 dark:bg-slate-800/50 p-4">
                       <p className="text-xs font-medium text-emerald-600 dark:text-slate-500">Status</p>
@@ -596,30 +780,67 @@ export default function MemberDetail() {
                     </div>
                   </div>
 
+                  {legacyMembershipFeeRecords.length > 0 ? (
+                    <div className="space-y-3 border-t border-emerald-100 dark:border-slate-800 pt-4">
+                      <div>
+                        <h3 className="text-sm font-semibold text-emerald-950 dark:text-slate-100">Access membership-fee history</h3>
+                        <p className="text-xs text-emerald-600 dark:text-slate-400">Original rows preserved from 01_Main_new and linked by exact Access ID.</p>
+                      </div>
+                      <div className="space-y-2">
+                        {legacyMembershipFeeRecords.map((record, index) => (
+                          <div key={`${record.sourceTable}-${record.sourceRow}-${index}`} className="rounded-xl border border-emerald-100 dark:border-slate-700 p-3 text-sm">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <span className="font-medium text-emerald-950 dark:text-slate-100">{record.details || "Membership fee record"}</span>
+                              <span className="font-semibold text-emerald-800 dark:text-emerald-300">{record.amount == null ? "Amount not recorded" : formatSAR(record.amount)}</span>
+                            </div>
+                            <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-emerald-700 dark:text-slate-400">
+                              <span>Payment date: {record.paymentDate ? formatDate(record.paymentDate) : "—"}</span>
+                              <span>Entry date: {record.entryDate ? formatDate(record.entryDate) : "—"}</span>
+                              <span>Bill no: {record.billNumber || "—"}</span>
+                              <span>Source row: {record.sourceRow || "—"}</span>
+                            </div>
+                            {record.remarks ? <p className="mt-2 text-xs text-emerald-800 dark:text-slate-300">Remarks: {record.remarks}</p> : null}
+                            {record.historicalStatus === "review" ? <p className="mt-2 text-xs font-medium text-violet-700 dark:text-violet-300">Legacy record requires review; no payment status was inferred.</p> : null}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+
                   <div className="flex flex-wrap gap-2 pt-2 border-t border-emerald-100 dark:border-slate-800">
                     <Button size="sm" variant={member.feeStatus === "paid" ? "default" : "outline"} disabled={member.feeStatus === "paid" || updateFeeStatus.isPending} onClick={() => handleFeeStatus("paid")} className={member.feeStatus === "paid" ? "bg-emerald-700 hover:bg-emerald-800" : "border-emerald-200 text-emerald-700 dark:border-slate-700 dark:text-emerald-400"}>
                       <CheckCircle2 className="mr-2 h-4 w-4" /> Mark Paid
                     </Button>
-                    <Button size="sm" variant="outline" disabled={member.feeStatus === "partial" || updateFeeStatus.isPending} onClick={() => handleFeeStatus("partial")} className="border-yellow-200 text-yellow-700 dark:border-slate-700 dark:text-yellow-400">
-                      Partial
-                    </Button>
-                    <Button size="sm" variant="outline" disabled={member.feeStatus === "exempt" || updateFeeStatus.isPending} onClick={() => handleFeeStatus("exempt")} className="border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-400">
-                      Exempt
-                    </Button>
-                    <Button size="sm" variant="outline" disabled={member.feeStatus === "pending" || updateFeeStatus.isPending} onClick={() => handleFeeStatus("pending")} className="border-amber-200 text-amber-700 dark:border-slate-700 dark:text-amber-400">
-                      <Clock className="mr-2 h-4 w-4" /> Mark Pending
-                    </Button>
-                    <Button size="sm" variant="outline" disabled={member.feeStatus === "unpaid" || updateFeeStatus.isPending} onClick={() => handleFeeStatus("unpaid")} className="border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-400">
-                      <XCircle className="mr-2 h-4 w-4" /> Mark Unpaid
-                    </Button>
-                  </div>
+                    {!(member as any).legacyMemberId ? <>
+                      <Button size="sm" variant="outline" disabled={member.feeStatus === "partial" || updateFeeStatus.isPending} onClick={() => handleFeeStatus("partial")} className="border-yellow-200 text-yellow-700 dark:border-slate-700 dark:text-yellow-400">
+                        Partial
+                      </Button>
+                      <Button size="sm" variant="outline" disabled={member.feeStatus === "exempt" || updateFeeStatus.isPending} onClick={() => handleFeeStatus("exempt")} className="border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-400">
+                        Exempt
+                      </Button>
+                      <Button size="sm" variant="outline" disabled={member.feeStatus === "pending" || updateFeeStatus.isPending} onClick={() => handleFeeStatus("pending")} className="border-amber-200 text-amber-700 dark:border-slate-700 dark:text-amber-400">
+                        <Clock className="mr-2 h-4 w-4" /> Mark Pending
+                      </Button>
+                      <Button size="sm" variant="outline" disabled={member.feeStatus === "unpaid" || updateFeeStatus.isPending} onClick={() => handleFeeStatus("unpaid")} className="border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-400">
+                        <XCircle className="mr-2 h-4 w-4" /> Mark Unpaid
+                      </Button>
+                    </> : null}
+                  </div></>}
                 </CardContent>
               </Card>
             </TabsContent>
 
             {/* LEDGER */}
             <TabsContent value="ledger" className="mt-4">
-              <MemberLedger member={member} frfHistory={frfSummary?.history} isLoading={!frfSummary} />
+              <MemberLedger
+                member={member}
+                frfHistory={frfSummary?.history}
+                payments={payments}
+                isLoading={!frfSummary}
+                onAddPayment={() => { setEditingPayment(null); setPayOpen(true); }}
+                onEditPayment={(payment) => { setEditingPayment(payment); setPayOpen(true); }}
+                onDeletePayment={(paymentId) => void deletePayment(paymentId)}
+              />
             </TabsContent>
 
             {/* PAYMENTS */}
@@ -640,7 +861,7 @@ export default function MemberDetail() {
                           <p className="text-lg font-bold text-emerald-900 dark:text-green-300">{formatSAR(paymentsTotal)}</p>
                         </div>
                       ) : null}
-                      <Button size="sm" variant="outline" className="border-emerald-200 text-emerald-700 dark:border-slate-700 dark:text-emerald-400" onClick={() => setPayOpen(true)}>
+                      <Button size="sm" variant="outline" className="border-emerald-200 text-emerald-700 dark:border-slate-700 dark:text-emerald-400" onClick={() => { setEditingPayment(null); setPayOpen(true); }}>
                         <Plus className="mr-1.5 h-4 w-4" /> Add
                       </Button>
                     </div>
@@ -670,6 +891,12 @@ export default function MemberDetail() {
                           <div className="flex items-center gap-3 shrink-0">
                             <p className="text-sm font-bold text-emerald-900 dark:text-green-300">{formatSAR(p.amountPaid)}</p>
                             <span className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize ${paymentStatusClass(p.status)}`}>{p.status}</span>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-emerald-700 dark:text-emerald-400" title="Edit payment" onClick={() => { setEditingPayment(p); setPayOpen(true); }}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600" title="Delete payment" onClick={() => void deletePayment(p.id)}>
+                              <XCircle className="h-4 w-4" />
+                            </Button>
                           </div>
                         </div>
                       ))}
@@ -682,7 +909,7 @@ export default function MemberDetail() {
             {/* REFERRALS */}
             {/* FRF */}
             <TabsContent value="frf" className="mt-4">
-              <MemberFrfSection memberId={id || ""} />
+              <MemberFrfSection memberId={id || ""} onRecordPayment={() => { setEditingPayment(null); setPayOpen(true); }} />
             </TabsContent>
 
             <TabsContent value="referrals" className="mt-4">
@@ -721,17 +948,22 @@ export default function MemberDetail() {
                           {referralsExpanded ? (
                             <div className="mt-3 space-y-2">
                               {referrals.members.map((rm) => (
-                                <Link key={rm.id} href={`/members/${rm.id}`} className="flex items-center justify-between gap-2 rounded-xl border border-emerald-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 hover:bg-emerald-50/40 dark:hover:bg-slate-800/50 transition-colors">
+                                 <div key={rm.id} className="flex items-center justify-between gap-2 rounded-xl border border-emerald-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-3">
+                                  <Link href={withReturnTo(`/members/${rm.id}`)} className="flex min-w-0 flex-1 items-center gap-3 hover:underline">
                                   <MemberAvatar photoUrl={(rm as any).photoUrl} name={rm.fullName} size="sm" />
                                   <div className="min-w-0 flex-1">
                                     <p className="font-medium text-emerald-950 dark:text-slate-100 text-sm truncate">{rm.fullName}</p>
                                     <p className="text-xs text-emerald-600 dark:text-slate-500">ID: {rm.membershipId}{rm.city ? ` • ${rm.city}` : ""}</p>
                                   </div>
-                                  <div className="flex items-center gap-3 shrink-0">
+                                  </Link>
+                                   <div className="flex items-center gap-2 shrink-0">
                                     <span className="text-xs text-emerald-700 dark:text-slate-400">{rm.mobileNumber}</span>
                                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${feeStatusBadgeClass(rm.feeStatus)}`}>{feeStatusLabel(rm.feeStatus)}</span>
+                                     <Button size="icon" variant="ghost" className="h-7 w-7 text-red-600" title="Remove referral" onClick={() => void clearReferral(rm)}>
+                                       <XCircle className="h-3.5 w-3.5" />
+                                     </Button>
                                   </div>
-                                </Link>
+                                 </div>
                               ))}
                             </div>
                           ) : null}
@@ -740,7 +972,10 @@ export default function MemberDetail() {
                         <div className="mt-4 text-center py-6 bg-emerald-50/30 dark:bg-slate-800/40 rounded-lg border border-emerald-100 dark:border-slate-800 border-dashed">
                           <p className="text-sm text-emerald-700 dark:text-slate-400">No members registered under this member&apos;s reference.</p>
                         </div>
-                      )}
+                       )}
+                       <Button size="sm" variant="outline" className="mt-4 border-emerald-200 text-emerald-700 dark:border-slate-700 dark:text-emerald-400" onClick={() => setReferralOpen(true)}>
+                         <Plus className="mr-1.5 h-4 w-4" /> Assign existing member
+                       </Button>
                     </>
                   )}
                 </CardContent>
@@ -816,6 +1051,12 @@ export default function MemberDetail() {
                                 </Button>
                               </>
                             ) : null}
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-emerald-700 dark:text-emerald-400" title="Edit document" onClick={() => void editDocument(d)}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600" title="Delete document" onClick={() => void removeDocument(d)}>
+                              <XCircle className="h-4 w-4" />
+                            </Button>
                           </div>
                         </div>
                       ))}
@@ -865,6 +1106,13 @@ export default function MemberDetail() {
                             <p className="text-[11px] text-emerald-600/70 dark:text-slate-500 mt-0.5">{item.date ? formatDate(item.date) : "Date not recorded"}</p>
                           </div>
                           <div className="flex items-center gap-3 shrink-0">
+                              {(item as any).sourceType === "frf_claim" ? (
+                                <Link href={withReturnTo(`/frf/${item.id}`)} className="text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:underline">Open case</Link>
+                              ) : (item as any).sourceType === "loan" ? (
+                                <Link href={withReturnTo("/loans")} className="text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:underline">Open loan</Link>
+                              ) : (item as any).sourceType === "welfare_request" ? (
+                                <Link href={withReturnTo("/welfare")} className="text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:underline">Open request</Link>
+                              ) : null}
                             <div className="text-right">
                               <p className="text-sm font-bold text-emerald-900 dark:text-green-300">{formatSAR(item.amountApproved)}</p>
                               {item.amountRequested > item.amountApproved ? <p className="text-[11px] text-emerald-600/70 dark:text-slate-500">of {formatSAR(item.amountRequested)} req.</p> : null}
@@ -882,6 +1130,7 @@ export default function MemberDetail() {
             {/* TIMELINE */}
             <TabsContent value="timeline" className="mt-4">
               <MemberTimeline
+                memberId={id || ""}
                 member={member}
                 payments={payments}
                 assistance={assistance?.items}
@@ -890,16 +1139,48 @@ export default function MemberDetail() {
             </TabsContent>
 
             {/* COMMITTEE */}
-            {isCommittee ? (
+              {showCommittee ? (
               <TabsContent value="committee" className="mt-4">
                 <Card className="rounded-2xl border-emerald-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
                   <CardHeader>
-                    <CardTitle className="text-lg text-emerald-900 dark:text-slate-100 flex items-center gap-2">
-                      <Award className="h-5 w-5 text-emerald-600 dark:text-emerald-400" /> Committee Information
-                    </CardTitle>
-                    <CardDescription className="dark:text-slate-400">Role and contribution of this committee member, calculated from real records.</CardDescription>
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <CardTitle className="text-lg text-emerald-900 dark:text-slate-100 flex items-center gap-2">
+                          <Award className="h-5 w-5 text-emerald-600 dark:text-emerald-400" /> Committee Information
+                        </CardTitle>
+                        <CardDescription className="dark:text-slate-400">Versioned term assignments are authoritative for committee membership and permissions.</CardDescription>
+                      </div>
+                      <Button size="sm" variant="outline" onClick={() => {
+                        const term = (committeeTermsQuery.data ?? []).find((t: any) => t.isActive) ?? committeeTermsQuery.data?.[0];
+                        setCommitteeAssignment(null);
+                        setCommitteeForm({ termId: term?.id ?? "", position: "", startDate: term?.startDate ?? "", endDate: term?.endDate ?? "" });
+                        setCommitteeDialogOpen(true);
+                      }}><Plus className="mr-1.5 h-4 w-4" /> Add assignment</Button>
+                    </div>
                   </CardHeader>
                   <CardContent>
+                    <div className="mb-5 space-y-2">
+                      {(committeeAssignmentsQuery.data ?? []).length === 0 ? (
+                        <p className="rounded-xl border border-dashed border-amber-200 bg-amber-50/40 p-3 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/20 dark:text-amber-300">
+                          This member has no authoritative term assignment yet. Legacy designation is shown for compatibility only.
+                        </p>
+                      ) : (committeeAssignmentsQuery.data ?? []).map((assignment: any) => (
+                        <div key={assignment.assignmentId} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-100 p-3 dark:border-slate-800">
+                          <div>
+                            <p className="font-semibold text-emerald-950 dark:text-slate-100">{assignment.position}</p>
+                            <p className="text-xs text-slate-500">{assignment.committeeYear} · {assignment.startDate} → {assignment.endDate || "ongoing"} · {assignment.isActive ? "Active" : "Inactive"}</p>
+                          </div>
+                          <div className="flex gap-1">
+                            <Button size="icon" variant="ghost" className="h-8 w-8" title="Edit assignment" onClick={() => {
+                              setCommitteeAssignment(assignment);
+                              setCommitteeForm({ termId: assignment.termId, position: assignment.position, startDate: assignment.startDate, endDate: assignment.endDate ?? "" });
+                              setCommitteeDialogOpen(true);
+                            }}><Pencil className="h-4 w-4" /></Button>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600" title="Remove assignment" onClick={() => void removeCommitteeAssignment(assignment)}><XCircle className="h-4 w-4" /></Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="rounded-xl bg-emerald-50/60 dark:bg-slate-800/50 p-4">
                         <p className="text-xs font-medium text-emerald-600 dark:text-slate-500">Committee Role</p>
@@ -926,7 +1207,7 @@ export default function MemberDetail() {
                         <p className="mt-1 text-2xl font-bold text-emerald-900 dark:text-slate-100">{committeeEntry?.frfReferred ?? 0}</p>
                       </div>
                     </div>
-                    <Link href="/reports/committee-performance" className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-emerald-700 dark:text-emerald-400 hover:underline">
+                    <Link href={withReturnTo("/reports/committee-performance")} className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-emerald-700 dark:text-emerald-400 hover:underline">
                       View full committee performance <ArrowRight className="h-4 w-4" />
                     </Link>
                   </CardContent>
@@ -946,31 +1227,99 @@ export default function MemberDetail() {
           <div className="flex-1 overflow-y-auto -mr-3 pr-3">
             <MemberForm defaultValues={member as Partial<MemberInput>} onSubmit={handleEdit} isSubmitting={updateMember.isPending} />
           </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>
+              Cancel
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Add Payment dialog */}
       <AddPaymentDialog
+        key={editingPayment?.id ?? "new-payment"}
         open={payOpen}
-        onOpenChange={setPayOpen}
+        onOpenChange={(open) => { setPayOpen(open); if (!open) setEditingPayment(null); }}
         memberId={id || ""}
+        membershipFeePaid={member?.feeStatus === "paid"}
+        initialPayment={editingPayment}
         isSubmitting={createPayment.isPending}
         onSubmit={(data, onDone) => {
-          createPayment.mutate({ data }, {
-            onSuccess: () => {
-              queryClient.invalidateQueries({ predicate: (q) => String(q.queryKey[0]).startsWith("/api/payments") });
-              invalidateMember();
-              setPayOpen(false);
-              setTab("payments");
-              toast({ title: "Payment recorded" });
-              onDone();
-            },
-            onError: (err: any) => {
-              toast({ title: "Failed to record payment", description: err.message, variant: "destructive" });
-            },
-          });
+          if (editingPayment) {
+            customFetch(`/api/payments/${editingPayment.id}`, { method: "PUT", body: JSON.stringify(data) })
+              .then(() => {
+                invalidateProfile();
+                setPayOpen(false);
+                setEditingPayment(null);
+                setTab("payments");
+                toast({ title: "Payment updated" });
+                onDone();
+              })
+              .catch((err: any) => toast({ title: "Failed to update payment", description: err.message, variant: "destructive" }));
+          } else {
+            createPayment.mutate({ data }, {
+              onSuccess: () => {
+                invalidateProfile();
+                setPayOpen(false);
+                setTab("payments");
+                toast({ title: "Payment recorded" });
+                onDone();
+              },
+              onError: (err: any) => toast({ title: "Failed to record payment", description: err.message, variant: "destructive" }),
+            });
+          }
         }}
       />
+
+      <Dialog open={referralOpen} onOpenChange={setReferralOpen}>
+        <DialogContent className="sm:max-w-[460px] dark:bg-slate-900 dark:border-slate-800">
+          <DialogHeader><DialogTitle className="dark:text-slate-100">Assign a referred member</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-slate-500">Select an existing member. The referral will be stored against that member&apos;s UUID and the responsibility total will update automatically.</p>
+            <select
+              value={selectedReferralMemberId}
+              onChange={(e) => setSelectedReferralMemberId(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
+            >
+              <option value="">Select member</option>
+              {(allMembers ?? []).filter((candidate) => candidate.id !== id).map((candidate) => (
+                <option key={candidate.id} value={candidate.id}>{candidate.fullName} ({candidate.membershipId})</option>
+              ))}
+            </select>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setReferralOpen(false)}>Cancel</Button>
+              <Button onClick={() => void saveReferral()} disabled={!selectedReferralMemberId}>Save referral</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={committeeDialogOpen} onOpenChange={(open) => { setCommitteeDialogOpen(open); if (!open) setCommitteeAssignment(null); }}>
+        <DialogContent className="sm:max-w-[460px] dark:bg-slate-900 dark:border-slate-800">
+          <DialogHeader><DialogTitle className="dark:text-slate-100">{committeeAssignment ? "Edit committee assignment" : "Add committee assignment"}</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            {!committeeAssignment ? (
+              <select
+                value={committeeForm.termId}
+                onChange={(e) => setCommitteeForm((v) => ({ ...v, termId: e.target.value }))}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
+              >
+                <option value="">Select committee term</option>
+                {(committeeTermsQuery.data ?? []).map((term: any) => <option key={term.id} value={term.id}>{term.committeeYear} ({term.memberCount} members)</option>)}
+              </select>
+            ) : <p className="text-sm text-slate-500">{committeeAssignment.committeeYear}</p>}
+            <Input value={committeeForm.position} onChange={(e) => setCommitteeForm((v) => ({ ...v, position: e.target.value }))} placeholder="Position / role" />
+            <div className="grid grid-cols-2 gap-3">
+              <Input type="date" value={committeeForm.startDate} onChange={(e) => setCommitteeForm((v) => ({ ...v, startDate: e.target.value }))} />
+              <Input type="date" value={committeeForm.endDate} onChange={(e) => setCommitteeForm((v) => ({ ...v, endDate: e.target.value }))} />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setCommitteeDialogOpen(false)}>Cancel</Button>
+              <Button onClick={() => void saveCommitteeAssignment()} disabled={!committeeForm.termId || !committeeForm.position || !committeeForm.startDate}>Save assignment</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Attach Document dialog */}
       <Dialog open={docDialogOpen} onOpenChange={(v) => { setDocDialogOpen(v); if (!v) { setDocFile(null); setDocTitle(STANDARD_DOCS[0]); } }}>
@@ -1029,36 +1378,44 @@ export default function MemberDetail() {
 }
 
 function AddPaymentDialog({
-  open, onOpenChange, memberId, isSubmitting, onSubmit,
+  open, onOpenChange, memberId, membershipFeePaid, initialPayment, isSubmitting, onSubmit,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   memberId: string;
+  membershipFeePaid: boolean;
+  initialPayment?: any | null;
   isSubmitting?: boolean;
   onSubmit: (data: any, onDone: () => void) => void;
 }) {
-  const [paymentType, setPaymentType] = useState("membership_fee");
-  const [amountPaid, setAmountPaid] = useState("100");
-  const [paymentMethod, setPaymentMethod] = useState("cash");
-  const [receiptNumber, setReceiptNumber] = useState("");
-  const [paidAt, setPaidAt] = useState(() => new Date().toISOString().slice(0, 10));
-  const [notes, setNotes] = useState("");
+  const [paymentType, setPaymentType] = useState(initialPayment?.paymentType ?? "membership_fee");
+  const [amountDue, setAmountDue] = useState(String(initialPayment?.amountDue ?? 0));
+  const [amountPaid, setAmountPaid] = useState(String(initialPayment?.amountPaid ?? 100));
+  const [paymentMethod, setPaymentMethod] = useState(initialPayment?.paymentMethod ?? "cash");
+  const [receiptNumber, setReceiptNumber] = useState(initialPayment?.receiptNumber ?? "");
+  const [paidAt, setPaidAt] = useState(() => initialPayment?.paidAt ? String(initialPayment.paidAt).slice(0, 10) : new Date().toISOString().slice(0, 10));
+  const [notes, setNotes] = useState(initialPayment?.notes ?? "");
+  const [status, setStatus] = useState(initialPayment?.status ?? "paid");
+  const [frfClaimId, setFrfClaimId] = useState(initialPayment?.frfClaimId ?? "");
 
   const reset = () => {
     setPaymentType("membership_fee");
+    setAmountDue("0");
     setAmountPaid("100");
     setPaymentMethod("cash");
     setReceiptNumber("");
     setPaidAt(new Date().toISOString().slice(0, 10));
     setNotes("");
+    setStatus("paid");
+    setFrfClaimId("");
   };
 
   const [error, setError] = useState("");
 
   const submit = () => {
     const amount = Number(amountPaid);
-    if (!Number.isFinite(amount) || amount <= 0) {
-      setError("Enter a valid amount greater than 0.");
+    if (!Number.isFinite(amount) || (amount <= 0 && !["cancelled", "refunded"].includes(status))) {
+      setError("Enter a valid amount greater than 0, unless the payment is cancelled or refunded.");
       return;
     }
     const parsedDate = new Date(paidAt);
@@ -1072,10 +1429,12 @@ function AddPaymentDialog({
       {
         memberId,
         paymentType,
+         amountDue: Number(amountDue) || amount,
         amountPaid: amount,
+         frfClaimId: frfClaimId || null,
         paymentMethod,
         receiptNumber: receipt,
-        status: "paid",
+         status,
         paidAt: parsedDate.toISOString(),
         notes: notes.trim() || null,
       },
@@ -1089,7 +1448,7 @@ function AddPaymentDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[460px] dark:bg-slate-900 dark:border-slate-800">
         <DialogHeader>
-          <DialogTitle className="dark:text-slate-100">Record Payment</DialogTitle>
+          <DialogTitle className="dark:text-slate-100">{initialPayment ? "Edit Payment" : "Record Payment"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -1097,14 +1456,41 @@ function AddPaymentDialog({
               <Label>Payment Type</Label>
               <select className={selectClass} value={paymentType} onChange={(e) => setPaymentType(e.target.value)}>
                 <option value="membership_fee">Membership Fee</option>
-                <option value="frf_contribution">FRF Contribution</option>
+                {(membershipFeePaid || initialPayment?.paymentType === "frf_contribution") && (
+                  <option value="frf_contribution">FRF Contribution</option>
+                )}
+                <option value="donation">Donation</option>
+                <option value="sponsorship">Sponsorship</option>
+                <option value="other">Other</option>
               </select>
             </div>
             <div className="space-y-2">
-              <Label>Amount (SAR)</Label>
+              <Label>Amount Paid (SAR)</Label>
               <Input type="number" value={amountPaid} onChange={(e) => setAmountPaid(e.target.value)} />
             </div>
           </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Amount Due (SAR)</Label>
+              <Input type="number" value={amountDue} onChange={(e) => setAmountDue(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Status</Label>
+              <select className={selectClass} value={status} onChange={(e) => setStatus(e.target.value)}>
+                <option value="paid">Paid</option>
+                <option value="pending">Pending</option>
+                <option value="overdue">Overdue</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="refunded">Refunded</option>
+              </select>
+            </div>
+          </div>
+          {paymentType === "frf_contribution" ? (
+            <div className="space-y-2">
+              <Label>FRF Claim ID</Label>
+              <Input value={frfClaimId} onChange={(e) => setFrfClaimId(e.target.value)} placeholder="Required for FRF contributions" disabled={Boolean(initialPayment)} />
+            </div>
+          ) : null}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Method</Label>

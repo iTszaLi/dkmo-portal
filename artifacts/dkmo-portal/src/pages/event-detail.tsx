@@ -51,6 +51,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import { getReturnTarget, useReturnNavigation, withReturnTo } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 import { generateEventReportPdf } from "@/lib/event-report-pdf";
 
@@ -731,13 +732,15 @@ function FinancialTab({ eventId, budget }: { eventId: string; budget: number }) 
 export default function EventDetail() {
   const [, params] = useRoute("/events/:id");
   const [, setLocation] = useLocation();
+  const goBack = useReturnNavigation("/events");
+  const backHref = getReturnTarget("/events");
   const { canEdit, canDelete } = useAuth();
   const { toast } = useToast();
 
   const id = params?.id;
   const isNew = id === "new";
 
-  const { data: event, isLoading, refetch } = useGetEvent(id ?? "", {
+  const { data: event, isLoading } = useGetEvent(id ?? "", {
     query: { enabled: !!id && !isNew, queryKey: getGetEventQueryKey(id ?? "") },
   });
 
@@ -808,19 +811,22 @@ export default function EventDetail() {
 
   const createMutation = useCreateEvent({
     mutation: {
-      onSuccess: (created) => { toast({ title: "Event created" }); setLocation(`/events/${created.id}`); },
+      onSuccess: (created) => {
+        toast({ title: "Event created" });
+        setLocation(withReturnTo(`/events/${created.id}`, getReturnTarget("/events")));
+      },
       onError: (err) => toast({ title: "Could not create", description: String(err), variant: "destructive" }),
     },
   });
   const updateMutation = useUpdateEvent({
     mutation: {
-      onSuccess: () => { toast({ title: "Saved" }); setEditing(false); refetch(); },
+      onSuccess: () => { toast({ title: "Saved" }); goBack(); },
       onError: (err) => toast({ title: "Could not save", description: String(err), variant: "destructive" }),
     },
   });
   const deleteMutation = useDeleteEvent({
     mutation: {
-      onSuccess: () => { toast({ title: "Event deleted" }); setLocation("/events"); },
+      onSuccess: () => { toast({ title: "Event deleted" }); setLocation(getReturnTarget("/events")); },
       onError: (err) => toast({ title: "Could not delete", description: String(err), variant: "destructive" }),
     },
   });
@@ -861,7 +867,7 @@ export default function EventDetail() {
     return (
       <div className="text-center py-12 text-green-700/70 dark:text-slate-500">
         Event not found.{" "}
-        <Link href="/events" className="text-green-800 dark:text-green-400 underline">Back</Link>
+        <Link href={backHref} className="text-green-800 dark:text-green-400 underline">Back</Link>
       </div>
     );
   }
@@ -873,11 +879,9 @@ export default function EventDetail() {
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Link href="/events">
-            <Button variant="ghost" size="sm" className="text-green-800 dark:text-green-400 hover:bg-green-50 dark:hover:bg-slate-800">
-              <ArrowLeft className="h-4 w-4 mr-1" /> Back
-            </Button>
-          </Link>
+          <Button variant="ghost" size="sm" onClick={goBack} className="text-green-800 dark:text-green-400 hover:bg-green-50 dark:hover:bg-slate-800">
+            <ArrowLeft className="h-4 w-4 mr-1" /> Back
+          </Button>
           <div>
             <h1 className="text-2xl font-bold text-green-950 dark:text-green-100">
               {isNew ? "New Event" : event!.name}
@@ -1038,7 +1042,7 @@ export default function EventDetail() {
                   <ListChecks className="h-4 w-4" /> Tasks ({tasks.length})
                 </CardTitle>
                 {canEdit && (
-                  <Link href={`/tasks/new?eventId=${id}`}>
+                  <Link href={withReturnTo(`/tasks/new?eventId=${id}`)}>
                     <Button size="sm" variant="outline" className="border-green-300 dark:border-green-800 text-green-800 dark:text-green-300">
                       <Plus className="h-4 w-4 mr-1" /> Add Task
                     </Button>
@@ -1051,7 +1055,7 @@ export default function EventDetail() {
                 ) : (
                   <div className="divide-y divide-green-50 dark:divide-slate-800">
                     {tasks.map((t) => (
-                      <Link key={t.id} href={`/tasks/${t.id}`} className="block py-3 hover:bg-green-50/40 dark:hover:bg-slate-800/40 -mx-2 px-2 rounded-lg transition-colors">
+                      <Link key={t.id} href={withReturnTo(`/tasks/${t.id}`)} className="block py-3 hover:bg-green-50/40 dark:hover:bg-slate-800/40 -mx-2 px-2 rounded-lg transition-colors">
                         <div className="flex items-center justify-between gap-2">
                           <p className="text-sm font-medium text-green-950 dark:text-slate-100">{t.title}</p>
                           <div className="flex gap-2 shrink-0">

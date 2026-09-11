@@ -1,0 +1,93 @@
+Bro, please make the following changes to the DKMO Committee module. Do not redesign anything else or change the existing committee/member data.
+
+1. Remove the large “Remove from committee” button
+Completely remove the current “Remove from committee” text button from every committee member card.
+Instead, add a small red dustbin/trash icon at the bottom-right corner of each committee member card.
+Keep it subtle and clean so it does not take up space.
+The red dustbin should perform the same “remove from committee” action.
+Add a confirmation dialog before removing a member, such as:
+“Remove [Member Name] from this committee?”
+Make sure clicking the dustbin does not accidentally open the member profile/card.
+2. Add a “2026–2027 Team Active” button/selector
+
+Under the current committee term section, add a clear button/selector:
+
+2026–2027 Team Active
+
+This should indicate that the current committee is the active team.
+
+When this button/selector is clicked, it should provide an option:
+
++ Create New Committee
+
+3. Create New Committee functionality
+
+When “+ Create New Committee” is selected, open a proper creation interface/modal.
+
+It must allow the administrator to:
+
+Enter the Committee Name — I should be able to name it whatever I want.
+Enter/select the Term Start Date.
+Enter/select the Term End Date.
+Add/select members from the existing DKMO member database.
+Select multiple members for the new committee.
+Assign each selected member their committee role/position.
+Save the new committee.
+
+Example:
+
+Committee Name: 2028–2029 Executive Committee
+Start: Jan 1, 2028
+End: Dec 31, 2029
+
+The member selection must come from the existing DKMO members database, not create duplicate member records.
+
+4. Committee history / active committee logic
+
+The existing 2026–2027 Committee must remain preserved as a historical committee when a new committee is created.
+
+Do NOT overwrite or delete the old committee.
+
+The system should support multiple committees/terms, for example:
+
+2026–2027 Team — Active/Previous depending on current status
+2028–2029 Team — New committee
+Future committees as needed
+
+Only one committee should be marked Active at a time.
+
+When a new committee is activated, the previous active committee should automatically become inactive/historical, but its complete membership, roles, dates and records must remain available.
+
+5. IMPORTANT — Fix the Back button bug
+
+There is currently a navigation bug:
+
+When I am on the Committee page, click a committee member card, open/view that member's profile, and then click Back, it takes me to the general Members module.
+
+That is WRONG.
+
+Correct behavior:
+
+Committee → Committee Member Profile → Back → Committee page
+
+The Back action must remember that I came from the Committee module and return me to the same Committee page/term/list I was viewing, not the general Members page.
+
+If I was viewing/filtering a specific committee, preserve that context when returning.
+
+6. Do not change existing data
+
+Very important:
+
+Keep the existing 30 committee members exactly as they are.
+Keep their current roles, departments, DKMO IDs and legacy IDs.
+Do not create duplicate member records.
+Do not modify the authoritative 2026–2027 committee data.
+This is a UI/functionality update only, except for adding the new committee-management capability.
+
+Please implement this cleanly and test all of these flows:
+
+Committee page → click member → profile → Back → Committee page.
+Click red dustbin → confirmation → remove member.
+Click 2026–2027 Team Active → see Create New Committee.
+Create a new committee with a custom name, dates and selected members.
+Verify the old committee remains preserved and is not overwritten.

@@ -1,0 +1,357 @@
+Bro, proceed with **#33 — Catch document and loan workflow regressions before they ship**.
+
+This is a **testing and bug-fixing task**, not a redesign. Add focused automated regression coverage for Documents, Loans, and Dashboard while preserving all existing DKMO business rules and historical data.
+
+## IMPORTANT
+
+* Do NOT redesign the UI.
+* Do NOT change unrelated modules.
+* Do NOT delete or alter real DKMO historical data.
+* Do NOT replace database calculations with hardcoded values.
+* Do NOT weaken authentication or permissions just to make tests pass.
+* Tests must use temporary/test records and clean them up afterward.
+* Existing DKMO production data must remain untouched.
+* Fix the underlying logic if a regression is found.
+
+---
+
+# 1. DOCUMENTS — AUTOMATED TEST COVERAGE
+
+Relevant files:
+
+* `artifacts/api-server/src/routes/documents.ts`
+* `artifacts/dkmo-portal/src/pages/documents.tsx`
+
+Add authenticated API tests covering:
+
+### Permissions
+
+Verify that:
+
+* Authorized users can access documents according to the existing permission rules.
+* Unauthorized users cannot view/download restricted documents.
+* Archive/delete operations require the correct authorization.
+* Do not bypass authentication simply for testing.
+
+### Upload
+
+Test document creation/upload metadata including:
+
+* Document name
+* Category/type
+* Description if supported
+* Uploaded-by user
+* Created date
+* File metadata
+* Any existing expiry fields
+
+Verify the saved database record is correct.
+
+### View / Download
+
+Verify:
+
+* Authorized user can view/download an accessible document.
+* Unauthorized user is denied.
+* Returned metadata/file reference is correct.
+
+### Archive
+
+Create a temporary document, archive it, then verify:
+
+* It is marked archived according to the existing schema.
+* It no longer appears in the normal active-document list if that is the current behavior.
+* It remains available wherever the existing application expects archived records.
+
+### Delete
+
+Test deletion using a temporary test document only.
+
+Verify:
+
+* Correct record/file is deleted.
+* Other documents are unaffected.
+* Unauthorized deletion is rejected.
+
+### Expiry classification
+
+Test documents with:
+
+* No expiry
+* Future expiry
+* Expiring soon according to the application's existing threshold
+* Already expired
+
+Verify the API/dashboard counters classify them correctly.
+
+Do NOT invent a new expiry rule. Use the existing application's intended classification logic.
+
+---
+
+# 2. LOANS — AUTOMATED WORKFLOW TESTS
+
+Relevant files:
+
+* `artifacts/api-server/src/routes/loans.ts`
+* `artifacts/dkmo-portal/src/pages/loans.tsx`
+
+Test the complete existing loan workflow.
+
+## Member linkage
+
+Create a temporary loan for a real test DKMO member ID.
+
+Verify:
+
+* Loan is linked to the correct member.
+* Member name/ID resolves correctly.
+* Loan never appears as "Unknown".
+* Do not create fake permanent members.
+
+## Budget checks
+
+Test:
+
+* Loan within available budget → allowed.
+* Loan exceeding available budget → rejected according to existing rules.
+* Disbursed amount reduces remaining budget correctly.
+* Rejected/cancelled/undisbursed loans do not incorrectly reduce disbursed totals.
+
+Do not change the existing admin budget-control design.
+
+## Disbursement
+
+Test:
+
+1. Create loan.
+2. Approve it if approval is required.
+3. Disburse it.
+4. Verify disbursed amount.
+5. Verify total disbursed and remaining budget.
+
+Make sure the calculations are database-derived.
+
+## Repayment
+
+Create a temporary disbursed loan and add repayments.
+
+Verify:
+
+`Outstanding Principal = Total Disbursed Principal - Total Principal Repaid`
+
+Test at least:
+
+* No repayment
+* Partial repayment
+* Multiple repayments
+* Full repayment
+
+Verify balances never become incorrect because of duplicate or unrelated records.
+
+## Loan status
+
+Test the existing status logic for:
+
+* Pending
+* Approved
+* Rejected
+* Disbursed/Active
+* Overdue
+* Fully repaid/Closed
+
+Do not hardcode statuses merely to satisfy tests.
+
+For a fully repaid loan:
+
+* Outstanding principal must become SAR 0.
+* Loan should become Closed according to the existing workflow.
+
+For overdue loans:
+
+* Verify overdue classification is based on the actual due date/payment state.
+
+## Export
+
+Verify loan export data contains correct database values for:
+
+* Member ID
+* Member name
+* Loan amount
+* Disbursed amount
+* Repaid amount
+* Outstanding amount
+* Status
+* Dates
+* Responsible committee staff if applicable
+
+Make sure exported data matches the UI/API source of truth.
+
+---
+
+# 3. DASHBOARD — REGRESSION TESTS
+
+Relevant file:
+
+* `artifacts/api-server/src/routes/dashboard.ts`
+
+Verify dashboard metrics are calculated from the real database.
+
+### Total Members
+
+Must use the actual member records.
+
+### Active Members
+
+Must use the same active-member status logic used by the Members module.
+
+Do not create a separate conflicting definition.
+
+### Membership Fees Pending
+
+Must come from the actual membership ledger/payment state.
+
+### Total Membership Fees Collected
+
+Must equal the total of **actually collected membership fees** from the membership ledger.
+
+Rules:
+
+* Membership fee = SAR 100 one-time fee.
+* Include paid membership fees.
+* Exclude FRF payments.
+* Exclude loan transactions.
+* Do not count unpaid/pending records as collected.
+* Do not hardcode the total.
+
+### Loan Money Outstanding
+
+Verify:
+
+`Loan Money Outstanding = Total Loan Principal Disbursed - Total Principal Repaid`
+
+Exclude:
+
+* Rejected loans
+* Cancelled loans
+* Undisbursed loans
+* Fully repaid loans
+
+The result should be SAR 0 when there are no outstanding loans.
+
+---
+
+# 4. FRF SINGLE ACTIVE CASE REGRESSION
+
+This is extremely important because the dashboard and FRF modules depend on this rule.
+
+Verify:
+
+* There can be **only one active FRF collection case at a time**.
+* Approving an FRF claim opens the next collection case.
+* A new collection case cannot become active while another case is still active.
+* When there is no active case:
+
+  * Active FRF Case = 0
+  * FRF Outstanding = SAR 0
+  * FRF Fees should show no active collection case.
+* FRF member eligibility must still follow the membership rule:
+
+  * Membership Paid → FRF Active/Eligible
+  * Membership Unpaid/Pending → FRF Inactive/Not Eligible
+
+Do not allow the regression tests to create multiple active FRF cases.
+
+---
+
+# 5. DATA ISOLATION
+
+Every test must use temporary records where possible.
+
+After each test:
+
+* Delete/rollback temporary documents.
+* Delete/rollback temporary loans.
+* Delete/rollback temporary repayments.
+* Restore any temporary budget/configuration changes.
+* Restore temporary test states.
+
+At the end, verify that unrelated DKMO data has not changed.
+
+**DO NOT modify:**
+
+* Historical migrated members
+* Membership ledger history
+* Historical referrals
+* Historical FRF records
+* Committee records
+* Real documents
+* Real loans
+* Other production data
+
+---
+
+# 6. TEST THE ACTUAL API LOGIC
+
+Do not make superficial tests that only check whether an endpoint returns HTTP 200.
+
+Tests should verify:
+
+* Database state
+* Returned values
+* Permission behavior
+* Calculated totals
+* Status transitions
+* Member relationships
+* Business rules
+
+If a test exposes a bug, fix the underlying implementation and then add/keep the regression test so the bug cannot return later.
+
+---
+
+# 7. FINAL VALIDATION
+
+After implementing the tests:
+
+1. Run the complete relevant test suite.
+2. Run the document tests.
+3. Run the loan tests.
+4. Run dashboard tests.
+5. Run FRF regression tests.
+6. Run the production build.
+7. Check TypeScript/build errors.
+8. Confirm no existing unrelated tests/regressions were introduced.
+
+Finally, report clearly:
+
+### TEST RESULTS
+
+* Documents: PASS/FAIL
+* Loans: PASS/FAIL
+* Dashboard: PASS/FAIL
+* FRF single-active-case rule: PASS/FAIL
+* Production build: PASS/FAIL
+
+### If bugs were found
+
+List:
+
+* What was broken
+* Why it was broken
+* What you changed
+* Which regression test now protects against it
+
+### IMPORTANT FINAL CHECK
+
+Do not consider the task complete merely because the tests pass.
+
+Confirm that:
+
+* Historical DKMO data remains intact.
+* No fake/demo data was added permanently.
+* Dashboard totals are database-driven.
+* Loan balances are repayment-derived.
+* Document permissions are enforced.
+* FRF still allows only one active collection case.
+* Membership → FRF eligibility logic remains intact.
+
+Keep the existing UI and architecture unless a change is genuinely required to fix a tested regression.

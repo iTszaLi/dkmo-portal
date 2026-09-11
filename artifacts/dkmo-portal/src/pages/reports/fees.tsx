@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatSAR, formatDate, feeStatusLabel, cn } from "@/lib/utils";
+import { getMembershipFeeAmount } from "@/lib/membership-fee";
 import { ArrowLeft, Search, FileDown, FileSpreadsheet, Printer, BarChart3 } from "lucide-react";
 import ExcelJS from "exceljs";
 import jsPDF from "jspdf";
@@ -32,7 +33,7 @@ async function loadImageAsBase64(url: string): Promise<string> {
 }
 
 // ── types ────────────────────────────────────────────────────────────────────
-type FeeStatus = "paid" | "partial" | "pending" | "unpaid" | "exempt";
+type FeeStatus = "paid" | "partial" | "pending" | "unpaid" | "exempt" | "review";
 
 type FeeSummaryRow = {
   membershipId: string;
@@ -55,13 +56,13 @@ export default function FeesReport() {
 
   const feeSummaryRows = useMemo((): FeeSummaryRow[] => {
     if (!members) return [];
-    return members.map((m) => ({
+    return members.filter((m) => m.feeStatus !== "not_applicable").map((m) => ({
       membershipId: m.membershipId,
       fullName: m.fullName,
       designation: m.designation ?? "",
       city: m.city,
       refMemberName: m.refMemberName ?? "",
-      membershipFee: Number(m.membershipFee),
+      membershipFee: m.feeStatus === "review" ? Number(m.membershipFee) : getMembershipFeeAmount(m.membershipFee),
       feeStatus: m.feeStatus as FeeStatus,
       feePaidAt: m.feePaidAt ?? null,
     }));
@@ -91,7 +92,7 @@ export default function FeesReport() {
   const summaryTotals = useMemo(() => ({
     totalFee: filteredRows.reduce((a, r) => a + r.membershipFee, 0),
     collected: filteredRows.filter((r) => r.feeStatus === "paid").reduce((a, r) => a + r.membershipFee, 0),
-    outstanding: filteredRows.filter((r) => r.feeStatus !== "paid" && r.feeStatus !== "exempt").reduce((a, r) => a + r.membershipFee, 0),
+    outstanding: filteredRows.filter((r) => !["paid", "exempt", "review"].includes(r.feeStatus)).reduce((a, r) => a + r.membershipFee, 0),
     paidCount: filteredRows.filter((r) => r.feeStatus === "paid").length,
     pendingCount: filteredRows.filter((r) => r.feeStatus === "pending" || r.feeStatus === "partial").length,
     unpaidCount: filteredRows.filter((r) => r.feeStatus === "unpaid").length,
@@ -364,7 +365,7 @@ export default function FeesReport() {
             Membership Fee Summary
           </CardTitle>
           <CardDescription className="dark:text-slate-400">
-            One-time registration fee status for every member — paid, pending, and unpaid.
+            Recorded membership fees and preserved Access evidence. Missing legacy information is excluded, not treated as unpaid.
             {hasFilters ? ` Showing ${filteredRows.length} of ${feeSummaryRows.length}.` : ""}
           </CardDescription>
 

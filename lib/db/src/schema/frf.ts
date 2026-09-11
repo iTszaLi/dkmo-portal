@@ -20,6 +20,8 @@ export const frfClaimsTable = pgTable("frf_claims", {
   underReviewBy: text("under_review_by").notNull().default(""),
   disbursedAt: timestamp("disbursed_at", { withTimezone: true }),
   disbursedBy: text("disbursed_by").notNull().default(""),
+  disbursedAmount: numeric("disbursed_amount", { precision: 12, scale: 2 }).notNull().default("0"),
+  disbursementReference: text("disbursement_reference").notNull().default(""),
   rejectedBy: text("rejected_by").notNull().default(""),
   rejectedAt: timestamp("rejected_at", { withTimezone: true }),
   reviewNotes: text("review_notes").notNull().default(""),

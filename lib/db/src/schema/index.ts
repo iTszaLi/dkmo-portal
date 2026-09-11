@@ -14,3 +14,5 @@ export * from "./app_keys";
 export * from "./welfare";
 export * from "./meetings";
 export * from "./import_batches";
+export * from "./committee";
+export * from "./member-timeline";

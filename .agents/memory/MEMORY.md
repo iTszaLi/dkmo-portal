@@ -2,13 +2,15 @@
 - [Public track endpoint DTO](public-track-endpoint-dto.md) — public DKMO status lookup must return a minimal non-PII DTO and match identifiers exactly (no substring enumeration).
 - [Welfare/community services](welfare-services.md) — one table+route+generic component for 5 service types; request numbers via app-code retry-on-conflict (not a SQL fn like FRF); FRF/Loans linked not rebuilt.
 - [Applying DB schema changes](db-schema-apply.md) — `db push` can hang on interactive rename prompts; use additive DDL in scripts/src/migrate.ts (`run migrate`) for new tables/columns.
-- [DKMO payments & recruitment model](dkmo-payments-model.md) — no monthly dues; FRF has a per-claim×member frf_contributions ledger synced atomically with payments rows; leaderboard keys on member UUID.
+- [DKMO payments & recruitment model](dkmo-payments-model.md) — Access ledger is authoritative for legacy membership fees; no row means N/A, not unpaid; FRF uses per-claim contribution ledgers.
 - [Member reference / group FRF responsibility](member-reference-responsibility.md) — members.refMemberId is TEXT holding the referrer's UUID; group = refMemberId===X.id; FRF responsibility = count × SAR 50.
 - [Documents per-entity views](documents-per-entity-views.md) — /api/documents is paginated; per-member views must filter server-side by linkedEntityType+linkedEntityId, never client-filter page 1.
 - [Documents DMS access model](documents-dms.md) — file URLs must be permission-checked API endpoints, never raw storage URLs; visibility levels + public portal at /dkmo-documents.
 - [DKMO ID sequence](dkmo-id-sequence.md) — members + membership applications share one DKMO-XXXX namespace via next_dkmo_number()/dkmo_id_seq; setval in migrate must be advance-only or deleted IDs get reused.
-- [Committee membership is DB-driven & independent](committee-db-driven.md) — role (designation) + two independent booleans isExecutiveCommittee/isCoreCommittee; no nesting/subset; toggle via PATCH /members/:id/committee-status.
+- [Versioned committee authority](committee-db-driven.md) — term assignments are authoritative; legacy member flags are compatibility-only, and login privileges require explicit account-member links.
 - [Dashboard widget personalization](dashboard-personalization.md) — Reorder widgets persisted to localStorage (sanitized on load); pair drag with keyboard Move buttons; confetti/anim respect reduced-motion; Member-of-Month from refMemberId.
+- [Dashboard notifications](dashboard-alerts.md) — New public membership applications stay in the notification bell until moved out of submitted status.
+- [Dashboard FRF aggregate aliases](dashboard-frf-aggregate-aliases.md) — qualify contribution amount/status/member fields whenever FRF summary SQL joins multiple tables with shared column names.
 - [Certificate security](certificate-security.md) — approved-only cert serial allocated lazily & atomically (isNull guard); PDF signing is integrity-only (self-signed), verify page is authenticity; never emit unsigned.
 - [DKMO duplicate prevention](dkmo-duplicate-prevention.md) — memberships STRICT (DB+app, excludes rejected); members table SOFT client-only confirm (no server block); check-duplicate public+non-PII; /duplicates admin-only.
 - [Membership certificate approval gate](membership-certificate-gate.md) — official cert PDF gated SERVER-side via public /certificate (403 until approved) + minimal /verify; never rebuild from /track.
@@ -23,3 +25,12 @@
 - [Read access is role-open](read-access-model.md) — all list GETs are auth-only by design; every role can read every module, so global search parity adds no exposure. Mutations are role-gated.
 - [Legacy member import](member-import-module.md) — server-authoritative validation; rollback check+delete must be one guarded transaction; update fills blanks only.
 - [Generic data-import framework](data-import-framework.md) — Payments/Receipts/FRF/Sponsors/Events share /api/import/:entity; batch-id stamping for rollback; canonical frf_contribution type; ALTER after CREATE in migrate.
+- [Access migration preservation gate](access-migration-safety.md) — Access history is authoritative; preserve every legacy row and block portal attachment until candidate decisions are explicit.
+- [Bulk SQL staging](bulk-sql-staging.md) — stage large audited imports in small parameterized batches, then use one short guarded replacement transaction.
+- [Orval and Zod 3 compatibility](orval-zod3-compatibility.md) — generated API contracts may emit Zod 4 helpers; normalize them in the codegen post-step before starting the API.
+- [Generated detail-query guards](generated-detail-query-guards.md) — empty string IDs can hit list routes; explicitly disable generated detail hooks until a real ID exists.
+- [Navigation return context](navigation-return-context.md) — detail/edit flows use an internal returnTo path and filtered list state belongs in URL parameters.
+- [Browser e2e runtime](browser-e2e-runtime.md) — Playwright needs Chromium plus native GTK/GBM/XKB libraries in the Nix environment before browser tests can launch.
+- [Stateful API regression fixtures](api-regression-fixtures.md) — dashboard assertions must baseline or isolate existing FRF ledger data; hard-coded totals only work on a clean database.
+- [Imported member activity dates](membership-activity-dates.md) — imported created_at is batch provenance; monthly membership activity must use normalized legacy dates instead.
+- [Meeting-specific participants](meeting-participants.md) — attendance rows are authoritative per meeting; legacy rosters seed once, additions are active-term-only.

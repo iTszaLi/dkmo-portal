@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatSAR, formatDate, cn } from "@/lib/utils";
+import { withReturnTo } from "@/lib/navigation";
 import { ArrowLeft, Search, FileDown, FileSpreadsheet, Printer, X, HeartHandshake, Users, CheckCircle2, Clock, Wallet } from "lucide-react";
 import ExcelJS from "exceljs";
 import jsPDF from "jspdf";
@@ -69,9 +70,10 @@ export default function FrfFeeReport() {
 
   const { data: claimsData = [], isLoading: claimsLoading } = useListFrfClaims();
 
-  // Only titled cases (those set up as named FRF fee cases) are selectable.
+  // Only approved/disbursed claims have collection ledgers. Review-only and
+  // rejected claims intentionally stay out of the fee report.
   const cases = useMemo(() => {
-    const list = claimsData.filter((c) => (c.title ?? "").trim() !== "");
+    const list = claimsData.filter((c) => (c.title ?? "").trim() !== "" && (c.status === "approved" || c.status === "disbursed"));
     return [...list].sort((a, b) => (a.title ?? "").localeCompare(b.title ?? ""));
   }, [claimsData]);
 
@@ -296,7 +298,7 @@ export default function FrfFeeReport() {
         <CardContent className="pt-6 flex flex-wrap items-center gap-3">
           <div className="min-w-[260px]">
             <label className="text-xs font-medium text-emerald-800 dark:text-slate-400 mb-1 block">Select FRF Case</label>
-            <Select value={caseId} onValueChange={setCaseId}>
+             <Select value={caseId} onValueChange={setCaseId}>
               <SelectTrigger className="w-full dark:bg-slate-800 dark:border-slate-700" data-testid="select-frf-case">
                 <SelectValue placeholder={claimsLoading ? "Loading cases…" : "Select FRF Case"} />
               </SelectTrigger>
@@ -306,6 +308,12 @@ export default function FrfFeeReport() {
                 ))}
               </SelectContent>
             </Select>
+            {selectedCase && (
+              <div className="mt-1 flex items-center justify-between gap-2 text-xs text-emerald-700/80 dark:text-slate-400">
+                <span>{selectedCase.status === "approved" ? "Active collection case" : "Completed history"}</span>
+                <Link href={withReturnTo(`/frf/${selectedCase.id}`)} className="font-semibold hover:underline">View claim</Link>
+              </div>
+            )}
           </div>
           <div className="relative flex-1 min-w-[200px] self-end">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500 dark:text-slate-500" />
@@ -358,7 +366,9 @@ export default function FrfFeeReport() {
             <p className="text-sm text-emerald-700/70 dark:text-slate-500 py-12 text-center">
               {hasFilters
                 ? "No members match the current filters for this case."
-                : "No FRF fee records have been created for this case yet."}
+                : cases.length === 0
+                  ? "No active or completed FRF collection case exists. Approve a claim to create the first SAR 50 member obligations."
+                  : "No FRF fee records have been created for this case yet."}
             </p>
           ) : (
             <div className="overflow-x-auto">

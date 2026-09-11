@@ -17,7 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   HeartHandshake, ArrowLeft, Search, Download, FileSpreadsheet, Users,
   CheckCircle2, Clock, AlertTriangle, DollarSign, Target, UserX, RotateCcw,
-  Camera, Trash2, History, Award, XCircle,
+  Camera, Trash2, History, Award, XCircle, ExternalLink,
 } from "lucide-react";
 import { FrfCaseDocuments } from "@/components/FrfCaseDocuments";
 import { useRef } from "react";
@@ -26,6 +26,7 @@ import { fileToCompressedDataUrl } from "@/lib/image-utils";
 import ExcelJS from "exceljs";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { getReturnTarget, useReturnNavigation, withReturnTo } from "@/lib/navigation";
 
 const CLAIM_TYPE_LABEL: Record<string, string> = {
   death_benefit: "Death Benefit",
@@ -60,7 +61,7 @@ type TimelineEvent = {
 };
 
 /** Builds the case activity timeline from claim milestones + the payment ledger. */
-function buildTimeline(claim: any, contributors: { amountPaid: number; paidAt?: string | null }[], targetAmount: number): TimelineEvent[] {
+function buildTimeline(claim: any, contributors: { amountPaid: number; paidAt?: string | null }[], reliefRequestedAmount: number): TimelineEvent[] {
   const paidDates = contributors
     .filter((c) => c.amountPaid > 0 && c.paidAt)
     .map((c) => c.paidAt as string)
@@ -68,8 +69,8 @@ function buildTimeline(claim: any, contributors: { amountPaid: number; paidAt?: 
   const events: TimelineEvent[] = [
     { label: "Case created", date: claim.claimDate ?? claim.createdAt, tone: "done" },
   ];
-  if (targetAmount > 0) {
-    events.push({ label: "Target amount set", date: claim.claimDate ?? claim.createdAt, detail: `Target SAR ${targetAmount.toLocaleString()}`, tone: "done" });
+  if (reliefRequestedAmount > 0) {
+    events.push({ label: "Relief requested", date: claim.claimDate ?? claim.createdAt, detail: `Requested SAR ${reliefRequestedAmount.toLocaleString()}`, tone: "done" });
   }
   if (claim.underReviewAt) events.push({ label: "Under review", date: claim.underReviewAt, detail: claim.underReviewBy ? `by ${claim.underReviewBy}` : undefined, tone: "info" });
   if (claim.approvedDate) events.push({ label: "Approved", date: claim.approvedDate, detail: claim.approvedBy ? `by ${claim.approvedBy}` : undefined, tone: "done" });
@@ -129,6 +130,8 @@ function initials(name: string) {
 
 export default function FrfClaimDetail() {
   const { id = "" } = useParams<{ id: string }>();
+  const goBack = useReturnNavigation("/frf");
+  const backHref = getReturnTarget("/frf");
   const { data, isLoading, error, refetch } = useGetFrfClaimCollection(id);
   const { canEdit, hasRole } = useAuth();
   const isAdmin = hasRole("admin");
@@ -196,14 +199,18 @@ export default function FrfClaimDetail() {
     const ws = wb.addWorksheet("FRF Collection");
     ws.addRow([`FRF Claim Collection — ${data.claim.claimantName}`]);
     ws.addRow([`Type: ${CLAIM_TYPE_LABEL[data.claim.claimType] ?? data.claim.claimType}`, `Contribution: SAR ${data.claim.contributionAmount}`]);
-    ws.addRow([`Expected: SAR ${data.expectedAmount}`, `Collected: SAR ${data.collectedAmount}`, `Outstanding: SAR ${data.outstandingAmount}`, `Rate: ${data.collectionRate}%`]);
+    ws.addRow([`Relief requested: SAR ${Number((data as any).reliefRequestedAmount ?? data.claim.amountRequested ?? 0)}`, `Relief approved: SAR ${Number((data as any).reliefApprovedAmount ?? data.claim.amountApproved ?? 0)}`, `Relief disbursed: SAR ${Number((data as any).reliefDisbursedAmount ?? (data.claim as any).disbursedAmount ?? 0)}`]);
+    ws.addRow([`Member contributions expected: SAR ${data.expectedAmount}`, `Collected: SAR ${data.collectedAmount}`, `Outstanding: SAR ${data.outstandingAmount}`, `Rate: ${data.collectionRate}%`]);
     ws.addRow([]);
     const header = ws.addRow(["Member", "Membership ID", "Mobile", "Reference", "Due (SAR)", "Paid (SAR)", "Balance (SAR)", "Status", "Method", "Paid Date", "Receipt #", "Remarks"]);
     header.font = { bold: true };
     for (const c of contributors) {
       ws.addRow([
         c.fullName, c.membershipId, c.mobileNumber, c.refMemberName || "—",
-        c.amount, c.amountPaid, c.balance, CONTRIB_STATUS_LABEL[c.status] ?? c.status,
+        c.status === "exempt" || c.status === "cancelled" ? "—" : c.amount,
+        c.status === "exempt" || c.status === "cancelled" ? "—" : c.amountPaid,
+        c.status === "exempt" || c.status === "cancelled" ? "—" : c.balance,
+        CONTRIB_STATUS_LABEL[c.status] ?? c.status,
         c.paymentMethod || "—", c.paidAt ? formatDate(c.paidAt) : "—", c.receiptNumber || "—", c.remarks || "—",
       ]);
     }
@@ -227,17 +234,20 @@ export default function FrfClaimDetail() {
     doc.setFontSize(10);
     doc.setTextColor(60);
     doc.text(`Claimant: ${data.claim.claimantName} · ${CLAIM_TYPE_LABEL[data.claim.claimType] ?? data.claim.claimType}`, 14, 24);
-    doc.text(`Contribution per member: SAR ${data.claim.contributionAmount}`, 14, 30);
+    doc.text(`Relief requested: SAR ${Number((data as any).reliefRequestedAmount ?? data.claim.amountRequested ?? 0)} · Approved: SAR ${Number((data as any).reliefApprovedAmount ?? data.claim.amountApproved ?? 0)} · Disbursed: SAR ${Number((data as any).reliefDisbursedAmount ?? (data.claim as any).disbursedAmount ?? 0)}`, 14, 30);
+    doc.text(`Member contribution per eligible member: SAR ${data.claim.contributionAmount}`, 14, 36);
     doc.text(
       `Expected: SAR ${data.expectedAmount}  |  Collected: SAR ${data.collectedAmount}  |  Outstanding: SAR ${data.outstandingAmount}  |  Rate: ${data.collectionRate}%`,
-      14, 36,
+      14, 42,
     );
     autoTable(doc, {
-      startY: 42,
+      startY: 48,
       head: [["Member", "Membership ID", "Mobile", "Due", "Paid", "Balance", "Status", "Paid Date"]],
       body: contributors.map((c) => [
         c.fullName, c.membershipId, c.mobileNumber,
-        `SAR ${c.amount}`, `SAR ${c.amountPaid}`, `SAR ${c.balance}`,
+        c.status === "exempt" || c.status === "cancelled" ? "—" : `SAR ${c.amount}`,
+        c.status === "exempt" || c.status === "cancelled" ? "—" : `SAR ${c.amountPaid}`,
+        c.status === "exempt" || c.status === "cancelled" ? "—" : `SAR ${c.balance}`,
         CONTRIB_STATUS_LABEL[c.status] ?? c.status, c.paidAt ? formatDate(c.paidAt) : "—",
       ]),
       styles: { fontSize: 8 },
@@ -268,20 +278,28 @@ export default function FrfClaimDetail() {
     doc.setDrawColor(180);
     doc.line(30, 46, pageW - 30, 46);
     // Body
-    const paidContribs = data.contributors.filter((x) => x.amountPaid > 0).length;
-    const progress = data.targetAmount > 0 ? data.targetProgress : data.collectionRate;
+     const paidContribs = data.contributors.filter(
+       (x) =>
+         x.amountPaid > 0 &&
+         x.status !== "exempt" &&
+         x.status !== "cancelled",
+     ).length;
     const rows: [string, string][] = [
       ["Case Title", c.title || "—"],
       ["Beneficiary Name", c.beneficiaryName || c.claimantName],
       ["Member ID", c.membershipId || "—"],
       ["Case Type", CLAIM_TYPE_LABEL[c.claimType] ?? c.claimType],
-      ["Target Amount", data.targetAmount > 0 ? `SAR ${data.targetAmount.toLocaleString()}` : "—"],
-      ["Total Collected", `SAR ${data.collectedAmount.toLocaleString()}`],
+      ["Relief Requested", `SAR ${Number((data as any).reliefRequestedAmount ?? c.amountRequested ?? 0).toLocaleString()}`],
+      ["Relief Approved", `SAR ${Number((data as any).reliefApprovedAmount ?? c.amountApproved ?? 0).toLocaleString()}`],
+      ["Relief Disbursed", `SAR ${Number((data as any).reliefDisbursedAmount ?? c.disbursedAmount ?? 0).toLocaleString()}`],
+      ["Member Contributions Expected", `SAR ${data.expectedAmount.toLocaleString()}`],
+      ["Member Contributions Collected", `SAR ${data.collectedAmount.toLocaleString()}`],
+      ["Member Contributions Outstanding", `SAR ${data.outstandingAmount.toLocaleString()}`],
       ["Number of Contributors", `${paidContribs} of ${data.totalMembers} members`],
-      ["Collection Percentage", `${progress}%`],
+      ["Contribution Collection Percentage", `${data.collectionRate}%`],
       ["Date Opened", formatDate(c.claimDate ?? c.createdAt)],
       ["Date Closed", c.caseStatus === "closed" ? formatDate(c.closingDate ?? c.disbursedAt ?? c.rejectedAt ?? null) : "Still open"],
-      ["Distribution Status", c.status === "disbursed" ? `Disbursed — SAR ${Number(c.amountApproved).toLocaleString()}` : c.status === "rejected" ? "Rejected" : "Not yet disbursed"],
+       ["Distribution Status", c.status === "disbursed" ? `Disbursed — SAR ${Number((c as any).disbursedAmount ?? (data as any).reliefDisbursedAmount ?? c.amountApproved).toLocaleString()}` : c.status === "rejected" ? "Rejected" : "Not yet disbursed"],
     ];
     autoTable(doc, {
       startY: 56,
@@ -314,7 +332,7 @@ export default function FrfClaimDetail() {
   if (error || !data) {
     return (
       <div className="space-y-4">
-        <Link href="/frf">
+        <Link href={backHref}>
           <Button variant="outline" size="sm"><ArrowLeft className="h-4 w-4 mr-1" /> Back to FRF</Button>
         </Link>
         <Card className="rounded-2xl">
@@ -327,19 +345,12 @@ export default function FrfClaimDetail() {
   const { claim } = data;
 
   const stats: { title: string; value: string; icon: typeof Users; color: string; sub?: string; filter?: string }[] = [
-    { title: "Contributing Members", value: String(data.totalMembers), icon: Users, color: "text-green-700 dark:text-green-400", sub: `${data.exemptCount} exempt`, filter: "all" },
+    { title: "Contributing Members", value: String(data.totalMembers), icon: Users, color: "text-green-700 dark:text-green-400", sub: `${data.exemptCount} exempt · ${data.cancelledCount} cancelled`, filter: "all" },
     { title: "Collected", value: formatSAR(data.collectedAmount), icon: CheckCircle2, color: "text-green-700 dark:text-green-400", sub: `${data.paidCount} paid · ${data.partialCount} partial`, filter: "collected" },
     { title: "Outstanding", value: formatSAR(data.outstandingAmount), icon: Clock, color: "text-orange-600 dark:text-orange-400", sub: `${data.pendingCount} pending · ${data.overdueCount} overdue · ${data.partialCount} partial`, filter: "owing" },
     { title: "Overdue", value: String(data.overdueCount), icon: AlertTriangle, color: "text-red-600 dark:text-red-400", sub: "30+ days", filter: "overdue" },
-    {
-      title: "Target",
-      value: formatSAR(data.targetAmount),
-      icon: Target,
-      color: "text-blue-700 dark:text-blue-400",
-      sub: data.targetAmount > 0
-        ? `${data.targetProgress}% reached · ${formatSAR(data.remainingToTarget)} to go`
-        : "No target set",
-    },
+    { title: "Relief Approved", value: formatSAR((data as any).reliefApprovedAmount ?? claim.amountApproved), icon: DollarSign, color: "text-blue-700 dark:text-blue-400", sub: `Requested ${formatSAR((data as any).reliefRequestedAmount ?? claim.amountRequested)}` },
+    { title: "Relief Disbursed", value: formatSAR((data as any).reliefDisbursedAmount ?? (claim as any).disbursedAmount ?? 0), icon: Target, color: "text-emerald-700 dark:text-emerald-400", sub: claim.status === "disbursed" ? "Actual assistance paid" : "Not yet disbursed" },
   ];
 
   const showContributors = (filter: string) => {
@@ -351,9 +362,16 @@ export default function FrfClaimDetail() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <Link href="/frf" className="inline-flex items-center gap-1 text-sm text-green-700 dark:text-green-400 hover:underline mb-1">
+          <a
+            href={backHref}
+            onClick={(event) => {
+              event.preventDefault();
+              goBack();
+            }}
+            className="inline-flex items-center gap-1 text-sm text-green-700 dark:text-green-400 hover:underline mb-1"
+          >
             <ArrowLeft className="h-3.5 w-3.5" /> Family Relief Fund
-          </Link>
+          </a>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-green-950 dark:text-green-100 flex items-center gap-2">
             <HeartHandshake className="h-6 w-6 text-green-700 dark:text-green-400" />
             {claim.title || claim.claimantName}
@@ -379,6 +397,11 @@ export default function FrfClaimDetail() {
           <Button variant="outline" size="sm" onClick={exportExcel} className="dark:border-slate-700">
             <FileSpreadsheet className="h-4 w-4 mr-1.5 text-green-600" /> Excel
           </Button>
+          <Link href={withReturnTo(`/payments?tab=frf&frfCaseId=${encodeURIComponent(id)}`)}>
+            <Button variant="outline" size="sm" className="dark:border-slate-700">
+              <ExternalLink className="h-4 w-4 mr-1.5 text-emerald-600" /> View Collection
+            </Button>
+          </Link>
           <Button variant="outline" size="sm" onClick={exportPdf} className="dark:border-slate-700">
             <Download className="h-4 w-4 mr-1.5 text-green-600" /> PDF
           </Button>
@@ -431,17 +454,17 @@ export default function FrfClaimDetail() {
                 {claim.description && <p className="text-sm text-green-900/80 dark:text-slate-300 mt-1.5">{claim.description}</p>}
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-2 text-sm">
-                <div><span className="text-xs text-green-700/70 dark:text-slate-500 block">Target</span><span className="font-semibold text-green-950 dark:text-slate-200">{data.targetAmount > 0 ? formatSAR(data.targetAmount) : "—"}</span></div>
-                <div><span className="text-xs text-green-700/70 dark:text-slate-500 block">Collected</span><span className="font-semibold text-green-700 dark:text-green-300">{formatSAR(data.collectedAmount)}</span></div>
-                <div><span className="text-xs text-green-700/70 dark:text-slate-500 block">Committed</span><span className="font-semibold text-blue-700 dark:text-blue-300">{formatSAR(data.expectedAmount)}</span></div>
-                <div><span className="text-xs text-green-700/70 dark:text-slate-500 block">Remaining</span><span className="font-semibold text-orange-700 dark:text-orange-300">{data.targetAmount > 0 ? formatSAR(data.remainingToTarget) : formatSAR(data.outstandingAmount)}</span></div>
+                <div><span className="text-xs text-green-700/70 dark:text-slate-500 block">Relief requested</span><span className="font-semibold text-green-950 dark:text-slate-200">{formatSAR((data as any).reliefRequestedAmount ?? claim.amountRequested)}</span></div>
+                <div><span className="text-xs text-green-700/70 dark:text-slate-500 block">Relief approved</span><span className="font-semibold text-blue-700 dark:text-blue-300">{formatSAR((data as any).reliefApprovedAmount ?? claim.amountApproved)}</span></div>
+                <div><span className="text-xs text-green-700/70 dark:text-slate-500 block">Relief disbursed</span><span className="font-semibold text-emerald-700 dark:text-emerald-300">{formatSAR((data as any).reliefDisbursedAmount ?? (claim as any).disbursedAmount ?? 0)}</span></div>
+                <div><span className="text-xs text-green-700/70 dark:text-slate-500 block">Contributions collected</span><span className="font-semibold text-green-700 dark:text-green-300">{formatSAR(data.collectedAmount)} / {formatSAR(data.expectedAmount)}</span></div>
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-green-700/70 dark:text-slate-500">Collection Progress</span>
-                  <span className="text-xs font-semibold text-green-800 dark:text-green-300">{data.targetAmount > 0 ? data.targetProgress : data.collectionRate}%</span>
+                   <span className="text-xs text-green-700/70 dark:text-slate-500">Member contribution collection progress</span>
+                   <span className="text-xs font-semibold text-green-800 dark:text-green-300">{data.collectionRate}%</span>
                 </div>
-                <Progress value={data.targetAmount > 0 ? data.targetProgress : data.collectionRate} className="h-2" />
+               <Progress value={data.collectionRate} className="h-2" />
               </div>
               {(claim.supportingPhotos?.length ?? 0) > 0 && (
                 <div>
@@ -513,7 +536,7 @@ export default function FrfClaimDetail() {
             <CardDescription className="dark:text-slate-400">Key milestones and payment activity for this case</CardDescription>
           </CardHeader>
           <CardContent>
-            <CaseTimeline events={buildTimeline(claim, data.contributors, data.targetAmount)} />
+           <CaseTimeline events={buildTimeline(claim, data.contributors, Number((data as any).reliefRequestedAmount ?? claim.amountRequested ?? 0))} />
           </CardContent>
         </Card>
         <FrfCaseDocuments claimId={id} isAdmin={isAdmin} />
@@ -583,7 +606,7 @@ export default function FrfClaimDetail() {
                   contributors.map((c) => (
                     <TableRow key={c.contributionId} className="hover:bg-green-50/30 dark:hover:bg-slate-800/50 dark:border-slate-800">
                       <TableCell>
-                        <Link href={`/members/${c.memberId}`} className="flex items-center gap-2 hover:underline">
+                        <Link href={withReturnTo(`/members/${c.memberId}`)} className="flex items-center gap-2 hover:underline">
                           <Avatar className="h-7 w-7">
                             <AvatarImage src={c.photoUrl ?? undefined} />
                             <AvatarFallback className="text-[10px] bg-green-100 text-green-800">{initials(c.fullName)}</AvatarFallback>
@@ -596,10 +619,10 @@ export default function FrfClaimDetail() {
                       </TableCell>
                       <TableCell className="text-sm text-green-800 dark:text-slate-300">{c.mobileNumber}</TableCell>
                       <TableCell className="text-sm text-green-800 dark:text-slate-300">{c.refMemberName || "—"}</TableCell>
-                      <TableCell className="text-right font-medium text-green-900 dark:text-slate-200">{c.status === "exempt" ? "—" : formatSAR(c.amount)}</TableCell>
-                      <TableCell className="text-right font-medium text-green-800 dark:text-green-300">{c.amountPaid > 0 ? formatSAR(c.amountPaid) : "—"}</TableCell>
-                      <TableCell className={cn("text-right font-medium", c.status === "exempt" ? "text-slate-400" : c.balance > 0 ? "text-orange-700 dark:text-orange-400" : "text-green-700 dark:text-green-400")}>
-                        {c.status === "exempt" ? "—" : formatSAR(c.balance)}
+                       <TableCell className="text-right font-medium text-green-900 dark:text-slate-200">{c.status === "exempt" || c.status === "cancelled" ? "—" : formatSAR(c.amount)}</TableCell>
+                       <TableCell className="text-right font-medium text-green-800 dark:text-green-300">{c.status === "exempt" || c.status === "cancelled" || c.amountPaid <= 0 ? "—" : formatSAR(c.amountPaid)}</TableCell>
+                       <TableCell className={cn("text-right font-medium", c.status === "exempt" || c.status === "cancelled" ? "text-slate-400" : c.balance > 0 ? "text-orange-700 dark:text-orange-400" : "text-green-700 dark:text-green-400")}>
+                         {c.status === "exempt" || c.status === "cancelled" ? "—" : formatSAR(c.balance)}
                       </TableCell>
                       <TableCell>
                         <Badge className={cn("text-[11px]", CONTRIB_STATUS_STYLE[c.status] ?? "")}>{CONTRIB_STATUS_LABEL[c.status] ?? c.status}</Badge>

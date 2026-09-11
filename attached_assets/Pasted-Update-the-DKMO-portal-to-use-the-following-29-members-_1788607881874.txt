@@ -1,0 +1,85 @@
+Update the DKMO portal to use the following **29 members as the official 2026–27 Committee Members**.
+
+These must be linked to their existing member records in the database. **Do not create duplicate member records.** Match them to the existing members using the best available name/member data and keep their existing unique DKMO Member ID.
+
+### 2026–27 Committee
+
+1. Fazlurrahman Kolkar — President
+2. Asif Kannur — Vice President
+3. Irshad Bajpe — General Secretary
+4. Abdul Rahiman Sulaiman — Treasurer
+5. Sameen Khan Ummer — Joint Secretary
+6. Abdul Azeez Bajpe — Overseas Convenor
+7. Salman Noor — Advisor
+8. G.K. Shaikh — Advisor
+9. Haneef B.K. — Advisor
+10. Ghani Ahmed Mulki — Loan Convenor
+11. Shamsuddin Addoor — Loan Convenor (Recovery)
+12. Yousuf Addoor — Auditor
+13. Irfan Shaikh — Verification Team Leader
+14. Ashraf Kozhikan — Event Organizer
+15. Shareef Thokur — Event Organizer
+16. Hameed Nazeer — Event Organizer
+17. Nazeer Hassan — Event Organizer
+18. Sadiq Ahmed Udupi — Employment Scheme
+19. Akhil Ganjimutt — Employment Scheme
+20. Ashraf Sheikh Koteshwar — FRF Convenor
+21. Mohammed Haris Byndoor — FRF Convenor
+22. Haneef N.S. — Executive Member
+23. Zia Ganjimutt — Executive Member
+24. Razik Bajpe — Executive Member
+25. Yousuf Kalanjibail — Executive Member
+26. Shaul Hameed — Executive Member
+27. Nayaz Ahmed — Executive Member
+28. Abdul Majeed Vittal — Executive Member
+29. Rafee Hameed Uchchila — Executive Member
+
+### IMPORTANT: Committee-only eligibility
+
+These 29 committee members are the **only members eligible to perform/participate in the following committee-controlled functions**:
+
+* **Loans** — only these committee members can be involved in submitting/recommending/processing/approving loan-related actions, according to their assigned role and permissions.
+* **Sponsors / Referrals** — only committee members can create, manage, approve, or record official sponsor/referral activities.
+* **FRF Claims** — only committee members can submit, verify, recommend, process, or manage FRF claims, according to their role.
+* **Membership Drives** — only committee members can create/manage official membership-drive activities.
+* **Events** — only committee members can create/manage official DKMO events and event-related records.
+* **Meeting Attendance** — committee members should have committee meeting attendance tracking.
+* **Receipts** — committee members should be eligible to create/issue/manage official DKMO receipts, subject to their assigned permissions.
+
+### Role-based permissions
+
+Do not give every committee member unlimited admin access.
+
+Their permissions should be **role-based**. For example:
+
+* President — highest committee-level oversight.
+* Vice President — committee oversight and delegated authority.
+* General Secretary — meetings, membership administration, committee records and correspondence.
+* Treasurer — payments, receipts and financial records.
+* Loan Convenors — loan-related functions.
+* FRF Convenors — FRF-related functions.
+* Auditor — audit/financial verification access.
+* Verification Team Leader — verification functions.
+* Event Organizers — event functions.
+* Employment Scheme members — employment-scheme functions.
+* Executive Members / Advisors — committee participation and the permitted committee functions.
+
+### Critical rule
+
+Being a normal DKMO member **must NOT automatically grant these committee privileges**.
+
+Only members assigned to the **2026–27 Committee** should receive these committee permissions.
+
+Also make the committee year/version explicit as **2026–27**, so a future committee can replace the current committee without destroying historical records.
+
+The portal should preserve the committee history, including:
+
+* Committee year
+* Member
+* Committee position
+* Start date
+* End date
+* Active/inactive status
+* Committee-related actions performed by that member
+
+Use the existing member records and existing unique DKMO Member IDs wherever possible. Do not create duplicate members.

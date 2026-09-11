@@ -1,0 +1,178 @@
+IMPORTANT: ADD THE SAME ENGLISH + KANNADA WHATSAPP REMINDER SYSTEM TO MEMBERSHIP FEES.
+
+The Membership Fees page must have a WhatsApp reminder option for members whose one-time membership registration fee is unpaid.
+
+FIRST inspect the existing Membership Fees WhatsApp reminder implementation, if one already exists, and make sure it supports both English and Kannada.
+
+==================================================
+MEMBERSHIP WHATSAPP REMINDER
+==================================================
+
+For an unpaid membership fee, show:
+
+"Send WhatsApp Reminder"
+
+When clicked, allow the admin to choose:
+
+○ English
+○ ಕನ್ನಡ (Kannada)
+
+Show a message preview before opening WhatsApp.
+
+==================================================
+ENGLISH MESSAGE
+==================================================
+
+Use this format:
+
+Assalamu Alaikum [Member Name],
+
+This is a gentle reminder from DKMO (Dakshina Karnataka Muslim Okkota — Committed to the Community).
+
+Your one-time membership registration fee of [AMOUNT] is currently unpaid.
+
+Please complete the payment at your earliest convenience to activate your membership.
+
+Jazakallah Khair,
+DKMO
+
+IMPORTANT:
+[AMOUNT] MUST be dynamic.
+
+For example:
+
+SAR 100.00
+
+Do NOT hardcode SAR 0.00.
+
+The actual amount must come from the member's membership payment record/configured membership fee.
+
+==================================================
+KANNADA MESSAGE
+==================================================
+
+Provide a natural, human-speakable Kannada version.
+
+DO NOT make it a stiff, word-for-word translation.
+
+Use simple, polite, everyday Kannada that a Kannada-speaking member from Karnataka would naturally understand.
+
+Example:
+
+ಅಸ್ಸಲಾಮು ಅಲೈಕುಮ್ [Member Name],
+
+DKMO (ದಕ್ಷಿಣ ಕರ್ನಾಟಕ ಮುಸ್ಲಿಂ ಒಕ್ಕೂಟ — ಸಮುದಾಯದ ಸೇವೆಗೆ ಬದ್ಧ) ವತಿಯಿಂದ ಒಂದು ಸಣ್ಣ ನೆನಪಿನ ಸಂದೇಶ.
+
+ನಿಮ್ಮ ಒಂದು ಬಾರಿ ಪಾವತಿಸಬೇಕಾದ ಸದಸ್ಯತ್ವ ನೋಂದಣಿ ಶುಲ್ಕ [AMOUNT] ಇನ್ನೂ ಪಾವತಿಯಾಗಿಲ್ಲ.
+
+ದಯವಿಟ್ಟು ಸಾಧ್ಯವಾದಷ್ಟು ಬೇಗ ಸದಸ್ಯತ್ವ ಶುಲ್ಕವನ್ನು ಪಾವತಿಸಿ, ನಿಮ್ಮ ಸದಸ್ಯತ್ವವನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಿಕೊಳ್ಳಿ.
+
+ಜಝಾಕಲ್ಲಾಹು ಖೈರ್,
+DKMO
+
+IMPORTANT:
+The Kannada should sound natural and conversational, NOT overly formal or literary.
+
+Keep "Assalamu Alaikum" and "Jazakallah Khair" naturally in the message.
+
+==================================================
+DYNAMIC MEMBER INFORMATION
+==================================================
+
+For every member, dynamically insert:
+
+- Member's actual name
+- Actual membership fee amount
+- DKMO ID where appropriate
+- Actual WhatsApp/mobile number
+
+Do not use example names or example amounts in the actual system.
+
+==================================================
+PAYMENT STATUS
+==================================================
+
+Only show/send the membership reminder when:
+
+Membership fee = UNPAID / pending
+
+If membership is already PAID:
+
+- Do not show the payment reminder
+- Do not allow sending an unpaid reminder
+
+==================================================
+FRF ELIGIBILITY CONNECTION
+==================================================
+
+Remember the DKMO business rule:
+
+Membership payment comes first.
+
+If membership fee is unpaid:
+- Membership is not fully activated
+- Member is NOT eligible for FRF
+- FRF must remain inactive
+- Do not send an FRF payment reminder to this member
+
+Once membership fee is paid:
+- Membership becomes eligible/active according to the existing approval rules
+- FRF eligibility can then become active when an FRF collection case exists
+
+Do not change this existing logic.
+
+==================================================
+WHATSAPP FLOW
+==================================================
+
+When the admin clicks the WhatsApp reminder:
+
+1. Open "Send Membership WhatsApp Reminder"
+2. Choose English or ಕನ್ನಡ
+3. Show the complete personalized message preview
+4. Allow the admin to confirm
+5. Open WhatsApp with the correctly formatted message
+6. Use the member's actual mobile/WhatsApp number
+7. Do NOT automatically mark the membership as paid
+8. Do NOT modify the payment record simply because a reminder was sent
+
+If the member has no valid mobile number:
+
+Show:
+"No WhatsApp/mobile number available"
+
+and disable the reminder.
+
+==================================================
+CONSISTENCY
+==================================================
+
+Use the same WhatsApp reminder UI, phone formatting, permission checks, confirmation behavior, success/error notifications and tracking system across:
+
+- Membership Fees
+- FRF Fees
+
+Do not create two completely different reminder systems.
+
+Make them reusable but allow the message content to be different for Membership vs FRF.
+
+==================================================
+FINAL TEST
+==================================================
+
+Test:
+
+1. Unpaid membership member → English reminder works.
+2. Unpaid membership member → Kannada reminder works.
+3. Paid membership member → no unpaid reminder.
+4. Actual fee amount appears correctly.
+5. Actual member name appears correctly.
+6. Actual WhatsApp number is used.
+7. No mobile number → reminder disabled.
+8. Sending reminder does not mark payment as paid.
+9. FRF eligibility remains correctly linked to membership payment.
+10. Existing FRF WhatsApp reminder continues working.
+11. Test with multiple members, not only one example member.
+
+IMPORTANT:
+The Kannada message must sound like a real DKMO committee/member speaking naturally to another Kannada-speaking member—not like a machine translation.

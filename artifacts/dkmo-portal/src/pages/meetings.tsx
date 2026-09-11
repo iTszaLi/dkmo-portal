@@ -8,8 +8,9 @@ import {
   useSetMeetingAttendance,
   useListMembers,
 } from "@workspace/api-client-react";
-import type { AttendanceRow, Member } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { customFetch } from "@workspace/api-client-react";
+import type { AttendanceRow, MeetingDetail, Member } from "@workspace/api-client-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +41,8 @@ import {
   MapPin,
   Plus,
   Users,
+  UserPlus,
+  UserMinus,
   Crown,
   ShieldCheck,
   Search,
@@ -90,12 +93,47 @@ function isCoreMember(m: { isCoreCommittee?: boolean | null }): boolean {
 type TypeFilter = "all" | "executive" | "core";
 type MemberView = "total" | "executive" | "core" | null;
 
+type OfficialCommitteeMember = {
+  assignmentId: string;
+  memberId: string;
+  membershipId: string;
+  fullName: string;
+  photoUrl: string | null;
+  position: string;
+  isActive: boolean;
+};
+
+type MeetingParticipantOption = {
+  memberId: string;
+  membershipId: string;
+  fullName: string;
+  location: string;
+  mobileNumber: string;
+  selected: boolean;
+};
+
+type MeetingParticipantSearchResponse = {
+  meetingId: string;
+  selectedCount: number;
+  members: MeetingParticipantOption[];
+};
+
 export default function Meetings() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: meetings, isLoading: meetingsLoading } = useListMeetings();
   const { data: members } = useListMembers();
+  const { data: activeCommitteeTerms } = useQuery({
+    queryKey: ["committee-terms"],
+    queryFn: () => customFetch<Array<{ committeeYear: string; isActive: boolean }>>("/api/committee/terms"),
+  });
+  const activeCommitteeYear = activeCommitteeTerms?.find((term) => term.isActive)?.committeeYear;
+  const { data: activeCommittee } = useQuery({
+    queryKey: ["committee-terms", activeCommitteeYear],
+    queryFn: () => customFetch<{ members: OfficialCommitteeMember[] }>(`/api/committee/terms/${activeCommitteeYear}`),
+    enabled: Boolean(activeCommitteeYear),
+  });
 
   const photoByMemberId = useMemo(() => {
     const map: Record<string, string | null | undefined> = {};
@@ -127,27 +165,23 @@ export default function Meetings() {
   // is counted in a card only if that specific flag is set; the two cards do not
   // imply one another.
   const memberStats = useMemo(() => {
-    const list: Member[] = members ?? [];
-    let executive = 0;
-    let core = 0;
-    for (const m of list) {
-      if (isExecutiveMember(m)) executive += 1;
-      if (isCoreMember(m)) core += 1;
-    }
-    return { total: list.length, executive, core };
-  }, [members]);
+    const list = activeCommittee?.members ?? [];
+    return { total: list.length, core: list.length };
+  }, [activeCommittee]);
 
   const executiveIds = useMemo(() => {
     const s = new Set<string>();
-    for (const m of members ?? []) if (isExecutiveMember(m)) s.add(m.id);
+    for (const m of activeCommittee?.members ?? []) {
+      if (m.position !== "Executive Member") s.add(m.memberId);
+    }
     return s;
-  }, [members]);
+  }, [activeCommittee]);
 
   const coreIds = useMemo(() => {
     const s = new Set<string>();
-    for (const m of members ?? []) if (isCoreMember(m)) s.add(m.id);
+    for (const m of activeCommittee?.members ?? []) s.add(m.memberId);
     return s;
-  }, [members]);
+  }, [activeCommittee]);
 
   // ── clickable summary cards → member list ───────────────────────────────────
   const [memberView, setMemberView] = useState<MemberView>(null);
@@ -155,12 +189,21 @@ export default function Meetings() {
     setMemberView((prev) => (prev === v ? null : v));
 
   const viewMembers = useMemo(() => {
-    const list: Member[] = members ?? [];
-    if (memberView === "executive") return list.filter(isExecutiveMember);
-    if (memberView === "core") return list.filter(isCoreMember);
+    const list = (activeCommittee?.members ?? []).map((m) => ({
+      id: m.memberId,
+      fullName: m.fullName,
+      photoUrl: m.photoUrl,
+      designation: m.position,
+      membershipId: m.membershipId,
+      city: "",
+      country: "",
+      mobileNumber: "",
+    }));
+    if (memberView === "executive") return list.filter((m) => m.designation !== "Executive Member");
+    if (memberView === "core") return list;
     if (memberView === "total") return list;
     return [];
-  }, [members, memberView]);
+  }, [activeCommittee, memberView]);
 
   // ── create / edit dialog ────────────────────────────────────────────────────
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -188,6 +231,17 @@ export default function Meetings() {
       notes: detail.notes ?? "",
     });
     setDialogOpen(true);
+  };
+
+  const [memberEditorOpen, setMemberEditorOpen] = useState(false);
+  const [memberSearch, setMemberSearch] = useState("");
+  const [draftMemberIds, setDraftMemberIds] = useState<string[]>([]);
+
+  const openMembersEditor = () => {
+    if (!detail) return;
+    setDraftMemberIds(detail.attendance.map((row) => row.memberId));
+    setMemberSearch("");
+    setMemberEditorOpen(true);
   };
 
   const invalidateMeetings = () => {
@@ -257,7 +311,81 @@ export default function Meetings() {
   };
 
   // ── selected meeting register ───────────────────────────────────────────────
-  const { data: detail, isLoading: detailLoading } = useGetMeeting(selectedId);
+  const { data: detail, isLoading: detailLoading } = useGetMeeting(selectedId, {
+    query: {
+      queryKey: [`/api/meetings/${selectedId}`],
+      enabled: Boolean(selectedId),
+    },
+  });
+
+  const participantOptionsQuery = useQuery<MeetingParticipantSearchResponse>({
+    queryKey: [`/api/meetings/${selectedId}/participants`, memberSearch],
+    queryFn: () =>
+      customFetch<MeetingParticipantSearchResponse>(
+        `/api/meetings/${selectedId}/participants?search=${encodeURIComponent(memberSearch)}`,
+      ),
+    enabled: Boolean(selectedId && memberEditorOpen),
+  });
+
+  const updateParticipants = useMutation({
+    mutationFn: ({ meetingId, memberIds }: { meetingId: string; memberIds: string[] }) =>
+      customFetch<MeetingDetail>(`/api/meetings/${meetingId}/participants`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ memberIds }),
+      }),
+    onSuccess: (updated) => {
+      invalidateMeetings();
+      queryClient.setQueryData([`/api/meetings/${updated.id}`], updated);
+      queryClient.invalidateQueries({ queryKey: [`/api/meetings/${updated.id}/participants`] });
+      setMemberEditorOpen(false);
+      toast({
+        title: "Meeting members updated",
+        description: `${updated.totalCount} members are included in ${updated.title}.`,
+      });
+    },
+    onError: (err) =>
+      toast({ title: "Member update failed", description: String(err), variant: "destructive" }),
+  });
+
+  const editorMemberById = useMemo(() => {
+    const map = new Map<string, MeetingParticipantOption>();
+    for (const row of detail?.attendance ?? []) {
+      map.set(row.memberId, {
+        memberId: row.memberId,
+        membershipId: row.membershipId,
+        fullName: row.fullName,
+        location: row.location,
+        mobileNumber: row.mobileNumber,
+        selected: true,
+      });
+    }
+    for (const member of participantOptionsQuery.data?.members ?? []) {
+      map.set(member.memberId, member);
+    }
+    return map;
+  }, [detail, participantOptionsQuery.data]);
+
+  const selectedEditorMembers = useMemo(
+    () =>
+      draftMemberIds
+        .map((memberId) => editorMemberById.get(memberId))
+        .filter((member): member is MeetingParticipantOption => Boolean(member)),
+    [draftMemberIds, editorMemberById],
+  );
+
+  const toggleDraftMember = (memberId: string) => {
+    setDraftMemberIds((current) =>
+      current.includes(memberId)
+        ? current.filter((id) => id !== memberId)
+        : [...current, memberId],
+    );
+  };
+
+  const handleSaveMembers = () => {
+    if (!detail) return;
+    updateParticipants.mutate({ meetingId: detail.id, memberIds: draftMemberIds });
+  };
 
   const [localStatus, setLocalStatus] = useState<Record<string, AttendanceRow["status"]>>({});
   const [search, setSearch] = useState("");
@@ -452,7 +580,7 @@ export default function Meetings() {
       </div>
 
       {/* Header summary cards — click to view that group's members */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
         <StatCard
           icon={Users}
           label="Total Members"
@@ -460,14 +588,6 @@ export default function Meetings() {
           accent="text-green-700 dark:text-green-400"
           active={memberView === "total"}
           onClick={() => toggleMemberView("total")}
-        />
-        <StatCard
-          icon={Crown}
-          label="Executive Members"
-          value={memberStats.executive}
-          accent="text-amber-600 dark:text-amber-400"
-          active={memberView === "executive"}
-          onClick={() => toggleMemberView("executive")}
         />
         <StatCard
           icon={ShieldCheck}
@@ -541,7 +661,7 @@ export default function Meetings() {
                           {m.fullName}
                         </p>
                       </div>
-                      {isExecutiveMember(m) ? (
+                      {m.designation !== "Executive Member" ? (
                         <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-2 py-0.5 text-[10px] font-medium">
                           <Crown className="h-3 w-3" /> Exec
                         </span>
@@ -682,6 +802,15 @@ export default function Meetings() {
                       data-testid="button-edit-meeting"
                     >
                       <Pencil className="mr-1.5 h-3.5 w-3.5" /> Edit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={openMembersEditor}
+                      className="border-green-200 dark:border-slate-700 text-green-700 dark:text-slate-300 hover:bg-green-50 dark:hover:bg-slate-800"
+                      data-testid="button-edit-meeting-members"
+                    >
+                      <Users className="mr-1.5 h-3.5 w-3.5" /> Edit Members
                     </Button>
                     <Button
                       variant="outline"
@@ -864,6 +993,164 @@ export default function Meetings() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Meeting-specific participant editor */}
+      <Dialog open={memberEditorOpen} onOpenChange={setMemberEditorOpen}>
+        <DialogContent
+          className="sm:max-w-3xl max-h-[90vh] overflow-hidden flex flex-col dark:bg-slate-900 dark:border-slate-800"
+          data-testid="dialog-edit-meeting-members"
+        >
+          <DialogHeader>
+            <DialogTitle className="text-green-950 dark:text-green-100">
+              Edit Members
+            </DialogTitle>
+            <DialogDescription className="dark:text-slate-400">
+              Choose the committee members included in this meeting’s attendance register.
+              The official committee and other meetings are not changed.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex min-h-0 flex-1 flex-col gap-4 py-2">
+            <div className="flex items-center justify-between rounded-xl border border-green-100 bg-green-50/60 px-4 py-3 dark:border-slate-700 dark:bg-slate-800/60">
+              <div>
+                <p className="font-semibold text-green-950 dark:text-slate-100">Meeting Members</p>
+                <p className="text-sm text-green-700/70 dark:text-slate-400">
+                  {draftMemberIds.length} members selected
+                </p>
+              </div>
+              <UserPlus className="h-5 w-5 text-green-600 dark:text-green-400" />
+            </div>
+
+            <div className="grid min-h-0 gap-4 md:grid-cols-2">
+              <div className="min-h-0 space-y-2">
+                <p className="text-sm font-medium text-green-950 dark:text-slate-100">
+                  Current selected members
+                </p>
+                <div className="max-h-[42vh] space-y-2 overflow-y-auto rounded-xl border border-green-100 p-2 dark:border-slate-700">
+                  {selectedEditorMembers.length === 0 ? (
+                    <p className="px-2 py-6 text-center text-sm text-green-700/70 dark:text-slate-500">
+                      No members selected.
+                    </p>
+                  ) : (
+                    selectedEditorMembers.map((member) => (
+                      <div
+                        key={member.memberId}
+                        className="flex items-center justify-between gap-2 rounded-lg bg-green-50/70 px-3 py-2 dark:bg-slate-800"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-green-950 dark:text-slate-100">
+                            {member.fullName}
+                          </p>
+                          <p className="text-xs text-green-700/70 dark:text-slate-400">
+                            {member.membershipId}
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => toggleDraftMember(member.memberId)}
+                          className="shrink-0 text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/20"
+                          aria-label={`Remove ${member.fullName}`}
+                          data-testid={`remove-meeting-member-${member.memberId}`}
+                        >
+                          <UserMinus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <div className="min-h-0 space-y-2">
+                <Label htmlFor="meeting-member-search">Add committee member</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-green-400 dark:text-slate-500" />
+                  <Input
+                    id="meeting-member-search"
+                    value={memberSearch}
+                    onChange={(event) => setMemberSearch(event.target.value)}
+                    placeholder="Search name or DKMO ID…"
+                    className="pl-9 dark:bg-slate-800 dark:border-slate-700"
+                    data-testid="input-meeting-member-search"
+                  />
+                </div>
+                <div className="max-h-[42vh] overflow-y-auto rounded-xl border border-green-100 p-2 dark:border-slate-700">
+                  {participantOptionsQuery.isLoading ? (
+                    <p className="px-2 py-6 text-center text-sm text-green-700/70 dark:text-slate-500">
+                      Searching committee members…
+                    </p>
+                  ) : participantOptionsQuery.isError ? (
+                    <p className="px-2 py-6 text-center text-sm text-red-600 dark:text-red-400">
+                      Unable to load committee members. Try again.
+                    </p>
+                  ) : (participantOptionsQuery.data?.members ?? []).length === 0 ? (
+                    <p className="px-2 py-6 text-center text-sm text-green-700/70 dark:text-slate-500">
+                      No matching committee members.
+                    </p>
+                  ) : (
+                    <div className="space-y-1">
+                      {participantOptionsQuery.data?.members.map((member) => {
+                        const selected = draftMemberIds.includes(member.memberId);
+                        return (
+                          <button
+                            type="button"
+                            key={member.memberId}
+                            onClick={() => toggleDraftMember(member.memberId)}
+                            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left hover:bg-green-50 dark:hover:bg-slate-800"
+                            data-testid={`meeting-member-option-${member.memberId}`}
+                          >
+                            <span
+                              aria-hidden="true"
+                              className={cn(
+                                "grid h-4 w-4 shrink-0 place-content-center rounded-sm border text-[11px] font-bold",
+                                selected
+                                  ? "border-green-700 bg-green-700 text-white dark:border-green-500 dark:bg-green-600"
+                                  : "border-green-300 dark:border-slate-600",
+                              )}
+                            >
+                              {selected ? "✓" : null}
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-sm font-medium text-green-950 dark:text-slate-100">
+                                {member.fullName}
+                              </span>
+                              <span className="block text-xs text-green-700/70 dark:text-slate-400">
+                                {member.membershipId}
+                              </span>
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setMemberEditorOpen(false)}
+              className="border-green-200 dark:border-slate-700"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSaveMembers}
+              disabled={updateParticipants.isPending}
+              className="bg-green-700 hover:bg-green-800 dark:bg-green-600 dark:hover:bg-green-700 text-white"
+              data-testid="button-save-meeting-members"
+            >
+              <Save className="mr-2 h-4 w-4" />
+              {updateParticipants.isPending ? "Saving…" : "Save Members"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Create / Edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
