@@ -6,7 +6,7 @@ services are required in production.
 | Part | How it runs on Vercel |
 |------|----------------------|
 | Frontend (React/Vite SPA) | Static build served from Vercel's CDN |
-| API (Express + PostgreSQL) | Vercel Serverless Function at `api/index.ts` — every `/api/*` request is routed to the Express app |
+| API (Express + PostgreSQL) | Vercel Serverless Function at `api/[...path].ts` — every `/api/*` request is routed to the Express app |
 | Database | Any PostgreSQL (Vercel Postgres / Neon recommended) via `DATABASE_URL` |
 | Sessions | Stored in PostgreSQL (`connect-pg-simple`) — serverless-safe |
 | Document/photo files | Google Cloud Storage via `GCS_CREDENTIALS_JSON` (optional — only needed for the Documents upload feature) |
@@ -15,7 +15,8 @@ services are required in production.
 
 1. Push this repository to GitHub and import it into Vercel.
 2. Vercel reads `vercel.json` automatically (pnpm install, Vite build,
-   SPA fallback, `/api/*` → serverless function). No settings to change.
+   SPA fallback, and file-system routing through `api/[...path].ts` for
+   `/api/*`). No settings to change.
 3. Add the environment variables below in Vercel → Project → Settings →
    **Environment Variables**, then Deploy.
 
