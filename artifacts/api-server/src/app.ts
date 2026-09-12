@@ -60,7 +60,7 @@ app.use(
 );
 
 // Baseline HTTP security headers (no external dependency needed).
-app.use((_req, res, next) => {
+app.use((_req: Request, res: Response, next: NextFunction) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
@@ -88,18 +88,21 @@ app.use(
     _next: NextFunction,
   ) => {
     if (err?.type === "entity.too.large") {
-      res.status(413).json({
+      res.statusCode = 413;
+      res.json({
         error:
           "The uploaded photo is too large. Please choose a smaller image (under 5MB) and try again.",
       });
       return;
     }
     if (err?.type === "entity.parse.failed") {
-      res.status(400).json({ error: "Invalid request format. Please try again." });
+      res.statusCode = 400;
+      res.json({ error: "Invalid request format. Please try again." });
       return;
     }
     logger.error({ err }, "Unhandled request error");
-    res.status(err?.status ?? 500).json({
+    res.statusCode = err?.status ?? 500;
+    res.json({
       error: "Something went wrong on our end. Please try again.",
     });
   },
