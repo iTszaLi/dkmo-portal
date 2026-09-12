@@ -1,4 +1,4 @@
-import express, { type Express } from "express";
+import express, { type NextFunction, type Request, type Response } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
 import { createSessionMiddleware } from "./lib/session";
@@ -6,7 +6,7 @@ import router from "./routes";
 import healthRouter from "./routes/health";
 import { logger } from "./lib/logger";
 
-const app: Express = express();
+const app = express();
 
 app.set("trust proxy", 1);
 
@@ -82,10 +82,10 @@ app.use("/api", router);
 app.use(
   (
     err: Error & { type?: string; status?: number },
-    req: express.Request,
-    res: express.Response,
+    req: Request,
+    res: Response,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _next: express.NextFunction,
+    _next: NextFunction,
   ) => {
     if (err?.type === "entity.too.large") {
       res.status(413).json({
@@ -98,7 +98,7 @@ app.use(
       res.status(400).json({ error: "Invalid request format. Please try again." });
       return;
     }
-    req.log?.error({ err }, "Unhandled request error");
+    logger.error({ err }, "Unhandled request error");
     res.status(err?.status ?? 500).json({
       error: "Something went wrong on our end. Please try again.",
     });

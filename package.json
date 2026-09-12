@@ -10,6 +10,7 @@
     "test:e2e": "playwright test"
   },
   "private": true,
+  "packageManager": "pnpm@10.26.1",
   "pnpm": {
     "overrides": {
       "@babel/core": ">=7.29.6",
