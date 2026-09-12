@@ -92,6 +92,50 @@ test("startup health check is public and does not require an authenticated sessi
   assert.deepEqual(health.body, { status: "ok" });
 });
 
+test("creating a paid member records the membership fee payment atomically", async () => {
+  let createdMember;
+  let createdPayment;
+  try {
+    const created = await request("/api/members", {
+      method: "POST",
+      headers: { cookie: adminCookie },
+      body: asJson({
+        fullName: `Paid Create Member ${memberTag}`,
+        mobileNumber: `+966500${memberTag.replace(/\D/g, "").slice(-6)}`,
+        membershipFee: 100,
+        feeStatus: "paid",
+        notes: marker,
+      }),
+    });
+    assert.equal(created.response.status, 201, JSON.stringify(created.body));
+    createdMember = created.body;
+    assert.equal(createdMember.feeStatus, "paid");
+    assert.equal(createdMember.frfStatus, "active");
+
+    [createdPayment] = await db
+      .select()
+      .from(paymentsTable)
+      .where(
+        and(
+          eq(paymentsTable.memberId, createdMember.id),
+          eq(paymentsTable.paymentType, "membership_fee"),
+        ),
+      );
+    assert.ok(createdPayment, "paid member creation must create a payment ledger row");
+    assert.equal(createdPayment.amountDue, "100.00");
+    assert.equal(createdPayment.amountPaid, "100.00");
+    assert.equal(createdPayment.status, "paid");
+    assert.equal(createdPayment.paymentMethod, "cash");
+  } finally {
+    if (createdPayment?.id) {
+      await db.delete(paymentsTable).where(eq(paymentsTable.id, createdPayment.id));
+    }
+    if (createdMember?.id) {
+      await db.delete(membersTable).where(eq(membersTable.id, createdMember.id));
+    }
+  }
+});
+
 before(async () => {
   server = app.listen(0);
   await new Promise((resolve) => server.once("listening", resolve));

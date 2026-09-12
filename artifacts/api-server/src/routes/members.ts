@@ -116,9 +116,10 @@ router.post("/members", async (req, res): Promise<void> => {
 
   try {
     const feeStatus = parsed.data.feeStatus ?? "unpaid";
-    if (feeStatus === "paid") {
+    const membershipFee = Number(parsed.data.membershipFee ?? 100);
+    if (feeStatus === "paid" && membershipFee <= 0) {
       res.status(400).json({
-        error: "Record an actual membership-fee payment before marking the membership fee paid.",
+        error: "A paid membership must have a membership-fee amount greater than zero.",
       });
       return;
     }
@@ -126,37 +127,71 @@ router.post("/members", async (req, res): Promise<void> => {
     // Membership IDs are always allocated by the server so they stay
     // sequential and unique; any client-provided value is ignored.
     const membershipId = await generateMembershipId();
-    const [created] = await db
-      .insert(membersTable)
-      .values({
-        fullName: parsed.data.fullName,
-        mobileNumber: parsed.data.mobileNumber,
-        membershipId,
-        iqamaNumber: parsed.data.iqamaNumber ?? "",
-        jamaath: parsed.data.jamaath ?? "",
-        city: parsed.data.city ?? "",
-        country: parsed.data.country ?? "",
-        dateOfBirth: parsed.data.dateOfBirth ?? "",
-        designation: parsed.data.designation ?? "",
-        isExecutiveCommittee: parsed.data.isExecutiveCommittee ?? false,
-        isCoreCommittee: parsed.data.isCoreCommittee ?? false,
-        membershipFee: String(parsed.data.membershipFee ?? 100),
-        feeStatus,
-        feePaidAt: null,
-        feeUpdatedBy: actor,
-        frfStatus: "inactive",
-        responsibility: parsed.data.responsibility ?? "not_responsible",
-        notes: parsed.data.notes ?? "",
-        refMemberName: parsed.data.refMemberName ?? "",
-        refMemberId: parsed.data.refMemberId ?? "",
-        photoUrl: parsed.data.photoUrl ?? null,
-      })
-      .returning();
+    const paidAt = feeStatus === "paid" ? new Date() : null;
+    const result = await db.transaction(async (tx) => {
+      const [created] = await tx
+        .insert(membersTable)
+        .values({
+          fullName: parsed.data.fullName,
+          mobileNumber: parsed.data.mobileNumber,
+          membershipId,
+          iqamaNumber: parsed.data.iqamaNumber ?? "",
+          jamaath: parsed.data.jamaath ?? "",
+          city: parsed.data.city ?? "",
+          country: parsed.data.country ?? "",
+          dateOfBirth: parsed.data.dateOfBirth ?? "",
+          designation: parsed.data.designation ?? "",
+          isExecutiveCommittee: parsed.data.isExecutiveCommittee ?? false,
+          isCoreCommittee: parsed.data.isCoreCommittee ?? false,
+          membershipFee: String(membershipFee),
+          feeStatus,
+          feePaidAt: paidAt,
+          feeUpdatedBy: actor,
+          frfStatus: "inactive",
+          responsibility: parsed.data.responsibility ?? "not_responsible",
+          notes: parsed.data.notes ?? "",
+          refMemberName: parsed.data.refMemberName ?? "",
+          refMemberId: parsed.data.refMemberId ?? "",
+          photoUrl: parsed.data.photoUrl ?? null,
+        })
+        .returning();
+      if (!created) return { created: undefined, payment: undefined };
+
+      let payment: typeof paymentsTable.$inferSelect | undefined;
+      if (feeStatus === "paid") {
+        [payment] = await tx
+          .insert(paymentsTable)
+          .values({
+            memberId: created.id,
+            paymentType: "membership_fee",
+            amountDue: String(membershipFee),
+            amountPaid: String(membershipFee),
+            status: "paid",
+            paymentMethod: "cash",
+            receiptNumber: `DKMO-MEM-${membershipId}`,
+            notes: "Membership fee recorded during member creation",
+            paidAt: paidAt ?? new Date(),
+          })
+          .returning();
+        if (!payment) throw new Error("Failed to record membership fee payment");
+        await syncMemberFrfEligibility(created.id, feeStatus, tx);
+      }
+
+      return { created, payment };
+    });
+    const { created, payment } = result;
     if (!created) {
       res.status(500).json({ error: "Failed to create member" });
       return;
     }
     logAudit(req, "member_created", "members", { entityId: created.id, entityName: created.fullName, details: `ID: ${created.membershipId}` });
+    if (payment) {
+      logAudit(req, "payment_created", "payments", {
+        entityId: payment.id,
+        entityName: created.fullName,
+        details: `Receipt: ${payment.receiptNumber}, Type: ${payment.paymentType}, Amount: ${payment.amountPaid}`,
+      });
+    }
     res.status(201).json(memberToApi(created));
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "";
