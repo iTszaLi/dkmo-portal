@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, ilike, or, desc, sql, and, type SQL } from "drizzle-orm";
+import { eq, ilike, or, desc, asc, sql, and } from "drizzle-orm";
 import { db, membersTable, frfClaimsTable, frfContributionsTable, paymentsTable } from "@workspace/db";
 import {
   CreateMemberBody,
@@ -37,55 +37,113 @@ router.get("/members", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const search = parsed.data.search?.trim();
+  const search = parsed.data.search?.trim().replace(/\s+/g, " ").toLowerCase();
 
-  let rows;
+  let rows:
+    | Array<{ member: typeof membersTable.$inferSelect; searchMatch: "direct" | "referred" | null }>
+    | undefined;
   if (search) {
     const like = `%${search}%`;
-    const conditions: SQL[] = [
-      ilike(membersTable.fullName, like),
-      ilike(membersTable.mobileNumber, like),
-      ilike(membersTable.membershipId, like),
-      ilike(membersTable.iqamaNumber, like),
-      ilike(membersTable.jamaath, like),
-      ilike(membersTable.city, like),
-      ilike(membersTable.country, like),
-      ilike(membersTable.refMemberName, like),
-      ilike(membersTable.legacyMemberId, like),
-      ilike(membersTable.legacyReferenceName, like),
-      ilike(membersTable.legacyReferenceCode, like),
-      // Match members whose referrer's DKMO ID matches the search term.
-      sql`${membersTable.refMemberId} IN (SELECT ref.id::text FROM members ref WHERE ref.membership_id ILIKE ${like})`,
+    const tokens = search.split(" ").filter(Boolean);
+    const normalizedFullName = sql`regexp_replace(lower(${membersTable.fullName}), '\\s+', ' ', 'g')`;
+    const directFields = [
+      membersTable.fullName,
+      membersTable.mobileNumber,
+      membersTable.membershipId,
+      membersTable.iqamaNumber,
+      membersTable.jamaath,
+      membersTable.city,
+      membersTable.country,
+      membersTable.email,
+      membersTable.bloodGroup,
+      membersTable.address,
+      membersTable.designation,
+      membersTable.notes,
+      membersTable.legacyMemberId,
+      membersTable.oldApplicationNumber,
+      membersTable.whatsappNumber,
+      membersTable.passportNumber,
+      membersTable.nativePlace,
+      membersTable.memberGroup,
+      membersTable.homeContactNumber,
+      membersTable.legacyMemberStatus,
+      membersTable.district,
+      membersTable.company,
     ];
-    // Mobile search: users type the KSA number without the leading zero
-    // (e.g. 502260256). Normalize stored numbers to digits-only and match,
-    // so leading zeros / country codes don't block the lookup.
+    const directMatchParts = [
+      sql`${normalizedFullName} ILIKE ${like}`,
+      ...directFields.map((field) => ilike(field, like)),
+      and(...tokens.map((token) => or(...directFields.map((field) => ilike(field, `%${token}%`))))),
+    ];
+    // Mobile search: users may omit +966 or a leading zero.
     const digits = search.replace(/\D/g, "").replace(/^0+/, "");
-    if (digits.length > 0) {
-      conditions.push(
-        sql`regexp_replace(${membersTable.mobileNumber}, '\D', '', 'g') ILIKE ${"%" + digits + "%"}`,
+    if (digits) {
+      directMatchParts.push(
+        sql`regexp_replace(${membersTable.mobileNumber}, '\\D', '', 'g') ILIKE ${"%" + digits + "%"}`,
       );
     }
+    const directMatch = or(...directMatchParts);
+    const referenceMatch = or(
+      ilike(membersTable.refMemberName, like),
+      ilike(membersTable.refMemberId, like),
+      ilike(membersTable.legacyReferenceName, like),
+      ilike(membersTable.legacyReferenceCode, like),
+      ilike(membersTable.legacyReferenceMobile, like),
+      // Also allow finding a referrer by the referrer's DKMO ID.
+      sql`${membersTable.refMemberId} IN (
+        SELECT ref.id::text
+        FROM members ref
+        WHERE ref.membership_id ILIKE ${like}
+      )`,
+    );
+    const exactId = or(
+      sql`lower(${membersTable.membershipId}) = ${search}`,
+      sql`lower(${membersTable.legacyMemberId}) = ${search}`,
+    );
+    const exactName = sql`${normalizedFullName} = ${search}`;
+    const idPrefix = or(
+      ilike(membersTable.membershipId, `${search}%`),
+      ilike(membersTable.legacyMemberId, `${search}%`),
+    );
+    const namePrefix = sql`${normalizedFullName} ILIKE ${`${search}%`}`;
+    const nameContains = sql`${normalizedFullName} ILIKE ${like}`;
+    const searchRank = sql<number>`CASE
+      WHEN ${exactId} THEN 0
+      WHEN ${exactName} THEN 1
+      WHEN ${idPrefix} THEN 2
+      WHEN ${namePrefix} THEN 3
+      WHEN ${nameContains} THEN 4
+      WHEN ${directMatch} THEN 6
+      WHEN ${referenceMatch} THEN 20
+      ELSE 99
+    END`;
+    const searchMatch = sql<"direct" | "referred">`CASE
+      WHEN ${directMatch} THEN 'direct'
+      WHEN ${referenceMatch} THEN 'referred'
+      ELSE 'direct'
+    END`;
+
     rows = await db
-      .select()
+      .select({ member: membersTable, searchMatch })
       .from(membersTable)
-      .where(or(...conditions))
-      .orderBy(desc(membersTable.createdAt));
+      .where(or(directMatch, referenceMatch))
+      .orderBy(asc(searchRank), asc(membersTable.fullName), desc(membersTable.createdAt));
   } else {
     rows = await db
-      .select()
+      .select({ member: membersTable, searchMatch: sql<null>`NULL` })
       .from(membersTable)
       .orderBy(desc(membersTable.createdAt));
   }
 
   // Attach FRF ledger aggregates so the members list can show
   // Due / Paid / Outstanding without extra requests.
-  const frfAgg = await aggregateMemberFrf(rows.map((r) => r.id));
+  const frfAgg = await aggregateMemberFrf(rows.map((r) => r.member.id));
   res.json(
-    rows.map((m) => {
-      const agg = frfAgg.get(m.id);
+    rows.map(({ member, searchMatch }) => {
+      const agg = frfAgg.get(member.id);
       return {
-        ...memberToApi(m),
+        ...memberToApi(member),
+        ...(searchMatch ? { searchMatch } : {}),
         frfDue: agg?.totalDue ?? 0,
         frfPaid: agg?.totalPaid ?? 0,
         frfOutstanding: agg?.totalOutstanding ?? 0,

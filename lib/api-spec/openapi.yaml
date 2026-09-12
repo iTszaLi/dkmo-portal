@@ -2012,6 +2012,10 @@ components:
         frfOutstanding: { type: number }
         frfOverdueCount: { type: integer }
         frfPendingCount: { type: integer }
+        searchMatch:
+          type: string
+          enum: [direct, referred]
+          description: How a member matched the optional Members search query.
         refMemberName:
           type: string
         refMemberId:

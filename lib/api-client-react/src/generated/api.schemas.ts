@@ -189,6 +189,17 @@ export const MemberResponsibility = {
   not_responsible: 'not_responsible',
 } as const;
 
+/**
+ * How a member matched the optional Members search query.
+ */
+export type MemberSearchMatch = typeof MemberSearchMatch[keyof typeof MemberSearchMatch];
+
+
+export const MemberSearchMatch = {
+  direct: 'direct',
+  referred: 'referred',
+} as const;
+
 export type MemberLegacyRecordStatus = typeof MemberLegacyRecordStatus[keyof typeof MemberLegacyRecordStatus];
 
 
@@ -246,6 +257,8 @@ export interface Member {
   frfOutstanding?: number;
   frfOverdueCount?: number;
   frfPendingCount?: number;
+  /** How a member matched the optional Members search query. */
+  searchMatch?: MemberSearchMatch;
   refMemberName: string;
   refMemberId: string;
   legacyMemberId?: string;

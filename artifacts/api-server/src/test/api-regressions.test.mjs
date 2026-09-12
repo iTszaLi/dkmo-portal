@@ -136,6 +136,78 @@ test("creating a paid member records the membership fee payment atomically", asy
   }
 });
 
+test("member search ranks direct matches above referral matches", async () => {
+  let directMember;
+  let referredMember;
+  const searchPhrase = `Search Rank ${memberTag}`;
+  const directMembershipId = `TEST-SEARCH-D-${memberTag}`;
+  const directMobile = `+966500${memberTag.replace(/\D/g, "").slice(-6)}`;
+
+  try {
+    [directMember] = await db
+      .insert(membersTable)
+      .values({
+        fullName: searchPhrase,
+        mobileNumber: directMobile,
+        membershipId: directMembershipId,
+        notes: "",
+      })
+      .returning();
+    [referredMember] = await db
+      .insert(membersTable)
+      .values({
+        fullName: "Unrelated Search Member",
+        mobileNumber: `+966501${randomUUID().replace(/\D/g, "").slice(-6)}`,
+        membershipId: `TEST-SEARCH-R-${randomUUID().slice(0, 8)}`,
+        refMemberId: directMember.id,
+        refMemberName: searchPhrase,
+        notes: "",
+      })
+      .returning();
+
+    const exact = await request(`/api/members?search=${encodeURIComponent(searchPhrase)}`, {
+      headers: { cookie: adminCookie },
+    });
+    assert.equal(exact.response.status, 200);
+    assert.equal(exact.body[0]?.id, directMember.id);
+    assert.equal(exact.body[0]?.searchMatch, "direct");
+    assert.equal(exact.body.find((member) => member.id === referredMember.id)?.searchMatch, "referred");
+
+    const partial = await request(`/api/members?search=${encodeURIComponent("Search Rank")}`, {
+      headers: { cookie: adminCookie },
+    });
+    assert.equal(partial.response.status, 200);
+    assert.equal(partial.body[0]?.id, directMember.id);
+
+    const byId = await request(`/api/members?search=${encodeURIComponent(directMembershipId)}`, {
+      headers: { cookie: adminCookie },
+    });
+    assert.equal(byId.response.status, 200);
+    assert.equal(byId.body[0]?.id, directMember.id);
+    assert.equal(byId.body.find((member) => member.id === referredMember.id)?.searchMatch, "referred");
+
+    const localPhone = directMobile.replace(/\D/g, "").replace(/^966/, "");
+    const byPhone = await request(`/api/members?search=${encodeURIComponent(localPhone)}`, {
+      headers: { cookie: adminCookie },
+    });
+    assert.equal(byPhone.response.status, 200);
+    assert.equal(byPhone.body[0]?.id, directMember.id);
+
+    const empty = await request(`/api/members?search=${encodeURIComponent("no-such-member-" + memberTag)}`, {
+      headers: { cookie: adminCookie },
+    });
+    assert.equal(empty.response.status, 200);
+    assert.deepEqual(empty.body, []);
+  } finally {
+    if (directMember?.id) {
+      await db.delete(membersTable).where(eq(membersTable.id, directMember.id));
+    }
+    if (referredMember?.id) {
+      await db.delete(membersTable).where(eq(membersTable.id, referredMember.id));
+    }
+  }
+});
+
 before(async () => {
   server = app.listen(0);
   await new Promise((resolve) => server.once("listening", resolve));

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useDeferredValue } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import { useListMembers, useCreateMember, useUpdateMember, useDeleteMember, useUpdateMemberFeeStatus, useUpdateMemberCommitteeStatus, useCreatePayment, getListMembersQueryKey } from "@workspace/api-client-react";
 import { celebrate } from "@/lib/confetti";
@@ -45,7 +45,9 @@ export default function Members() {
   const [editingMember, setEditingMember] = useState<any>(null);
   const [deletingMember, setDeletingMember] = useState<any>(null);
 
-  const { data: members, isLoading } = useListMembers({ search: search.length > 2 ? search : undefined });
+  const deferredSearch = useDeferredValue(search);
+  const searchQuery = deferredSearch.trim();
+  const { data: members, isLoading } = useListMembers({ search: searchQuery.length >= 2 ? searchQuery : undefined });
   const { data: allMembers, isLoading: isTotalLoading } = useListMembers();
   const createMember = useCreateMember();
   const updateMember = useUpdateMember();
@@ -235,6 +237,13 @@ export default function Members() {
     }
     return true;
   });
+  const matchingMembers = filteredMembers ?? [];
+  const referredMatchCount = matchingMembers.filter((member) => member.searchMatch === "referred").length;
+  const hasMemberFilters =
+    statusFilter !== "all" ||
+    legacyFilter !== "all" ||
+    feeFilter !== "all" ||
+    frfDueFilter !== "all";
 
   return (
     <div className="space-y-6">
@@ -350,6 +359,19 @@ export default function Members() {
         )}
       </div>
 
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-emerald-700 dark:text-slate-400" aria-live="polite">
+        <span data-testid="text-member-result-count">
+          {isLoading
+            ? "Searching members…"
+            : `${matchingMembers.length.toLocaleString()} matching member${matchingMembers.length === 1 ? "" : "s"}${searchQuery ? ` for “${searchQuery}”` : ""}${hasMemberFilters ? " with current filters" : ""}`}
+        </span>
+        {referredMatchCount > 0 && (
+          <span className="text-xs text-slate-500 dark:text-slate-400">
+            {referredMatchCount.toLocaleString()} referral-only result{referredMatchCount === 1 ? "" : "s"} shown after direct matches
+          </span>
+        )}
+      </div>
+
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-emerald-100 dark:border-slate-800 shadow-sm overflow-hidden">
         <Table>
           <TableHeader className="bg-emerald-50/50 dark:bg-slate-800/60">
@@ -383,7 +405,7 @@ export default function Members() {
                 </TableCell>
               </TableRow>
             ) : (
-              filteredMembers?.map((member) => (
+              matchingMembers.map((member) => (
                 <TableRow key={member.id} className="hover:bg-emerald-50/30 dark:hover:bg-slate-800/50 cursor-pointer dark:border-slate-800 transition-colors">
                   <TableCell>
                     <Link href={withReturnTo(`/members/${member.id}`)} className="flex items-center gap-3 w-full">
@@ -391,6 +413,15 @@ export default function Members() {
                       <div>
                         <div className="font-medium text-emerald-950 dark:text-slate-200">{member.fullName}</div>
                         <div className="text-xs text-emerald-600 dark:text-slate-500">ID: {member.membershipId}</div>
+                        {member.searchMatch === "referred" && (
+                          <Badge
+                            variant="outline"
+                            className="mt-1 border-violet-300 text-[10px] text-violet-700 dark:border-violet-700 dark:text-violet-300"
+                            data-testid={`badge-search-match-${member.id}`}
+                          >
+                            Referred by match
+                          </Badge>
+                        )}
                         {(member as any).legacyMemberId ? (
                           <div className="text-xs text-amber-700 dark:text-amber-300">
                             Access ID: {(member as any).legacyMemberId}
