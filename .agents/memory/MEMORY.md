@@ -34,3 +34,4 @@
 - [Stateful API regression fixtures](api-regression-fixtures.md) — dashboard assertions must baseline or isolate existing FRF ledger data; hard-coded totals only work on a clean database.
 - [Imported member activity dates](membership-activity-dates.md) — imported created_at is batch provenance; monthly membership activity must use normalized legacy dates instead.
 - [Meeting-specific participants](meeting-participants.md) — attendance rows are authoritative per meeting; legacy rosters seed once, additions are active-term-only.
+- [Member search matching](member-search-matching.md) — rank direct member-field matches ahead of referral-only matches and label referral results explicitly.
